@@ -34,7 +34,7 @@
 /* #undef LLVM_ENABLE_ABI_BREAKING_CHECKS */
 
 /* Define if threads enabled */
-#define LLVM_ENABLE_THREADS 1
+#define LLVM_ENABLE_THREADS 0
 
 /* Installation directory for config files */
 /* #undef LLVM_ETCDIR */
