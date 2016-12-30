@@ -2014,7 +2014,12 @@ static void AddGoldPlugin(const ToolChain &ToolChain, const ArgList &Args,
   // forward.
   CmdArgs.push_back("-plugin");
   std::string Plugin =
+      // base clang has LLVMgold.so plugin in same libexec dir as compiler
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+      ToolChain.getDriver().Dir + "/LLVMgold.so";
+#else
       ToolChain.getDriver().Dir + "/../lib" CLANG_LIBDIR_SUFFIX "/LLVMgold.so";
+#endif
   CmdArgs.push_back(Args.MakeArgString(Plugin));
 
   // Try to pass driver level flags relevant to LTO code generation down to
@@ -9927,14 +9932,17 @@ void dragonfly::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   Args.AddAllArgs(CmdArgs,
                   {options::OPT_L, options::OPT_T_Group, options::OPT_e});
 
+  if (D.isUsingLTO())
+    AddGoldPlugin(getToolChain(), Args, CmdArgs, D.getLTOMode() == LTOK_Thin);
+
   AddLinkerInputs(getToolChain(), Inputs, Args, CmdArgs);
 
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
-    CmdArgs.push_back("-L/usr/lib/gcc50");
+    CmdArgs.push_back("-L/usr/lib/gcc50"); // XXX gcc 7.0 import
 
     if (!Args.hasArg(options::OPT_static)) {
       CmdArgs.push_back("-rpath");
-      CmdArgs.push_back("/usr/lib/gcc50");
+      CmdArgs.push_back("/usr/lib/gcc50"); // XXX gcc 7.0 import
     }
 
     if (D.CCCIsCXX()) {
