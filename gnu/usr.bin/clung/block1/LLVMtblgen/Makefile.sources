@@ -1,0 +1,56 @@
+# Support sources
+LLVM_SRCDIRS+=	lib/Support
+SRCS+=	APInt.cpp \
+	CommandLine.cpp \
+	ConvertUTF.c \
+	ConvertUTFWrapper.cpp \
+	Debug.cpp \
+	Errno.cpp \
+	ErrorHandling.cpp \
+	FoldingSet.cpp \
+	FormattedStream.cpp \
+	Hashing.cpp \
+	Host.cpp \
+	IntEqClasses.cpp \
+	Locale.cpp \
+	ManagedStatic.cpp \
+	MemoryBuffer.cpp \
+	Mutex.cpp \
+	Path.cpp \
+	PrettyStackTrace.cpp \
+	Process.cpp \
+	Program.cpp \
+	Regex.cpp \
+	Signals.cpp \
+	SmallPtrSet.cpp \
+	SmallVector.cpp \
+	SourceMgr.cpp \
+	StringExtras.cpp \
+	StringMap.cpp \
+	StringRef.cpp \
+	StringSaver.cpp \
+	TargetParser.cpp \
+	Threading.cpp \
+	TimeValue.cpp \
+	ToolOutputFile.cpp \
+	Triple.cpp \
+	Twine.cpp \
+	Unicode.cpp \
+	circular_raw_ostream.cpp \
+	raw_ostream.cpp \
+	regcomp.c \
+	regerror.c \
+	regexec.c \
+	regfree.c \
+	regstrlcpy.c
+
+# TableGen sources
+LLVM_SRCDIRS += lib/TableGen
+SRCS+=	zLTG_Error.cpp \
+	Main.cpp \
+	Record.cpp \
+	SetTheory.cpp \
+	StringMatcher.cpp \
+	TableGenBackend.cpp \
+	TGLexer.cpp \
+	TGParser.cpp

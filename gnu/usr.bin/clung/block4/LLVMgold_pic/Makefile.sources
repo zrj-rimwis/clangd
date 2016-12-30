@@ -1,0 +1,757 @@
+#LIB=	LLVMLTO
+LLVM_SRCDIRS+= lib/LTO
+SRCS+=	LTO.cpp \
+	LTOModule.cpp \
+	LTOCodeGenerator.cpp \
+	UpdateCompilerUsed.cpp \
+	ThinLTOCodeGenerator.cpp
+
+#LIB=	LLVMAnalysis
+LLVM_SRCDIRS+= lib/Analysis
+SRCS+=	AliasAnalysis.cpp \
+	AliasAnalysisEvaluator.cpp \
+	AliasAnalysisSummary.cpp \
+	AliasSetTracker.cpp \
+	AssumptionCache.cpp \
+	BasicAliasAnalysis.cpp \
+	BlockFrequencyInfo.cpp \
+	BlockFrequencyInfoImpl.cpp \
+	BranchProbabilityInfo.cpp \
+	CFG.cpp \
+	CFGPrinter.cpp \
+	CFLAndersAliasAnalysis.cpp \
+	CFLSteensAliasAnalysis.cpp \
+	CGSCCPassManager.cpp \
+	CallGraph.cpp \
+	CallGraphSCCPass.cpp \
+	CallPrinter.cpp \
+	CaptureTracking.cpp \
+	CodeMetrics.cpp \
+	ConstantFolding.cpp \
+	CostModel.cpp \
+	Delinearization.cpp \
+	DemandedBits.cpp \
+	DependenceAnalysis.cpp \
+	DivergenceAnalysis.cpp \
+	DomPrinter.cpp \
+	DominanceFrontier.cpp \
+	EHPersonalities.cpp \
+	GlobalsModRef.cpp \
+	IVUsers.cpp \
+	IndirectCallPromotionAnalysis.cpp \
+	InlineCost.cpp \
+	InstCount.cpp \
+	InstructionSimplify.cpp \
+	Interval.cpp \
+	IntervalPartition.cpp \
+	IteratedDominanceFrontier.cpp \
+	LazyBlockFrequencyInfo.cpp \
+	LazyCallGraph.cpp \
+	LazyValueInfo.cpp \
+	Lint.cpp \
+	Loads.cpp \
+	LoopAccessAnalysis.cpp \
+	LoopInfo.cpp \
+	LoopPass.cpp \
+	LoopPassManager.cpp \
+	LoopUnrollAnalyzer.cpp \
+	MemDepPrinter.cpp \
+	MemDerefPrinter.cpp \
+	MemoryBuiltins.cpp \
+	MemoryDependenceAnalysis.cpp \
+	MemoryLocation.cpp \
+	ModuleDebugInfoPrinter.cpp \
+	ModuleSummaryAnalysis.cpp \
+	ObjCARCAliasAnalysis.cpp \
+	ObjCARCAnalysisUtils.cpp \
+	ObjCARCInstKind.cpp \
+	OptimizationDiagnosticInfo.cpp \
+	OrderedBasicBlock.cpp \
+	PHITransAddr.cpp \
+	PostDominators.cpp \
+	ProfileSummaryInfo.cpp \
+	PtrUseVisitor.cpp \
+	RegionInfo.cpp \
+	RegionPass.cpp \
+	RegionPrinter.cpp \
+	ScalarEvolution.cpp \
+	ScalarEvolutionAliasAnalysis.cpp \
+	ScalarEvolutionExpander.cpp \
+	ScalarEvolutionNormalization.cpp \
+	ScopedNoAliasAA.cpp \
+	SparsePropagation.cpp \
+	TargetLibraryInfo.cpp \
+	TargetTransformInfo.cpp \
+	TypeBasedAliasAnalysis.cpp \
+	TypeMetadataUtils.cpp \
+	ValueTracking.cpp \
+	VectorUtils.cpp
+
+#LIB=	LLVMAsmParser
+LLVM_SRCDIRS+= lib/AsmParser
+SRCS+=	LLLexer.cpp \
+	LLParser.cpp \
+	Parser.cpp
+
+#LIB=	LLVMAsmPrinter
+LLVM_SRCDIRS+= lib/CodeGen/AsmPrinter
+SRCS+=	ARMException.cpp \
+	AddressPool.cpp \
+	AsmPrinter.cpp \
+	AsmPrinterDwarf.cpp \
+	AsmPrinterInlineAsm.cpp \
+	CodeViewDebug.cpp \
+	DbgValueHistoryCalculator.cpp \
+	DebugHandlerBase.cpp \
+	DebugLocStream.cpp \
+	DIE.cpp \
+	DIEHash.cpp \
+	DwarfAccelTable.cpp \
+	DwarfCFIException.cpp \
+	DwarfCompileUnit.cpp \
+	DwarfDebug.cpp \
+	DwarfExpression.cpp \
+	DwarfFile.cpp \
+	DwarfStringPool.cpp \
+	DwarfUnit.cpp \
+	EHStreamer.cpp \
+	WinException.cpp
+
+#LIB=	LLVMBitReader
+LLVM_SRCDIRS+= lib/Bitcode/Reader
+SRCS+=	BitcodeReader.cpp \
+	BitstreamReader.cpp
+
+#LIB=	LLVMBitWriter
+LLVM_SRCDIRS+= lib/Bitcode/Writer
+SRCS+=	BitcodeWriter.cpp \
+	BitcodeWriterPass.cpp \
+	ValueEnumerator.cpp
+
+# zrj might need to separate, long time to compile
+#LIB=	LLVMCodeGen
+LLVM_SRCDIRS+= lib/CodeGen
+SRCS+=	AggressiveAntiDepBreaker.cpp \
+	AllocationOrder.cpp \
+	Analysis.cpp \
+	AtomicExpandPass.cpp \
+	BasicTargetTransformInfo.cpp \
+	BranchFolding.cpp \
+	CalcSpillWeights.cpp \
+	CallingConvLower.cpp \
+	CodeGen.cpp \
+	CodeGenPrepare.cpp \
+	CriticalAntiDepBreaker.cpp \
+	DFAPacketizer.cpp \
+	DeadMachineInstructionElim.cpp \
+	DetectDeadLanes.cpp \
+	DwarfEHPrepare.cpp \
+	EarlyIfConversion.cpp \
+	EdgeBundles.cpp \
+	ExecutionDepsFix.cpp \
+	ExpandISelPseudos.cpp \
+	ExpandPostRAPseudos.cpp \
+	FaultMaps.cpp \
+	FuncletLayout.cpp \
+	GCMetadata.cpp \
+	GCRootLowering.cpp \
+	GlobalMerge.cpp \
+	IfConversion.cpp \
+	ImplicitNullChecks.cpp \
+	InlineSpiller.cpp \
+	InterferenceCache.cpp \
+	InterleavedAccessPass.cpp \
+	IntrinsicLowering.cpp \
+	LLVMTargetMachine.cpp \
+	LatencyPriorityQueue.cpp \
+	LexicalScopes.cpp \
+	LiveDebugValues.cpp \
+	LiveDebugVariables.cpp \
+	LiveInterval.cpp \
+	LiveIntervalAnalysis.cpp \
+	LiveIntervalUnion.cpp \
+	LivePhysRegs.cpp \
+	LiveRangeCalc.cpp \
+	LiveRangeEdit.cpp \
+	LiveRegMatrix.cpp \
+	LiveStackAnalysis.cpp \
+	LiveVariables.cpp \
+	LocalStackSlotAllocation.cpp \
+	LowerEmuTLS.cpp \
+	MIRPrinter.cpp \
+	MIRPrintingPass.cpp \
+	MachineBasicBlock.cpp \
+	MachineBlockFrequencyInfo.cpp \
+	MachineBlockPlacement.cpp \
+	MachineBranchProbabilityInfo.cpp \
+	MachineCSE.cpp \
+	MachineCombiner.cpp \
+	MachineCopyPropagation.cpp \
+	MachineDominanceFrontier.cpp \
+	MachineDominators.cpp \
+	MachineFunction.cpp \
+	MachineFunctionAnalysis.cpp \
+	MachineFunctionPass.cpp \
+	MachineFunctionPrinterPass.cpp \
+	MachineInstr.cpp \
+	MachineInstrBundle.cpp \
+	MachineLICM.cpp \
+	MachineLoopInfo.cpp \
+	MachineModuleInfo.cpp \
+	MachineModuleInfoImpls.cpp \
+	MachinePassRegistry.cpp \
+	MachinePostDominators.cpp \
+	MachineRegionInfo.cpp \
+	MachineRegisterInfo.cpp \
+	MachineSSAUpdater.cpp \
+	MachineScheduler.cpp \
+	MachineSink.cpp \
+	MachineTraceMetrics.cpp \
+	MachineVerifier.cpp \
+	OptimizePHIs.cpp \
+	PHIElimination.cpp \
+	PHIEliminationUtils.cpp \
+	ParallelCG.cpp \
+	PatchableFunction.cpp \
+	PeepholeOptimizer.cpp \
+	PostRAHazardRecognizer.cpp \
+	PostRASchedulerList.cpp \
+	PreISelIntrinsicLowering.cpp \
+	ProcessImplicitDefs.cpp \
+	PrologEpilogInserter.cpp \
+	PseudoSourceValue.cpp \
+	RegAllocBase.cpp \
+	RegAllocBasic.cpp \
+	RegAllocFast.cpp \
+	RegAllocGreedy.cpp \
+	RegAllocPBQP.cpp \
+	RegUsageInfoCollector.cpp \
+	RegUsageInfoPropagate.cpp \
+	RegisterClassInfo.cpp \
+	RegisterCoalescer.cpp \
+	RegisterPressure.cpp \
+	RegisterScavenging.cpp \
+	RegisterUsageInfo.cpp \
+	RenameIndependentSubregs.cpp \
+	SafeStack.cpp \
+	SafeStackColoring.cpp \
+	SafeStackLayout.cpp \
+	ScheduleDAG.cpp \
+	ScheduleDAGInstrs.cpp \
+	ScheduleDAGPrinter.cpp \
+	ScoreboardHazardRecognizer.cpp \
+	ShadowStackGCLowering.cpp \
+	ShrinkWrap.cpp \
+	SjLjEHPrepare.cpp \
+	SlotIndexes.cpp \
+	SpillPlacement.cpp \
+	SplitKit.cpp \
+	StackColoring.cpp \
+	StackMapLivenessAnalysis.cpp \
+	StackMaps.cpp \
+	StackProtector.cpp \
+	StackSlotColoring.cpp \
+	TailDuplication.cpp \
+	TailDuplicator.cpp \
+	TargetFrameLoweringImpl.cpp \
+	TargetInstrInfo.cpp \
+	TargetLoweringBase.cpp \
+	TargetLoweringObjectFileImpl.cpp \
+	TargetOptionsImpl.cpp \
+	TargetPassConfig.cpp \
+	TargetRegisterInfo.cpp \
+	TargetSchedule.cpp \
+	TwoAddressInstructionPass.cpp \
+	UnreachableBlockElim.cpp \
+	VirtRegMap.cpp \
+	WinEHPrepare.cpp \
+	XRayInstrumentation.cpp
+
+#LIB=	LLVMCore
+LLVM_SRCDIRS+= lib/IR
+SRCS+=	AsmWriter.cpp \
+	Attributes.cpp \
+	AutoUpgrade.cpp \
+	BasicBlock.cpp \
+	Comdat.cpp \
+	ConstantFold.cpp \
+	ConstantRange.cpp \
+	Constants.cpp \
+	Core.cpp \
+	DIBuilder.cpp \
+	DataLayout.cpp \
+	DebugInfo.cpp \
+	DebugInfoMetadata.cpp \
+	DebugLoc.cpp \
+	DiagnosticInfo.cpp \
+	DiagnosticPrinter.cpp \
+	Dominators.cpp \
+	Function.cpp \
+	GCOV.cpp \
+	GVMaterializer.cpp \
+	Globals.cpp \
+	IRBuilder.cpp \
+	IRPrintingPasses.cpp \
+	InlineAsm.cpp \
+	Instruction.cpp \
+	Instructions.cpp \
+	IntrinsicInst.cpp \
+	LLVMContext.cpp \
+	LLVMContextImpl.cpp \
+	LegacyPassManager.cpp \
+	MDBuilder.cpp \
+	Mangler.cpp \
+	Metadata.cpp \
+	zLIR_Module.cpp \
+	ModuleSummaryIndex.cpp \
+	Operator.cpp \
+	OptBisect.cpp \
+	Pass.cpp \
+	PassManager.cpp \
+	PassRegistry.cpp \
+	ProfileSummary.cpp \
+	Statepoint.cpp \
+	Type.cpp \
+	TypeFinder.cpp \
+	Use.cpp \
+	User.cpp \
+	Value.cpp \
+	ValueSymbolTable.cpp \
+	ValueTypes.cpp \
+	Verifier.cpp
+
+#LIB=	LLVMIRReader
+LLVM_SRCDIRS+= lib/IRReader
+SRCS+=	IRReader.cpp
+
+#LIB=	LLVMInstCombine
+LLVM_SRCDIRS+= lib/Transforms/InstCombine
+SRCS+=	InstCombineAddSub.cpp \
+	InstCombineAndOrXor.cpp \
+	InstCombineCalls.cpp \
+	InstCombineCasts.cpp \
+	InstCombineCompares.cpp \
+	InstCombineLoadStoreAlloca.cpp \
+	InstCombineMulDivRem.cpp \
+	InstCombinePHI.cpp \
+	InstCombineSelect.cpp \
+	InstCombineShifts.cpp \
+	InstCombineSimplifyDemanded.cpp \
+	InstCombineVectorOps.cpp \
+	InstructionCombining.cpp
+
+# maybe not needed
+#LIB=	LLVMInstrumentation
+LLVM_SRCDIRS+= lib/Transforms/Instrumentation
+SRCS+=	AddressSanitizer.cpp \
+	BoundsChecking.cpp \
+	DataFlowSanitizer.cpp \
+	EfficiencySanitizer.cpp \
+	GCOVProfiling.cpp \
+	IndirectCallPromotion.cpp \
+	InstrProfiling.cpp \
+	Instrumentation.cpp \
+	MemorySanitizer.cpp \
+	PGOInstrumentation.cpp \
+	SanitizerCoverage.cpp \
+	ThreadSanitizer.cpp
+
+# maybe not needed
+#LIB=	LLVMLinker
+LLVM_SRCDIRS+= lib/Linker
+SRCS+=	IRMover.cpp \
+	LinkModules.cpp
+
+#LIB=	LLVMMC
+LLVM_SRCDIRS+= lib/MC
+SRCS+=	ConstantPools.cpp \
+	ELFObjectWriter.cpp \
+	MCAsmBackend.cpp \
+	MCAsmInfo.cpp \
+	MCAsmInfoCOFF.cpp \
+	MCAsmInfoDarwin.cpp \
+	MCAsmInfoELF.cpp \
+	MCAsmStreamer.cpp \
+	MCAssembler.cpp \
+	MCCodeEmitter.cpp \
+	MCCodeView.cpp \
+	MCContext.cpp \
+	MCDwarf.cpp \
+	MCELFObjectTargetWriter.cpp \
+	MCELFStreamer.cpp \
+	MCExpr.cpp \
+	MCFragment.cpp \
+	MCInst.cpp \
+	MCInstPrinter.cpp \
+	MCInstrAnalysis.cpp \
+	MCInstrDesc.cpp \
+	MCLinkerOptimizationHint.cpp \
+	MCMachOStreamer.cpp \
+	MCMachObjectTargetWriter.cpp \
+	MCNullStreamer.cpp \
+	MCObjectFileInfo.cpp \
+	MCObjectStreamer.cpp \
+	MCObjectWriter.cpp \
+	MCRegisterInfo.cpp \
+	MCSchedule.cpp \
+	MCSection.cpp \
+	MCSectionCOFF.cpp \
+	MCSectionELF.cpp \
+	MCSectionMachO.cpp \
+	MCStreamer.cpp \
+	MCSubtargetInfo.cpp \
+	MCSymbol.cpp \
+	MCSymbolELF.cpp \
+	MCTargetOptions.cpp \
+	MCValue.cpp \
+	MCWin64EH.cpp \
+	MCWinEH.cpp \
+	MachObjectWriter.cpp \
+	StringTableBuilder.cpp \
+	SubtargetFeature.cpp \
+	WinCOFFObjectWriter.cpp \
+	WinCOFFStreamer.cpp \
+
+#LIB=	LLVMMCDisassembler
+LLVM_SRCDIRS+= lib/MC/MCDisassembler
+SRCS+=	MCRelocationInfo.cpp
+
+#LIB=	LLVMMCParser
+LLVM_SRCDIRS+= lib/MC/MCParser
+SRCS+=	AsmLexer.cpp \
+	AsmParser.cpp \
+	COFFAsmParser.cpp \
+	DarwinAsmParser.cpp \
+	ELFAsmParser.cpp \
+	MCAsmLexer.cpp \
+	MCAsmParser.cpp \
+	MCAsmParserExtension.cpp \
+	MCTargetAsmParser.cpp
+
+#LIB=	LLVMipo
+LLVM_SRCDIRS+= lib/Transforms/IPO
+SRCS+=	ArgumentPromotion.cpp \
+	BarrierNoopPass.cpp \
+	ConstantMerge.cpp \
+	CrossDSOCFI.cpp \
+	DeadArgumentElimination.cpp \
+	ElimAvailExtern.cpp \
+	ExtractGV.cpp \
+	ForceFunctionAttrs.cpp \
+	FunctionAttrs.cpp \
+	FunctionImport.cpp \
+	GlobalDCE.cpp \
+	GlobalOpt.cpp \
+	IPConstantPropagation.cpp \
+	InferFunctionAttrs.cpp \
+	InlineAlways.cpp \
+	InlineSimple.cpp \
+	Inliner.cpp \
+	Internalize.cpp \
+	LoopExtractor.cpp \
+	LowerTypeTests.cpp \
+	MergeFunctions.cpp \
+	PartialInlining.cpp \
+	PassManagerBuilder.cpp \
+	PruneEH.cpp \
+	SampleProfile.cpp \
+	StripDeadPrototypes.cpp \
+	StripSymbols.cpp \
+	WholeProgramDevirt.cpp
+
+# maybe not needed
+#LIB=	LLVMObjCARCOpts
+LLVM_SRCDIRS+= lib/Transforms/ObjCARC
+SRCS+=	DependencyAnalysis.cpp \
+	ObjCARCAPElim.cpp \
+	ObjCARCContract.cpp \
+	ObjCARCExpand.cpp \
+	ObjCARCOpts.cpp \
+	ProvenanceAnalysis.cpp \
+	ProvenanceAnalysisEvaluator.cpp \
+	PtrState.cpp
+
+#LIB=	LLVMObject
+LLVM_SRCDIRS+= lib/Object
+SRCS+=	Archive.cpp \
+	ArchiveWriter.cpp \
+	Binary.cpp \
+	COFFObjectFile.cpp \
+	ELF.cpp \
+	ELFObjectFile.cpp \
+	zLO_Error.cpp \
+	IRObjectFile.cpp \
+	MachOObjectFile.cpp \
+	MachOUniversal.cpp \
+	ModuleSummaryIndexObjectFile.cpp \
+	ObjectFile.cpp \
+	RecordStreamer.cpp \
+	SymbolicFile.cpp \
+
+#LIB=	LLVMProfileData
+LLVM_SRCDIRS+= lib/ProfileData
+SRCS+=	InstrProf.cpp \
+	InstrProfReader.cpp \
+	InstrProfWriter.cpp \
+	ProfileSummaryBuilder.cpp \
+	SampleProf.cpp \
+	SampleProfReader.cpp \
+	SampleProfWriter.cpp
+
+#LIB=	LLVMSupport
+LLVM_SRCDIRS+= lib/Support
+SRCS+=	APFloat.cpp \
+	APInt.cpp \
+	APSInt.cpp \
+	ARMBuildAttrs.cpp \
+	Allocator.cpp \
+	BlockFrequency.cpp \
+	BranchProbability.cpp \
+	CachePruning.cpp \
+	CommandLine.cpp \
+	Compression.cpp \
+	ConvertUTF.c \
+	ConvertUTFWrapper.cpp \
+	CrashRecoveryContext.cpp \
+	DAGDeltaAlgorithm.cpp \
+	DataExtractor.cpp \
+	Debug.cpp \
+	DeltaAlgorithm.cpp \
+	Dwarf.cpp \
+	DynamicLibrary.cpp \
+	Errno.cpp \
+	zLS_Error.cpp \
+	ErrorHandling.cpp \
+	FoldingSet.cpp \
+	FormattedStream.cpp \
+	GraphWriter.cpp \
+	Hashing.cpp \
+	Host.cpp \
+	IntEqClasses.cpp \
+	IntervalMap.cpp \
+	JamCRC.cpp \
+	LEB128.cpp \
+	LineIterator.cpp \
+	Locale.cpp \
+	LockFileManager.cpp \
+	MD5.cpp \
+	ManagedStatic.cpp \
+	MathExtras.cpp \
+	MemoryBuffer.cpp \
+	MemoryObject.cpp \
+	Mutex.cpp \
+	Options.cpp \
+	Path.cpp \
+	PrettyStackTrace.cpp \
+	Process.cpp \
+	Program.cpp \
+	RWMutex.cpp \
+	RandomNumberGenerator.cpp \
+	Regex.cpp \
+	SHA1.cpp \
+	ScaledNumber.cpp \
+	ScopedPrinter.cpp \
+	SearchForAddressOfSpecialSymbol.cpp \
+	Signals.cpp \
+	SmallPtrSet.cpp \
+	SmallVector.cpp \
+	SourceMgr.cpp \
+	SpecialCaseList.cpp \
+	Statistic.cpp \
+	StreamingMemoryObject.cpp \
+	StringExtras.cpp \
+	StringMap.cpp \
+	StringRef.cpp \
+	StringSaver.cpp \
+	TargetParser.cpp \
+	TargetRegistry.cpp \
+	ThreadLocal.cpp \
+	Threading.cpp \
+	TimeValue.cpp \
+	Timer.cpp \
+	ToolOutputFile.cpp \
+	Triple.cpp \
+	Twine.cpp \
+	Unicode.cpp \
+	YAMLParser.cpp \
+	YAMLTraits.cpp \
+	circular_raw_ostream.cpp \
+	raw_os_ostream.cpp \
+	raw_ostream.cpp \
+	regcomp.c \
+	regerror.c \
+	regexec.c \
+	regfree.c \
+	regstrlcpy.c
+
+#LIB=	LLVMSelectionDAG
+LLVM_SRCDIRS+= lib/CodeGen/SelectionDAG
+SRCS+=	DAGCombiner.cpp \
+	FastISel.cpp \
+	FunctionLoweringInfo.cpp \
+	InstrEmitter.cpp \
+	LegalizeDAG.cpp \
+	LegalizeFloatTypes.cpp \
+	LegalizeIntegerTypes.cpp \
+	LegalizeTypes.cpp \
+	LegalizeTypesGeneric.cpp \
+	LegalizeVectorOps.cpp \
+	LegalizeVectorTypes.cpp \
+	ResourcePriorityQueue.cpp \
+	ScheduleDAGFast.cpp \
+	ScheduleDAGRRList.cpp \
+	ScheduleDAGSDNodes.cpp \
+	ScheduleDAGVLIW.cpp \
+	SelectionDAG.cpp \
+	SelectionDAGBuilder.cpp \
+	SelectionDAGDumper.cpp \
+	SelectionDAGISel.cpp \
+	SelectionDAGPrinter.cpp \
+	SelectionDAGTargetInfo.cpp \
+	StatepointLowering.cpp \
+	TargetLowering.cpp
+
+#LIB=	LLVMTarget
+LLVM_SRCDIRS+= lib/Target
+SRCS+=	Target.cpp \
+	TargetLoweringObjectFile.cpp \
+	TargetMachine.cpp \
+	TargetMachineC.cpp \
+	TargetRecip.cpp \
+	TargetSubtargetInfo.cpp
+
+#LIB=	LLVMTransformUtils
+LLVM_SRCDIRS+= lib/Transforms/Utils
+SRCS+=	ASanStackFrameLayout.cpp \
+	AddDiscriminators.cpp \
+	BasicBlockUtils.cpp \
+	BreakCriticalEdges.cpp \
+	BuildLibCalls.cpp \
+	BypassSlowDivision.cpp \
+	CloneFunction.cpp \
+	CloneModule.cpp \
+	CmpInstAnalysis.cpp \
+	CodeExtractor.cpp \
+	CtorUtils.cpp \
+	DemoteRegToStack.cpp \
+	Evaluator.cpp \
+	FlattenCFG.cpp \
+	FunctionImportUtils.cpp \
+	GlobalStatus.cpp \
+	InlineFunction.cpp \
+	InstructionNamer.cpp \
+	IntegerDivision.cpp \
+	LCSSA.cpp \
+	Local.cpp \
+	LoopSimplify.cpp \
+	LoopUnroll.cpp \
+	LoopUnrollRuntime.cpp \
+	LoopUtils.cpp \
+	LoopVersioning.cpp \
+	LowerInvoke.cpp \
+	LowerSwitch.cpp \
+	Mem2Reg.cpp \
+	MemorySSA.cpp \
+	MetaRenamer.cpp \
+	ModuleUtils.cpp \
+	NameAnonFunctions.cpp \
+	PromoteMemoryToRegister.cpp \
+	SSAUpdater.cpp \
+	SanitizerStats.cpp \
+	SimplifyCFG.cpp \
+	SimplifyIndVar.cpp \
+	SimplifyInstructions.cpp \
+	SimplifyLibCalls.cpp \
+	SplitModule.cpp \
+	SymbolRewriter.cpp \
+	UnifyFunctionExitNodes.cpp \
+	ValueMapper.cpp
+
+#LIB=	LLVMVectorize
+LLVM_SRCDIRS+= lib/Transforms/Vectorize
+SRCS+=	BBVectorize.cpp \
+	LoadStoreVectorizer.cpp \
+	LoopVectorize.cpp \
+	SLPVectorizer.cpp
+
+## snowflake
+CFLAGS+= -I${TOP_LLVM}/lib/Target/X86
+#LIB=	LLVMX86AsmParser
+LLVM_SRCDIRS+= lib/Target/X86/AsmParser
+SRCS+=	X86AsmInstrumentation.cpp \
+	X86AsmParser.cpp
+
+#LIB=	LLVMX86AsmPrinter
+LLVM_SRCDIRS+= lib/Target/X86/InstPrinter
+SRCS+=	X86ATTInstPrinter.cpp \
+	X86IntelInstPrinter.cpp \
+	X86InstComments.cpp
+
+#LIB=	LLVMX86CodeGen
+LLVM_SRCDIRS+= lib/Target/X86
+SRCS+=	X86AsmPrinter.cpp \
+	X86CallFrameOptimization.cpp \
+	X86ExpandPseudo.cpp \
+	X86FastISel.cpp \
+	X86FixupBWInsts.cpp \
+	X86FixupLEAs.cpp \
+	X86FixupSetCC.cpp \
+	X86FloatingPoint.cpp \
+	X86FrameLowering.cpp \
+	X86ISelDAGToDAG.cpp \
+	X86ISelLowering.cpp \
+	X86InstrInfo.cpp \
+	X86MCInstLower.cpp \
+	X86MachineFunctionInfo.cpp \
+	X86OptimizeLEAs.cpp \
+	X86PadShortFunction.cpp \
+	X86RegisterInfo.cpp \
+	X86SelectionDAGInfo.cpp \
+	X86ShuffleDecodeConstantPool.cpp \
+	X86Subtarget.cpp \
+	X86TargetMachine.cpp \
+	X86TargetObjectFile.cpp \
+	X86TargetTransformInfo.cpp \
+	X86VZeroUpper.cpp \
+	X86WinAllocaExpander.cpp \
+	X86WinEHState.cpp
+
+#LIB=	LLVMX86Desc
+LLVM_SRCDIRS+= lib/Target/X86/MCTargetDesc
+SRCS+=	X86AsmBackend.cpp \
+	X86ELFObjectWriter.cpp \
+	X86MCAsmInfo.cpp \
+	X86MCCodeEmitter.cpp \
+	X86MCTargetDesc.cpp \
+	X86MachObjectWriter.cpp \
+	X86WinCOFFObjectWriter.cpp \
+	X86WinCOFFStreamer.cpp
+
+#LIB=	LLVMX86Info
+LLVM_SRCDIRS+= lib/Target/X86/TargetInfo
+SRCS+=	X86TargetInfo.cpp
+
+#LIB=	LLVMX86Utils
+LLVM_SRCDIRS+= lib/Target/X86/Utils
+SRCS+=	X86ShuffleDecode.cpp
+
+#LIB= LLVMCodeView
+LLVM_SRCDIRS+= lib/DebugInfo/CodeView
+SRCS+=	ByteStream.cpp \
+	CVTypeVisitor.cpp \
+	CodeViewError.cpp \
+	FieldListRecordBuilder.cpp \
+	Line.cpp \
+	ListRecordBuilder.cpp \
+	MemoryTypeTableBuilder.cpp \
+	ModuleSubstream.cpp \
+	ModuleSubstreamVisitor.cpp \
+	RecordSerialization.cpp \
+	StreamReader.cpp \
+	StreamWriter.cpp \
+	SymbolDumper.cpp \
+	TypeDumper.cpp \
+	TypeRecord.cpp \
+	TypeRecordBuilder.cpp \
+	TypeStreamMerger.cpp \
+	TypeTableBuilder.cpp

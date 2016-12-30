@@ -1,0 +1,357 @@
+#LIB=	clangAST
+CLUNG_SRCDIRS+= lib/AST
+SRCS+=	APValue.cpp \
+	ASTConsumer.cpp \
+	ASTContext.cpp \
+	ASTDiagnostic.cpp \
+	ASTDumper.cpp \
+	ASTImporter.cpp \
+	ASTTypeTraits.cpp \
+	AttrImpl.cpp \
+	CXXInheritance.cpp \
+	Comment.cpp \
+	CommentBriefParser.cpp \
+	CommentCommandTraits.cpp \
+	CommentLexer.cpp \
+	CommentParser.cpp \
+	CommentSema.cpp \
+	Decl.cpp \
+	DeclBase.cpp \
+	DeclCXX.cpp \
+	DeclFriend.cpp \
+	DeclGroup.cpp \
+	DeclObjC.cpp \
+	DeclOpenMP.cpp \
+	DeclPrinter.cpp \
+	DeclTemplate.cpp \
+	DeclarationName.cpp \
+	Expr.cpp \
+	ExprClassification.cpp \
+	ExprConstant.cpp \
+	ExprCXX.cpp \
+	ExprObjC.cpp \
+	ExternalASTSource.cpp \
+	InheritViz.cpp \
+	zCA_ItaniumCXXABI.cpp \
+	ItaniumMangle.cpp \
+	Mangle.cpp \
+	zCA_MicrosoftCXXABI.cpp \
+	MicrosoftMangle.cpp \
+	NestedNameSpecifier.cpp \
+	NSAPI.cpp \
+	OpenMPClause.cpp \
+	ParentMap.cpp \
+	RawCommentList.cpp \
+	RecordLayout.cpp \
+	RecordLayoutBuilder.cpp \
+	SelectorLocationsKind.cpp \
+	Stmt.cpp \
+	StmtCXX.cpp \
+	StmtIterator.cpp \
+	StmtObjC.cpp \
+	StmtOpenMP.cpp \
+	StmtPrinter.cpp \
+	StmtProfile.cpp \
+	StmtViz.cpp \
+	TemplateBase.cpp \
+	TemplateName.cpp \
+	Type.cpp \
+	TypeLoc.cpp \
+	TypePrinter.cpp \
+	VTableBuilder.cpp \
+	VTTBuilder.cpp
+
+#LIB=	clangAnalysis
+CLUNG_SRCDIRS+= lib/Analysis
+SRCS+=	AnalysisDeclContext.cpp \
+	BodyFarm.cpp \
+	CFG.cpp \
+	CFGReachabilityAnalysis.cpp \
+	CFGStmtMap.cpp \
+	CocoaConventions.cpp \
+	Consumed.cpp \
+	FormatString.cpp \
+	LiveVariables.cpp \
+	ObjCNoReturn.cpp \
+	PostOrderCFGView.cpp \
+	PrintfFormatString.cpp \
+	PseudoConstantAnalysis.cpp \
+	ReachableCode.cpp \
+	ScanfFormatString.cpp \
+	ThreadSafety.cpp \
+	ThreadSafetyCommon.cpp \
+	ThreadSafetyTIL.cpp \
+	UninitializedValues.cpp
+
+#LIB=	clangBasic
+CLUNG_SRCDIRS+= lib/Basic
+SRCS+=	Attributes.cpp \
+	Builtins.cpp \
+	CharInfo.cpp \
+	Cuda.cpp \
+	Diagnostic.cpp \
+	DiagnosticIDs.cpp \
+	DiagnosticOptions.cpp \
+	FileManager.cpp \
+	FileSystemStatCache.cpp \
+	IdentifierTable.cpp \
+	LangOptions.cpp \
+	zCB_Module.cpp \
+	ObjCRuntime.cpp \
+	OpenMPKinds.cpp \
+	OperatorPrecedence.cpp \
+	SanitizerBlacklist.cpp \
+	Sanitizers.cpp \
+	SourceLocation.cpp \
+	SourceManager.cpp \
+	zCB_TargetInfo.cpp \
+	Targets.cpp \
+	TokenKinds.cpp \
+	Version.cpp \
+	VersionTuple.cpp \
+	VirtualFileSystem.cpp \
+	Warnings.cpp
+
+#LIB=	clangCodeGen
+CLUNG_SRCDIRS+= lib/CodeGen
+SRCS+=	BackendUtil.cpp \
+	CGAtomic.cpp \
+	CGBlocks.cpp \
+	CGBuiltin.cpp \
+	CGCUDABuiltin.cpp \
+	CGCUDANV.cpp \
+	CGCUDARuntime.cpp \
+	CGCXX.cpp \
+	CGCXXABI.cpp \
+	CGCall.cpp \
+	CGClass.cpp \
+	CGCleanup.cpp \
+	CGDebugInfo.cpp \
+	CGDecl.cpp \
+	CGDeclCXX.cpp \
+	CGException.cpp \
+	CGExpr.cpp \
+	CGExprAgg.cpp \
+	CGExprCXX.cpp \
+	CGExprComplex.cpp \
+	CGExprConstant.cpp \
+	CGExprScalar.cpp \
+	CGLoopInfo.cpp \
+	CGObjC.cpp \
+	CGObjCGNU.cpp \
+	CGObjCMac.cpp \
+	CGObjCRuntime.cpp \
+	CGOpenCLRuntime.cpp \
+	CGOpenMPRuntime.cpp \
+	CGOpenMPRuntimeNVPTX.cpp \
+	CGRecordLayoutBuilder.cpp \
+	CGStmt.cpp \
+	CGStmtOpenMP.cpp \
+	CGVTT.cpp \
+	CGVTables.cpp \
+	CodeGenAction.cpp \
+	CodeGenFunction.cpp \
+	CodeGenModule.cpp \
+	CodeGenPGO.cpp \
+	CodeGenTBAA.cpp \
+	CodeGenTypes.cpp \
+	CoverageMappingGen.cpp \
+	zCCG_ItaniumCXXABI.cpp \
+	zCCG_MicrosoftCXXABI.cpp \
+	ModuleBuilder.cpp \
+	ObjectFilePCHContainerOperations.cpp \
+	SanitizerMetadata.cpp \
+	SwiftCallingConv.cpp \
+	zCCG_TargetInfo.cpp
+
+#LIB=	clangDriver
+CLUNG_SRCDIRS+= lib/Driver
+SRCS+=	Action.cpp \
+	Compilation.cpp \
+	CrossWindowsToolChain.cpp \
+	Driver.cpp \
+	DriverOptions.cpp \
+	Job.cpp \
+	MSVCToolChain.cpp \
+	MinGWToolChain.cpp \
+	Multilib.cpp \
+	Phases.cpp \
+	SanitizerArgs.cpp \
+	Tool.cpp \
+	ToolChain.cpp \
+	ToolChains.cpp \
+	Tools.cpp \
+	Types.cpp
+
+#LIB=	clangEdit
+CLUNG_SRCDIRS+= lib/Edit
+SRCS+=	Commit.cpp \
+	EditedSource.cpp \
+	RewriteObjCFoundationAPI.cpp
+
+#LIB=	clangFrontend
+CLUNG_SRCDIRS+= lib/Frontend
+SRCS+=	ASTConsumers.cpp \
+	ASTMerge.cpp \
+	ASTUnit.cpp \
+	CacheTokens.cpp \
+	ChainedDiagnosticConsumer.cpp \
+	ChainedIncludesSource.cpp \
+	CodeGenOptions.cpp \
+	CompilerInstance.cpp \
+	CompilerInvocation.cpp \
+	CreateInvocationFromCommandLine.cpp \
+	DependencyFile.cpp \
+	DependencyGraph.cpp \
+	DiagnosticRenderer.cpp \
+	FrontendAction.cpp \
+	zCF_FrontendActions.cpp \
+	FrontendOptions.cpp \
+	HeaderIncludeGen.cpp \
+	InitHeaderSearch.cpp \
+	InitPreprocessor.cpp \
+	LangStandards.cpp \
+	LayoutOverrideSource.cpp \
+	LogDiagnosticPrinter.cpp \
+	ModuleDependencyCollector.cpp \
+	MultiplexConsumer.cpp \
+	PCHContainerOperations.cpp \
+	PrintPreprocessedOutput.cpp \
+	SerializedDiagnosticPrinter.cpp \
+	SerializedDiagnosticReader.cpp \
+	TestModuleFileExtension.cpp \
+	TextDiagnostic.cpp \
+	TextDiagnosticBuffer.cpp \
+	TextDiagnosticPrinter.cpp \
+	VerifyDiagnosticConsumer.cpp
+
+#LIB=	clangFrontendTool
+CLUNG_SRCDIRS+= lib/FrontendTool
+SRCS+=	ExecuteCompilerInvocation.cpp
+
+#LIB=	clangLex
+CLUNG_SRCDIRS+= lib/Lex
+SRCS+=	HeaderMap.cpp \
+	HeaderSearch.cpp \
+	Lexer.cpp \
+	LiteralSupport.cpp \
+	MacroArgs.cpp \
+	MacroInfo.cpp \
+	ModuleMap.cpp \
+	PPCaching.cpp \
+	PPCallbacks.cpp \
+	PPConditionalDirectiveRecord.cpp \
+	PPDirectives.cpp \
+	PPExpressions.cpp \
+	PPLexerChange.cpp \
+	PPMacroExpansion.cpp \
+	PTHLexer.cpp \
+	Pragma.cpp \
+	PreprocessingRecord.cpp \
+	Preprocessor.cpp \
+	PreprocessorLexer.cpp \
+	ScratchBuffer.cpp \
+	TokenConcatenation.cpp \
+	TokenLexer.cpp
+
+#LIB=	clangParse
+CLUNG_SRCDIRS+= lib/Parse
+SRCS+=	ParseAST.cpp \
+	ParseCXXInlineMethods.cpp \
+	ParseDecl.cpp \
+	ParseDeclCXX.cpp \
+	ParseExpr.cpp \
+	ParseExprCXX.cpp \
+	ParseInit.cpp \
+	ParseObjc.cpp \
+	ParseOpenMP.cpp \
+	ParsePragma.cpp \
+	ParseStmt.cpp \
+	ParseStmtAsm.cpp \
+	ParseTemplate.cpp \
+	ParseTentative.cpp \
+	Parser.cpp
+
+# disable ?
+#LIB=	clangRewrite
+CLUNG_SRCDIRS+= lib/Rewrite
+SRCS+=	DeltaTree.cpp \
+	HTMLRewrite.cpp \
+	RewriteRope.cpp \
+	Rewriter.cpp \
+	TokenRewriter.cpp
+
+# disable ?
+#LIB=	clangRewriteFrontend
+CLUNG_SRCDIRS+= lib/Frontend/Rewrite
+SRCS+=	FixItRewriter.cpp \
+	zCFR_FrontendActions.cpp \
+	HTMLPrint.cpp \
+	InclusionRewriter.cpp \
+	RewriteMacros.cpp \
+	RewriteTest.cpp
+
+#LIB=	clangSema
+CLUNG_SRCDIRS+= lib/Sema
+SRCS+=	AnalysisBasedWarnings.cpp \
+	AttributeList.cpp \
+	CodeCompleteConsumer.cpp \
+	DeclSpec.cpp \
+	DelayedDiagnostic.cpp \
+	IdentifierResolver.cpp \
+	JumpDiagnostics.cpp \
+	MultiplexExternalSemaSource.cpp \
+	Scope.cpp \
+	ScopeInfo.cpp \
+	Sema.cpp \
+	SemaAccess.cpp \
+	SemaAttr.cpp \
+	SemaCUDA.cpp \
+	SemaCXXScopeSpec.cpp \
+	SemaCast.cpp \
+	SemaChecking.cpp \
+	SemaCodeComplete.cpp \
+	SemaConsumer.cpp \
+	SemaCoroutine.cpp \
+	SemaDecl.cpp \
+	SemaDeclAttr.cpp \
+	SemaDeclCXX.cpp \
+	SemaDeclObjC.cpp \
+	SemaExceptionSpec.cpp \
+	SemaExpr.cpp \
+	SemaExprCXX.cpp \
+	SemaExprMember.cpp \
+	SemaExprObjC.cpp \
+	SemaFixItUtils.cpp \
+	SemaInit.cpp \
+	SemaLambda.cpp \
+	SemaLookup.cpp \
+	SemaObjCProperty.cpp \
+	SemaOpenMP.cpp \
+	SemaOverload.cpp \
+	SemaPseudoObject.cpp \
+	SemaStmt.cpp \
+	SemaStmtAsm.cpp \
+	SemaStmtAttr.cpp \
+	SemaTemplate.cpp \
+	SemaTemplateDeduction.cpp \
+	SemaTemplateInstantiate.cpp \
+	SemaTemplateInstantiateDecl.cpp \
+	SemaTemplateVariadic.cpp \
+	SemaType.cpp \
+	TypeLocBuilder.cpp
+
+#LIB=	clangSerialization
+CLUNG_SRCDIRS+= lib/Serialization
+SRCS+=	ASTCommon.cpp \
+	ASTReader.cpp \
+	ASTReaderDecl.cpp \
+	ASTReaderStmt.cpp \
+	ASTWriter.cpp \
+	ASTWriterDecl.cpp \
+	ASTWriterStmt.cpp \
+	GeneratePCH.cpp \
+	GlobalModuleIndex.cpp \
+	zCS_Module.cpp \
+	ModuleFileExtension.cpp \
+	ModuleManager.cpp
