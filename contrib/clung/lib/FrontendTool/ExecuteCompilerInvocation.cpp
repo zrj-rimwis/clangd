@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/FrontendTool/Utils.h"
+#ifdef CLANG_ENABLE_ARCMT // DragonFly
 #include "clang/ARCMigrate/ARCMTActions.h"
+#endif
 #include "clang/CodeGen/CodeGenAction.h"
 #include "clang/Driver/Options.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -23,7 +25,9 @@
 #include "clang/Frontend/FrontendPluginRegistry.h"
 #include "clang/Frontend/Utils.h"
 #include "clang/Rewrite/Frontend/FrontendActions.h"
+#ifdef CLANG_ENABLE_STATIC_ANALYZER // DragonFly
 #include "clang/StaticAnalyzer/Frontend/FrontendActions.h"
+#endif
 #include "llvm/Option/OptTable.h"
 #include "llvm/Option/Option.h"
 #include "llvm/Support/DynamicLibrary.h"
