@@ -54,13 +54,13 @@
 #undef HAVE_DLD
 
 /* Define to 1 if you have the `dlerror' function. */
-#define HAVE_DLERROR 1
+#undef HAVE_DLERROR
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
+#undef HAVE_DLFCN_H
 
 /* Define if dlopen() is available on this platform. */
-#define HAVE_DLOPEN 1
+#undef HAVE_DLOPEN
 
 /* Define if you have the _dyld_func_lookup function. */
 #undef HAVE_DYLD
