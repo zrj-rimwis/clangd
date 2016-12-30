@@ -16,6 +16,8 @@
 
 #include "llvm/Support/thread.h"
 
+// No threads - nothing to see here.
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
 #ifdef _MSC_VER
 // concrt.h depends on eh.h for __uncaught_exception declaration
 // even if we disable exceptions.
@@ -133,5 +135,6 @@ private:
 #endif
 };
 }
+#endif // LLVM_ENABLE_THREADS
 
 #endif // LLVM_SUPPORT_THREAD_POOL_H

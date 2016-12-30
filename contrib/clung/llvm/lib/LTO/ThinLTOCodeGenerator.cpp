@@ -63,8 +63,10 @@ extern cl::opt<bool> LTODiscardValueNames;
 
 namespace {
 
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
 static cl::opt<int> ThreadCount("threads",
                                 cl::init(std::thread::hardware_concurrency()));
+#endif
 
 static void diagnosticHandler(const DiagnosticInfo &DI) {
   DiagnosticPrinterRawOStream DP(errs());
@@ -669,12 +671,18 @@ std::unique_ptr<MemoryBuffer> ThinLTOCodeGenerator::codegen(Module &TheModule) {
 void ThinLTOCodeGenerator::run() {
   if (CodeGenOnly) {
     // Perform only parallel codegen and return.
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
     ThreadPool Pool;
+#endif
     assert(ProducedBinaries.empty() && "The generator should not be reused");
     ProducedBinaries.resize(Modules.size());
     int count = 0;
     for (auto &ModuleBuffer : Modules) {
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
       Pool.async([&](int count) {
+#else
+      [&](int count) {
+#endif
         LLVMContext Context;
         Context.setDiscardValueNames(LTODiscardValueNames);
 
@@ -683,7 +691,11 @@ void ThinLTOCodeGenerator::run() {
 
         // CodeGen
         ProducedBinaries[count] = codegen(*TheModule);
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
       }, count++);
+#else
+      } (count++);
+#endif
     }
 
     return;
@@ -771,10 +783,16 @@ void ThinLTOCodeGenerator::run() {
 
   // Parallel optimizer + codegen
   {
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
     ThreadPool Pool(ThreadCount);
+#endif
     for (auto IndexCount : ModulesOrdering) {
       auto &ModuleBuffer = Modules[IndexCount];
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
       Pool.async([&](int count) {
+#else
+      [&](int count) {
+#endif
         auto ModuleIdentifier = ModuleBuffer.getBufferIdentifier();
         auto &ExportList = ExportLists[ModuleIdentifier];
 
@@ -819,7 +837,11 @@ void ThinLTOCodeGenerator::run() {
 
         OutputBuffer = CacheEntry.write(std::move(OutputBuffer));
         ProducedBinaries[count] = std::move(OutputBuffer);
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
       }, IndexCount);
+#else
+      }(IndexCount);
+#endif
     }
   }
 

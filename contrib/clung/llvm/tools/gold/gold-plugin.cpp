@@ -1070,11 +1070,15 @@ void CodeGen::runSplitCodeGen(const SmallString<128> &BCFilename) {
   else if (options::TheOutputType == options::OT_SAVE_TEMPS)
     Filename = output_name + ".o";
 
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
   // Note that the default parallelism is 1 instead of the
   // hardware_concurrency, as there are behavioral differences between
   // parallelism levels (e.g. symbol ordering will be different, and some uses
   // of inline asm currently have issues with parallelism >1).
   unsigned int MaxThreads = options::Parallelism ? options::Parallelism : 1;
+#else
+  const unsigned int MaxThreads = 1;
+#endif
 
   std::vector<SmallString<128>> Filenames(MaxThreads);
   std::vector<SmallString<128>> BCFilenames(MaxThreads);
@@ -1215,14 +1219,18 @@ thinLTOBackends(raw_fd_ostream *ApiFile,
   unsigned TaskCount = 0;
   std::vector<ThinLTOTaskInfo> Tasks;
   Tasks.reserve(Modules.size());
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
   unsigned int MaxThreads = options::Parallelism
                                 ? options::Parallelism
                                 : thread::hardware_concurrency();
+#endif
 
   // Create ThreadPool in nested scope so that threads will be joined
   // on destruction.
   {
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
     ThreadPool ThinLTOThreadPool(MaxThreads);
+#endif
     for (claimed_file &F : Modules) {
       // Do all the gold callbacks in the main thread, since gold is not thread
       // safe by default.
@@ -1251,12 +1259,20 @@ thinLTOBackends(raw_fd_ostream *ApiFile,
       std::unique_ptr<raw_fd_ostream> OS =
           llvm::make_unique<raw_fd_ostream>(FD, true);
 
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
       // Enqueue the task
       ThinLTOThreadPool.async(thinLTOBackendTask, std::ref(F), View, F.name,
                               ApiFile, std::ref(CombinedIndex), OS.get(),
                               TaskCount, std::ref(ModuleMap),
                               std::ref(ImportLists[F.name]),
                               std::ref(ModuleToDefinedGVSummaries[F.name]));
+#else
+      thinLTOBackendTask(std::ref(F), View, F.name,
+                              ApiFile, std::ref(CombinedIndex), OS.get(),
+                              TaskCount, std::ref(ModuleMap),
+                              std::ref(ImportLists[F.name]),
+                              std::ref(ModuleToDefinedGVSummaries[F.name]));
+#endif
 
       // Record the information needed by the task or during its cleanup
       // to a ThinLTOTaskInfo instance. For information needed by the task
