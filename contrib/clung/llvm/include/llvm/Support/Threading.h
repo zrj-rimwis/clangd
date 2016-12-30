@@ -36,6 +36,17 @@
 #include "llvm/Support/Atomic.h"
 #endif
 
+#if LLVM_THREADING_USE_STD_CALL_ONCE && defined(__DragonFly__)
+/* c++ types, careful, spooooky non std:: stuff up ahead!! */
+ extern "C" {
+# define __mapple_weak(name) static __typeof__(name) __mapple_ ## name \
+	 __attribute__((__weakref__(#name)))
+  __mapple_weak(pthread_cancel);
+  __mapple_weak(pthread_create);
+# undef __mapple_weak
+  }
+#endif
+
 namespace llvm {
   /// Returns true if LLVM is compiled with support for multi-threading, and
   /// false otherwise.
@@ -90,6 +101,17 @@ namespace llvm {
   template <typename Function, typename... Args>
   void call_once(once_flag &flag, Function &&F, Args &&... ArgList) {
 #if LLVM_THREADING_USE_STD_CALL_ONCE
+# if defined(__DragonFly__)
+/*
+ * Dear c++ developers from platforms with pthreads in main system lib, the
+ * pthread_once shouldn't be used from non threaded context in the first place.
+ * It should be a no-op for non -pthread, but looks like some code depends for
+ * it to be still called so play usual weak symbol chasing game at runtime.
+ */
+   if (&__mapple_pthread_cancel == 0 || &__mapple_pthread_create == 0) {
+      std::forward<Function>(F)(std::forward<Args>(ArgList)...);
+   } else
+# endif
     std::call_once(flag, std::forward<Function>(F),
                    std::forward<Args>(ArgList)...);
 #else

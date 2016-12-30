@@ -12,7 +12,7 @@ CXXFLAGS+=	-std=c++11 -fno-exceptions -fno-rtti
 
 LLVM_LIBS=	${.OBJDIR}/../../block1/LLVMtblgen/libLLVMtblgen.a
 
-LDADD=		-lpthread -lz -lm ${LLVM_LIBS}
+LDADD=		-lz -lm ${LLVM_LIBS}
 
 NOMAN=		yes
 
