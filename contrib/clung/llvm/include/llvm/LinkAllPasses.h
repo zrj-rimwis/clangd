@@ -47,7 +47,9 @@
 #include "llvm/Transforms/Utils/SymbolRewriter.h"
 #include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
 #include "llvm/Transforms/Vectorize.h"
+#ifndef __DragonFly__
 #include "llvm/Support/Valgrind.h"
+#endif
 #include <cstdlib>
 
 namespace {
@@ -209,7 +211,9 @@ namespace {
       llvm::AliasSetTracker X(AA);
       X.add(nullptr, 0, llvm::AAMDNodes()); // for -print-alias-sets
       (void) llvm::AreStatisticsEnabled();
+#ifndef __DragonFly__
       (void) llvm::sys::RunningOnValgrind();
+#endif
     }
   } ForcePassLinking; // Force link by creating a global definition.
 }
