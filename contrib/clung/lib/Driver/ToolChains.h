@@ -812,6 +812,8 @@ public:
   DragonFly(const Driver &D, const llvm::Triple &Triple,
             const llvm::opt::ArgList &Args);
 
+  bool HasNativeLLVMSupport() const override;
+
   bool IsMathErrnoDefault() const override { return false; }
 
 protected:
