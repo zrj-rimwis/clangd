@@ -28,7 +28,7 @@ DPADD+=	${.OBJDIR}/../../block4/${SL}/lib${SL}.a
 .endfor
 
 # host library linkage
-LDADD+=	-lpthread -lz -lm
+LDADD+=	-lz -lm
 
 CLUNG_SRCDIRS+=	tools/driver
 

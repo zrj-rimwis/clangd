@@ -15,11 +15,12 @@
 #ifndef LLVM_SUPPORT_THREADING_H
 #define LLVM_SUPPORT_THREADING_H
 
-#include "llvm/Config/llvm-config.h" // for LLVM_ON_UNIX
+#include "llvm/Config/llvm-config.h" // for LLVM_ON_UNIX && LLVM_ENABLE_THREADS
 #include "llvm/Support/Compiler.h"
 #include <ciso646> // So we can check the C++ standard lib macros.
 #include <functional>
 
+#if LLVM_ENABLE_THREADS != 0 // No threads means no. Respect user choice!!!
 // std::call_once from libc++ is used on all Unix platforms. Other
 // implementations like libstdc++ are known to have problems on NetBSD,
 // OpenBSD and PowerPC.
@@ -36,15 +37,6 @@
 #include "llvm/Support/Atomic.h"
 #endif
 
-#if LLVM_THREADING_USE_STD_CALL_ONCE && defined(__DragonFly__)
-/* c++ types, careful, spooooky non std:: stuff up ahead!! */
- extern "C" {
-# define __mapple_weak(name) static __typeof__(name) __mapple_ ## name \
-	 __attribute__((__weakref__(#name)))
-  __mapple_weak(pthread_cancel);
-  __mapple_weak(pthread_create);
-# undef __mapple_weak
-  }
 #endif
 
 namespace llvm {
@@ -66,8 +58,14 @@ namespace llvm {
   /// the thread stack.
   void llvm_execute_on_thread(void (*UserFn)(void*), void *UserData,
                               unsigned RequestedStackSize = 0);
+#if LLVM_ENABLE_THREADS == 0
+  enum InitStatus { NotRan = 0, HasCalled = 1 };
+  typedef volatile int once_flag;
+  /// This macro is the only way you should define your once flag for LLVM's
+  /// call_once.
+#define LLVM_DEFINE_ONCE_FLAG(flag) static once_flag flag = NotRan
 
-#if LLVM_THREADING_USE_STD_CALL_ONCE
+#elif LLVM_THREADING_USE_STD_CALL_ONCE
 
   typedef std::once_flag once_flag;
 
@@ -100,18 +98,13 @@ namespace llvm {
   /// \param F Function to call once.
   template <typename Function, typename... Args>
   void call_once(once_flag &flag, Function &&F, Args &&... ArgList) {
-#if LLVM_THREADING_USE_STD_CALL_ONCE
-# if defined(__DragonFly__)
-/*
- * Dear c++ developers from platforms with pthreads in main system lib, the
- * pthread_once shouldn't be used from non threaded context in the first place.
- * It should be a no-op for non -pthread, but looks like some code depends for
- * it to be still called so play usual weak symbol chasing game at runtime.
- */
-   if (&__mapple_pthread_cancel == 0 || &__mapple_pthread_create == 0) {
+#if LLVM_ENABLE_THREADS == 0
+    /* simple tracking */
+    if (flag == NotRan) {
+      flag = HasCalled;
       std::forward<Function>(F)(std::forward<Args>(ArgList)...);
-   } else
-# endif
+    }
+#elif LLVM_THREADING_USE_STD_CALL_ONCE
     std::call_once(flag, std::forward<Function>(F),
                    std::forward<Args>(ArgList)...);
 #else

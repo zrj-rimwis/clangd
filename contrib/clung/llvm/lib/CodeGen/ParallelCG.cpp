@@ -42,13 +42,20 @@ std::unique_ptr<Module> llvm::splitCodeGen(
     TargetMachine::CodeGenFileType FileType, bool PreserveLocals) {
   assert(BCOSs.empty() || BCOSs.size() == OSs.size());
 
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
   if (OSs.size() == 1) {
+#else
+  if (true) {
+    if (OSs.size() != 1)
+      report_fatal_error("zrj: hey why you no 1!!!");
+#endif
     if (!BCOSs.empty())
       WriteBitcodeToFile(M.get(), *BCOSs[0]);
     codegen(M.get(), *OSs[0], TMFactory, FileType);
     return M;
   }
 
+#if LLVM_ENABLE_THREADS // defined(__DragonFly__)
   // Create ThreadPool in nested scope so that threads will be joined
   // on destruction.
   {
@@ -96,4 +103,5 @@ std::unique_ptr<Module> llvm::splitCodeGen(
   }
 
   return {};
+#endif
 }
