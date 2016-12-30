@@ -22,7 +22,12 @@
 
 namespace llvm {
   namespace sys {
+#if defined(__GNUC__) && defined(__DragonFly__)
+/* Short circuit the dep chain. */
+    static inline void MemoryFence() { __sync_synchronize(); };
+#else
     void MemoryFence();
+#endif
 
 #ifdef _MSC_VER
     typedef long cas_flag;
