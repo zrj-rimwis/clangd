@@ -211,6 +211,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   if (HSOpts.UseStandardSystemIncludes) {
     switch (os) {
     case llvm::Triple::CloudABI:
+    case llvm::Triple::DragonFly:
     case llvm::Triple::FreeBSD:
     case llvm::Triple::NetBSD:
     case llvm::Triple::OpenBSD:
@@ -232,11 +233,16 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   // Builtin includes use #include_next directives and should be positioned
   // just prior C include dirs.
   if (HSOpts.UseBuiltinIncludes) {
+#if 0
     // Ignore the sys root, we *always* look for clang headers relative to
     // supplied path.
     SmallString<128> P = StringRef(HSOpts.ResourceDir);
     llvm::sys::path::append(P, "include");
     AddUnmappedPath(P, ExternCSystem, false);
+#else
+    /* DF_CLANG_HEADERS provided by Makefiles */
+    AddPath(DF_CLANG_HEADERS, ExternCSystem, false);
+#endif
   }
 
   // All remaining additions are for system include directories, early exit if
@@ -255,6 +261,12 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   }
 
   switch (os) {
+#ifdef DF_CLANG_HEADERS
+  /* lets see what breaks */
+  case llvm::Triple::DragonFly: {
+    break;
+  }
+#endif
   case llvm::Triple::Linux:
     llvm_unreachable("Include management is handled in the driver.");
 
@@ -411,7 +423,7 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
       break;
     }
     break;
-  case llvm::Triple::DragonFly:
+  case llvm::Triple::DragonFly: // XXX how to handle this for upcoming gcc 7.0 ?
     AddPath("/usr/include/c++/5.0", CXXSystem, false);
     break;
   case llvm::Triple::OpenBSD: {
@@ -666,8 +678,12 @@ void clang::ApplyHeaderSearchOptions(HeaderSearch &HS,
 
   if (HSOpts.UseBuiltinIncludes) {
     // Set up the builtin include directory in the module map.
+#if 0 // DragonFly
     SmallString<128> P = StringRef(HSOpts.ResourceDir);
     llvm::sys::path::append(P, "include");
+#else
+    SmallString<256> P = StringRef(DF_CLANG_HEADERS);
+#endif
     if (const DirectoryEntry *Dir = HS.getFileMgr().getDirectory(P))
       HS.getModuleMap().setBuiltinIncludeDir(Dir);
   }
