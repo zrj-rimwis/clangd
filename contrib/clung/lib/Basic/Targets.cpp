@@ -301,10 +301,7 @@ protected:
                     MacroBuilder &Builder) const override {
     // DragonFly defines; list based off of gcc output
     Builder.defineMacro("__DragonFly__");
-    Builder.defineMacro("__DragonFly_cc_version", "100001");
     Builder.defineMacro("__ELF__");
-    Builder.defineMacro("__KPRINTF_ATTRIBUTE__");
-    Builder.defineMacro("__tune_i386__");
     DefineStd(Builder, "unix", Opts);
   }
 public:
