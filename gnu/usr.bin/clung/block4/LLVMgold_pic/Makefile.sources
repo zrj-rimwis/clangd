@@ -611,6 +611,44 @@ SRCS+=	DAGCombiner.cpp \
 	StatepointLowering.cpp \
 	TargetLowering.cpp
 
+#LIB=	LLVMScalarOpts
+LLVM_SRCDIRS+= lib/Transforms/Scalar
+SRCS+=	ADCE.cpp \
+	AlignmentFromAssumptions.cpp \
+	BDCE.cpp \
+	ConstantHoisting.cpp \
+	CorrelatedValuePropagation.cpp \
+	DeadStoreElimination.cpp \
+	EarlyCSE.cpp \
+	Float2Int.cpp \
+	GVN.cpp \
+	GVNHoist.cpp \
+	IndVarSimplify.cpp \
+	JumpThreading.cpp \
+	LICM.cpp \
+	LoadCombine.cpp \
+	LoopDeletion.cpp \
+	LoopDistribute.cpp \
+	LoopIdiomRecognize.cpp \
+	LoopInterchange.cpp \
+	LoopLoadElimination.cpp \
+	LoopRerollPass.cpp \
+	LoopRotation.cpp \
+	LoopStrengthReduce.cpp \
+	LoopUnrollPass.cpp \
+	LoopUnswitch.cpp \
+	LoopVersioningLICM.cpp \
+	LowerExpectIntrinsic.cpp \
+	MemCpyOptimizer.cpp \
+	MergedLoadStoreMotion.cpp \
+	PartiallyInlineLibCalls.cpp \
+	Reassociate.cpp \
+	SCCP.cpp \
+	SROA.cpp \
+	SimplifyCFGPass.cpp \
+	SpeculativeExecution.cpp \
+	TailRecursionElimination.cpp
+
 #LIB=	LLVMTarget
 LLVM_SRCDIRS+= lib/Target
 SRCS+=	Target.cpp \
