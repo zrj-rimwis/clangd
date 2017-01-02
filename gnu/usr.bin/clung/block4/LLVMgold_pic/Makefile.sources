@@ -787,7 +787,6 @@ SRCS+=	ByteStream.cpp \
 	RecordSerialization.cpp \
 	StreamReader.cpp \
 	StreamWriter.cpp \
-	SymbolDumper.cpp \
 	TypeDumper.cpp \
 	TypeRecord.cpp \
 	TypeRecordBuilder.cpp \
