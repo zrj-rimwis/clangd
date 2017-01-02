@@ -483,7 +483,8 @@ SRCS+=	Archive.cpp \
 # maybe not needed
 LLVM_SRCDIRS+= lib/ObjectYAML
 SRCS+=	COFFYAML.cpp \
-	ELFYAML.cpp
+	ELFYAML.cpp \
+	YAML.cpp
 
 #LIB=	LLVMOption
 LLVM_SRCDIRS+= lib/Option
