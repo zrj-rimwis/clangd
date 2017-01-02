@@ -25,7 +25,9 @@
 #include "clang/Frontend/Utils.h"
 #include "clang/FrontendTool/Utils.h"
 #include "llvm/ADT/Statistic.h"
+#if 0 // __DragonFly__ // No anchoring!!
 #include "llvm/LinkAllPasses.h"
+#endif
 #include "llvm/Option/ArgList.h"
 #include "llvm/Option/OptTable.h"
 #include "llvm/Support/ErrorHandling.h"

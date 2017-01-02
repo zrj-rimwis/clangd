@@ -31,7 +31,6 @@ SRCS+=	APValue.cpp \
 	ExprCXX.cpp \
 	ExprObjC.cpp \
 	ExternalASTSource.cpp \
-	InheritViz.cpp \
 	zCA_ItaniumCXXABI.cpp \
 	ItaniumMangle.cpp \
 	Mangle.cpp \
@@ -71,7 +70,6 @@ SRCS+=	AnalysisDeclContext.cpp \
 	CocoaConventions.cpp \
 	Consumed.cpp \
 	FormatString.cpp \
-	LiveVariables.cpp \
 	ObjCNoReturn.cpp \
 	PostOrderCFGView.cpp \
 	PrintfFormatString.cpp \

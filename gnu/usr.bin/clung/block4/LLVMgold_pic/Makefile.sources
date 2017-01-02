@@ -9,7 +9,6 @@ SRCS+=	LTO.cpp \
 #LIB=	LLVMAnalysis
 LLVM_SRCDIRS+= lib/Analysis
 SRCS+=	AliasAnalysis.cpp \
-	AliasAnalysisEvaluator.cpp \
 	AliasAnalysisSummary.cpp \
 	AliasSetTracker.cpp \
 	AssumptionCache.cpp \
@@ -18,49 +17,35 @@ SRCS+=	AliasAnalysis.cpp \
 	BlockFrequencyInfoImpl.cpp \
 	BranchProbabilityInfo.cpp \
 	CFG.cpp \
-	CFGPrinter.cpp \
 	CFLAndersAliasAnalysis.cpp \
 	CFLSteensAliasAnalysis.cpp \
 	CGSCCPassManager.cpp \
 	CallGraph.cpp \
 	CallGraphSCCPass.cpp \
-	CallPrinter.cpp \
 	CaptureTracking.cpp \
 	CodeMetrics.cpp \
 	ConstantFolding.cpp \
-	CostModel.cpp \
-	Delinearization.cpp \
 	DemandedBits.cpp \
 	DependenceAnalysis.cpp \
-	DivergenceAnalysis.cpp \
-	DomPrinter.cpp \
 	DominanceFrontier.cpp \
 	EHPersonalities.cpp \
 	GlobalsModRef.cpp \
 	IVUsers.cpp \
 	IndirectCallPromotionAnalysis.cpp \
 	InlineCost.cpp \
-	InstCount.cpp \
 	InstructionSimplify.cpp \
-	Interval.cpp \
-	IntervalPartition.cpp \
 	IteratedDominanceFrontier.cpp \
 	LazyBlockFrequencyInfo.cpp \
-	LazyCallGraph.cpp \
 	LazyValueInfo.cpp \
-	Lint.cpp \
 	Loads.cpp \
 	LoopAccessAnalysis.cpp \
 	LoopInfo.cpp \
 	LoopPass.cpp \
 	LoopPassManager.cpp \
 	LoopUnrollAnalyzer.cpp \
-	MemDepPrinter.cpp \
-	MemDerefPrinter.cpp \
 	MemoryBuiltins.cpp \
 	MemoryDependenceAnalysis.cpp \
 	MemoryLocation.cpp \
-	ModuleDebugInfoPrinter.cpp \
 	ModuleSummaryAnalysis.cpp \
 	ObjCARCAliasAnalysis.cpp \
 	ObjCARCAnalysisUtils.cpp \
@@ -71,15 +56,11 @@ SRCS+=	AliasAnalysis.cpp \
 	PostDominators.cpp \
 	ProfileSummaryInfo.cpp \
 	PtrUseVisitor.cpp \
-	RegionInfo.cpp \
-	RegionPass.cpp \
-	RegionPrinter.cpp \
 	ScalarEvolution.cpp \
 	ScalarEvolutionAliasAnalysis.cpp \
 	ScalarEvolutionExpander.cpp \
 	ScalarEvolutionNormalization.cpp \
 	ScopedNoAliasAA.cpp \
-	SparsePropagation.cpp \
 	TargetLibraryInfo.cpp \
 	TargetTransformInfo.cpp \
 	TypeBasedAliasAnalysis.cpp \
@@ -155,7 +136,6 @@ SRCS+=	AggressiveAntiDepBreaker.cpp \
 	FuncletLayout.cpp \
 	GCMetadata.cpp \
 	GCRootLowering.cpp \
-	GlobalMerge.cpp \
 	IfConversion.cpp \
 	ImplicitNullChecks.cpp \
 	InlineSpiller.cpp \
@@ -187,7 +167,6 @@ SRCS+=	AggressiveAntiDepBreaker.cpp \
 	MachineCSE.cpp \
 	MachineCombiner.cpp \
 	MachineCopyPropagation.cpp \
-	MachineDominanceFrontier.cpp \
 	MachineDominators.cpp \
 	MachineFunction.cpp \
 	MachineFunctionAnalysis.cpp \
@@ -201,7 +180,6 @@ SRCS+=	AggressiveAntiDepBreaker.cpp \
 	MachineModuleInfoImpls.cpp \
 	MachinePassRegistry.cpp \
 	MachinePostDominators.cpp \
-	MachineRegionInfo.cpp \
 	MachineRegisterInfo.cpp \
 	MachineSSAUpdater.cpp \
 	MachineScheduler.cpp \
@@ -221,10 +199,8 @@ SRCS+=	AggressiveAntiDepBreaker.cpp \
 	PrologEpilogInserter.cpp \
 	PseudoSourceValue.cpp \
 	RegAllocBase.cpp \
-	RegAllocBasic.cpp \
 	RegAllocFast.cpp \
 	RegAllocGreedy.cpp \
-	RegAllocPBQP.cpp \
 	RegUsageInfoCollector.cpp \
 	RegUsageInfoPropagate.cpp \
 	RegisterClassInfo.cpp \
@@ -287,7 +263,6 @@ SRCS+=	AsmWriter.cpp \
 	DiagnosticPrinter.cpp \
 	Dominators.cpp \
 	Function.cpp \
-	GCOV.cpp \
 	GVMaterializer.cpp \
 	Globals.cpp \
 	IRBuilder.cpp \
@@ -364,8 +339,7 @@ SRCS+=	IRMover.cpp \
 
 #LIB=	LLVMMC
 LLVM_SRCDIRS+= lib/MC
-SRCS+=	ConstantPools.cpp \
-	ELFObjectWriter.cpp \
+SRCS+=	ELFObjectWriter.cpp \
 	MCAsmBackend.cpp \
 	MCAsmInfo.cpp \
 	MCAsmInfoCOFF.cpp \
@@ -384,7 +358,6 @@ SRCS+=	ConstantPools.cpp \
 	MCInst.cpp \
 	MCInstPrinter.cpp \
 	MCInstrAnalysis.cpp \
-	MCInstrDesc.cpp \
 	MCLinkerOptimizationHint.cpp \
 	MCMachOStreamer.cpp \
 	MCMachObjectTargetWriter.cpp \
@@ -436,22 +409,18 @@ SRCS+=	ArgumentPromotion.cpp \
 	CrossDSOCFI.cpp \
 	DeadArgumentElimination.cpp \
 	ElimAvailExtern.cpp \
-	ExtractGV.cpp \
 	ForceFunctionAttrs.cpp \
 	FunctionAttrs.cpp \
 	FunctionImport.cpp \
 	GlobalDCE.cpp \
 	GlobalOpt.cpp \
-	IPConstantPropagation.cpp \
 	InferFunctionAttrs.cpp \
 	InlineAlways.cpp \
 	InlineSimple.cpp \
 	Inliner.cpp \
 	Internalize.cpp \
-	LoopExtractor.cpp \
 	LowerTypeTests.cpp \
 	MergeFunctions.cpp \
-	PartialInlining.cpp \
 	PassManagerBuilder.cpp \
 	PruneEH.cpp \
 	SampleProfile.cpp \
@@ -468,13 +437,11 @@ SRCS+=	DependencyAnalysis.cpp \
 	ObjCARCExpand.cpp \
 	ObjCARCOpts.cpp \
 	ProvenanceAnalysis.cpp \
-	ProvenanceAnalysisEvaluator.cpp \
 	PtrState.cpp
 
 #LIB=	LLVMObject
 LLVM_SRCDIRS+= lib/Object
 SRCS+=	Archive.cpp \
-	ArchiveWriter.cpp \
 	Binary.cpp \
 	COFFObjectFile.cpp \
 	ELF.cpp \
@@ -492,31 +459,25 @@ SRCS+=	Archive.cpp \
 LLVM_SRCDIRS+= lib/ProfileData
 SRCS+=	InstrProf.cpp \
 	InstrProfReader.cpp \
-	InstrProfWriter.cpp \
 	ProfileSummaryBuilder.cpp \
 	SampleProf.cpp \
-	SampleProfReader.cpp \
-	SampleProfWriter.cpp
+	SampleProfReader.cpp
 
 #LIB=	LLVMSupport
 LLVM_SRCDIRS+= lib/Support
 SRCS+=	APFloat.cpp \
 	APInt.cpp \
 	APSInt.cpp \
-	ARMBuildAttrs.cpp \
 	Allocator.cpp \
 	BlockFrequency.cpp \
 	BranchProbability.cpp \
-	CachePruning.cpp \
 	CommandLine.cpp \
 	Compression.cpp \
 	ConvertUTF.c \
 	ConvertUTFWrapper.cpp \
 	CrashRecoveryContext.cpp \
-	DAGDeltaAlgorithm.cpp \
 	DataExtractor.cpp \
 	Debug.cpp \
-	DeltaAlgorithm.cpp \
 	Dwarf.cpp \
 	DynamicLibrary.cpp \
 	Errno.cpp \
@@ -540,7 +501,6 @@ SRCS+=	APFloat.cpp \
 	MemoryBuffer.cpp \
 	MemoryObject.cpp \
 	Mutex.cpp \
-	Options.cpp \
 	Path.cpp \
 	PrettyStackTrace.cpp \
 	Process.cpp \
@@ -576,7 +536,6 @@ SRCS+=	APFloat.cpp \
 	YAMLParser.cpp \
 	YAMLTraits.cpp \
 	circular_raw_ostream.cpp \
-	raw_os_ostream.cpp \
 	raw_ostream.cpp \
 	regcomp.c \
 	regerror.c \
@@ -598,7 +557,6 @@ SRCS+=	DAGCombiner.cpp \
 	LegalizeVectorOps.cpp \
 	LegalizeVectorTypes.cpp \
 	ResourcePriorityQueue.cpp \
-	ScheduleDAGFast.cpp \
 	ScheduleDAGRRList.cpp \
 	ScheduleDAGSDNodes.cpp \
 	ScheduleDAGVLIW.cpp \
@@ -654,7 +612,6 @@ LLVM_SRCDIRS+= lib/Target
 SRCS+=	Target.cpp \
 	TargetLoweringObjectFile.cpp \
 	TargetMachine.cpp \
-	TargetMachineC.cpp \
 	TargetRecip.cpp \
 	TargetSubtargetInfo.cpp
 
@@ -667,18 +624,13 @@ SRCS+=	ASanStackFrameLayout.cpp \
 	BuildLibCalls.cpp \
 	BypassSlowDivision.cpp \
 	CloneFunction.cpp \
-	CloneModule.cpp \
 	CmpInstAnalysis.cpp \
-	CodeExtractor.cpp \
 	CtorUtils.cpp \
 	DemoteRegToStack.cpp \
 	Evaluator.cpp \
-	FlattenCFG.cpp \
 	FunctionImportUtils.cpp \
 	GlobalStatus.cpp \
 	InlineFunction.cpp \
-	InstructionNamer.cpp \
-	IntegerDivision.cpp \
 	LCSSA.cpp \
 	Local.cpp \
 	LoopSimplify.cpp \
@@ -687,10 +639,8 @@ SRCS+=	ASanStackFrameLayout.cpp \
 	LoopUtils.cpp \
 	LoopVersioning.cpp \
 	LowerInvoke.cpp \
-	LowerSwitch.cpp \
 	Mem2Reg.cpp \
 	MemorySSA.cpp \
-	MetaRenamer.cpp \
 	ModuleUtils.cpp \
 	NameAnonFunctions.cpp \
 	PromoteMemoryToRegister.cpp \
@@ -700,15 +650,12 @@ SRCS+=	ASanStackFrameLayout.cpp \
 	SimplifyIndVar.cpp \
 	SimplifyInstructions.cpp \
 	SimplifyLibCalls.cpp \
-	SplitModule.cpp \
 	SymbolRewriter.cpp \
-	UnifyFunctionExitNodes.cpp \
 	ValueMapper.cpp
 
 #LIB=	LLVMVectorize
 LLVM_SRCDIRS+= lib/Transforms/Vectorize
 SRCS+=	BBVectorize.cpp \
-	LoadStoreVectorizer.cpp \
 	LoopVectorize.cpp \
 	SLPVectorizer.cpp
 
@@ -782,13 +729,9 @@ SRCS+=	ByteStream.cpp \
 	Line.cpp \
 	ListRecordBuilder.cpp \
 	MemoryTypeTableBuilder.cpp \
-	ModuleSubstream.cpp \
-	ModuleSubstreamVisitor.cpp \
 	RecordSerialization.cpp \
 	StreamReader.cpp \
-	StreamWriter.cpp \
 	TypeDumper.cpp \
 	TypeRecord.cpp \
 	TypeRecordBuilder.cpp \
-	TypeStreamMerger.cpp \
 	TypeTableBuilder.cpp
