@@ -825,7 +825,9 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
   if (NeedLocTracking && Opts.getDebugInfo() == codegenoptions::NoDebugInfo)
     Opts.setDebugInfo(codegenoptions::LocTrackingOnly);
 
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
   Opts.RewriteMapFiles = Args.getAllArgValues(OPT_frewrite_map_file);
+#endif
 
   // Parse -fsanitize-recover= arguments.
   // FIXME: Report unrecoverable sanitizers incorrectly specified here.

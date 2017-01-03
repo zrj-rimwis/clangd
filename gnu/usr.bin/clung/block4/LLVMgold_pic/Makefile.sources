@@ -650,7 +650,6 @@ SRCS+=	ASanStackFrameLayout.cpp \
 	SimplifyIndVar.cpp \
 	SimplifyInstructions.cpp \
 	SimplifyLibCalls.cpp \
-	SymbolRewriter.cpp \
 	ValueMapper.cpp
 
 #LIB=	LLVMVectorize

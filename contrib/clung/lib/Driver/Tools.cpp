@@ -4126,6 +4126,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // LLVM Code Generator Options.
 
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
   if (Args.hasArg(options::OPT_frewrite_map_file) ||
       Args.hasArg(options::OPT_frewrite_map_file_EQ)) {
     for (const Arg *A : Args.filtered(options::OPT_frewrite_map_file,
@@ -4135,6 +4136,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       A->claim();
     }
   }
+#endif
 
   if (Arg *A = Args.getLastArg(options::OPT_Wframe_larger_than_EQ)) {
     StringRef v = A->getValue();

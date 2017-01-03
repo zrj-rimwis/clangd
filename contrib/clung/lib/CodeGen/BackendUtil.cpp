@@ -45,7 +45,9 @@
 #include "llvm/Transforms/ObjCARC.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
 #include "llvm/Transforms/Utils/SymbolRewriter.h"
+#endif
 #include <memory>
 using namespace clang;
 using namespace llvm;
@@ -269,6 +271,7 @@ static TargetLibraryInfoImpl *createTLII(llvm::Triple &TargetTriple,
   return TLII;
 }
 
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
 static void addSymbolRewriterPass(const CodeGenOptions &Opts,
                                   legacy::PassManager *MPM) {
   llvm::SymbolRewriter::RewriteDescriptorList DL;
@@ -279,6 +282,7 @@ static void addSymbolRewriterPass(const CodeGenOptions &Opts,
 
   MPM->add(createRewriteSymbolsPass(DL));
 }
+#endif
 
 void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
                                       legacy::FunctionPassManager &FPM,
@@ -424,9 +428,11 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
   if (CodeGenOpts.VerifyModule)
     FPM.add(createVerifierPass());
 
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
   // Set up the per-module pass manager.
   if (!CodeGenOpts.RewriteMapFiles.empty())
     addSymbolRewriterPass(CodeGenOpts, &MPM);
+#endif
 
   if (!CodeGenOpts.DisableGCov &&
       (CodeGenOpts.EmitGcovArcs || CodeGenOpts.EmitGcovNotes)) {

@@ -194,8 +194,10 @@ public:
   /// flag.
   std::shared_ptr<llvm::Regex> OptimizationRemarkAnalysisPattern;
 
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
   /// Set of files definining the rules for the symbol rewriting.
   std::vector<std::string> RewriteMapFiles;
+#endif
 
   /// Set of sanitizer checks that are non-fatal (i.e. execution should be
   /// continued when possible).

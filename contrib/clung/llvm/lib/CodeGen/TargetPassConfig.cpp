@@ -34,7 +34,9 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Instrumentation.h"
 #include "llvm/Transforms/Scalar.h"
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
 #include "llvm/Transforms/Utils/SymbolRewriter.h"
+#endif
 
 using namespace llvm;
 
@@ -509,7 +511,9 @@ void TargetPassConfig::addPassesToHandleExceptions() {
 void TargetPassConfig::addCodeGenPrepare() {
   if (getOptLevel() != CodeGenOpt::None && !DisableCGP)
     addPass(createCodeGenPreparePass(TM));
+#ifdef LLVM_ENABLE_SYMBOLREWRITER
   addPass(createRewriteSymbolsPass());
+#endif
 }
 
 /// Add common passes that perform LLVM IR to IR transforms in preparation for
