@@ -50,7 +50,9 @@ CreateFrontendBaseAction(CompilerInstance &CI) {
   case DumpTokens:             return llvm::make_unique<DumpTokensAction>();
   case EmitAssembly:           return llvm::make_unique<EmitAssemblyAction>();
   case EmitBC:                 return llvm::make_unique<EmitBCAction>();
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   case EmitHTML:               return llvm::make_unique<HTMLPrintAction>();
+#endif
   case EmitLLVM:               return llvm::make_unique<EmitLLVMAction>();
   case EmitLLVMOnly:           return llvm::make_unique<EmitLLVMOnlyAction>();
   case EmitCodeGenOnly:        return llvm::make_unique<EmitCodeGenOnlyAction>();

@@ -37,12 +37,14 @@ CreateModernObjCRewriter(const std::string &InFile,
                          DiagnosticsEngine &Diags, const LangOptions &LOpts,
                          bool SilenceRewriteMacroWarning, bool LineInfo);
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 /// CreateHTMLPrinter - Create an AST consumer which rewrites source code to
 /// HTML with syntax highlighting suitable for viewing in a web-browser.
 std::unique_ptr<ASTConsumer> CreateHTMLPrinter(std::unique_ptr<raw_ostream> OS,
                                                Preprocessor &PP,
                                                bool SyntaxHighlight = true,
                                                bool HighlightMacros = true);
+#endif
 
 } // end clang namespace
 

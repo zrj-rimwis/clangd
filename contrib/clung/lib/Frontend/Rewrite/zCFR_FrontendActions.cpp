@@ -31,6 +31,7 @@ using namespace clang;
 // AST Consumer Actions
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 std::unique_ptr<ASTConsumer>
 HTMLPrintAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
   if (std::unique_ptr<raw_ostream> OS =
@@ -38,6 +39,7 @@ HTMLPrintAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
     return CreateHTMLPrinter(std::move(OS), CI.getPreprocessor());
   return nullptr;
 }
+#endif
 
 FixItAction::FixItAction() {}
 FixItAction::~FixItAction() {}

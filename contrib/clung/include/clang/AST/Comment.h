@@ -101,6 +101,7 @@ protected:
   enum { NumInlineCommandCommentBits = NumInlineContentCommentBits + 2 + 
                                        CommandInfo::NumCommandIDBits };
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   class HTMLTagCommentBitfields {
     friend class HTMLTagComment;
 
@@ -121,6 +122,7 @@ protected:
     unsigned IsSelfClosing : 1;
   };
   enum { NumHTMLStartTagCommentBits = NumHTMLTagCommentBits + 1 };
+#endif
 
   class ParagraphCommentBitfields {
     friend class ParagraphComment;
@@ -167,8 +169,10 @@ protected:
     InlineContentCommentBitfields InlineContentCommentBits;
     TextCommentBitfields TextCommentBits;
     InlineCommandCommentBitfields InlineCommandCommentBits;
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     HTMLTagCommentBitfields HTMLTagCommentBits;
     HTMLStartTagCommentBitfields HTMLStartTagCommentBits;
+#endif
     ParagraphCommentBitfields ParagraphCommentBits;
     BlockCommandCommentBitfields BlockCommandCommentBits;
     ParamCommandCommentBitfields ParamCommandCommentBits;
@@ -372,6 +376,7 @@ public:
   }
 };
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 /// Abstract class for opening and closing HTML tags.  HTML tags are always
 /// treated as inline content (regardless HTML semantics).
 class HTMLTagComment : public InlineContentComment {
@@ -414,7 +419,9 @@ public:
     HTMLTagCommentBits.IsMalformed = 1;
   }
 };
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 /// An opening HTML tag with attributes.
 class HTMLStartTagComment : public HTMLTagComment {
 public:
@@ -508,7 +515,9 @@ public:
     HTMLStartTagCommentBits.IsSelfClosing = true;
   }
 };
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 /// A closing HTML tag.
 class HTMLEndTagComment : public HTMLTagComment {
 public:
@@ -530,6 +539,7 @@ public:
 
   child_iterator child_end() const { return nullptr; }
 };
+#endif
 
 /// Block content (contains inline content).
 /// Abstract class.

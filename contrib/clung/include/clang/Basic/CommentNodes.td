@@ -9,9 +9,6 @@ class DComment<Comment base, bit abstract = 0> : Comment<abstract> {
 def InlineContentComment : Comment<1>;
   def TextComment : DComment<InlineContentComment>;
   def InlineCommandComment : DComment<InlineContentComment>;
-  def HTMLTagComment : DComment<InlineContentComment, 1>;
-    def HTMLStartTagComment : DComment<HTMLTagComment>;
-    def HTMLEndTagComment : DComment<HTMLTagComment>;
 
 def BlockContentComment : Comment<1>;
   def ParagraphComment : DComment<BlockContentComment>;

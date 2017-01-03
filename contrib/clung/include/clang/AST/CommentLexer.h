@@ -43,6 +43,7 @@ enum TokenKind {
   verbatim_block_end,
   verbatim_line_name,
   verbatim_line_text,
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   html_start_tag,     // <tag
   html_ident,         // attr
   html_equals,        // =
@@ -50,6 +51,7 @@ enum TokenKind {
   html_greater,       // >
   html_slash_greater, // />
   html_end_tag        // </tag
+#endif
 };
 } // end namespace tok
 
@@ -171,6 +173,7 @@ public:
     IntVal = Text.size();
   }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   StringRef getHTMLTagStartName() const LLVM_READONLY {
     assert(is(tok::html_start_tag));
     return StringRef(TextPtr, IntVal);
@@ -214,6 +217,7 @@ public:
     TextPtr = Name.data();
     IntVal = Name.size();
   }
+#endif
 
   void dump(const Lexer &L, const SourceManager &SM) const;
 };
@@ -268,11 +272,13 @@ private:
     /// line).
     LS_VerbatimLineText,
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     /// Finished lexing \verbatim <TAG \endverbatim part, lexing tag attributes.
     LS_HTMLStartTag,
 
     /// Finished lexing \verbatim </TAG \endverbatim part, lexing '>'.
     LS_HTMLEndTag
+#endif
   };
 
   /// Current lexing mode.
@@ -282,6 +288,7 @@ private:
   /// command, including command marker.
   SmallString<16> VerbatimBlockEndCommandName;
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   /// Given a character reference name (e.g., "lt"), return the character that
   /// it stands for (e.g., "<").
   StringRef resolveHTMLNamedCharacterReference(StringRef Name) const;
@@ -291,6 +298,7 @@ private:
 
   /// Given a Unicode codepoint as base-16 integer, return the character.
   StringRef resolveHTMLHexCharacterReference(StringRef Name) const;
+#endif
 
   void formTokenWithChars(Token &Result, const char *TokEnd,
                           tok::TokenKind Kind);
@@ -332,6 +340,7 @@ private:
 
   void lexVerbatimLineText(Token &T);
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   void lexHTMLCharacterReference(Token &T);
 
   void setupAndLexHTMLStartTag(Token &T);
@@ -341,6 +350,7 @@ private:
   void setupAndLexHTMLEndTag(Token &T);
 
   void lexHTMLEndTag(Token &T);
+#endif
 
 public:
   Lexer(llvm::BumpPtrAllocator &Allocator, DiagnosticsEngine &Diags,

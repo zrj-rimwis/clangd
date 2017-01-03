@@ -25,6 +25,7 @@ void Token::dump(const Lexer &L, const SourceManager &SM) const {
   llvm::errs() << " " << Length << " \"" << L.getSpelling(*this, SM) << "\"\n";
 }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 static inline bool isHTMLNamedCharacterReferenceCharacter(char C) {
   return isLetter(C);
 }
@@ -36,6 +37,7 @@ static inline bool isHTMLDecimalCharacterReferenceCharacter(char C) {
 static inline bool isHTMLHexCharacterReferenceCharacter(char C) {
   return isHexDigit(C);
 }
+#endif
 
 static inline StringRef convertCodePointToUTF8(
                                       llvm::BumpPtrAllocator &Allocator,
@@ -50,11 +52,14 @@ static inline StringRef convertCodePointToUTF8(
 
 namespace {
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 #include "clang/AST/CommentHTMLTags.inc"
 #include "clang/AST/CommentHTMLNamedCharacterReferences.inc"
+#endif
 
 } // end anonymous namespace
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 StringRef Lexer::resolveHTMLNamedCharacterReference(StringRef Name) const {
   // Fast path, first check a few most widely used named character references.
   return llvm::StringSwitch<StringRef>(Name)
@@ -87,6 +92,7 @@ StringRef Lexer::resolveHTMLHexCharacterReference(StringRef Name) const {
   }
   return convertCodePointToUTF8(Allocator, CodePoint);
 }
+#endif
 
 void Lexer::skipLineStartingDecorations() {
   // This function should be called only for C comments
@@ -147,6 +153,7 @@ const char *skipNewline(const char *BufferPtr, const char *BufferEnd) {
   return BufferPtr;
 }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 const char *skipNamedCharacterReference(const char *BufferPtr,
                                         const char *BufferEnd) {
   for ( ; BufferPtr != BufferEnd; ++BufferPtr) {
@@ -189,11 +196,13 @@ const char *skipHTMLIdentifier(const char *BufferPtr, const char *BufferEnd) {
   }
   return BufferEnd;
 }
+#endif
 
 /// Skip HTML string quoted in single or double quotes.  Escaping quotes inside
 /// string allowed.
 ///
 /// Returns pointer to closing quote.
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 const char *skipHTMLQuotedString(const char *BufferPtr, const char *BufferEnd)
 {
   const char Quote = *BufferPtr;
@@ -207,6 +216,7 @@ const char *skipHTMLQuotedString(const char *BufferPtr, const char *BufferEnd)
   }
   return BufferEnd;
 }
+#endif
 
 const char *skipWhitespace(const char *BufferPtr, const char *BufferEnd) {
   for ( ; BufferPtr != BufferEnd; ++BufferPtr) {
@@ -306,12 +316,14 @@ void Lexer::lexCommentText(Token &T) {
   case LS_VerbatimLineText:
     lexVerbatimLineText(T);
     return;
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   case LS_HTMLStartTag:
     lexHTMLStartTag(T);
     return;
   case LS_HTMLEndTag:
     lexHTMLEndTag(T);
     return;
+#endif
   }
 
   assert(State == LS_Normal);
@@ -403,9 +415,11 @@ void Lexer::lexCommentText(Token &T) {
         return;
       }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
       case '&':
         lexHTMLCharacterReference(T);
         return;
+#endif
 
       case '<': {
         TokenPtr++;
@@ -413,12 +427,14 @@ void Lexer::lexCommentText(Token &T) {
           formTextToken(T, TokenPtr);
           return;
         }
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
         const char C = *TokenPtr;
         if (isHTMLIdentifierStartingCharacter(C))
           setupAndLexHTMLStartTag(T);
         else if (C == '/')
           setupAndLexHTMLEndTag(T);
         else
+#endif
           formTextToken(T, TokenPtr);
         return;
       }
@@ -552,6 +568,7 @@ void Lexer::lexVerbatimLineText(Token &T) {
   State = LS_Normal;
 }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void Lexer::lexHTMLCharacterReference(Token &T) {
   const char *TokenPtr = BufferPtr;
   assert(*TokenPtr == '&');
@@ -613,7 +630,9 @@ void Lexer::lexHTMLCharacterReference(Token &T) {
   formTokenWithChars(T, TokenPtr, tok::text);
   T.setText(Resolved);
 }
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void Lexer::setupAndLexHTMLStartTag(Token &T) {
   assert(BufferPtr[0] == '<' &&
          isHTMLIdentifierStartingCharacter(BufferPtr[1]));
@@ -634,7 +653,9 @@ void Lexer::setupAndLexHTMLStartTag(Token &T) {
       (C == '>' || C == '/' || isHTMLIdentifierStartingCharacter(C)))
     State = LS_HTMLStartTag;
 }
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void Lexer::lexHTMLStartTag(Token &T) {
   assert(State == LS_HTMLStartTag);
 
@@ -696,7 +717,9 @@ void Lexer::lexHTMLStartTag(Token &T) {
     return;
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void Lexer::setupAndLexHTMLEndTag(Token &T) {
   assert(BufferPtr[0] == '<' && BufferPtr[1] == '/');
 
@@ -716,13 +739,16 @@ void Lexer::setupAndLexHTMLEndTag(Token &T) {
   if (BufferPtr != CommentEnd && *BufferPtr == '>')
     State = LS_HTMLEndTag;
 }
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void Lexer::lexHTMLEndTag(Token &T) {
   assert(BufferPtr != CommentEnd && *BufferPtr == '>');
 
   formTokenWithChars(T, BufferPtr + 1, tok::html_greater);
   State = LS_Normal;
 }
+#endif
 
 Lexer::Lexer(llvm::BumpPtrAllocator &Allocator, DiagnosticsEngine &Diags,
              const CommandTraits &Traits,

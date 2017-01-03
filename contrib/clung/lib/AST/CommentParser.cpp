@@ -430,6 +430,7 @@ InlineCommandComment *Parser::parseInlineCommand() {
   return IC;
 }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 HTMLStartTagComment *Parser::parseHTMLStartTag() {
   assert(Tok.is(tok::html_start_tag));
   HTMLStartTagComment *HST =
@@ -534,7 +535,9 @@ HTMLStartTagComment *Parser::parseHTMLStartTag() {
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 HTMLEndTagComment *Parser::parseHTMLEndTag() {
   assert(Tok.is(tok::html_end_tag));
   Token TokEndTag = Tok;
@@ -549,6 +552,7 @@ HTMLEndTagComment *Parser::parseHTMLEndTag() {
                            Loc,
                            TokEndTag.getHTMLTagEndName());
 }
+#endif
 
 BlockContentComment *Parser::parseParagraphOrBlockCommand() {
   SmallVector<InlineContentComment *, 8> Content;
@@ -620,6 +624,7 @@ BlockContentComment *Parser::parseParagraphOrBlockCommand() {
       continue;
     }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     // Don't deal with HTML tag soup now.
     case tok::html_start_tag:
       Content.push_back(parseHTMLStartTag());
@@ -628,6 +633,7 @@ BlockContentComment *Parser::parseParagraphOrBlockCommand() {
     case tok::html_end_tag:
       Content.push_back(parseHTMLEndTag());
       continue;
+#endif
 
     case tok::text:
       Content.push_back(S.actOnText(Tok.getLocation(),
@@ -639,11 +645,13 @@ BlockContentComment *Parser::parseParagraphOrBlockCommand() {
     case tok::verbatim_block_line:
     case tok::verbatim_block_end:
     case tok::verbatim_line_text:
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     case tok::html_ident:
     case tok::html_equals:
     case tok::html_quoted_string:
     case tok::html_greater:
     case tok::html_slash_greater:
+#endif
       llvm_unreachable("should not see this token");
     }
     break;
@@ -731,8 +739,10 @@ BlockContentComment *Parser::parseBlockContent() {
   case tok::unknown_command:
   case tok::backslash_command:
   case tok::at_command:
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   case tok::html_start_tag:
   case tok::html_end_tag:
+#endif
     return parseParagraphOrBlockCommand();
 
   case tok::verbatim_block_begin:
@@ -746,11 +756,13 @@ BlockContentComment *Parser::parseBlockContent() {
   case tok::verbatim_block_line:
   case tok::verbatim_block_end:
   case tok::verbatim_line_text:
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   case tok::html_ident:
   case tok::html_equals:
   case tok::html_quoted_string:
   case tok::html_greater:
   case tok::html_slash_greater:
+#endif
     llvm_unreachable("should not see this token");
   }
   llvm_unreachable("bogus token kind");

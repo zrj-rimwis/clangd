@@ -10,41 +10,6 @@
 let Component = "Comment" in {
 let CategoryName = "Documentation Issue" in {
 
-// HTML parsing errors.  These are under -Wdocumentation to make sure the user
-// knows that we didn't parse something as they might expect.
-
-def warn_doc_html_start_tag_expected_quoted_string : Warning<
-  "expected quoted string after equals sign">,
-  InGroup<Documentation>, DefaultIgnore;
-
-def warn_doc_html_start_tag_expected_ident_or_greater : Warning<
-  "HTML start tag prematurely ended, expected attribute name or '>'">,
-  InGroup<Documentation>, DefaultIgnore;
-
-def note_doc_html_tag_started_here : Note<
-  "HTML tag started here">;
-
-// HTML semantic errors
-
-def warn_doc_html_end_forbidden : Warning<
-  "HTML end tag '%0' is forbidden">,
-  InGroup<DocumentationHTML>, DefaultIgnore;
-
-def warn_doc_html_end_unbalanced : Warning<
-  "HTML end tag does not match any start tag">,
-  InGroup<DocumentationHTML>, DefaultIgnore;
-
-def warn_doc_html_start_end_mismatch : Warning<
-  "HTML start tag '%0' closed by '%1'">,
-  InGroup<DocumentationHTML>, DefaultIgnore;
-
-def note_doc_html_end_tag : Note<
-  "end tag">;
-
-def warn_doc_html_missing_end_tag : Warning<
-  "HTML tag '%0' requires an end tag">,
-  InGroup<DocumentationHTML>, DefaultIgnore;
-
 // Commands
 
 def warn_doc_block_command_empty_paragraph : Warning<

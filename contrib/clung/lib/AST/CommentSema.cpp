@@ -22,7 +22,9 @@ namespace clang {
 namespace comments {
 
 namespace {
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 #include "clang/AST/CommentHTMLTagsProperties.inc"
+#endif
 } // end anonymous namespace
 
 Sema::Sema(llvm::BumpPtrAllocator &Allocator, const SourceManager &SourceMgr,
@@ -455,6 +457,7 @@ VerbatimLineComment *Sema::actOnVerbatimLine(SourceLocation LocBegin,
   return VL;
 }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 HTMLStartTagComment *Sema::actOnHTMLStartTagStart(SourceLocation LocBegin,
                                                   StringRef TagName) {
   return new (Allocator) HTMLStartTagComment(LocBegin, TagName);
@@ -472,7 +475,9 @@ void Sema::actOnHTMLStartTagFinish(
   else if (!isHTMLEndTagForbidden(Tag->getTagName()))
     HTMLOpenTags.push_back(Tag);
 }
+#endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 HTMLEndTagComment *Sema::actOnHTMLEndTag(SourceLocation LocBegin,
                                          SourceLocation LocEnd,
                                          StringRef TagName) {
@@ -540,12 +545,14 @@ HTMLEndTagComment *Sema::actOnHTMLEndTag(SourceLocation LocBegin,
 
   return HET;
 }
+#endif
 
 FullComment *Sema::actOnFullComment(
                               ArrayRef<BlockContentComment *> Blocks) {
   FullComment *FC = new (Allocator) FullComment(Blocks, ThisDeclInfo);
   resolveParamCommandIndexes(FC);
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   // Complain about HTML tags that are not closed.
   while (!HTMLOpenTags.empty()) {
     HTMLStartTagComment *HST = HTMLOpenTags.pop_back_val();
@@ -556,6 +563,7 @@ FullComment *Sema::actOnFullComment(
       << HST->getTagName() << HST->getSourceRange();
     HST->setIsMalformed();
   }
+#endif
 
   return FC;
 }

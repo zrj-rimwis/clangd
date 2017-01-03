@@ -65,9 +65,11 @@ class Sema {
     return Diags.Report(Loc, DiagID);
   }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   /// A stack of HTML tags that are currently open (not matched with closing
   /// tags).
   SmallVector<HTMLStartTagComment *, 8> HTMLOpenTags;
+#endif
 
 public:
   Sema(llvm::BumpPtrAllocator &Allocator, const SourceManager &SourceMgr,
@@ -168,6 +170,7 @@ public:
                                          SourceLocation TextBegin,
                                          StringRef Text);
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   HTMLStartTagComment *actOnHTMLStartTagStart(SourceLocation LocBegin,
                                               StringRef TagName);
 
@@ -179,6 +182,7 @@ public:
   HTMLEndTagComment *actOnHTMLEndTag(SourceLocation LocBegin,
                                      SourceLocation LocEnd,
                                      StringRef TagName);
+#endif
 
   FullComment *actOnFullComment(ArrayRef<BlockContentComment *> Blocks);
 

@@ -105,8 +105,10 @@ public:
   BlockCommandComment *parseBlockCommand();
   InlineCommandComment *parseInlineCommand();
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   HTMLStartTagComment *parseHTMLStartTag();
   HTMLEndTagComment *parseHTMLEndTag();
+#endif
 
   BlockContentComment *parseParagraphOrBlockCommand();
 

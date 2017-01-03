@@ -104,9 +104,6 @@ CLX1=	Attrs/-gen-clang-attr-classes/Attr.td \
 	StmtNodes/-gen-clang-stmt-nodes/StmtNodes.td \
 	DeclNodes/-gen-clang-decl-nodes/DeclNodes.td \
 	CommentNodes/-gen-clang-comment-nodes/CommentNodes.td \
-	CommentHTMLTags/-gen-clang-comment-html-tags/CommentHTMLTags.td \
-	CommentHTMLTagsProperties/-gen-clang-comment-html-tags-properties/CommentHTMLTags.td \
-	CommentHTMLNamedCharacterReferences/-gen-clang-comment-html-named-character-references/CommentHTMLNamedCharacterReferences.td \
 	CommentCommandInfo/-gen-clang-comment-command-info/CommentCommands.td \
 	CommentCommandList/-gen-clang-comment-command-list/CommentCommands.td
 CLX2=	AttrTemplateInstantiate/-gen-clang-attr-template-instantiate/Attr.td \

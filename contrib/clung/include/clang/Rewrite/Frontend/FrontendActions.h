@@ -20,11 +20,13 @@ class FixItOptions;
 // AST Consumer Actions
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 class HTMLPrintAction : public ASTFrontendAction {
 protected:
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                  StringRef InFile) override;
 };
+#endif
 
 class FixItAction : public ASTFrontendAction {
 protected:

@@ -1092,8 +1092,10 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
       Opts.ProgramAction = frontend::EmitAssembly; break;
     case OPT_emit_llvm_bc:
       Opts.ProgramAction = frontend::EmitBC; break;
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     case OPT_emit_html:
       Opts.ProgramAction = frontend::EmitHTML; break;
+#endif
     case OPT_emit_llvm:
       Opts.ProgramAction = frontend::EmitLLVM; break;
     case OPT_emit_llvm_only:
@@ -2240,7 +2242,9 @@ static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
   case frontend::ASTView:
   case frontend::EmitAssembly:
   case frontend::EmitBC:
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   case frontend::EmitHTML:
+#endif
   case frontend::EmitLLVM:
   case frontend::EmitLLVMOnly:
   case frontend::EmitCodeGenOnly:

@@ -54,9 +54,11 @@ void EmitClangDiagsIndexName(RecordKeeper &Records, raw_ostream &OS);
 
 void EmitClangSACheckers(RecordKeeper &Records, raw_ostream &OS);
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void EmitClangCommentHTMLTags(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangCommentHTMLTagsProperties(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangCommentHTMLNamedCharacterReferences(RecordKeeper &Records, raw_ostream &OS);
+#endif
 
 void EmitClangCommentCommandInfo(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangCommentCommandList(RecordKeeper &Records, raw_ostream &OS);

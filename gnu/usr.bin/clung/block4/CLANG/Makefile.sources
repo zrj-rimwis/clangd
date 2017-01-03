@@ -274,7 +274,6 @@ SRCS+=	ParseAST.cpp \
 #LIB=	clangRewrite
 CLUNG_SRCDIRS+= lib/Rewrite
 SRCS+=	DeltaTree.cpp \
-	HTMLRewrite.cpp \
 	RewriteRope.cpp \
 	Rewriter.cpp \
 	TokenRewriter.cpp
@@ -284,7 +283,6 @@ SRCS+=	DeltaTree.cpp \
 CLUNG_SRCDIRS+= lib/Frontend/Rewrite
 SRCS+=	FixItRewriter.cpp \
 	zCFR_FrontendActions.cpp \
-	HTMLPrint.cpp \
 	InclusionRewriter.cpp \
 	RewriteMacros.cpp \
 	RewriteTest.cpp

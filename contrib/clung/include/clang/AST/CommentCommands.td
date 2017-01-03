@@ -167,7 +167,6 @@ def SuperClass    : RecordLikeDetailCommand<"superclass">;
 
 defm Code      : VerbatimBlockCommand<"code", "endcode">;
 defm Verbatim  : VerbatimBlockCommand<"verbatim", "endverbatim">;
-defm Htmlonly  : VerbatimBlockCommand<"htmlonly", "endhtmlonly">;
 defm Latexonly : VerbatimBlockCommand<"latexonly", "endlatexonly">;
 defm Xmlonly   : VerbatimBlockCommand<"xmlonly", "endxmlonly">;
 defm Manonly   : VerbatimBlockCommand<"manonly", "endmanonly">;

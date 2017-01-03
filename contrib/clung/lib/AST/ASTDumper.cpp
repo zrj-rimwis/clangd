@@ -563,8 +563,10 @@ namespace  {
     // Inline comments.
     void visitTextComment(const TextComment *C);
     void visitInlineCommandComment(const InlineCommandComment *C);
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     void visitHTMLStartTagComment(const HTMLStartTagComment *C);
     void visitHTMLEndTagComment(const HTMLEndTagComment *C);
+#endif
 
     // Block comments.
     void visitBlockCommandComment(const BlockCommandComment *C);
@@ -2366,6 +2368,7 @@ void ASTDumper::visitInlineCommandComment(const InlineCommandComment *C) {
     OS << " Arg[" << i << "]=\"" << C->getArgText(i) << "\"";
 }
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 void ASTDumper::visitHTMLStartTagComment(const HTMLStartTagComment *C) {
   OS << " Name=\"" << C->getTagName() << "\"";
   if (C->getNumAttrs() != 0) {
@@ -2382,6 +2385,7 @@ void ASTDumper::visitHTMLStartTagComment(const HTMLStartTagComment *C) {
 void ASTDumper::visitHTMLEndTagComment(const HTMLEndTagComment *C) {
   OS << " Name=\"" << C->getTagName() << "\"";
 }
+#endif
 
 void ASTDumper::visitBlockCommandComment(const BlockCommandComment *C) {
   OS << " Name=\"" << getCommandName(C->getCommandID()) << "\"";

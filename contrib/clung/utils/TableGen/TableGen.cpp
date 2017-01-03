@@ -45,9 +45,11 @@ enum ActionType {
   GenClangDeclNodes,
   GenClangStmtNodes,
   GenClangSACheckers,
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   GenClangCommentHTMLTags,
   GenClangCommentHTMLTagsProperties,
   GenClangCommentHTMLNamedCharacterReferences,
+#endif
   GenClangCommentCommandInfo,
   GenClangCommentCommandList,
   GenArmNeon,
@@ -110,6 +112,7 @@ cl::opt<ActionType> Action(
                    "Generate Clang AST statement nodes"),
         clEnumValN(GenClangSACheckers, "gen-clang-sa-checkers",
                    "Generate Clang Static Analyzer checkers"),
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
         clEnumValN(GenClangCommentHTMLTags, "gen-clang-comment-html-tags",
                    "Generate efficient matchers for HTML tag "
                    "names that are used in documentation comments"),
@@ -121,6 +124,7 @@ cl::opt<ActionType> Action(
                    "gen-clang-comment-html-named-character-references",
                    "Generate function to translate named character "
                    "references to UTF-8 sequences"),
+#endif
         clEnumValN(GenClangCommentCommandInfo, "gen-clang-comment-command-info",
                    "Generate command properties for commands that "
                    "are used in documentation comments"),
@@ -207,6 +211,7 @@ bool ClangTableGenMain(raw_ostream &OS, RecordKeeper &Records) {
   case GenClangSACheckers:
     EmitClangSACheckers(Records, OS);
     break;
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
   case GenClangCommentHTMLTags:
     EmitClangCommentHTMLTags(Records, OS);
     break;
@@ -216,6 +221,7 @@ bool ClangTableGenMain(raw_ostream &OS, RecordKeeper &Records) {
   case GenClangCommentHTMLNamedCharacterReferences:
     EmitClangCommentHTMLNamedCharacterReferences(Records, OS);
     break;
+#endif
   case GenClangCommentCommandInfo:
     EmitClangCommentCommandInfo(Records, OS);
     break;

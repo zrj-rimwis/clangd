@@ -537,7 +537,11 @@ public:
   AnalyzerOptions() :
     AnalysisStoreOpt(RegionStoreModel),
     AnalysisConstraintsOpt(RangeConstraintsModel),
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
     AnalysisDiagOpt(PD_HTML),
+#else
+    AnalysisDiagOpt(PD_TEXT),
+#endif
     AnalysisPurgeOpt(PurgeStmt),
     DisableAllChecks(0),
     ShowCheckerHelp(0),
