@@ -841,9 +841,11 @@ bool CompilerInstance::ExecuteAction(FrontendAction &Act) {
   // created. This complexity should be lifted elsewhere.
   getTarget().adjust(getLangOpts());
 
+#ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__
   // rewriter project will change target built-in bool type from its default. 
   if (getFrontendOpts().ProgramAction == frontend::RewriteObjC)
     getTarget().noSignedCharForObjCBool();
+#endif
 
   // Validate/process some options.
   if (getHeaderSearchOpts().Verbose)

@@ -59,11 +59,13 @@ protected:
   bool BeginInvocation(CompilerInstance &CI) override;
 };
 
+#ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__
 class RewriteObjCAction : public ASTFrontendAction {
 protected:
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                  StringRef InFile) override;
 };
+#endif
 
 class RewriteMacrosAction : public PreprocessorFrontendAction {
 protected:
