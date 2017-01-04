@@ -7,10 +7,10 @@ CPU: Intel(R) Core(TM) i7-4712MQ CPU @ 2.30GHz (2294.70-MHz K8-class CPU)
 turbo disabled (for more reproducible build times)
 All compilations are done on tmpfs mount, "time make -j8" in gnu/usr.bin/clung.
 
-du -hsc contrib : 65M (2348 sources)
+du -hsc contrib : 65M (2338 sources)
 make -j8 depend : ~2.5min
-make -j8        : 19min 33s
-du -hsc .       : 572M
+make -j8        : 19min 15s
+du -hsc .       : 571M
  clang          : 52M
  LLVM.gold      : 28M
 
