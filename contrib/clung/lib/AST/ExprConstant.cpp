@@ -9349,7 +9349,9 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::AddrLabelExprClass:
   case Expr::StmtExprClass:
   case Expr::CXXMemberCallExprClass:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case Expr::CUDAKernelCallExprClass:
+#endif
   case Expr::CXXDynamicCastExprClass:
   case Expr::CXXTypeidExprClass:
   case Expr::CXXUuidofExprClass:

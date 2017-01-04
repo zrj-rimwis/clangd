@@ -2038,6 +2038,7 @@ static const CXXMethodDecl *computeKeyFunction(ASTContext &Context,
         continue;
     }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (Context.getLangOpts().CUDA) {
       // While compiler may see key method in this TU, during CUDA
       // compilation we should ignore methods that are not accessible
@@ -2052,6 +2053,7 @@ static const CXXMethodDecl *computeKeyFunction(ASTContext &Context,
           continue;
       }
     }
+#endif
 
     // If the key function is dllimport but the class isn't, then the class has
     // no key function. The DLL that exports the key function won't export the

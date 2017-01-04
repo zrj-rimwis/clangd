@@ -1787,6 +1787,7 @@ void CodeGenModule::ConstructAttributeList(
     }
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA && getLangOpts().CUDAIsDevice) {
     // Conservatively, mark all functions and calls in CUDA as convergent
     // (meaning, they may call an intrinsically convergent op, such as
@@ -1798,6 +1799,7 @@ void CodeGenModule::ConstructAttributeList(
     if (getLangOpts().CUDADeviceFlushDenormalsToZero)
       FuncAttrs.addAttribute("nvptx-f32ftz", "true");
   }
+#endif
 
   ClangToLLVMArgMapping IRFunctionArgs(getContext(), FI);
 

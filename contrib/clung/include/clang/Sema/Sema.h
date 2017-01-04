@@ -4012,9 +4012,11 @@ public:
                                    Expr *Config = nullptr,
                                    bool IsExecConfig = false);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   ExprResult ActOnCUDAExecConfigExpr(Scope *S, SourceLocation LLLLoc,
                                      MultiExprArg ExecConfig,
                                      SourceLocation GGGLoc);
+#endif
 
   ExprResult ActOnCastExpr(Scope *S, SourceLocation LParenLoc,
                            Declarator &D, ParsedType &Ty,
@@ -9104,6 +9106,7 @@ public:
                             QualType FieldTy, bool IsMsStruct,
                             Expr *BitWidth, bool *ZeroWidth = nullptr);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   enum CUDAFunctionTarget {
     CFT_Device,
     CFT_Global,
@@ -9181,6 +9184,7 @@ public:
   /// (E.2.3.1 in CUDA 7.5 Programming guide).
   bool isEmptyCudaConstructor(SourceLocation Loc, CXXConstructorDecl *CD);
   bool isEmptyCudaDestructor(SourceLocation Loc, CXXDestructorDecl *CD);
+#endif
 
   /// \name Code completion
   //@{

@@ -8,7 +8,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "ToolChains.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "clang/Basic/Cuda.h"
+#endif
 #include "clang/Basic/ObjCRuntime.h"
 #include "clang/Basic/Version.h"
 #include "clang/Basic/VirtualFileSystem.h"
@@ -1699,6 +1701,7 @@ bool Generic_GCC::GCCInstallationDetector::getBiarchSibling(Multilib &M) const {
 
 // Parses the contents of version.txt in an CUDA installation.  It should
 // contain one line of the from e.g. "CUDA Version 7.5.2".
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static CudaVersion ParseCudaVersionFile(llvm::StringRef V) {
   if (!V.startswith("CUDA Version "))
     return CudaVersion::UNKNOWN;
@@ -1821,6 +1824,7 @@ void Generic_GCC::CudaInstallationDetector::print(raw_ostream &OS) const {
     OS << "Found CUDA installation: " << InstallPath << ", version "
        << CudaVersionToString(Version) << "\n";
 }
+#endif
 
 namespace {
 // Filter to remove Multilibs that don't exist as a suffix to Path
@@ -2635,7 +2639,11 @@ void Generic_GCC::GCCInstallationDetector::ScanLibDirForGCCTriple(
 
 Generic_GCC::Generic_GCC(const Driver &D, const llvm::Triple &Triple,
                          const ArgList &Args)
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     : ToolChain(D, Triple, Args), GCCInstallation(D), CudaInstallation(D) {
+#else
+    : ToolChain(D, Triple, Args), GCCInstallation(D) {
+#endif
   getProgramPaths().push_back(getDriver().getInstalledDir());
   if (getDriver().getInstalledDir() != getDriver().Dir)
     getProgramPaths().push_back(getDriver().Dir);
@@ -2667,7 +2675,9 @@ Tool *Generic_GCC::buildLinker() const { return new tools::gcc::Linker(*this); }
 void Generic_GCC::printVerboseInfo(raw_ostream &OS) const {
   // Print the information about how we detected the GCC installation.
   GCCInstallation.print(OS);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   CudaInstallation.print(OS);
+#endif
 }
 
 bool Generic_GCC::IsUnwindTablesDefault() const {
@@ -3992,7 +4002,9 @@ static void addMultilibsFilePaths(const Driver &D, const MultilibSet &Multilibs,
 Linux::Linux(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
     : Generic_ELF(D, Triple, Args) {
   GCCInstallation.init(Triple, Args);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   CudaInstallation.init(Triple, Args);
+#endif
   Multilibs = GCCInstallation.getMultilibs();
   llvm::Triple::ArchType Arch = Triple.getArch();
   std::string SysRoot = computeSysRoot();
@@ -4592,6 +4604,7 @@ void Linux::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
   }
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void Linux::AddCudaIncludeArgs(const ArgList &DriverArgs,
                                ArgStringList &CC1Args) const {
   if (DriverArgs.hasArg(options::OPT_nocudainc))
@@ -4606,6 +4619,7 @@ void Linux::AddCudaIncludeArgs(const ArgList &DriverArgs,
   CC1Args.push_back("-include");
   CC1Args.push_back("__clang_cuda_runtime_wrapper.h");
 }
+#endif
 
 void Linux::AddIAMCUIncludeArgs(const ArgList &DriverArgs,
                                 ArgStringList &CC1Args) const {
@@ -4691,6 +4705,7 @@ bool DragonFly::HasNativeLLVMSupport() const { return true; }
 /// which isn't properly a linker but nonetheless performs the step of stitching
 /// together object files from the assembler into a single blob.
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 CudaToolChain::CudaToolChain(const Driver &D, const llvm::Triple &Triple,
                              const ArgList &Args)
     : Linux(D, Triple, Args) {
@@ -4795,6 +4810,7 @@ Tool *CudaToolChain::buildAssembler() const {
 Tool *CudaToolChain::buildLinker() const {
   return new tools::NVPTX::Linker(*this);
 }
+#endif
 
 /// XCore tool chain
 XCoreToolChain::XCoreToolChain(const Driver &D, const llvm::Triple &Triple,

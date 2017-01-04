@@ -85,8 +85,10 @@ bool types::isAcceptedByClang(ID Id) {
   case TY_Asm:
   case TY_C: case TY_PP_C:
   case TY_CL:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case TY_CUDA: case TY_PP_CUDA:
   case TY_CUDA_DEVICE:
+#endif
   case TY_ObjC: case TY_PP_ObjC: case TY_PP_ObjC_Alias:
   case TY_CXX: case TY_PP_CXX:
   case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
@@ -123,7 +125,9 @@ bool types::isCXX(ID Id) {
   case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
   case TY_CXXHeader: case TY_PP_CXXHeader:
   case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case TY_CUDA: case TY_PP_CUDA: case TY_CUDA_DEVICE:
+#endif
     return true;
   }
 }
@@ -141,6 +145,7 @@ bool types::isLLVMIR(ID Id) {
   }
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 bool types::isCuda(ID Id) {
   switch (Id) {
   default:
@@ -152,6 +157,7 @@ bool types::isCuda(ID Id) {
     return true;
   }
 }
+#endif
 
 types::ID types::lookupTypeForExtension(const char *Ext) {
   return llvm::StringSwitch<types::ID>(Ext)
@@ -178,8 +184,10 @@ types::ID types::lookupTypeForExtension(const char *Ext) {
            .Case("CC", TY_CXX)
            .Case("cl", TY_CL)
            .Case("cp", TY_CXX)
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
            .Case("cu", TY_CUDA)
            .Case("cui", TY_PP_CUDA)
+#endif
            .Case("hh", TY_CXXHeader)
            .Case("ll", TY_LLVM_IR)
            .Case("hpp", TY_CXXHeader)
@@ -237,7 +245,11 @@ void types::getCompilationPhases(ID Id, llvm::SmallVectorImpl<phases::ID> &P) {
     }
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (!onlyPrecompileType(Id) && Id != TY_CUDA_DEVICE) {
+#else
+  if (!onlyPrecompileType(Id) && true) {
+#endif
     P.push_back(phases::Link);
   }
   assert(0 < P.size() && "Not enough phases in list");

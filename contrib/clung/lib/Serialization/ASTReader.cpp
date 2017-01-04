@@ -3060,6 +3060,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
                                     Record.begin(), Record.end());
       break;
         
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case CUDA_SPECIAL_DECL_REFS:
       // Later tables overwrite earlier ones.
       // FIXME: Modules will have trouble with this.
@@ -3067,6 +3068,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
       for (unsigned I = 0, N = Record.size(); I != N; ++I)
         CUDASpecialDeclRefs.push_back(getGlobalDeclID(F, Record[I]));
       break;
+#endif
 
     case HEADER_SEARCH_TABLE: {
       F.HeaderFileInfoTableData = Blob.data();
@@ -4042,12 +4044,14 @@ void ASTReader::InitializeContext() {
   
   ReadPragmaDiagnosticMappings(Context.getDiagnostics());
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // If there were any CUDA special declarations, deserialize them.
   if (!CUDASpecialDeclRefs.empty()) {
     assert(CUDASpecialDeclRefs.size() == 1 && "More decl refs than expected!");
     Context.setcudaConfigureCallDecl(
                            cast<FunctionDecl>(GetDecl(CUDASpecialDeclRefs[0])));
   }
+#endif
 
   // Re-export any modules that were imported by a non-module AST file.
   // FIXME: This does not make macro-only imports visible again.

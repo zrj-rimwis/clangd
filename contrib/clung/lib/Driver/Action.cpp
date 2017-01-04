@@ -85,8 +85,10 @@ std::string Action::getOffloadingKindPrefix() const {
   case OFK_Host:
     llvm_unreachable("Host kind is not an offloading device kind.");
     break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case OFK_Cuda:
     return "device-cuda";
+#endif
 
     // TODO: Add other programming models here.
   }
@@ -95,8 +97,10 @@ std::string Action::getOffloadingKindPrefix() const {
     return "";
 
   std::string Res("host");
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (ActiveOffloadKindMask & OFK_Cuda)
     Res += "-cuda";
+#endif
 
   // TODO: Add other programming models here.
 

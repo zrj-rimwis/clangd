@@ -1580,9 +1580,11 @@ static void handleAliasAttr(Sema &S, Decl *D, const AttributeList &Attr) {
     S.Diag(Attr.getLoc(), diag::err_alias_not_supported_on_darwin);
     return;
   }
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (S.Context.getTargetInfo().getTriple().isNVPTX()) {
     S.Diag(Attr.getLoc(), diag::err_alias_not_supported_on_nvptx);
   }
+#endif
 
   // Aliases should be on declarations, not definitions.
   if (const auto *FD = dyn_cast<FunctionDecl>(D)) {
@@ -3695,6 +3697,8 @@ static void handleOptimizeNoneAttr(Sema &S, Decl *D,
     D->addAttr(Optnone);
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
+// volation, shouldn't contain cuda in name?
 static void handleGlobalAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   if (checkAttrMutualExclusion<CUDADeviceAttr>(S, D, Attr.getRange(),
                                                Attr.getName()) ||
@@ -3727,6 +3731,7 @@ static void handleGlobalAttr(Sema &S, Decl *D, const AttributeList &Attr) {
               CUDAGlobalAttr(Attr.getRange(), S.Context,
                              Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
 static void handleGNUInlineAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   FunctionDecl *Fn = cast<FunctionDecl>(D);
@@ -4044,6 +4049,7 @@ bool Sema::CheckRegparmAttr(const AttributeList &Attr, unsigned &numParams) {
 // acceptable, performs implicit conversion to Rvalue, and returns
 // non-nullptr Expr result on success. Otherwise, it returns nullptr
 // and may output an error.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static Expr *makeLaunchBoundsArgExpr(Sema &S, Expr *E,
                                      const CUDALaunchBoundsAttr &Attr,
                                      const unsigned Idx) {
@@ -4080,7 +4086,9 @@ static Expr *makeLaunchBoundsArgExpr(Sema &S, Expr *E,
 
   return ValArg.getAs<Expr>();
 }
+#endif
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void Sema::AddLaunchBoundsAttr(SourceRange AttrRange, Decl *D, Expr *MaxThreads,
                                Expr *MinBlocks, unsigned SpellingListIndex) {
   CUDALaunchBoundsAttr TmpAttr(AttrRange, Context, MaxThreads, MinBlocks,
@@ -4098,7 +4106,9 @@ void Sema::AddLaunchBoundsAttr(SourceRange AttrRange, Decl *D, Expr *MaxThreads,
   D->addAttr(::new (Context) CUDALaunchBoundsAttr(
       AttrRange, Context, MaxThreads, MinBlocks, SpellingListIndex));
 }
+#endif
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static void handleLaunchBoundsAttr(Sema &S, Decl *D,
                                    const AttributeList &Attr) {
   if (!checkAttributeAtLeastNumArgs(S, Attr, 1) ||
@@ -4109,6 +4119,7 @@ static void handleLaunchBoundsAttr(Sema &S, Decl *D,
                         Attr.getNumArgs() > 1 ? Attr.getArgAsExpr(1) : nullptr,
                         Attr.getAttributeSpellingListIndex());
 }
+#endif
 
 static void handleArgumentWithTypeTagAttr(Sema &S, Decl *D,
                                           const AttributeList &Attr) {
@@ -5449,10 +5460,12 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_Common:
     handleCommonAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case AttributeList::AT_CUDAConstant:
     handleSimpleAttributeWithExclusions<CUDAConstantAttr, CUDASharedAttr>(S, D,
                                                                           Attr);
     break;
+#endif
   case AttributeList::AT_PassObjectSize:
     handlePassObjectSizeAttr(S, D, Attr);
     break;
@@ -5492,6 +5505,7 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_FormatArg:
     handleFormatArgAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case AttributeList::AT_CUDAGlobal:
     handleGlobalAttr(S, D, Attr);
     break;
@@ -5503,12 +5517,15 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     handleSimpleAttributeWithExclusions<CUDAHostAttr, CUDAGlobalAttr>(S, D,
                                                                       Attr);
     break;
+#endif
   case AttributeList::AT_GNUInline:
     handleGNUInlineAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case AttributeList::AT_CUDALaunchBounds:
     handleLaunchBoundsAttr(S, D, Attr);
     break;
+#endif
   case AttributeList::AT_Restrict:
     handleRestrictAttr(S, D, Attr);
     break;
@@ -5560,10 +5577,12 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_NoThrow:
     handleSimpleAttribute<NoThrowAttr>(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case AttributeList::AT_CUDAShared:
     handleSimpleAttributeWithExclusions<CUDASharedAttr, CUDAConstantAttr>(S, D,
                                                                           Attr);
     break;
+#endif
   case AttributeList::AT_VecReturn:
     handleVecReturnAttr(S, D, Attr);
     break;

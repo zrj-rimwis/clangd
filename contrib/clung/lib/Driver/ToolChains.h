@@ -11,7 +11,9 @@
 #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_H
 
 #include "Tools.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "clang/Basic/Cuda.h"
+#endif
 #include "clang/Basic/VersionTuple.h"
 #include "clang/Driver/Action.h"
 #include "clang/Driver/Multilib.h"
@@ -159,6 +161,7 @@ public:
 protected:
   GCCInstallationDetector GCCInstallation;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // \brief A class to find a viable CUDA installation
   class CudaInstallationDetector {
   private:
@@ -210,6 +213,7 @@ protected:
   };
 
   CudaInstallationDetector CudaInstallation;
+#endif
 
 public:
   Generic_GCC(const Driver &D, const llvm::Triple &Triple,
@@ -834,8 +838,10 @@ public:
   void AddClangCXXStdlibIncludeArgs(
       const llvm::opt::ArgList &DriverArgs,
       llvm::opt::ArgStringList &CC1Args) const override;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   void AddCudaIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                           llvm::opt::ArgStringList &CC1Args) const override;
+#endif
   void AddIAMCUIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                            llvm::opt::ArgStringList &CC1Args) const override;
   bool isPIEDefault() const override;
@@ -853,6 +859,7 @@ protected:
   Tool *buildLinker() const override;
 };
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 class LLVM_LIBRARY_VISIBILITY CudaToolChain : public Linux {
 public:
   CudaToolChain(const Driver &D, const llvm::Triple &Triple,
@@ -882,6 +889,7 @@ protected:
   Tool *buildAssembler() const override;  // ptxas
   Tool *buildLinker() const override;     // fatbinary (ok, not really a linker)
 };
+#endif
 
 class LLVM_LIBRARY_VISIBILITY MipsLLVMToolChain : public Linux {
 protected:

@@ -6017,12 +6017,14 @@ bool Sema::ShouldDeleteSpecialMember(CXXMethodDecl *MD, CXXSpecialMember CSM,
   if (SMI.shouldDeleteForAllConstMembers())
     return true;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     // We should delete the special member in CUDA mode if target inference
     // failed.
     return inferCUDATargetForImplicitSpecialMember(RD, CSM, MD, SMI.ConstArg,
                                                    Diagnose);
   }
+#endif
 
   return false;
 }
@@ -9160,12 +9162,14 @@ CXXConstructorDecl *Sema::DeclareImplicitDefaultConstructor(
   DefaultCon->setAccess(AS_public);
   DefaultCon->setDefaulted();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     inferCUDATargetForImplicitSpecialMember(ClassDecl, CXXDefaultConstructor,
                                             DefaultCon,
                                             /* ConstRHS */ false,
                                             /* Diagnose */ false);
   }
+#endif
 
   // Build an exception specification pointing back at this constructor.
   FunctionProtoType::ExtProtoInfo EPI = getImplicitMethodEPI(*this, DefaultCon);
@@ -9472,12 +9476,14 @@ CXXDestructorDecl *Sema::DeclareImplicitDestructor(CXXRecordDecl *ClassDecl) {
   Destructor->setAccess(AS_public);
   Destructor->setDefaulted();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     inferCUDATargetForImplicitSpecialMember(ClassDecl, CXXDestructor,
                                             Destructor,
                                             /* ConstRHS */ false,
                                             /* Diagnose */ false);
   }
+#endif
 
   // Build an exception specification pointing back at this destructor.
   FunctionProtoType::ExtProtoInfo EPI = getImplicitMethodEPI(*this, Destructor);
@@ -10178,12 +10184,14 @@ CXXMethodDecl *Sema::DeclareImplicitCopyAssignment(CXXRecordDecl *ClassDecl) {
   CopyAssignment->setDefaulted();
   CopyAssignment->setImplicit();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     inferCUDATargetForImplicitSpecialMember(ClassDecl, CXXCopyAssignment,
                                             CopyAssignment,
                                             /* ConstRHS */ Const,
                                             /* Diagnose */ false);
   }
+#endif
 
   // Build an exception specification pointing back at this member.
   FunctionProtoType::ExtProtoInfo EPI =
@@ -10570,12 +10578,14 @@ CXXMethodDecl *Sema::DeclareImplicitMoveAssignment(CXXRecordDecl *ClassDecl) {
   MoveAssignment->setDefaulted();
   MoveAssignment->setImplicit();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     inferCUDATargetForImplicitSpecialMember(ClassDecl, CXXMoveAssignment,
                                             MoveAssignment,
                                             /* ConstRHS */ false,
                                             /* Diagnose */ false);
   }
+#endif
 
   // Build an exception specification pointing back at this member.
   FunctionProtoType::ExtProtoInfo EPI =
@@ -11006,12 +11016,14 @@ CXXConstructorDecl *Sema::DeclareImplicitCopyConstructor(
   CopyConstructor->setAccess(AS_public);
   CopyConstructor->setDefaulted();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     inferCUDATargetForImplicitSpecialMember(ClassDecl, CXXCopyConstructor,
                                             CopyConstructor,
                                             /* ConstRHS */ Const,
                                             /* Diagnose */ false);
   }
+#endif
 
   // Build an exception specification pointing back at this member.
   FunctionProtoType::ExtProtoInfo EPI =
@@ -11186,12 +11198,14 @@ CXXConstructorDecl *Sema::DeclareImplicitMoveConstructor(
   MoveConstructor->setAccess(AS_public);
   MoveConstructor->setDefaulted();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     inferCUDATargetForImplicitSpecialMember(ClassDecl, CXXMoveConstructor,
                                             MoveConstructor,
                                             /* ConstRHS */ false,
                                             /* Diagnose */ false);
   }
+#endif
 
   // Build an exception specification pointing back at this member.
   FunctionProtoType::ExtProtoInfo EPI =

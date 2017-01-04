@@ -579,6 +579,7 @@ llvm::Constant *CodeGenVTables::CreateVTableInitializer(
         break;
       }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       if (CGM.getLangOpts().CUDA) {
         // Emit NULL for methods we can't codegen on this
         // side. Otherwise we'd end up with vtable with unresolved
@@ -596,6 +597,7 @@ llvm::Constant *CodeGenVTables::CreateVTableInitializer(
         }
         // Method is acceptable, continue processing as usual.
       }
+#endif
 
       if (cast<CXXMethodDecl>(GD.getDecl())->isPure()) {
         // We have a pure virtual member function.

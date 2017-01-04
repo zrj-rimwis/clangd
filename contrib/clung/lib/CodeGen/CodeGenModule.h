@@ -88,7 +88,9 @@ class CGDebugInfo;
 class CGObjCRuntime;
 class CGOpenCLRuntime;
 class CGOpenMPRuntime;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 class CGCUDARuntime;
+#endif
 class BlockFieldFlags;
 class FunctionArgList;
 class CoverageMappingModuleGen;
@@ -288,7 +290,9 @@ private:
   std::unique_ptr<CGObjCRuntime> ObjCRuntime;
   std::unique_ptr<CGOpenCLRuntime> OpenCLRuntime;
   std::unique_ptr<CGOpenMPRuntime> OpenMPRuntime;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   std::unique_ptr<CGCUDARuntime> CUDARuntime;
+#endif
   std::unique_ptr<CGDebugInfo> DebugInfo;
   std::unique_ptr<ObjCEntrypoints> ObjCData;
   llvm::MDNode *NoObjCARCExceptionsMetadata = nullptr;
@@ -525,11 +529,13 @@ public:
     return *OpenMPRuntime;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   /// Return a reference to the configured CUDA runtime.
   CGCUDARuntime &getCUDARuntime() {
     assert(CUDARuntime != nullptr);
     return *CUDARuntime;
   }
+#endif
 
   ObjCEntrypoints &getObjCEntrypoints() const {
     assert(ObjCData != nullptr);

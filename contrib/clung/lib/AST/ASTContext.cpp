@@ -740,7 +740,11 @@ ASTContext::ASTContext(LangOptions &LOpts, SourceManager &SM,
       ObjCInstanceTypeDecl(nullptr), FILEDecl(nullptr), jmp_bufDecl(nullptr),
       sigjmp_bufDecl(nullptr), ucontext_tDecl(nullptr),
       BlockDescriptorType(nullptr), BlockDescriptorExtendedType(nullptr),
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       cudaConfigureCallDecl(nullptr), FirstLocalImport(), LastLocalImport(),
+#else
+      FirstLocalImport(), LastLocalImport(),
+#endif
       ExternCContext(nullptr), MakeIntegerSeqDecl(nullptr),
       TypePackElementDecl(nullptr), SourceMgr(SM), LangOpts(LOpts),
       SanitizerBL(new SanitizerBlacklist(LangOpts.SanitizerBlacklistFiles, SM)),
@@ -8462,12 +8466,14 @@ static GVALinkage adjustGVALinkageForAttributes(const ASTContext &Context,
   } else if (D->hasAttr<DLLExportAttr>()) {
     if (L == GVA_DiscardableODR)
       return GVA_StrongODR;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   } else if (Context.getLangOpts().CUDA && Context.getLangOpts().CUDAIsDevice &&
              D->hasAttr<CUDAGlobalAttr>()) {
     // Device-side functions with __global__ attribute must always be
     // visible externally so they can be launched from host.
     if (L == GVA_DiscardableODR || L == GVA_Internal)
       return GVA_StrongODR;
+#endif
   }
   return L;
 }

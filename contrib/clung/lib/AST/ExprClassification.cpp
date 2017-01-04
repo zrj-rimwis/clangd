@@ -288,7 +288,9 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::CXXOperatorCallExprClass:
   case Expr::CXXMemberCallExprClass:
   case Expr::UserDefinedLiteralClass:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case Expr::CUDAKernelCallExprClass:
+#endif
     return ClassifyUnnamed(Ctx, cast<CallExpr>(E)->getCallReturnType(Ctx));
 
     // __builtin_choose_expr is equivalent to the chosen expression.

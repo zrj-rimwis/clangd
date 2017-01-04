@@ -5588,6 +5588,7 @@ Address ARMABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
 // NVPTX ABI Implementation
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 namespace {
 
 class NVPTXABIInfo : public ABIInfo {
@@ -5683,6 +5684,7 @@ setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
     }
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // Perform special handling in CUDA mode.
   if (M.getLangOpts().CUDA) {
     // CUDA __global__ functions get a kernel metadata entry.  Since
@@ -5711,6 +5713,7 @@ setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
       }
     }
   }
+#endif
 }
 
 void NVPTXTargetCodeGenInfo::addNVVMMetadata(llvm::Function *F, StringRef Name,
@@ -5729,6 +5732,7 @@ void NVPTXTargetCodeGenInfo::addNVVMMetadata(llvm::Function *F, StringRef Name,
   MD->addOperand(llvm::MDNode::get(Ctx, MDVals));
 }
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // SystemZ ABI Implementation
@@ -7978,9 +7982,11 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
     return SetCGInfo(new PPC64_SVR4_TargetCodeGenInfo(Types, Kind, HasQPX));
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case llvm::Triple::nvptx:
   case llvm::Triple::nvptx64:
     return SetCGInfo(new NVPTXTargetCodeGenInfo(Types));
+#endif
 
   case llvm::Triple::msp430:
     return SetCGInfo(new MSP430TargetCodeGenInfo(Types));

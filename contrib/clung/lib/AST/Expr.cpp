@@ -2865,7 +2865,9 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case CallExprClass:
   case CXXOperatorCallExprClass:
   case CXXMemberCallExprClass:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case CUDAKernelCallExprClass:
+#endif
   case UserDefinedLiteralClass: {
     // We don't know a call definitely has side effects, except for calls
     // to pure/const functions that definitely don't.

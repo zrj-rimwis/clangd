@@ -917,6 +917,7 @@ public:
 };
 } // end namespace PS4cpu
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 namespace NVPTX {
 
 // Run ptxas, the NVPTX assembler.
@@ -951,6 +952,7 @@ class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
 };
 
 }  // end namespace NVPTX
+#endif
 
 } // end namespace tools
 } // end namespace driver

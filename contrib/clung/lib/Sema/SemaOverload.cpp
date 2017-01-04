@@ -1125,6 +1125,7 @@ bool Sema::IsOverload(FunctionDecl *New, FunctionDecl *Old,
       return true;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA && ConsiderCudaAttrs) {
     CUDAFunctionTarget NewTarget = IdentifyCUDATarget(New),
                        OldTarget = IdentifyCUDATarget(Old);
@@ -1146,6 +1147,7 @@ bool Sema::IsOverload(FunctionDecl *New, FunctionDecl *Old,
     // different CUDA target attributes.
     return NewTarget != OldTarget;
   }
+#endif
 
   // The signatures match; this is not an overload.
   return false;
@@ -5810,6 +5812,7 @@ Sema::AddOverloadCandidate(FunctionDecl *Function,
     return;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // (CUDA B.1): Check for invalid calls between targets.
   if (getLangOpts().CUDA)
     if (const FunctionDecl *Caller = dyn_cast<FunctionDecl>(CurContext))
@@ -5822,6 +5825,7 @@ Sema::AddOverloadCandidate(FunctionDecl *Function,
         Candidate.FailureKind = ovl_fail_bad_target;
         return;
       }
+#endif
 
   // Determine the implicit conversion sequences for each of the
   // arguments.
@@ -6195,6 +6199,7 @@ Sema::AddMethodCandidate(CXXMethodDecl *Method, DeclAccessPair FoundDecl,
     }
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // (CUDA B.1): Check for invalid calls between targets.
   if (getLangOpts().CUDA)
     if (const FunctionDecl *Caller = dyn_cast<FunctionDecl>(CurContext))
@@ -6203,6 +6208,7 @@ Sema::AddMethodCandidate(CXXMethodDecl *Method, DeclAccessPair FoundDecl,
         Candidate.FailureKind = ovl_fail_bad_target;
         return;
       }
+#endif
 
   // Determine the implicit conversion sequences for each of the
   // arguments.
@@ -8676,11 +8682,13 @@ bool clang::isBetterOverloadCandidate(Sema &S, const OverloadCandidate &Cand1,
       return Cmp == Comparison::Better;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (S.getLangOpts().CUDA && Cand1.Function && Cand2.Function) {
     FunctionDecl *Caller = dyn_cast<FunctionDecl>(S.CurContext);
     return S.IdentifyCUDAPreference(Caller, Cand1.Function) >
            S.IdentifyCUDAPreference(Caller, Cand2.Function);
   }
+#endif
 
   bool HasPS1 = Cand1.Function != nullptr &&
                 functionHasPassObjectSizeParams(Cand1.Function);
@@ -8781,6 +8789,7 @@ OverloadCandidateSet::BestViableFunction(Sema &S, SourceLocation Loc,
   // only on their host/device attributes. Specifically, if one
   // candidate call is WrongSide and the other is SameSide, we ignore
   // the WrongSide candidate.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (S.getLangOpts().CUDA) {
     const FunctionDecl *Caller = dyn_cast<FunctionDecl>(S.CurContext);
     bool ContainsSameSideCandidate =
@@ -8800,6 +8809,7 @@ OverloadCandidateSet::BestViableFunction(Sema &S, SourceLocation Loc,
                        Candidates.end());
     }
   }
+#endif
 
   // Find the best viable function.
   Best = end();
@@ -9608,6 +9618,7 @@ static void DiagnoseBadDeduction(Sema &S, OverloadCandidate *Cand,
                        Cand->DeductionFailure, NumArgs, TakingCandidateAddress);
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 /// CUDA: diagnose an invalid call across targets.
 static void DiagnoseBadTarget(Sema &S, OverloadCandidate *Cand) {
   FunctionDecl *Caller = cast<FunctionDecl>(S.CurContext);
@@ -9663,6 +9674,7 @@ static void DiagnoseBadTarget(Sema &S, OverloadCandidate *Cand) {
                                               /* Diagnose */ true);
   }
 }
+#endif
 
 static void DiagnoseFailedEnableIfAttr(Sema &S, OverloadCandidate *Cand) {
   FunctionDecl *Callee = Cand->Function;
@@ -9744,8 +9756,10 @@ static void NoteFunctionCandidate(Sema &S, OverloadCandidate *Cand,
     return S.NoteOverloadCandidate(Cand->FoundDecl, Fn);
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case ovl_fail_bad_target:
     return DiagnoseBadTarget(S, Cand);
+#endif
 
   case ovl_fail_enable_if:
     return DiagnoseFailedEnableIfAttr(S, Cand);
@@ -10349,8 +10363,10 @@ public:
       }
     }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (S.getLangOpts().CUDA && Matches.size() > 1)
       EliminateSuboptimalCudaMatches();
+#endif
   }
 
   bool hasComplained() const { return HasComplained; }
@@ -10470,10 +10486,12 @@ private:
       return false;
 
     if (FunctionDecl *FunDecl = dyn_cast<FunctionDecl>(Fn)) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       if (S.getLangOpts().CUDA)
         if (FunctionDecl *Caller = dyn_cast<FunctionDecl>(S.CurContext))
           if (!Caller->isImplicit() && S.CheckCUDATarget(Caller, FunDecl))
             return false;
+#endif
 
       // If any candidate has a placeholder return type, trigger its deduction
       // now.
@@ -10583,9 +10601,11 @@ private:
     }
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   void EliminateSuboptimalCudaMatches() {
     S.EraseUnwantedCUDAMatches(dyn_cast<FunctionDecl>(S.CurContext), Matches);
   }
+#endif
 
 public:
   void ComplainNoMatchesFound() const {
@@ -12331,6 +12351,7 @@ Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
     new (Context) CXXMemberCallExpr(Context, MemExprE, Args,
                                     ResultType, VK, RParenLoc);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // (CUDA B.1): Check for invalid calls between targets.
   if (getLangOpts().CUDA) {
     if (const FunctionDecl *Caller = dyn_cast<FunctionDecl>(CurContext)) {
@@ -12342,6 +12363,7 @@ Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
       }
     }
   }
+#endif
 
   // Check for a valid return type.
   if (CheckCallReturnType(Method->getReturnType(), MemExpr->getMemberLoc(),

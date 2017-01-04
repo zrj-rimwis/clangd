@@ -2484,8 +2484,10 @@ FunctionDecl *Sema::FindUsualDeallocationFunction(SourceLocation StartLoc,
            "found an unexpected usual deallocation function");
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA)
     EraseUnwantedCUDAMatches(dyn_cast<FunctionDecl>(CurContext), Matches);
+#endif
 
   assert(Matches.size() == 1 &&
          "unexpectedly have multiple usual deallocation functions");
@@ -2518,8 +2520,10 @@ bool Sema::FindDeallocationFunction(SourceLocation StartLoc, CXXRecordDecl *RD,
       Matches.push_back(F.getPair());
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA)
     EraseUnwantedCUDAMatches(dyn_cast<FunctionDecl>(CurContext), Matches);
+#endif
 
   // There's exactly one suitable operator;  pick it.
   if (Matches.size() == 1) {

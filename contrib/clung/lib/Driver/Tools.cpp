@@ -304,12 +304,14 @@ static void addExtraOffloadCXXStdlibIncludeArgs(Compilation &C,
                                                 const ArgList &Args,
                                                 ArgStringList &CmdArgs) {
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (JA.isHostOffloading(Action::OFK_Cuda))
     C.getSingleOffloadToolChain<Action::OFK_Cuda>()
         ->AddClangCXXStdlibIncludeArgs(Args, CmdArgs);
   else if (JA.isDeviceOffloading(Action::OFK_Cuda))
     C.getSingleOffloadToolChain<Action::OFK_Host>()
         ->AddClangCXXStdlibIncludeArgs(Args, CmdArgs);
+#endif
 
   // TODO: Add support for other programming models here.
 }
@@ -320,12 +322,14 @@ static void addExtraOffloadSpecificIncludeArgs(Compilation &C,
                                                const ArgList &Args,
                                                ArgStringList &CmdArgs) {
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (JA.isHostOffloading(Action::OFK_Cuda))
     C.getSingleOffloadToolChain<Action::OFK_Host>()->AddCudaIncludeArgs(
         Args, CmdArgs);
   else if (JA.isDeviceOffloading(Action::OFK_Cuda))
     C.getSingleOffloadToolChain<Action::OFK_Cuda>()->AddCudaIncludeArgs(
         Args, CmdArgs);
+#endif
 
   // TODO: Add support for other programming models here.
 }
@@ -1952,11 +1956,13 @@ static std::string getCPUName(const ArgList &Args, const llvm::Triple &T,
     return CPUName;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case llvm::Triple::nvptx:
   case llvm::Triple::nvptx64:
     if (const Arg *A = Args.getLastArg(options::OPT_march_EQ))
       return A->getValue();
     return "";
+#endif
 
   case llvm::Triple::ppc:
   case llvm::Triple::ppc64:
@@ -3852,8 +3858,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // CUDA compilation may have multiple inputs (source file + results of
   // device-side compilations). All other jobs are expected to have exactly one
   // input.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   bool IsCuda = JA.isOffloading(Action::OFK_Cuda);
   assert((IsCuda || Inputs.size() == 1) && "Unable to handle multiple inputs.");
+#endif
 
   // C++ is not supported for IAMCU.
   if (IsIAMCU && types::isCXX(Input.getType()))
@@ -3868,6 +3876,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   CmdArgs.push_back("-triple");
   CmdArgs.push_back(Args.MakeArgString(TripleStr));
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (IsCuda) {
     // We have to pass the triple of the host if compiling for a CUDA device and
     // vice-versa.
@@ -3884,6 +3893,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-aux-triple");
     CmdArgs.push_back(Args.MakeArgString(NormalizedTriple));
   }
+#endif
 
   if (Triple.isOSWindows() && (Triple.getArch() == llvm::Triple::arm ||
                                Triple.getArch() == llvm::Triple::thumb)) {
@@ -4368,7 +4378,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // a linker bug (see <rdar://problem/7651567>), and CUDA device code, where
   // aliases aren't supported.
   if (!getToolChain().getTriple().isOSDarwin() &&
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       !getToolChain().getTriple().isNVPTX())
+#else
+      !false)
+#endif
     CmdArgs.push_back("-mconstructor-aliases");
 
   // Darwin's kernel doesn't support guard variables; just die if we
@@ -6042,11 +6056,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // Host-side cuda compilation receives device-side outputs as Inputs[1...].
   // Include them with -fcuda-include-gpubinary.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (IsCuda && Inputs.size() > 1)
     for (auto I = std::next(Inputs.begin()), E = Inputs.end(); I != E; ++I) {
       CmdArgs.push_back("-fcuda-include-gpubinary");
       CmdArgs.push_back(I->getFilename());
     }
+#endif
 
   bool WholeProgramVTables =
       Args.hasFlag(options::OPT_fwhole_program_vtables,
@@ -7395,8 +7411,10 @@ llvm::Triple::ArchType darwin::getArchTypeForMachOArchName(StringRef Str) {
       .Case("arm64", llvm::Triple::aarch64)
       .Case("r600", llvm::Triple::r600)
       .Case("amdgcn", llvm::Triple::amdgcn)
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       .Case("nvptx", llvm::Triple::nvptx)
       .Case("nvptx64", llvm::Triple::nvptx64)
+#endif
       .Case("amdil", llvm::Triple::amdil)
       .Case("spir", llvm::Triple::spir)
       .Default(llvm::Triple::UnknownArch);
@@ -11248,6 +11266,7 @@ void PS4cpu::Link::ConstructJob(Compilation &C, const JobAction &JA,
     ConstructGoldLinkJob(*this, C, JA, Output, Inputs, Args, LinkingOutput);
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void NVPTX::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                     const InputInfo &Output,
                                     const InputInfoList &Inputs,
@@ -11320,10 +11339,12 @@ void NVPTX::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
   const char *Exec = Args.MakeArgString(TC.GetProgramPath("ptxas"));
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif
 
 // All inputs to this linker must be from CudaDeviceActions, as we need to look
 // at the Inputs' Actions in order to figure out which GPU architecture they
 // correspond to.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void NVPTX::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                  const InputInfo &Output,
                                  const InputInfoList &Inputs,
@@ -11364,3 +11385,4 @@ void NVPTX::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   const char *Exec = Args.MakeArgString(TC.GetProgramPath("fatbinary"));
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif

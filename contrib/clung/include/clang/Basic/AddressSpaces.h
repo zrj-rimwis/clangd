@@ -32,9 +32,15 @@ enum ID {
   opencl_constant,
   opencl_generic,
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   cuda_device,
   cuda_constant,
   cuda_shared,
+#else
+  cuda_device_disabled,
+  cuda_constant_disabled,
+  cuda_shared_disabled,
+#endif
 
   Last,
   Count = Last-Offset

@@ -377,8 +377,12 @@ void CodeGenFunction::EmitStaticVarDecl(const VarDecl &D,
   // have any non-empty initializers. This is ensured by Sema.
   // Whatever initializer such variable may have when it gets here is
   // a no-op and should not be emitted.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   bool isCudaSharedVar = getLangOpts().CUDA && getLangOpts().CUDAIsDevice &&
                          D.hasAttr<CUDASharedAttr>();
+#else
+  const bool isCudaSharedVar = false;
+#endif
   // If this value has an initializer, emit it.
   if (D.getInit() && !isCudaSharedVar)
     var = AddInitializerToStaticVarDecl(D, var);

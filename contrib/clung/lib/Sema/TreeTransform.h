@@ -9149,6 +9149,7 @@ TreeTransform<Derived>::TransformCXXMemberCallExpr(CXXMemberCallExpr *E) {
   return getDerived().TransformCallExpr(E);
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformCUDAKernelCallExpr(CUDAKernelCallExpr *E) {
@@ -9181,6 +9182,7 @@ TreeTransform<Derived>::TransformCUDAKernelCallExpr(CUDAKernelCallExpr *E) {
                                       Args,
                                       E->getRParenLoc(), EC.get());
 }
+#endif
 
 template<typename Derived>
 ExprResult

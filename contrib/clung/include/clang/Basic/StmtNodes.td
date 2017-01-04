@@ -171,7 +171,6 @@ def ObjCAvailabilityCheckExpr : DStmt<Expr>;
 def ObjCBridgedCastExpr : DStmt<ExplicitCastExpr>;
 
 // CUDA Expressions.
-def CUDAKernelCallExpr : DStmt<CallExpr>;
 
 // Clang Extensions.
 def ShuffleVectorExpr : DStmt<Expr>;

@@ -768,11 +768,13 @@ private:
   /// The AST context tracks a few important types, such as va_list, directly.
   SmallVector<uint64_t, 16> SpecialTypes;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   /// \brief The IDs of CUDA-specific declarations ASTContext stores directly.
   ///
   /// The AST context tracks a few important decls, currently cudaConfigureCall,
   /// directly.
   SmallVector<uint64_t, 2> CUDASpecialDeclRefs;
+#endif
 
   /// \brief The floating point pragma option settings.
   SmallVector<uint64_t, 1> FPPragmaOptions;

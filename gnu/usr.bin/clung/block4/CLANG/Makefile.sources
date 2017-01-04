@@ -86,7 +86,6 @@ CLUNG_SRCDIRS+= lib/Basic
 SRCS+=	Attributes.cpp \
 	Builtins.cpp \
 	CharInfo.cpp \
-	Cuda.cpp \
 	Diagnostic.cpp \
 	DiagnosticIDs.cpp \
 	DiagnosticOptions.cpp \
@@ -116,9 +115,6 @@ SRCS+=	BackendUtil.cpp \
 	CGAtomic.cpp \
 	CGBlocks.cpp \
 	CGBuiltin.cpp \
-	CGCUDABuiltin.cpp \
-	CGCUDANV.cpp \
-	CGCUDARuntime.cpp \
 	CGCXX.cpp \
 	CGCXXABI.cpp \
 	CGCall.cpp \
@@ -141,7 +137,6 @@ SRCS+=	BackendUtil.cpp \
 	CGObjCRuntime.cpp \
 	CGOpenCLRuntime.cpp \
 	CGOpenMPRuntime.cpp \
-	CGOpenMPRuntimeNVPTX.cpp \
 	CGRecordLayoutBuilder.cpp \
 	CGStmt.cpp \
 	CGStmtOpenMP.cpp \
@@ -302,7 +297,6 @@ SRCS+=	AnalysisBasedWarnings.cpp \
 	Sema.cpp \
 	SemaAccess.cpp \
 	SemaAttr.cpp \
-	SemaCUDA.cpp \
 	SemaCXXScopeSpec.cpp \
 	SemaCast.cpp \
 	SemaChecking.cpp \

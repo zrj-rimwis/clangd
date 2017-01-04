@@ -2101,10 +2101,12 @@ void CXXNameMangler::mangleQualifiers(Qualifiers Quals) {
       case LangAS::opencl_global:   ASString = "CLglobal";   break;
       case LangAS::opencl_local:    ASString = "CLlocal";    break;
       case LangAS::opencl_constant: ASString = "CLconstant"; break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       //  <CUDA-addrspace> ::= "CU" [ "device" | "constant" | "shared" ]
       case LangAS::cuda_device:     ASString = "CUdevice";   break;
       case LangAS::cuda_constant:   ASString = "CUconstant"; break;
       case LangAS::cuda_shared:     ASString = "CUshared";   break;
+#endif
       }
     }
     mangleVendorQualifier(ASString);
@@ -3249,7 +3251,9 @@ recurse:
   case Expr::ArrayTypeTraitExprClass:
   case Expr::ExpressionTraitExprClass:
   case Expr::VAArgExprClass:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case Expr::CUDAKernelCallExprClass:
+#endif
   case Expr::AsTypeExprClass:
   case Expr::PseudoObjectExprClass:
   case Expr::AtomicExprClass:

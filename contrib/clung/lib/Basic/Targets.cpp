@@ -13,7 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Basic/Builtins.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "clang/Basic/Cuda.h"
+#endif
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/MacroBuilder.h"
@@ -1689,6 +1691,7 @@ public:
   }
 };
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static const unsigned NVPTXAddrSpaceMap[] = {
     1, // opencl_global
     3, // opencl_local
@@ -1699,7 +1702,9 @@ static const unsigned NVPTXAddrSpaceMap[] = {
     4, // cuda_constant
     3, // cuda_shared
 };
+#endif
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 class NVPTXTargetInfo : public TargetInfo {
   static const char *const GCCRegNames[];
   static const Builtin::Info BuiltinInfo[];
@@ -1872,7 +1877,9 @@ public:
     Opts.cl_khr_local_int32_extended_atomics = 1;
   }
 };
+#endif
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 const Builtin::Info NVPTXTargetInfo::BuiltinInfo[] = {
 #define BUILTIN(ID, TYPE, ATTRS)                                               \
   { #ID, TYPE, ATTRS, nullptr, ALL_LANGUAGES, nullptr },
@@ -1911,6 +1918,7 @@ public:
     resetDataLayout("e-i64:64-v16:16-v32:32-n16:32:64");
   }
 };
+#endif
 
 static const unsigned AMDGPUAddrSpaceMap[] = {
   1,    // opencl_global
@@ -8360,10 +8368,12 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
       return new PPC64TargetInfo(Triple, Opts);
     }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case llvm::Triple::nvptx:
     return new NVPTX32TargetInfo(Triple, Opts);
   case llvm::Triple::nvptx64:
     return new NVPTX64TargetInfo(Triple, Opts);
+#endif
 
   case llvm::Triple::amdgcn:
   case llvm::Triple::r600:

@@ -1735,6 +1735,7 @@ Sema::BuildDeclRefExpr(ValueDecl *D, QualType Ty, ExprValueKind VK,
                        const DeclarationNameInfo &NameInfo,
                        const CXXScopeSpec *SS, NamedDecl *FoundD,
                        const TemplateArgumentListInfo *TemplateArgs) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA)
     if (const FunctionDecl *Caller = dyn_cast<FunctionDecl>(CurContext))
       if (const FunctionDecl *Callee = dyn_cast<FunctionDecl>(D)) {
@@ -1747,6 +1748,7 @@ Sema::BuildDeclRefExpr(ValueDecl *D, QualType Ty, ExprValueKind VK,
           return ExprError();
         }
       }
+#endif
 
   bool RefersToCapturedVariable =
       isa<VarDecl>(D) &&
@@ -5157,11 +5159,15 @@ Sema::ActOnCallExpr(Scope *S, Expr *Fn, SourceLocation LParenLoc,
       Dependent = true;
 
     if (Dependent) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       if (ExecConfig) {
         return new (Context) CUDAKernelCallExpr(
             Context, Fn, cast<CallExpr>(ExecConfig), ArgExprs,
             Context.DependentTy, VK_RValue, RParenLoc);
       } else {
+#else
+      {
+#endif
         return new (Context) CallExpr(
             Context, Fn, ArgExprs, Context.DependentTy, VK_RValue, RParenLoc);
       }
@@ -5339,12 +5345,14 @@ Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
   // Make the call expr early, before semantic checks.  This guarantees cleanup
   // of arguments and function on error.
   CallExpr *TheCall;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (Config)
     TheCall = new (Context) CUDAKernelCallExpr(Context, Fn,
                                                cast<CallExpr>(Config), Args,
                                                Context.BoolTy, VK_RValue,
                                                RParenLoc);
   else
+#endif
     TheCall = new (Context) CallExpr(Context, Fn, Args, Context.BoolTy,
                                      VK_RValue, RParenLoc);
 
@@ -5390,6 +5398,7 @@ Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
       << Fn->getType() << Fn->getSourceRange());
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     if (Config) {
       // CUDA: Kernel calls must be to global functions
@@ -5408,6 +5417,7 @@ Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
             << FDecl->getName() << Fn->getSourceRange());
     }
   }
+#endif
 
   // Check for a valid return type
   if (CheckCallReturnType(FuncT->getReturnType(), Fn->getLocStart(), TheCall,
@@ -12219,6 +12229,7 @@ ExprResult Sema::BuildVAArgExpr(SourceLocation BuiltinLoc,
   Expr *OrigExpr = E;
   bool IsMS = false;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // CUDA device code does not support varargs.
   if (getLangOpts().CUDA && getLangOpts().CUDAIsDevice) {
     if (const FunctionDecl *F = dyn_cast<FunctionDecl>(CurContext)) {
@@ -12227,6 +12238,7 @@ ExprResult Sema::BuildVAArgExpr(SourceLocation BuiltinLoc,
         return ExprError(Diag(E->getLocStart(), diag::err_va_arg_in_device));
     }
   }
+#endif
 
   // It might be a __builtin_ms_va_list. (But don't ever mark a va_arg()
   // as Microsoft ABI on an actual Microsoft platform, where

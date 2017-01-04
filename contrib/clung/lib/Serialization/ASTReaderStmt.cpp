@@ -1742,10 +1742,12 @@ void ASTStmtReader::VisitSEHTryStmt(SEHTryStmt *S) {
 // CUDA Expressions and Statements
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void ASTStmtReader::VisitCUDAKernelCallExpr(CUDAKernelCallExpr *E) {
   VisitCallExpr(E);
   E->setConfig(cast<CallExpr>(Reader.ReadSubExpr()));
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // OpenCL Expressions and Statements.
@@ -3684,9 +3686,11 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       S = new (Context) OpaqueValueExpr(Empty);
       break;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case EXPR_CUDA_KERNEL_CALL:
       S = new (Context) CUDAKernelCallExpr(Context, Empty);
       break;
+#endif
         
     case EXPR_ASTYPE:
       S = new (Context) AsTypeExpr(Empty);

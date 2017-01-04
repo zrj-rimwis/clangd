@@ -52,12 +52,17 @@ inline bool IsVariableAConstantExpression(VarDecl *Var, ASTContext &Context) {
 // Decls with mismatched attributes and related diagnostics may have to be
 // ignored during this CUDA compilation pass.
 inline bool DeclAttrsMatchCUDAMode(const LangOptions &LangOpts, Decl *D) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (!LangOpts.CUDA || !D)
     return true;
   bool isDeviceSideDecl = D->hasAttr<CUDADeviceAttr>() ||
                           D->hasAttr<CUDASharedAttr>() ||
                           D->hasAttr<CUDAGlobalAttr>();
   return isDeviceSideDecl == LangOpts.CUDAIsDevice;
+#else
+  /* This is dangerous */
+  return true;
+#endif
 }
 
 // Directly mark a variable odr-used. Given a choice, prefer to use 

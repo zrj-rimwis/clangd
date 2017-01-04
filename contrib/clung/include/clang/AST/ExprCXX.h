@@ -156,6 +156,7 @@ public:
   }
 };
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 /// \brief Represents a call to a CUDA kernel function.
 class CUDAKernelCallExpr : public CallExpr {
 private:
@@ -193,6 +194,7 @@ public:
     return T->getStmtClass() == CUDAKernelCallExprClass;
   }
 };
+#endif
 
 /// \brief Abstract class common to all of the C++ "named"/"keyword" casts.
 ///

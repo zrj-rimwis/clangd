@@ -1858,6 +1858,7 @@ void StmtPrinter::VisitCXXMemberCallExpr(CXXMemberCallExpr *Node) {
   VisitCallExpr(cast<CallExpr>(Node));
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void StmtPrinter::VisitCUDAKernelCallExpr(CUDAKernelCallExpr *Node) {
   PrintExpr(Node->getCallee());
   OS << "<<<";
@@ -1866,6 +1867,7 @@ void StmtPrinter::VisitCUDAKernelCallExpr(CUDAKernelCallExpr *Node) {
   PrintCallArgs(Node);
   OS << ")";
 }
+#endif
 
 void StmtPrinter::VisitCXXNamedCastExpr(CXXNamedCastExpr *Node) {
   OS << Node->getCastName() << '<';

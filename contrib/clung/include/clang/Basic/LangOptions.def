@@ -181,17 +181,21 @@ LANGOPT(OpenCLVersion     , 32, 0, "OpenCL version")
 LANGOPT(NativeHalfType    , 1, 0, "Native half type support")
 LANGOPT(NativeHalfArgsAndReturns, 1, 0, "Native half args and returns")
 LANGOPT(HalfArgsAndReturns, 1, 0, "half args and returns")
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 LANGOPT(CUDA              , 1, 0, "CUDA")
+#endif
 LANGOPT(OpenMP            , 32, 0, "OpenMP support and version of OpenMP (31, 40 or 45)")
 LANGOPT(OpenMPUseTLS      , 1, 0, "Use TLS for threadprivates or runtime calls")
 LANGOPT(OpenMPIsDevice    , 1, 0, "Generate code only for OpenMP target device")
 LANGOPT(RenderScript      , 1, 0, "RenderScript")
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 LANGOPT(CUDAIsDevice      , 1, 0, "compiling for CUDA device")
 LANGOPT(CUDAAllowVariadicFunctions, 1, 0, "allowing variadic functions in CUDA device code")
 LANGOPT(CUDAHostDeviceConstexpr, 1, 1, "treating unattributed constexpr functions as __host__ __device__")
 LANGOPT(CUDADeviceFlushDenormalsToZero, 1, 0, "flushing denormals to zero")
 LANGOPT(CUDADeviceApproxTranscendentals, 1, 0, "using approximate transcendental functions")
+#endif
 
 LANGOPT(SizedDeallocation , 1, 0, "enable sized deallocation functions")
 LANGOPT(ConceptsTS , 1, 0, "enable C++ Extensions for Concepts")

@@ -2354,11 +2354,19 @@ enum CXCursorKind {
   CXCursor_PureAttr                      = 409,
   CXCursor_ConstAttr                     = 410,
   CXCursor_NoDuplicateAttr               = 411,
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   CXCursor_CUDAConstantAttr              = 412,
   CXCursor_CUDADeviceAttr                = 413,
   CXCursor_CUDAGlobalAttr                = 414,
   CXCursor_CUDAHostAttr                  = 415,
   CXCursor_CUDASharedAttr                = 416,
+#else
+  CXCursor_CUDAConstantAttr_disabled     = 412,
+  CXCursor_CUDADeviceAttr_disabled       = 413,
+  CXCursor_CUDAGlobalAttr_disabled       = 414,
+  CXCursor_CUDAHostAttr_disabled         = 415,
+  CXCursor_CUDASharedAttr_disabled       = 416,
+#endif
   CXCursor_VisibilityAttr                = 417,
   CXCursor_DLLExport                     = 418,
   CXCursor_DLLImport                     = 419,

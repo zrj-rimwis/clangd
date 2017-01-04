@@ -215,9 +215,11 @@ PUNCTUATOR(coloncolon,          "::")
 // Objective C support.
 PUNCTUATOR(at,                  "@")
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 // CUDA support.
 PUNCTUATOR(lesslessless,          "<<<")
 PUNCTUATOR(greatergreatergreater, ">>>")
+#endif
 
 // CL support
 PUNCTUATOR(caretcaret,            "^^")

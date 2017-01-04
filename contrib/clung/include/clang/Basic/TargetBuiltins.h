@@ -63,6 +63,7 @@ namespace clang {
     };
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   /// \brief NVPTX builtins
   namespace NVPTX {
     enum {
@@ -72,6 +73,7 @@ namespace clang {
         LastTSBuiltin
     };
   }
+#endif
 
   /// \brief AMDGPU builtins
   namespace AMDGPU {

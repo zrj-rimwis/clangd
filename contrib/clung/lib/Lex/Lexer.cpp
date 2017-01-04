@@ -3434,10 +3434,12 @@ LexNextToken:
         // If this is '<<<<' and we're in a Perforce-style conflict marker,
         // ignore it.
         goto LexNextToken;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       } else if (LangOpts.CUDA && After == '<') {
         Kind = tok::lesslessless;
         CurPtr = ConsumeChar(ConsumeChar(CurPtr, SizeTmp, Result),
                              SizeTmp2, Result);
+#endif
       } else {
         CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
         Kind = tok::lessless;
@@ -3490,10 +3492,12 @@ LexNextToken:
       } else if (After == '>' && HandleEndOfConflictMarker(CurPtr-1)) {
         // If this is '>>>>>>>' and we're in a conflict marker, ignore it.
         goto LexNextToken;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       } else if (LangOpts.CUDA && After == '>') {
         Kind = tok::greatergreatergreater;
         CurPtr = ConsumeChar(ConsumeChar(CurPtr, SizeTmp, Result),
                              SizeTmp2, Result);
+#endif
       } else {
         CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
         Kind = tok::greatergreater;

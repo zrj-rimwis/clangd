@@ -444,8 +444,10 @@ static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
   // Not "standard" per se, but available even with the -undef flag.
   if (LangOpts.AsmPreprocessor)
     Builder.defineMacro("__ASSEMBLER__");
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (LangOpts.CUDA)
     Builder.defineMacro("__CUDA__");
+#endif
 }
 
 /// Initialize the predefined C++ language feature test macros defined in
@@ -942,18 +944,22 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     break;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // CUDA device path compilaton
   if (LangOpts.CUDAIsDevice) {
     // The CUDA_ARCH value is set for the GPU target specified in the NVPTX
     // backend's target defines.
     Builder.defineMacro("__CUDA_ARCH__");
   }
+#endif
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // We need to communicate this to our CUDA header wrapper, which in turn
   // informs the proper CUDA headers of this choice.
   if (LangOpts.CUDADeviceApproxTranscendentals || LangOpts.FastMath) {
     Builder.defineMacro("__CLANG_CUDA_APPROX_TRANSCENDENTALS__");
   }
+#endif
 
   // OpenCL definitions.
   if (LangOpts.OpenCL) {
@@ -989,9 +995,11 @@ void clang::InitializePreprocessor(
 
   // Install things like __POWERPC__, __GNUC__, etc into the macro table.
   if (InitOpts.UsePredefines) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (LangOpts.CUDA && PP.getAuxTargetInfo())
       InitializePredefinedMacros(*PP.getAuxTargetInfo(), LangOpts, FEOpts,
                                  Builder);
+#endif
 
     InitializePredefinedMacros(PP.getTargetInfo(), LangOpts, FEOpts, Builder);
 

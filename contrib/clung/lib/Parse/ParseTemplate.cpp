@@ -774,9 +774,11 @@ bool Parser::ParseGreaterThanInTemplateList(SourceLocation &RAngleLoc,
     RemainingToken = tok::greater;
     break;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case tok::greatergreatergreater:
     RemainingToken = tok::greatergreater;
     break;
+#endif
 
   case tok::greaterequal:
     RemainingToken = tok::equal;
@@ -817,7 +819,11 @@ bool Parser::ParseGreaterThanInTemplateList(SourceLocation &RAngleLoc,
     if ((RemainingToken == tok::greater ||
          RemainingToken == tok::greatergreater) &&
         (Next.isOneOf(tok::greater, tok::greatergreater,
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
                       tok::greatergreatergreater, tok::equal,
+#else
+                      tok::equal,
+#endif
                       tok::greaterequal, tok::greatergreaterequal,
                       tok::equalequal)) &&
         areTokensAdjacent(Tok, Next))
@@ -825,7 +831,11 @@ bool Parser::ParseGreaterThanInTemplateList(SourceLocation &RAngleLoc,
 
     unsigned DiagId = diag::err_two_right_angle_brackets_need_space;
     if (getLangOpts().CPlusPlus11 &&
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
         (Tok.is(tok::greatergreater) || Tok.is(tok::greatergreatergreater)))
+#else
+        (Tok.is(tok::greatergreater) || false))
+#endif
       DiagId = diag::warn_cxx98_compat_two_right_angle_brackets;
     else if (Tok.is(tok::greaterequal))
       DiagId = diag::err_right_angle_bracket_equal_needs_space;

@@ -293,8 +293,10 @@ class ASTContext : public RefCountedBase<ASTContext> {
   /// serialized.
   mutable RecordDecl *BlockDescriptorExtendedType;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   /// \brief Declaration for the CUDA cudaConfigureCall function.
   FunctionDecl *cudaConfigureCallDecl;
+#endif
 
   /// \brief Keeps track of all declaration attributes.
   ///
@@ -1095,12 +1097,14 @@ public:
   /// pointer to blocks.
   QualType getBlockDescriptorExtendedType() const;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   void setcudaConfigureCallDecl(FunctionDecl *FD) {
     cudaConfigureCallDecl = FD;
   }
   FunctionDecl *getcudaConfigureCallDecl() {
     return cudaConfigureCallDecl;
   }
+#endif
 
   /// Returns true iff we need copy/dispose helpers for the given type.
   bool BlockRequiresCopying(QualType Ty, const VarDecl *D);

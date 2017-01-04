@@ -576,10 +576,14 @@ namespace clang {
     /// viable because the final conversion was not an exact match.
     ovl_fail_final_conversion_not_exact,
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     /// (CUDA) This candidate was not viable because the callee
     /// was not accessible from the caller's target (i.e. host->device,
     /// global->host, device->host).
     ovl_fail_bad_target,
+#else
+    ovl_fail_bad_target_disabled,
+#endif
 
     /// This candidate function was not viable because an enable_if
     /// attribute disabled it.

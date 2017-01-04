@@ -204,6 +204,7 @@ static void instantiateDependentEnableIfAttr(
 
 // Constructs and adds to New a new instance of CUDALaunchBoundsAttr using
 // template A as the base and arguments from TemplateArgs.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static void instantiateDependentCUDALaunchBoundsAttr(
     Sema &S, const MultiLevelTemplateArgumentList &TemplateArgs,
     const CUDALaunchBoundsAttr &Attr, Decl *New) {
@@ -226,6 +227,7 @@ static void instantiateDependentCUDALaunchBoundsAttr(
   S.AddLaunchBoundsAttr(Attr.getLocation(), New, MaxThreads, MinBlocks,
                         Attr.getSpellingListIndex());
 }
+#endif
 
 static void
 instantiateDependentModeAttr(Sema &S,
@@ -338,12 +340,14 @@ void Sema::InstantiateAttrs(const MultiLevelTemplateArgumentList &TemplateArgs,
       continue;
     }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (const CUDALaunchBoundsAttr *CUDALaunchBounds =
             dyn_cast<CUDALaunchBoundsAttr>(TmplAttr)) {
       instantiateDependentCUDALaunchBoundsAttr(*this, TemplateArgs,
                                                *CUDALaunchBounds, New);
       continue;
     }
+#endif
 
     if (const ModeAttr *Mode = dyn_cast<ModeAttr>(TmplAttr)) {
       instantiateDependentModeAttr(*this, TemplateArgs, *Mode, New);

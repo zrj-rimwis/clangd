@@ -12,7 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "CodeGenFunction.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "CGCUDARuntime.h"
+#endif
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"
 #include "CGObjCRuntime.h"
@@ -344,10 +346,12 @@ CodeGenFunction::EmitCXXOperatorMemberCallExpr(const CXXOperatorCallExpr *E,
       /*IsArrow=*/false, E->getArg(0));
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 RValue CodeGenFunction::EmitCUDAKernelCallExpr(const CUDAKernelCallExpr *E,
                                                ReturnValueSlot ReturnValue) {
   return CGM.getCUDARuntime().EmitCUDAKernelCallExpr(*this, E, ReturnValue);
 }
+#endif
 
 static void EmitNullBaseClassInitialization(CodeGenFunction &CGF,
                                             Address DestPtr,

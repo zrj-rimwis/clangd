@@ -10,7 +10,9 @@
 #ifndef LLVM_CLANG_DRIVER_ACTION_H
 #define LLVM_CLANG_DRIVER_ACTION_H
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "clang/Basic/Cuda.h"
+#endif
 #include "clang/Driver/Types.h"
 #include "clang/Driver/Util.h"
 #include "llvm/ADT/STLExtras.h"
@@ -78,8 +80,10 @@ public:
     OFK_None = 0x00,
     // The host offloading tool chain.
     OFK_Host = 0x01,
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     // The device offloading tool chains - one bit for each programming model.
     OFK_Cuda = 0x02,
+#endif
   };
 
   static const char *getClassName(ActionClass AC);

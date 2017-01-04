@@ -2384,7 +2384,9 @@ DEF_TRAVERSE_STMT(CapturedStmt, { TRY_TO(TraverseDecl(S->getCapturedDecl())); })
 DEF_TRAVERSE_STMT(CXXOperatorCallExpr, {})
 DEF_TRAVERSE_STMT(OpaqueValueExpr, {})
 DEF_TRAVERSE_STMT(TypoExpr, {})
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 DEF_TRAVERSE_STMT(CUDAKernelCallExpr, {})
+#endif
 
 // These operators (all of them) do not need any action except
 // iterating over the children.

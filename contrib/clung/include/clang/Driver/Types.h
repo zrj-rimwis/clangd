@@ -66,8 +66,10 @@ namespace types {
   /// Is this LLVM IR.
   bool isLLVMIR(ID Id);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   /// isCuda - Is this a CUDA input.
   bool isCuda(ID Id);
+#endif
 
   /// isObjC - Is this an "ObjC" input (Obj-C and Obj-C++ sources and headers).
   bool isObjC(ID Id);

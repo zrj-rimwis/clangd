@@ -496,8 +496,12 @@ namespace clang {
       /// \brief Record code for \#pragma diagnostic mappings.
       DIAG_PRAGMA_MAPPINGS = 32,
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       /// \brief Record code for special CUDA declarations.
       CUDA_SPECIAL_DECL_REFS = 33,
+#else
+      CUDA_SPECIAL_DECL_REFS_disabled = 33,
+#endif
       
       /// \brief Record code for header search information.
       HEADER_SEARCH_TABLE = 34,
@@ -1427,8 +1431,12 @@ namespace clang {
       EXPR_MATERIALIZE_TEMPORARY, // MaterializeTemporaryExpr
       EXPR_CXX_FOLD,              // CXXFoldExpr
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       // CUDA
-      EXPR_CUDA_KERNEL_CALL,       // CUDAKernelCallExpr      
+      EXPR_CUDA_KERNEL_CALL,       // CUDAKernelCallExpr
+#else
+      EXPR_CUDA_KERNEL_CALL_disabled,
+#endif
 
       // OpenCL
       EXPR_ASTYPE,                 // AsTypeExpr

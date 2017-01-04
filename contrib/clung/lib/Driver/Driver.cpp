@@ -430,6 +430,7 @@ void Driver::CreateOffloadingDeviceToolChains(Compilation &C,
   // CUDA
   //
   // We need to generate a CUDA toolchain if any of the inputs has a CUDA type.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (llvm::any_of(Inputs, [](std::pair<types::ID, const llvm::opt::Arg *> &I) {
         return types::isCuda(I.first);
       })) {
@@ -442,6 +443,7 @@ void Driver::CreateOffloadingDeviceToolChains(Compilation &C,
                          : "nvptx-nvidia-cuda"));
     C.addOffloadDeviceToolChain(&TC, Action::OFK_Cuda);
   }
+#endif
 
   //
   // TODO: Add support for other offloading programming models here.
@@ -1395,6 +1397,7 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
 // Actions and /p Current is released. Otherwise the function creates
 // and returns a new CudaHostAction which wraps /p Current and device
 // side actions.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static Action *buildCudaActions(Compilation &C, DerivedArgList &Args,
                                 const Arg *InputArg, Action *HostAction,
                                 ActionList &Actions) {
@@ -1514,6 +1517,7 @@ static Action *buildCudaActions(Compilation &C, DerivedArgList &Args,
   DDep.add(*FatbinAction, *CudaTC, /*BoundArch=*/nullptr, Action::OFK_Cuda);
   return C.MakeAction<OffloadAction>(HDep, DDep);
 }
+#endif
 
 void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
                           const InputList &Inputs, ActionList &Actions) const {
@@ -1686,11 +1690,13 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
       }
     }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     phases::ID CudaInjectionPhase =
         (phases::Compile < FinalPhase &&
          llvm::find(PL, phases::Compile) != PL.end())
             ? phases::Compile
             : FinalPhase;
+#endif
 
     // Track the host offload kinds used on this input.
     unsigned InputActiveOffloadHostKinds = 0u;
@@ -1722,6 +1728,7 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
       // Otherwise construct the appropriate action.
       Current = ConstructPhaseAction(C, Args, Phase, Current);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       if (InputType == types::TY_CUDA && Phase == CudaInjectionPhase) {
         Current = buildCudaActions(C, Args, InputArg, Current, Actions);
         if (!Current)
@@ -1732,6 +1739,7 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
         InputActiveOffloadHostKinds |= Action::OFK_Cuda;
         CompilationActiveOffloadHostKinds |= Action::OFK_Cuda;
       }
+#endif
 
       if (Current->getType() == types::TY_Nothing)
         break;
@@ -1767,10 +1775,12 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
   // Claim ignored clang-cl options.
   Args.ClaimAllArgs(options::OPT_cl_ignored_Group);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // Claim --cuda-host-only and --cuda-compile-host-device, which may be passed
   // to non-CUDA compilations and should not trigger warnings there.
   Args.ClaimAllArgs(options::OPT_cuda_host_only);
   Args.ClaimAllArgs(options::OPT_cuda_compile_host_device);
+#endif
 }
 
 Action *Driver::ConstructPhaseAction(Compilation &C, const ArgList &Args,
@@ -2673,9 +2683,11 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
         break;
       }
       break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case llvm::Triple::CUDA:
       TC = new toolchains::CudaToolChain(*this, Target, Args);
       break;
+#endif
     case llvm::Triple::PS4:
       TC = new toolchains::PS4CPU(*this, Target, Args);
       break;

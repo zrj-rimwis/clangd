@@ -2359,8 +2359,10 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
         Arg));
   }
   case Builtin::BIprintf:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (getLangOpts().CUDA && getLangOpts().CUDAIsDevice)
       return EmitCUDADevicePrintfCallExpr(E, ReturnValue);
+#endif
     break;
   case Builtin::BI__builtin_canonicalize:
   case Builtin::BI__builtin_canonicalizef:
@@ -2497,9 +2499,11 @@ static Value *EmitTargetArchBuiltinExpr(CodeGenFunction *CGF,
     return CGF->EmitAMDGPUBuiltinExpr(BuiltinID, E);
   case llvm::Triple::systemz:
     return CGF->EmitSystemZBuiltinExpr(BuiltinID, E);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case llvm::Triple::nvptx:
   case llvm::Triple::nvptx64:
     return CGF->EmitNVPTXBuiltinExpr(BuiltinID, E);
+#endif
   case llvm::Triple::wasm32:
   case llvm::Triple::wasm64:
     return CGF->EmitWebAssemblyBuiltinExpr(BuiltinID, E);
@@ -7939,6 +7943,7 @@ Value *CodeGenFunction::EmitSystemZBuiltinExpr(unsigned BuiltinID,
   }
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 Value *CodeGenFunction::EmitNVPTXBuiltinExpr(unsigned BuiltinID,
                                              const CallExpr *E) {
   auto MakeLdg = [&](unsigned IntrinsicID) {
@@ -8074,6 +8079,7 @@ Value *CodeGenFunction::EmitNVPTXBuiltinExpr(unsigned BuiltinID,
     return nullptr;
   }
 }
+#endif
 
 Value *CodeGenFunction::EmitWebAssemblyBuiltinExpr(unsigned BuiltinID,
                                                    const CallExpr *E) {

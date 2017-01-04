@@ -1096,12 +1096,14 @@ bool Parser::ConsumeAndStoreInitializer(CachedTokens &Toks,
         return false;
       break;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case tok::greatergreatergreater:
       if (!getLangOpts().CPlusPlus11)
         goto consume_token;
       if (AngleCount) --AngleCount;
       if (KnownTemplateCount) --KnownTemplateCount;
       // Fall through.
+#endif
     case tok::greatergreater:
       if (!getLangOpts().CPlusPlus11)
         goto consume_token;
@@ -1138,7 +1140,9 @@ bool Parser::ConsumeAndStoreInitializer(CachedTokens &Toks,
       ConsumeToken();
       switch (Tok.getKind()) {
       case tok::comma:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       case tok::greatergreatergreater:
+#endif
       case tok::greatergreater:
       case tok::greater:
       case tok::less:

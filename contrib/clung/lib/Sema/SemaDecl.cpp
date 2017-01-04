@@ -5757,10 +5757,12 @@ static bool isIncompleteDeclExternC(Sema &S, const T *D) {
     if (!D->isInExternCContext() || D->template hasAttr<OverloadableAttr>())
       return false;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     // So do CUDA's host/device attributes.
     if (S.getLangOpts().CUDA && (D->template hasAttr<CUDADeviceAttr>() ||
                                  D->template hasAttr<CUDAHostAttr>()))
       return false;
+#endif
   }
   return D->isExternC();
 }
@@ -6219,6 +6221,7 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
            diag::err_thread_non_global)
         << DeclSpec::getSpecifierName(TSCS);
     else if (!Context.getTargetInfo().isTLSSupported()) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       if (getLangOpts().CUDA) {
         // Postpone error emission until we've collected attributes required to
         // figure out whether it's a host or device variable and whether the
@@ -6229,6 +6232,7 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
         // to emit any code for it.
         NewVD->setTSCSpec(TSCS);
       } else
+#endif
         Diag(D.getDeclSpec().getThreadStorageClassSpecLoc(),
              diag::err_thread_unsupported);
     } else
@@ -6279,6 +6283,7 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   // Handle attributes prior to checking for duplicates in MergeVarDecl
   ProcessDeclAttributes(S, NewVD, D);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     if (EmitTLSUnsupportedError && DeclAttrsMatchCUDAMode(getLangOpts(), NewVD))
       Diag(D.getDeclSpec().getThreadStorageClassSpecLoc(),
@@ -6291,6 +6296,7 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       NewVD->setStorageClass(SC_Static);
     }
   }
+#endif
 
   // Ensure that dllimport globals without explicit storage class are treated as
   // extern. The storage class is set above using parsed attributes. Now we can
@@ -8194,8 +8200,10 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   // Handle attributes.
   ProcessDeclAttributes(S, NewFD, D);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA)
     maybeAddCUDAHostDeviceAttrs(S, NewFD, Previous);
+#endif
 
   if (getLangOpts().OpenCL) {
     // OpenCL v1.1 s6.5: Using an address space qualifier in a function return
@@ -8533,6 +8541,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
         D.isFunctionDefinition());
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
     IdentifierInfo *II = NewFD->getIdentifier();
     if (II && II->isStr("cudaConfigureCall") && !NewFD->isInvalidDecl() &&
@@ -8554,6 +8563,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       Diag(NewFD->getLocation(), diag::err_variadic_device_fn);
     }
   }
+#endif
 
   if (getLangOpts().CPlusPlus) {
     if (FunctionTemplate) {
@@ -10524,6 +10534,7 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
         NewAttr->setInherited(true);
         VD->addAttr(NewAttr);
       }
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       // CUDA E.2.9.4: Within the body of a __device__ or __global__
       // function, only __shared__ variables may be declared with
       // static storage class.
@@ -10533,6 +10544,7 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
         Diag(VD->getLocation(), diag::err_device_static_local_var);
         VD->setInvalidDecl();
       }
+#endif
     }
   }
 
@@ -10541,6 +10553,7 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
   // 7.5). We must also apply the same checks to all __shared__
   // variables whether they are local or not. CUDA also allows
   // constant initializers for __constant__ and __device__ variables.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA && getLangOpts().CUDAIsDevice) {
     const Expr *Init = VD->getInit();
     if (Init && VD->hasGlobalStorage() &&
@@ -10574,6 +10587,7 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
       }
     }
   }
+#endif
 
   // Grab the dllimport or dllexport attribute off of the VarDecl.
   const InheritableAttr *DLLAttr = getDLLAttr(VD);
@@ -11878,6 +11892,7 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
       FD->addAttr(PureAttr::CreateImplicit(Context, FD->getLocation()));
     if (Context.BuiltinInfo.isConst(BuiltinID) && !FD->hasAttr<ConstAttr>())
       FD->addAttr(ConstAttr::CreateImplicit(Context, FD->getLocation()));
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (getLangOpts().CUDA && Context.BuiltinInfo.isTSBuiltin(BuiltinID) &&
         !FD->hasAttr<CUDADeviceAttr>() && !FD->hasAttr<CUDAHostAttr>()) {
       // Add the appropriate attribute, depending on the CUDA compilation mode
@@ -11889,6 +11904,7 @@ void Sema::AddKnownFunctionAttributes(FunctionDecl *FD) {
       else
         FD->addAttr(CUDAHostAttr::CreateImplicit(Context, FD->getLocation()));
     }
+#endif
   }
 
   // If C++ exceptions are enabled but we are told extern "C" functions cannot

@@ -693,8 +693,10 @@ SanitizerMask ToolChain::getSupportedSanitizers() const {
   return Res;
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void ToolChain::AddCudaIncludeArgs(const ArgList &DriverArgs,
                                    ArgStringList &CC1Args) const {}
+#endif
 
 void ToolChain::AddIAMCUIncludeArgs(const ArgList &DriverArgs,
                                     ArgStringList &CC1Args) const {}

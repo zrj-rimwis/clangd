@@ -1686,11 +1686,13 @@ void ASTStmtWriter::VisitTypoExpr(TypoExpr *E) {
 // CUDA Expressions and Statements.
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void ASTStmtWriter::VisitCUDAKernelCallExpr(CUDAKernelCallExpr *E) {
   VisitCallExpr(E);
   Record.AddStmt(E->getConfig());
   Code = serialization::EXPR_CUDA_KERNEL_CALL;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // OpenCL Expressions and Statements.

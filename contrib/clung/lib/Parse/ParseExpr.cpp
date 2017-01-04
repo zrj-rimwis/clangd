@@ -1504,7 +1504,11 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
     }
 
     case tok::l_paren:         // p-e: p-e '(' argument-expression-list[opt] ')'
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case tok::lesslessless: {  // p-e: p-e '<<<' argument-expression-list '>>>'
+#else
+    {
+#endif
                                //   '(' argument-expression-list[opt] ')'
       tok::TokenKind OpKind = Tok.getKind();
       InMessageExpressionRAIIObject InMessage(*this, false);
@@ -1513,6 +1517,8 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
 
       BalancedDelimiterTracker PT(*this, tok::l_paren);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
+   /* this is sily, why not just make a saparate case to simplify the logic? */
       if (OpKind == tok::lesslessless) {
         ExprVector ExecConfigExprs;
         CommaLocsTy ExecConfigCommaLocs;
@@ -1553,6 +1559,9 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
             ExecConfig = ECResult.get();
         }
       } else {
+#else
+      {
+#endif
         PT.consumeOpen();
         Loc = PT.getOpenLocation();
       }

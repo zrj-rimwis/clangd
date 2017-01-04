@@ -896,7 +896,9 @@ static void AddStmtsExprs(llvm::BitstreamWriter &Stream,
   RECORD(EXPR_SUBST_NON_TYPE_TEMPLATE_PARM_PACK);
   RECORD(EXPR_FUNCTION_PARM_PACK);
   RECORD(EXPR_MATERIALIZE_TEMPORARY);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   RECORD(EXPR_CUDA_KERNEL_CALL);
+#endif
   RECORD(EXPR_CXX_UUIDOF_EXPR);
   RECORD(EXPR_CXX_UUIDOF_TYPE);
   RECORD(EXPR_LAMBDA);
@@ -962,7 +964,9 @@ void ASTWriter::WriteBlockInfoBlock() {
   RECORD(DECL_UPDATE_OFFSETS);
   RECORD(DECL_UPDATES);
   RECORD(DIAG_PRAGMA_MAPPINGS);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   RECORD(CUDA_SPECIAL_DECL_REFS);
+#endif
   RECORD(HEADER_SEARCH_TABLE);
   RECORD(FP_PRAGMA_OPTIONS);
   RECORD(OPENCL_EXTENSIONS);
@@ -4260,10 +4264,12 @@ uint64_t ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
     AddDeclRef(SemaRef.getStdBadAlloc(), SemaDeclRefs);
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   RecordData CUDASpecialDeclRefs;
   if (Context.getcudaConfigureCallDecl()) {
     AddDeclRef(Context.getcudaConfigureCallDecl(), CUDASpecialDeclRefs);
   }
+#endif
 
   // Build a record containing all of the known namespaces.
   RecordData KnownNamespaces;
@@ -4556,9 +4562,11 @@ uint64_t ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
   if (!SemaDeclRefs.empty())
     Stream.EmitRecord(SEMA_DECL_REFS, SemaDeclRefs);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // Write the record containing CUDA-specific declaration references.
   if (!CUDASpecialDeclRefs.empty())
     Stream.EmitRecord(CUDA_SPECIAL_DECL_REFS, CUDASpecialDeclRefs);
+#endif
   
   // Write the delegating constructors.
   if (!DelegatingCtorDecls.empty())

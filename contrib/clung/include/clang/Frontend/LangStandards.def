@@ -158,10 +158,12 @@ LANGSTANDARD_ALIAS(opencl11, "CL1.1")
 LANGSTANDARD_ALIAS(opencl12, "CL1.2")
 LANGSTANDARD_ALIAS(opencl20, "CL2.0")
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 // CUDA
 LANGSTANDARD(cuda, "cuda",
              "NVIDIA CUDA(tm)",
              LineComment | CPlusPlus | Digraphs)
+#endif
 
 #undef LANGSTANDARD
 #undef LANGSTANDARD_ALIAS

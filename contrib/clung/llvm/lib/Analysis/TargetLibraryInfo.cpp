@@ -404,10 +404,14 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   //
   // FIXME: Having no standard library prevents e.g. many fastmath
   // optimizations, so this situation should be fixed.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (T.isNVPTX()) {
     TLI.disableAllFunctions();
     TLI.setAvailable(LibFunc::nvvm_reflect);
   } else {
+#else
+  {
+#endif
     TLI.setUnavailable(LibFunc::nvvm_reflect);
   }
 

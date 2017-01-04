@@ -1210,9 +1210,11 @@ void StmtProfiler::VisitCXXMemberCallExpr(const CXXMemberCallExpr *S) {
   VisitCallExpr(S);
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void StmtProfiler::VisitCUDAKernelCallExpr(const CUDAKernelCallExpr *S) {
   VisitCallExpr(S);
 }
+#endif
 
 void StmtProfiler::VisitAsTypeExpr(const AsTypeExpr *S) {
   VisitExpr(S);

@@ -584,10 +584,13 @@ public:
            getEnvironment() == Triple::MuslEABIHF;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   /// Tests whether the target is NVPTX (32- or 64-bit).
+// why this one is here?
   bool isNVPTX() const {
     return getArch() == Triple::nvptx || getArch() == Triple::nvptx64;
   }
+#endif
 
   /// Tests wether the target supports comdat
   bool supportsCOMDAT() const { return !isOSBinFormatMachO(); }

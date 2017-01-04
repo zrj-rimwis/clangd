@@ -2106,9 +2106,11 @@ void PragmaUnrollHintHandler::HandlePragma(Preprocessor &PP,
 
     // In CUDA, the argument to '#pragma unroll' should not be contained in
     // parentheses.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (PP.getLangOpts().CUDA && ValueInParens)
       PP.Diag(Info->Toks[0].getLocation(),
               diag::warn_pragma_unroll_cuda_value_in_parens);
+#endif
 
     if (Tok.isNot(tok::eod)) {
       PP.Diag(Tok.getLocation(), diag::warn_pragma_extra_tokens_at_eol)

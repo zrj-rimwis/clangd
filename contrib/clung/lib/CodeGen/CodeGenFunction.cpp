@@ -14,7 +14,9 @@
 #include "CodeGenFunction.h"
 #include "CGBlocks.h"
 #include "CGCleanup.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "CGCUDARuntime.h"
+#endif
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"
 #include "CGOpenMPRuntime.h"
@@ -1049,10 +1051,12 @@ void CodeGenFunction::GenerateCode(GlobalDecl GD, llvm::Function *Fn,
     EmitDestructorBody(Args);
   else if (isa<CXXConstructorDecl>(FD))
     EmitConstructorBody(Args);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   else if (getLangOpts().CUDA &&
            !getLangOpts().CUDAIsDevice &&
            FD->hasAttr<CUDAGlobalAttr>())
     CGM.getCUDARuntime().emitDeviceStub(*this, Args);
+#endif
   else if (isa<CXXConversionDecl>(FD) &&
            cast<CXXConversionDecl>(FD)->isLambdaToBlockPointerConversion()) {
     // The lambda conversion to block pointer is special; the semantics can't be

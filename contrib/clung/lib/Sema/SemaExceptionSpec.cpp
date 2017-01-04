@@ -1140,7 +1140,9 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::AsTypeExprClass:
   case Expr::BinaryConditionalOperatorClass:
   case Expr::BlockExprClass:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case Expr::CUDAKernelCallExprClass:
+#endif
   case Expr::DeclRefExprClass:
   case Expr::ObjCBridgedCastExprClass:
   case Expr::ObjCIndirectCopyRestoreExprClass:

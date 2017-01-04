@@ -2975,11 +2975,13 @@ public:
                                        const CXXMethodDecl *MD,
                                        ReturnValueSlot ReturnValue);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   RValue EmitCUDAKernelCallExpr(const CUDAKernelCallExpr *E,
                                 ReturnValueSlot ReturnValue);
 
   RValue EmitCUDADevicePrintfCallExpr(const CallExpr *E,
                                       ReturnValueSlot ReturnValue);
+#endif
 
   RValue EmitBuiltinExpr(const FunctionDecl *FD,
                          unsigned BuiltinID, const CallExpr *E,

@@ -13,14 +13,18 @@
 
 #include "CodeGenModule.h"
 #include "CGBlocks.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "CGCUDARuntime.h"
+#endif
 #include "CGCXXABI.h"
 #include "CGCall.h"
 #include "CGDebugInfo.h"
 #include "CGObjCRuntime.h"
 #include "CGOpenCLRuntime.h"
 #include "CGOpenMPRuntime.h"
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "CGOpenMPRuntimeNVPTX.h"
+#endif
 #include "CodeGenFunction.h"
 #include "CodeGenPGO.h"
 #include "CodeGenTBAA.h"
@@ -118,8 +122,10 @@ CodeGenModule::CodeGenModule(ASTContext &C, const HeaderSearchOptions &HSO,
     createOpenCLRuntime();
   if (LangOpts.OpenMP)
     createOpenMPRuntime();
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (LangOpts.CUDA)
     createCUDARuntime();
+#endif
 
   // Enable TBAA unless it's suppressed. ThreadSanitizer needs TBAA even at O0.
   if (LangOpts.Sanitize.has(SanitizerKind::Thread) ||
@@ -189,21 +195,25 @@ void CodeGenModule::createOpenMPRuntime() {
   // If it does not exist use the default implementation.
   switch (getTarget().getTriple().getArch()) {
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case llvm::Triple::nvptx:
   case llvm::Triple::nvptx64:
     assert(getLangOpts().OpenMPIsDevice &&
            "OpenMP NVPTX is only prepared to deal with device code.");
     OpenMPRuntime.reset(new CGOpenMPRuntimeNVPTX(*this));
     break;
+#endif
   default:
     OpenMPRuntime.reset(new CGOpenMPRuntime(*this));
     break;
   }
 }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 void CodeGenModule::createCUDARuntime() {
   CUDARuntime.reset(CreateNVCUDARuntime(*this));
 }
+#endif
 
 void CodeGenModule::addReplacement(StringRef Name, llvm::Constant *C) {
   Replacements[Name] = C;
@@ -381,6 +391,7 @@ void CodeGenModule::Release() {
   if (ObjCRuntime)
     if (llvm::Function *ObjCInitFunction = ObjCRuntime->ModuleInitFunction())
       AddGlobalCtor(ObjCInitFunction);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (Context.getLangOpts().CUDA && !Context.getLangOpts().CUDAIsDevice &&
       CUDARuntime) {
     if (llvm::Function *CudaCtorFunction = CUDARuntime->makeModuleCtorFunction())
@@ -388,6 +399,7 @@ void CodeGenModule::Release() {
     if (llvm::Function *CudaDtorFunction = CUDARuntime->makeModuleDtorFunction())
       AddGlobalDtor(CudaDtorFunction);
   }
+#endif
   if (OpenMPRuntime)
     if (llvm::Function *OpenMPRegistrationFunction =
             OpenMPRuntime->emitRegistrationFunction())
@@ -469,6 +481,7 @@ void CodeGenModule::Release() {
     getModule().addModuleFlag(llvm::Module::Override, "Cross-DSO CFI", 1);
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (LangOpts.CUDAIsDevice && getTarget().getTriple().isNVPTX()) {
     // Indicate whether __nvvm_reflect should be configured to flush denormal
     // floating point values to 0.  (This corresponds to its "__CUDA_FTZ"
@@ -476,6 +489,7 @@ void CodeGenModule::Release() {
     getModule().addModuleFlag(llvm::Module::Override, "nvvm-reflect-ftz",
                               LangOpts.CUDADeviceFlushDenormalsToZero ? 1 : 0);
   }
+#endif
 
   if (uint32_t PLevel = Context.getLangOpts().PICLevel) {
     assert(PLevel < 3 && "Invalid PIC Level");
@@ -1536,6 +1550,7 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
   if (Global->hasAttr<IFuncAttr>())
     return emitIFuncDefinition(GD);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // If this is CUDA, be selective about which declarations we emit.
   if (LangOpts.CUDA) {
     if (LangOpts.CUDAIsDevice) {
@@ -1559,6 +1574,7 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
              "Expected Variable or Function");
     }
   }
+#endif
 
   if (LangOpts.OpenMP) {
     // If this is OpenMP device, check if it is legal to emit this global
@@ -1592,6 +1608,7 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
   } else {
     const auto *VD = cast<VarDecl>(Global);
     assert(VD->isFileVarDecl() && "Cannot emit local var decl as global.");
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     // We need to emit device-side global CUDA variables even if a
     // variable does not have a definition -- we still need to define
     // host-side shadow for it.
@@ -1599,6 +1616,9 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
                            !VD->hasDefinition() &&
                            (VD->hasAttr<CUDAConstantAttr>() ||
                             VD->hasAttr<CUDADeviceAttr>());
+#else
+    const bool MustEmitForCuda = false;
+#endif
     if (!MustEmitForCuda &&
         VD->isThisDeclarationADefinition() != VarDecl::Definition &&
         !Context.isMSStaticDataMemberInlineDefinition(VD)) {
@@ -2305,6 +2325,7 @@ CharUnits CodeGenModule::GetTargetTypeStoreSize(llvm::Type *Ty) const {
 
 unsigned CodeGenModule::GetGlobalVarAddressSpace(const VarDecl *D,
                                                  unsigned AddrSpace) {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (D && LangOpts.CUDA && LangOpts.CUDAIsDevice) {
     if (D->hasAttr<CUDAConstantAttr>())
       AddrSpace = getContext().getTargetAddressSpace(LangAS::cuda_constant);
@@ -2313,6 +2334,7 @@ unsigned CodeGenModule::GetGlobalVarAddressSpace(const VarDecl *D,
     else
       AddrSpace = getContext().getTargetAddressSpace(LangAS::cuda_device);
   }
+#endif
 
   return AddrSpace;
 }
@@ -2397,9 +2419,15 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
   // CUDA E.2.4.1 "__shared__ variables cannot have an initialization
   // as part of their declaration."  Sema has already checked for
   // error cases, so we just need to set Init to UndefValue.
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA && getLangOpts().CUDAIsDevice &&
       D->hasAttr<CUDASharedAttr>())
     Init = llvm::UndefValue::get(getTypes().ConvertType(ASTTy));
+#else
+  if (false) {
+    /* dummy */
+  }
+#endif
   else if (!InitExpr) {
     // This is a tentative definition; tentative definitions are
     // implicitly initialized with { 0 }.
@@ -2492,6 +2520,7 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
   llvm::GlobalValue::LinkageTypes Linkage =
       getLLVMLinkageVarDefinition(D, GV->isConstant());
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // CUDA B.2.1 "The __device__ qualifier declares a variable that resides on
   // the device. [...]"
   // CUDA B.2.2 "The __constant__ qualifier, optionally used together with
@@ -2528,6 +2557,7 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
         Linkage = llvm::GlobalValue::InternalLinkage;
     }
   }
+#endif
   GV->setInitializer(Init);
 
   // If it is safe to mark the global 'constant', do so now.
@@ -2690,9 +2720,11 @@ llvm::GlobalValue::LinkageTypes CodeGenModule::getLLVMLinkageForDeclarator(
   if (Linkage == GVA_StrongODR) {
     if (Context.getLangOpts().AppleKext)
       return llvm::Function::ExternalLinkage;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     if (Context.getLangOpts().CUDA && Context.getLangOpts().CUDAIsDevice)
       return D->hasAttr<CUDAGlobalAttr>() ? llvm::Function::ExternalLinkage
                                           : llvm::Function::InternalLinkage;
+#endif
     return llvm::Function::WeakODRLinkage;
   }
 
@@ -3897,9 +3929,11 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
     break;
 
   case Decl::FileScopeAsm: {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     // File-scope asm is ignored during device-side CUDA compilation.
     if (LangOpts.CUDA && LangOpts.CUDAIsDevice)
       break;
+#endif
     // File-scope asm is ignored during device-side OpenMP compilation.
     if (LangOpts.OpenMPIsDevice)
       break;
@@ -4060,10 +4094,12 @@ static void EmitGlobalDeclMetadata(CodeGenModule &CGM,
 /// to such functions with an unmangled name from inline assembly within the
 /// same translation unit.
 void CodeGenModule::EmitStaticExternCAliases() {
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // Don't do anything if we're generating CUDA device code -- the NVPTX
   // assembly target doesn't support aliases.
   if (Context.getTargetInfo().getTriple().isNVPTX())
     return;
+#endif
   for (auto &I : StaticExternCValues) {
     IdentifierInfo *Name = I.first;
     llvm::GlobalValue *Val = I.second;

@@ -695,6 +695,7 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
   Opts.CompressDebugSections = Args.hasArg(OPT_compress_debug_sections);
   Opts.RelaxELFRelocations = Args.hasArg(OPT_mrelax_relocations);
   Opts.DebugCompilationDir = Args.getLastArgValue(OPT_fdebug_compilation_dir);
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   for (auto A : Args.filtered(OPT_mlink_bitcode_file, OPT_mlink_cuda_bitcode)) {
     unsigned LinkFlags = llvm::Linker::Flags::None;
     if (A->getOption().matches(OPT_mlink_cuda_bitcode))
@@ -702,6 +703,7 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
                   llvm::Linker::Flags::InternalizeLinkedSymbols;
     Opts.LinkBitcodeFiles.push_back(std::make_pair(LinkFlags, A->getValue()));
   }
+#endif
   Opts.SanitizeCoverageType =
       getLastArgIntValue(Args, OPT_fsanitize_coverage_type, 0, Diags);
   Opts.SanitizeCoverageIndirectCalls =
@@ -838,8 +840,10 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
                       Args.getAllArgValues(OPT_fsanitize_trap_EQ), Diags,
                       Opts.SanitizeTrap);
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   Opts.CudaGpuBinaryFileNames =
       Args.getAllArgValues(OPT_fcuda_include_gpubinary);
+#endif
 
   Opts.Backchain = Args.hasArg(OPT_mbackchain);
 
@@ -1288,7 +1292,9 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
     DashX = llvm::StringSwitch<InputKind>(A->getValue())
       .Case("c", IK_C)
       .Case("cl", IK_OpenCL)
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       .Case("cuda", IK_CUDA)
+#endif
       .Case("c++", IK_CXX)
       .Case("objective-c", IK_ObjC)
       .Case("objective-c++", IK_ObjCXX)
@@ -1498,10 +1504,12 @@ void CompilerInvocation::setLangDefaults(LangOptions &Opts, InputKind IK,
     case IK_OpenCL:
       LangStd = LangStandard::lang_opencl;
       break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case IK_CUDA:
     case IK_PreprocessedCuda:
       LangStd = LangStandard::lang_cuda;
       break;
+#endif
     case IK_Asm:
     case IK_C:
     case IK_PreprocessedC:
@@ -1565,8 +1573,10 @@ void CompilerInvocation::setLangDefaults(LangOptions &Opts, InputKind IK,
     }
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   Opts.CUDA = IK == IK_CUDA || IK == IK_PreprocessedCuda ||
               LangStd == LangStandard::lang_cuda;
+#endif
 
   Opts.RenderScript = IK == IK_RenderScript;
   if (Opts.RenderScript) {
@@ -1650,12 +1660,14 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
           Diags.Report(diag::err_drv_argument_not_allowed_with)
             << A->getAsString(Args) << "OpenCL";
         break;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       case IK_CUDA:
       case IK_PreprocessedCuda:
         if (!Std.isCPlusPlus())
           Diags.Report(diag::err_drv_argument_not_allowed_with)
             << A->getAsString(Args) << "CUDA";
         break;
+#endif
       default:
         break;
       }
@@ -1709,6 +1721,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   if (Args.hasArg(OPT_fno_operator_names))
     Opts.CXXOperatorNames = 0;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (Args.hasArg(OPT_fcuda_is_device))
     Opts.CUDAIsDevice = 1;
 
@@ -1723,6 +1736,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 
   if (Opts.CUDAIsDevice && Args.hasArg(OPT_fcuda_approx_transcendentals))
     Opts.CUDADeviceApproxTranscendentals = 1;
+#endif
 
   if (Opts.ObjC1) {
     if (Arg *arg = Args.getLastArg(OPT_fobjc_runtime_EQ)) {
@@ -1964,7 +1978,11 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   // something more generic, remove the Opts.CUDA term here.
   Opts.DeclSpecKeyword =
       Args.hasFlag(OPT_fdeclspec, OPT_fno_declspec,
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
                    (Opts.MicrosoftExt || Opts.Borland || Opts.CUDA));
+#else
+                   (Opts.MicrosoftExt || Opts.Borland));
+#endif
 
   // For now, we only support local submodule visibility in C++ (because we
   // heavily depend on the ODR for merging redefinitions).
@@ -2374,6 +2392,7 @@ bool CompilerInvocation::CreateFromArgs(CompilerInvocation &Res,
       LangOpts.ObjCExceptions = 1;
   }
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (LangOpts.CUDA) {
     // During CUDA device-side compilation, the aux triple is the
     // triple used for host compilation.
@@ -2384,6 +2403,7 @@ bool CompilerInvocation::CreateFromArgs(CompilerInvocation &Res,
     if (!Args.hasArg(OPT_ffp_contract))
       Res.getCodeGenOpts().setFPContractMode(CodeGenOptions::FPC_Fast);
   }
+#endif
 
   // FIXME: Override value name discarding when asan or msan is used because the
   // backend passes depend on the name of the alloca in order to print out

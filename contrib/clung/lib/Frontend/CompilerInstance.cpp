@@ -827,6 +827,7 @@ bool CompilerInstance::ExecuteAction(FrontendAction &Act) {
   if (!hasTarget())
     return false;
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // Create TargetInfo for the other side of CUDA compilation.
   if (getLangOpts().CUDA && !getFrontendOpts().AuxTriple.empty()) {
     auto TO = std::make_shared<TargetOptions>();
@@ -834,6 +835,7 @@ bool CompilerInstance::ExecuteAction(FrontendAction &Act) {
     TO->HostTriple = getTarget().getTriple().str();
     setAuxTarget(TargetInfo::CreateTargetInfo(getDiagnostics(), TO));
   }
+#endif
 
   // Inform the target of the language options.
   //
@@ -903,8 +905,10 @@ bool CompilerInstance::ExecuteAction(FrontendAction &Act) {
 static InputKind getSourceInputKindFromOptions(const LangOptions &LangOpts) {
   if (LangOpts.OpenCL)
     return IK_OpenCL;
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (LangOpts.CUDA)
     return IK_CUDA;
+#endif
   if (LangOpts.ObjC1)
     return LangOpts.CPlusPlus? IK_ObjCXX : IK_ObjC;
   return LangOpts.CPlusPlus? IK_CXX : IK_C;

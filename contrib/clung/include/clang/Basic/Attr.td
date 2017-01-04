@@ -239,7 +239,6 @@ class LangOpt<string name, bit negated = 0> {
 }
 def MicrosoftExt : LangOpt<"MicrosoftExt">;
 def Borland : LangOpt<"Borland">;
-def CUDA : LangOpt<"CUDA">;
 def COnly : LangOpt<"CPlusPlus", 1>;
 def OpenCL : LangOpt<"OpenCL">;
 def RenderScript : LangOpt<"RenderScript">;
@@ -599,79 +598,7 @@ def Constructor : InheritableAttr {
   let Documentation = [Undocumented];
 }
 
-def CUDAConstant : InheritableAttr {
-  let Spellings = [GNU<"constant">];
-  let Subjects = SubjectList<[Var]>;
-  let LangOpts = [CUDA];
-  let Documentation = [Undocumented];
-}
-
-def CUDACudartBuiltin : IgnoredAttr {
-  let Spellings = [GNU<"cudart_builtin">];
-  let LangOpts = [CUDA];
-}
-
-def CUDADevice : InheritableAttr {
-  let Spellings = [GNU<"device">];
-  let Subjects = SubjectList<[Function, Var]>;
-  let LangOpts = [CUDA];
-  let Documentation = [Undocumented];
-}
-
-def CUDADeviceBuiltin : IgnoredAttr {
-  let Spellings = [GNU<"device_builtin">];
-  let LangOpts = [CUDA];
-}
-
-def CUDADeviceBuiltinSurfaceType : IgnoredAttr {
-  let Spellings = [GNU<"device_builtin_surface_type">];
-  let LangOpts = [CUDA];
-}
-
-def CUDADeviceBuiltinTextureType : IgnoredAttr {
-  let Spellings = [GNU<"device_builtin_texture_type">];
-  let LangOpts = [CUDA];
-}
-
-def CUDAGlobal : InheritableAttr {
-  let Spellings = [GNU<"global">];
-  let Subjects = SubjectList<[Function]>;
-  let LangOpts = [CUDA];
-  let Documentation = [Undocumented];
-}
-
-def CUDAHost : InheritableAttr {
-  let Spellings = [GNU<"host">];
-  let Subjects = SubjectList<[Function]>;
-  let LangOpts = [CUDA];
-  let Documentation = [Undocumented];
-}
-
-def CUDAInvalidTarget : InheritableAttr {
-  let Spellings = [];
-  let Subjects = SubjectList<[Function]>;
-  let LangOpts = [CUDA];
-  let Documentation = [Undocumented];
-}
-
-def CUDALaunchBounds : InheritableAttr {
-  let Spellings = [GNU<"launch_bounds">];
-  let Args = [ExprArgument<"MaxThreads">, ExprArgument<"MinBlocks", 1>];
-  let LangOpts = [CUDA];
-  let Subjects = SubjectList<[ObjCMethod, FunctionLike], WarnDiag,
-                             "ExpectedFunctionOrMethod">;
-  // An AST node is created for this attribute, but is not used by other parts
-  // of the compiler. However, this node needs to exist in the AST because
-  // non-LLVM backends may be relying on the attribute's presence.
-  let Documentation = [Undocumented];
-}
-
-def CUDAShared : InheritableAttr {
-  let Spellings = [GNU<"shared">];
-  let Subjects = SubjectList<[Var]>;
-  let LangOpts = [CUDA];
-  let Documentation = [Undocumented];
-}
+// cuda
 
 def C11NoReturn : InheritableAttr {
   let Spellings = [Keyword<"_Noreturn">];
@@ -1158,11 +1085,6 @@ def NotTailCalled : InheritableAttr {
 def NoThrow : InheritableAttr {
   let Spellings = [GCC<"nothrow">, Declspec<"nothrow">];
   let Documentation = [Undocumented];
-}
-
-def NvWeak : IgnoredAttr {
-  let Spellings = [GNU<"nv_weak">];
-  let LangOpts = [CUDA];
 }
 
 def ObjCBridge : InheritableAttr {
