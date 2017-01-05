@@ -185,6 +185,8 @@ static ScanfSpecifierResult ParseScanfSpecifier(FormatStringHandler &H,
     case 'p': k = ConversionSpecifier::pArg; break;
     // Apple extensions
       // Apple-specific
+/* XXX or kernel format expansions should go here? */
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case 'D':
       if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::DArg;
@@ -197,6 +199,7 @@ static ScanfSpecifierResult ParseScanfSpecifier(FormatStringHandler &H,
       if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::UArg;
       break;
+#endif
   }
   ScanfConversionSpecifier CS(conversionPosition, k);
   if (k == ScanfConversionSpecifier::ScanListArg) {

@@ -64,10 +64,12 @@ MCStreamer *createAsmStreamer(MCContext &Ctx,
 MCStreamer *createELFStreamer(MCContext &Ctx, MCAsmBackend &TAB,
                               raw_pwrite_stream &OS, MCCodeEmitter *CE,
                               bool RelaxAll);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 MCStreamer *createMachOStreamer(MCContext &Ctx, MCAsmBackend &TAB,
                                 raw_pwrite_stream &OS, MCCodeEmitter *CE,
                                 bool RelaxAll, bool DWARFMustBeAtTheEnd,
                                 bool LabelSections = false);
+#endif
 
 MCRelocationInfo *createMCRelocationInfo(const Triple &TT, MCContext &Ctx);
 
@@ -132,11 +134,13 @@ public:
                                            raw_pwrite_stream &OS,
                                            MCCodeEmitter *Emitter,
                                            bool RelaxAll);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   typedef MCStreamer *(*MachOStreamerCtorTy)(MCContext &Ctx, MCAsmBackend &TAB,
                                              raw_pwrite_stream &OS,
                                              MCCodeEmitter *Emitter,
                                              bool RelaxAll,
                                              bool DWARFMustBeAtTheEnd);
+#endif
   typedef MCStreamer *(*COFFStreamerCtorTy)(MCContext &Ctx, MCAsmBackend &TAB,
                                             raw_pwrite_stream &OS,
                                             MCCodeEmitter *Emitter,
@@ -224,7 +228,9 @@ private:
 
   // Construction functions for the various object formats, if registered.
   COFFStreamerCtorTy COFFStreamerCtorFn;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MachOStreamerCtorTy MachOStreamerCtorFn;
+#endif
   ELFStreamerCtorTy ELFStreamerCtorFn;
 
   /// Construction function for this target's null TargetStreamer, if
@@ -249,7 +255,11 @@ private:
 
 public:
   Target()
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       : COFFStreamerCtorFn(nullptr), MachOStreamerCtorFn(nullptr),
+#else
+      : COFFStreamerCtorFn(nullptr),
+#endif
         ELFStreamerCtorFn(nullptr), NullTargetStreamerCtorFn(nullptr),
         AsmTargetStreamerCtorFn(nullptr), ObjectTargetStreamerCtorFn(nullptr),
         MCRelocationInfoCtorFn(nullptr), MCSymbolizerCtorFn(nullptr) {}
@@ -441,6 +451,7 @@ public:
       S = COFFStreamerCtorFn(Ctx, TAB, OS, Emitter, RelaxAll,
                              IncrementalLinkerCompatible);
       break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case Triple::MachO:
       if (MachOStreamerCtorFn)
         S = MachOStreamerCtorFn(Ctx, TAB, OS, Emitter, RelaxAll,
@@ -449,6 +460,7 @@ public:
         S = createMachOStreamer(Ctx, TAB, OS, Emitter, RelaxAll,
                                 DWARFMustBeAtTheEnd);
       break;
+#endif
     case Triple::ELF:
       if (ELFStreamerCtorFn)
         S = ELFStreamerCtorFn(T, Ctx, TAB, OS, Emitter, RelaxAll);
@@ -786,9 +798,11 @@ struct TargetRegistry {
     T.COFFStreamerCtorFn = Fn;
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   static void RegisterMachOStreamer(Target &T, Target::MachOStreamerCtorTy Fn) {
     T.MachOStreamerCtorFn = Fn;
   }
+#endif
 
   static void RegisterELFStreamer(Target &T, Target::ELFStreamerCtorTy Fn) {
     T.ELFStreamerCtorFn = Fn;

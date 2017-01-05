@@ -917,11 +917,13 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
 
   // On Darwin, there are __double_underscored variants of the type
   // nullability qualifiers.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TI.getTriple().isOSDarwin()) {
     Builder.defineMacro("__nonnull", "_Nonnull");
     Builder.defineMacro("__null_unspecified", "_Null_unspecified");
     Builder.defineMacro("__nullable", "_Nullable");
   }
+#endif
 
   // OpenMP definition
   // OpenMP 2.2:

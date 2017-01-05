@@ -5395,6 +5395,7 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
   // Special-case some of Darwin's platform-independence types by suggesting
   // casts to primitive types that are known to be large enough.
   bool ShouldNotPrintDirectly = false; StringRef CastTyName;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (S.Context.getTargetInfo().getTriple().isOSDarwin()) {
     QualType CastTy;
     std::tie(CastTy, CastTyName) = shouldNotPrintDirectly(S.Context, IntendedTy, E);
@@ -5403,6 +5404,7 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       ShouldNotPrintDirectly = true;
     }
   }
+#endif
 
   // We may be able to offer a FixItHint if it is a supported type.
   PrintfSpecifier fixedFS = FS;

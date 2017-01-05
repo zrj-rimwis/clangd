@@ -58,8 +58,10 @@ Tool *MSVCToolChain::buildLinker() const {
 }
 
 Tool *MSVCToolChain::buildAssembler() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (getTriple().isOSBinFormatMachO())
     return new tools::darwin::Assembler(*this);
+#endif
   getDriver().Diag(clang::diag::err_no_external_assembler);
   return nullptr;
 }
@@ -74,8 +76,10 @@ bool MSVCToolChain::IsUnwindTablesDefault() const {
   // how to generate them yet.
 
   // Don't emit unwind tables by default for MachO targets.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (getTriple().isOSBinFormatMachO())
     return false;
+#endif
 
   return getArch() == llvm::Triple::x86_64;
 }

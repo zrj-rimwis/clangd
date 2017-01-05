@@ -32,6 +32,7 @@ const char *const TargetLibraryInfoImpl::StandardNames[LibFunc::NumLibFuncs] = {
 
 static bool hasSinCosPiStret(const Triple &T) {
   // Only Darwin variants have _stret versions of combined trig functions.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (!T.isOSDarwin())
     return false;
 
@@ -46,6 +47,9 @@ static bool hasSinCosPiStret(const Triple &T) {
     return false;
 
   return true;
+#else
+  return false;  /* interesting */
+#endif
 }
 
 /// initialize - Initialize the set of available library functions based on the
@@ -85,6 +89,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
 
   // memset_pattern16 is only available on iOS 3.0 and Mac OS X 10.5 and later.
   // All versions of watchOS support it.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (T.isMacOSX()) {
     if (T.isMacOSXVersionLT(10, 5))
       TLI.setUnavailable(LibFunc::memset_pattern16);
@@ -92,6 +97,9 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     if (T.isOSVersionLT(3, 0))
       TLI.setUnavailable(LibFunc::memset_pattern16);
   } else if (!T.isWatchOS()) {
+#else
+  {
+#endif
     TLI.setUnavailable(LibFunc::memset_pattern16);
   }
 
@@ -104,6 +112,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     TLI.setUnavailable(LibFunc::sincospif_stret);
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (T.isMacOSX() && T.getArch() == Triple::x86 &&
       !T.isMacOSXVersionLT(10, 7)) {
     // x86-32 OSX has a scheme where fwrite and fputs (and some other functions
@@ -114,6 +123,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     TLI.setAvailableWithName(LibFunc::fwrite, "fwrite$UNIX2003");
     TLI.setAvailableWithName(LibFunc::fputs, "fputs$UNIX2003");
   }
+#endif
 
   // iprintf and friends are only available on XCore and TCE.
   if (T.getArch() != Triple::xcore && T.getArch() != Triple::tce) {
@@ -287,6 +297,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   }
 
   switch (T.getOS()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Triple::MacOSX:
     // exp10 and exp10f are not available on OS X until 10.9 and iOS until 7.0
     // and their names are __exp10 and __exp10f. exp10l is not available on
@@ -315,6 +326,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
       TLI.setAvailableWithName(LibFunc::exp10f, "__exp10f");
     }
     break;
+#endif
   case Triple::Linux:
     // exp10, exp10f, exp10l is available on Linux (GLIBC) but are extremely
     // buggy prior to glibc version 2.18. Until this version is widely deployed
@@ -334,11 +346,13 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   // http://svn.freebsd.org/base/head/lib/libc/string/ffsl.c
   // http://www.gnu.org/software/gnulib/manual/html_node/ffsl.html
   switch (T.getOS()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // XXX should we add DragonFly here?
   case Triple::Darwin:
   case Triple::MacOSX:
   case Triple::IOS:
   case Triple::TvOS:
   case Triple::WatchOS:
+#endif
   case Triple::FreeBSD:
   case Triple::Linux:
     break;
@@ -350,11 +364,13 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   // http://svn.freebsd.org/base/head/lib/libc/string/ffsll.c
   // http://www.gnu.org/software/gnulib/manual/html_node/ffsll.html
   switch (T.getOS()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // XXX should we add DragonFly here?
   case Triple::Darwin:
   case Triple::MacOSX:
   case Triple::IOS:
   case Triple::TvOS:
   case Triple::WatchOS:
+#endif
   case Triple::FreeBSD:
   case Triple::Linux:
     break;

@@ -14,7 +14,9 @@
 
 #include "llvm/ProfileData/Coverage/CoverageMappingReader.h"
 #include "llvm/ADT/DenseMap.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/Object/MachOUniversal.h"
+#endif
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Endian.h"
@@ -600,6 +602,7 @@ static Error loadBinaryFormat(MemoryBufferRef ObjectBuffer,
     return BinOrErr.takeError();
   auto Bin = std::move(BinOrErr.get());
   std::unique_ptr<ObjectFile> OF;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (auto *Universal = dyn_cast<object::MachOUniversalBinary>(Bin.get())) {
     // If we have a universal binary, try to look up the object for the
     // appropriate architecture.
@@ -607,6 +610,10 @@ static Error loadBinaryFormat(MemoryBufferRef ObjectBuffer,
     if (!ObjectFileOrErr)
       return ObjectFileOrErr.takeError();
     OF = std::move(ObjectFileOrErr.get());
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (isa<object::ObjectFile>(Bin.get())) {
     // For any other object file, upcast and take ownership.
     OF.reset(cast<object::ObjectFile>(Bin.release()));

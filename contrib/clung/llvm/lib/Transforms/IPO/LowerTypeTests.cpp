@@ -757,7 +757,11 @@ void LowerTypeTests::buildBitSetsFromFunctions(ArrayRef<Metadata *> TypeIds,
   auto JumpTable = new GlobalVariable(*M, JumpTableType,
                                       /*isConstant=*/true,
                                       GlobalValue::PrivateLinkage, nullptr);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   JumpTable->setSection(ObjectFormat == Triple::MachO
+#else
+  JumpTable->setSection(false
+#endif
                             ? "__TEXT,__text,regular,pure_instructions"
                             : ".text");
   lowerTypeTestCalls(TypeIds, JumpTable, GlobalLayout);
@@ -990,7 +994,11 @@ static void init(LowerTypeTests *LTT, Module &M) {
   LTT->M = &M;
   const DataLayout &DL = M.getDataLayout();
   Triple TargetTriple(M.getTargetTriple());
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // interesting
   LTT->LinkerSubsectionsViaSymbols = TargetTriple.isMacOSX();
+#else
+  LTT->LinkerSubsectionsViaSymbols = false;
+#endif
   LTT->Arch = TargetTriple.getArch();
   LTT->ObjectFormat = TargetTriple.getObjectFormat();
   LTT->Int1Ty = Type::getInt1Ty(M.getContext());

@@ -3790,17 +3790,21 @@ void llvm::WriteBitcodeToFile(const Module *M, raw_ostream &Out,
 
   // If this is darwin or another generic macho target, reserve space for the
   // header.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   Triple TT(M->getTargetTriple());
   if (TT.isOSDarwin() || TT.isOSBinFormatMachO())
     Buffer.insert(Buffer.begin(), BWH_HeaderSize, 0);
+#endif
 
   // Emit the module into the buffer.
   ModuleBitcodeWriter ModuleWriter(M, Buffer, ShouldPreserveUseListOrder, Index,
                                    GenerateHash);
   ModuleWriter.write();
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TT.isOSDarwin() || TT.isOSBinFormatMachO())
     emitDarwinBCHeaderAndTrailer(Buffer, TT);
+#endif
 
   // Write the generated bitstream to "Out".
   Out.write((char*)&Buffer.front(), Buffer.size());

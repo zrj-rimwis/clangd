@@ -2268,7 +2268,11 @@ EVT X86TargetLowering::getTypeForExtReturn(LLVMContext &Context, EVT VT,
                                            ISD::NodeType ExtendKind) const {
   MVT ReturnMVT = MVT::i32;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool Darwin = Subtarget.getTargetTriple().isOSDarwin();
+#else
+  const bool Darwin = false;
+#endif
   if (VT == MVT::i1 || (!Darwin && (VT == MVT::i8 || VT == MVT::i16))) {
     // The ABI does not require i1, i8 or i16 to be extended.
     //

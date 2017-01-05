@@ -29,7 +29,9 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Triple.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetParser.h"
 #include <algorithm>
@@ -112,6 +114,7 @@ public:
       : OSTargetInfo<Target>(Triple, Opts) {}
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static void getDarwinDefines(MacroBuilder &Builder, const LangOptions &Opts,
                              const llvm::Triple &Triple,
                              StringRef &PlatformName,
@@ -231,7 +234,9 @@ static void getDarwinDefines(MacroBuilder &Builder, const LangOptions &Opts,
 
   PlatformMinVersion = VersionTuple(Maj, Min, Rev);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 template<typename Target>
 class DarwinTargetInfo : public OSTargetInfo<Target> {
 protected:
@@ -293,6 +298,7 @@ public:
     return  64;
   }
 };
+#endif
 
 
 // DragonFlyBSD Target
@@ -1665,6 +1671,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinPPC32TargetInfo : public DarwinTargetInfo<PPC32TargetInfo> {
 public:
   DarwinPPC32TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -1690,6 +1697,7 @@ public:
     resetDataLayout("E-m:o-i64:64-n32:64");
   }
 };
+#endif
 
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 static const unsigned NVPTXAddrSpaceMap[] = {
@@ -4098,6 +4106,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinI386TargetInfo : public DarwinTargetInfo<X86_32TargetInfo> {
 public:
   DarwinI386TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4127,6 +4136,7 @@ public:
     return true;
   }
 };
+#endif
 
 // x86-32 Windows target
 class WindowsX86_32TargetInfo : public WindowsTargetInfo<X86_32TargetInfo> {
@@ -4526,6 +4536,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinX86_64TargetInfo : public DarwinTargetInfo<X86_64TargetInfo> {
 public:
   DarwinX86_64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4549,6 +4560,7 @@ public:
     return true;
   }
 };
+#endif
 
 class OpenBSDX86_64TargetInfo : public OpenBSDTargetInfo<X86_64TargetInfo> {
 public:
@@ -4647,7 +4659,11 @@ class ARMTargetInfo : public TargetInfo {
     const llvm::Triple &T = getTriple();
 
     // size_t is unsigned long on MachO-derived environments, NetBSD and Bitrig.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (T.isOSBinFormatMachO() || T.getOS() == llvm::Triple::NetBSD ||
+#else
+    if (T.getOS() == llvm::Triple::NetBSD ||
+#endif
         T.getOS() == llvm::Triple::Bitrig)
       SizeType = UnsignedLong;
     else
@@ -4673,10 +4689,15 @@ class ARMTargetInfo : public TargetInfo {
 
     // Thumb1 add sp, #imm requires the immediate value be multiple of 4,
     // so set preferred for small types to 32.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (T.isOSBinFormatMachO()) {
       resetDataLayout(BigEndian
                           ? "E-m:o-p:32:32-i64:64-v128:64:128-a:0:32-n32-S64"
                           : "e-m:o-p:32:32-i64:64-v128:64:128-a:0:32-n32-S64");
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (T.isOSWindows()) {
       assert(!BigEndian && "Windows on ARM does not support big endian");
       resetDataLayout("e"
@@ -4727,6 +4748,7 @@ class ARMTargetInfo : public TargetInfo {
     /// gcc.
     ZeroLengthBitfieldBoundary = 32;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (T.isOSBinFormatMachO() && IsAAPCS16) {
       assert(!BigEndian && "AAPCS16 does not support big-endian");
       resetDataLayout("e-m:o-p:32:32-i64:64-a:0:32-n32-S128");
@@ -4736,6 +4758,7 @@ class ARMTargetInfo : public TargetInfo {
               ? "E-m:o-p:32:32-f64:32:64-v64:32:64-v128:32:128-a:0:32-n32-S32"
               : "e-m:o-p:32:32-f64:32:64-v64:32:64-v128:32:128-a:0:32-n32-S32");
     else
+#endif
       resetDataLayout(
           BigEndian
               ? "E-m:e-p:32:32-f64:32:64-v64:32:64-v128:32:128-a:0:32-n32-S32"
@@ -4871,6 +4894,7 @@ public:
     // FIXME: This duplicates code from the driver that sets the -target-abi
     // option - this code is used if -target-abi isn't passed and should
     // be unified in some way.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSBinFormatMachO()) {
       // The backend is hardwired to assume AAPCS for M-class processors, ensure
       // the frontend matches that.
@@ -4883,6 +4907,10 @@ public:
       } else {
         setABI("apcs-gnu");
       }
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (Triple.isOSWindows()) {
       // FIXME: this is invalid for WindowsCE
       setABI("aapcs");
@@ -5193,7 +5221,11 @@ public:
     if (ABI == "aapcs" || ABI == "aapcs-linux" || ABI == "aapcs-vfp") {
       // Embedded targets on Darwin follow AAPCS, but not EABI.
       // Windows on ARM follows AAPCS VFP, but does not conform to EABI.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (!getTriple().isOSBinFormatMachO() && !getTriple().isOSWindows())
+#else
+      if (!false && !getTriple().isOSWindows())
+#endif
         Builder.defineMacro("__ARM_EABI__");
       Builder.defineMacro("__ARM_PCS", "1");
     }
@@ -5629,6 +5661,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinARMTargetInfo : public DarwinTargetInfo<ARMleTargetInfo> {
 protected:
   void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
@@ -5659,6 +5692,7 @@ public:
       TheCXXABI.set(TargetCXXABI::iOS);
   }
 };
+#endif
 
 class AArch64TargetInfo : public TargetInfo {
   virtual void setDataLayout() = 0;
@@ -6010,9 +6044,11 @@ const Builtin::Info AArch64TargetInfo::BuiltinInfo[] = {
 
 class AArch64leTargetInfo : public AArch64TargetInfo {
   void setDataLayout() override {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (getTriple().isOSBinFormatMachO())
       resetDataLayout("e-m:o-i64:64-i128:128-n32:64-S128");
     else
+#endif
       resetDataLayout("e-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128");
   }
 
@@ -6030,7 +6066,11 @@ public:
 
 class AArch64beTargetInfo : public AArch64TargetInfo {
   void setDataLayout() override {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     assert(!getTriple().isOSBinFormatMachO());
+#else
+    assert(!false);
+#endif
     resetDataLayout("E-m:e-i8:8:32-i16:16:32-i64:64-i128:128-n32:64-S128");
   }
 
@@ -6046,6 +6086,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinAArch64TargetInfo : public DarwinTargetInfo<AArch64leTargetInfo> {
 protected:
   void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
@@ -6078,6 +6119,7 @@ public:
     return TargetInfo::CharPtrBuiltinVaList;
   }
 };
+#endif
 
 // Hexagon abstract base class
 class HexagonTargetInfo : public TargetInfo {
@@ -8154,8 +8196,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     return new LanaiTargetInfo(Triple, Opts);
 
   case llvm::Triple::aarch64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin())
       return new DarwinAArch64TargetInfo(Triple, Opts);
+#endif
 
     switch (os) {
     case llvm::Triple::CloudABI:
@@ -8184,8 +8228,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
 
   case llvm::Triple::arm:
   case llvm::Triple::thumb:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSBinFormatMachO())
       return new DarwinARMTargetInfo(Triple, Opts);
+#endif
 
     switch (os) {
     case llvm::Triple::CloudABI:
@@ -8222,8 +8268,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
 
   case llvm::Triple::armeb:
   case llvm::Triple::thumbeb:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin())
       return new DarwinARMTargetInfo(Triple, Opts);
+#endif
 
     switch (os) {
     case llvm::Triple::Linux:
@@ -8325,8 +8373,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     return new Le64TargetInfo(Triple, Opts);
 
   case llvm::Triple::ppc:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin())
       return new DarwinPPC32TargetInfo(Triple, Opts);
+#endif
     switch (os) {
     case llvm::Triple::Linux:
       return new LinuxTargetInfo<PPC32TargetInfo>(Triple, Opts);
@@ -8343,8 +8393,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     }
 
   case llvm::Triple::ppc64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin())
       return new DarwinPPC64TargetInfo(Triple, Opts);
+#endif
     switch (os) {
     case llvm::Triple::Linux:
       return new LinuxTargetInfo<PPC64TargetInfo>(Triple, Opts);
@@ -8438,8 +8490,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     return new TCETargetInfo(Triple, Opts);
 
   case llvm::Triple::x86:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin())
       return new DarwinI386TargetInfo(Triple, Opts);
+#endif
 
     switch (os) {
     case llvm::Triple::CloudABI:
@@ -8493,8 +8547,10 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
     }
 
   case llvm::Triple::x86_64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin() || Triple.isOSBinFormatMachO())
       return new DarwinX86_64TargetInfo(Triple, Opts);
+#endif
 
     switch (os) {
     case llvm::Triple::CloudABI:

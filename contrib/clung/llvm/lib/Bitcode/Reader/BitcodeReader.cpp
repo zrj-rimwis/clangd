@@ -1880,9 +1880,11 @@ ErrorOr<Value *> BitcodeReader::recordValue(SmallVectorImpl<uint64_t> &Record,
   auto *GO = dyn_cast<GlobalObject>(V);
   if (GO) {
     if (GO->getComdat() == reinterpret_cast<Comdat *>(1)) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (TT.isOSBinFormatMachO())
         GO->setComdat(nullptr);
       else
+#endif
         GO->setComdat(TheModule->getOrInsertComdat(V->getName()));
     }
   }

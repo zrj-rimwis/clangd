@@ -165,14 +165,20 @@ const char *Triple::getOSTypeName(OSType Kind) {
   case UnknownOS: return "unknown";
 
   case CloudABI: return "cloudabi";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Darwin: return "darwin";
+#endif
   case DragonFly: return "dragonfly";
   case FreeBSD: return "freebsd";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case IOS: return "ios";
+#endif
   case KFreeBSD: return "kfreebsd";
   case Linux: return "linux";
   case Lv2: return "lv2";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case MacOSX: return "macosx";
+#endif
   case NetBSD: return "netbsd";
   case OpenBSD: return "openbsd";
   case Solaris: return "solaris";
@@ -189,8 +195,10 @@ const char *Triple::getOSTypeName(OSType Kind) {
   case AMDHSA: return "amdhsa";
   case PS4: return "ps4";
   case ELFIAMCU: return "elfiamcu";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case TvOS: return "tvos";
   case WatchOS: return "watchos";
+#endif
   case Mesa3D: return "mesa3d";
   }
 
@@ -434,14 +442,20 @@ static Triple::VendorType parseVendor(StringRef VendorName) {
 static Triple::OSType parseOS(StringRef OSName) {
   return StringSwitch<Triple::OSType>(OSName)
     .StartsWith("cloudabi", Triple::CloudABI)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     .StartsWith("darwin", Triple::Darwin)
+#endif
     .StartsWith("dragonfly", Triple::DragonFly)
     .StartsWith("freebsd", Triple::FreeBSD)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     .StartsWith("ios", Triple::IOS)
+#endif
     .StartsWith("kfreebsd", Triple::KFreeBSD)
     .StartsWith("linux", Triple::Linux)
     .StartsWith("lv2", Triple::Lv2)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     .StartsWith("macosx", Triple::MacOSX)
+#endif
     .StartsWith("netbsd", Triple::NetBSD)
     .StartsWith("openbsd", Triple::OpenBSD)
     .StartsWith("solaris", Triple::Solaris)
@@ -459,8 +473,10 @@ static Triple::OSType parseOS(StringRef OSName) {
     .StartsWith("amdhsa", Triple::AMDHSA)
     .StartsWith("ps4", Triple::PS4)
     .StartsWith("elfiamcu", Triple::ELFIAMCU)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     .StartsWith("tvos", Triple::TvOS)
     .StartsWith("watchos", Triple::WatchOS)
+#endif
     .StartsWith("mesa3d", Triple::Mesa3D)
     .Default(Triple::UnknownOS);
 }
@@ -491,7 +507,9 @@ static Triple::ObjectFormatType parseFormat(StringRef EnvironmentName) {
   return StringSwitch<Triple::ObjectFormatType>(EnvironmentName)
     .EndsWith("coff", Triple::COFF)
     .EndsWith("elf", Triple::ELF)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     .EndsWith("macho", Triple::MachO)
+#endif
     .Default(Triple::UnknownObjectFormat);
 }
 
@@ -560,7 +578,9 @@ static const char *getObjectFormatTypeName(Triple::ObjectFormatType Kind) {
   case Triple::UnknownObjectFormat: return "";
   case Triple::COFF: return "coff";
   case Triple::ELF: return "elf";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Triple::MachO: return "macho";
+#endif
   }
   llvm_unreachable("unknown object format type");
 }
@@ -573,8 +593,14 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   case Triple::thumb:
   case Triple::x86:
   case Triple::x86_64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (T.isOSDarwin())
       return Triple::MachO;
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else if (T.isOSWindows())
       return Triple::COFF;
     return Triple::ELF;
@@ -621,8 +647,10 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
 
   case Triple::ppc:
   case Triple::ppc64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (T.isOSDarwin())
       return Triple::MachO;
+#endif
     return Triple::ELF;
   }
   llvm_unreachable("unknown architecture");
@@ -959,6 +987,7 @@ void Triple::getOSVersion(unsigned &Major, unsigned &Minor,
   parseVersionFromName(OSName, Major, Minor, Micro);
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 bool Triple::getMacOSXVersion(unsigned &Major, unsigned &Minor,
                               unsigned &Micro) const {
   getOSVersion(Major, Minor, Micro);
@@ -999,7 +1028,9 @@ bool Triple::getMacOSXVersion(unsigned &Major, unsigned &Minor,
   }
   return true;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void Triple::getiOSVersion(unsigned &Major, unsigned &Minor,
                            unsigned &Micro) const {
   switch (getOS()) {
@@ -1025,7 +1056,9 @@ void Triple::getiOSVersion(unsigned &Major, unsigned &Minor,
     llvm_unreachable("conflicting triple info");
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void Triple::getWatchOSVersion(unsigned &Major, unsigned &Minor,
                                unsigned &Micro) const {
   switch (getOS()) {
@@ -1049,6 +1082,7 @@ void Triple::getWatchOSVersion(unsigned &Major, unsigned &Minor,
     llvm_unreachable("conflicting triple info");
   }
 }
+#endif
 
 void Triple::setTriple(const Twine &Str) {
   *this = Triple(Str);
@@ -1441,6 +1475,7 @@ StringRef Triple::getARMCPUForArch(StringRef MArch) const {
   case llvm::Triple::Win32:
     // FIXME: this is invalid for WindowsCE
     return "cortex-a9";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case llvm::Triple::MacOSX:
   case llvm::Triple::IOS:
   case llvm::Triple::WatchOS:
@@ -1448,6 +1483,7 @@ StringRef Triple::getARMCPUForArch(StringRef MArch) const {
     if (MArch == "v7k")
       return "cortex-a7";
     break;
+#endif
   default:
     break;
   }

@@ -236,6 +236,7 @@ static void InitLibcallNames(const char **Names, const Triple &TT) {
   Names[RTLIB::FPEXT_F64_F128] = "__extenddftf2";
   Names[RTLIB::FPEXT_F32_F128] = "__extendsftf2";
   Names[RTLIB::FPEXT_F32_F64] = "__extendsfdf2";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TT.isOSDarwin()) {
     // For f16/f32 conversions, Darwin uses the standard naming scheme, instead
     // of the gnueabi-style __gnu_*_ieee.
@@ -243,6 +244,9 @@ static void InitLibcallNames(const char **Names, const Triple &TT) {
     Names[RTLIB::FPEXT_F16_F32] = "__extendhfsf2";
     Names[RTLIB::FPROUND_F32_F16] = "__truncsfhf2";
   } else {
+#else
+  {
+#endif
     Names[RTLIB::FPEXT_F16_F32] = "__gnu_h2f_ieee";
     Names[RTLIB::FPROUND_F32_F16] = "__gnu_f2h_ieee";
   }

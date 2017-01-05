@@ -750,7 +750,11 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
         case ConversionSpecifier::uArg:
         case ConversionSpecifier::xArg:
         case ConversionSpecifier::XArg:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
           return !Target.getTriple().isOSDarwin() &&
+#else
+          return !false &&
+#endif
                  !Target.getTriple().isOSWindows();
         default:
           return false;

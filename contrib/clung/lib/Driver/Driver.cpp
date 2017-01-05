@@ -313,6 +313,7 @@ static llvm::Triple computeTargetTriple(const Driver &D,
   llvm::Triple Target(llvm::Triple::normalize(DefaultTargetTriple));
 
   // Handle Apple-specific options available here.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (Target.isOSBinFormatMachO()) {
     // If an explict Darwin arch name is given, that trumps all.
     if (!DarwinArchName.empty()) {
@@ -326,6 +327,7 @@ static llvm::Triple computeTargetTriple(const Driver &D,
       tools::darwin::setTripleTypeForMachOArchName(Target, ArchName);
     }
   }
+#endif
 
   // Handle pseudo-target flags '-mlittle-endian'/'-EL' and
   // '-mbig-endian'/'-EB'.
@@ -584,9 +586,11 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
 
   // Construct the list of abstract actions to perform for this compilation. On
   // MachO targets this uses the driver-driver and universal actions.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TC.getTriple().isOSBinFormatMachO())
     BuildUniversalActions(*C, C->getDefaultToolChain(), Inputs);
   else
+#endif
     BuildActions(*C, C->getArgs(), Inputs, C->getActions());
 
   if (CCCPrintPhases) {
@@ -698,9 +702,11 @@ void Driver::generateCompilationDiagnostics(Compilation &C,
   // Construct the list of abstract actions to perform for this compilation. On
   // Darwin OSes this uses the driver-driver and builds universal actions.
   const ToolChain &TC = C.getDefaultToolChain();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TC.getTriple().isOSBinFormatMachO())
     BuildUniversalActions(C, TC, Inputs);
   else
+#endif
     BuildActions(C, C.getArgs(), Inputs, C.getActions());
 
   BuildJobs(C);
@@ -1109,6 +1115,7 @@ static bool ContainsCompileOrAssembleAction(const Action *A) {
   return false;
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // hmmm this one is only for macho?
 void Driver::BuildUniversalActions(Compilation &C, const ToolChain &TC,
                                    const InputList &BAInputs) const {
   DerivedArgList &Args = C.getArgs();
@@ -1195,6 +1202,7 @@ void Driver::BuildUniversalActions(Compilation &C, const ToolChain &TC,
     }
   }
 }
+#endif
 
 /// \brief Check that the file referenced by Value exists. If it doesn't,
 /// issue a diagnostic and return false.
@@ -1875,10 +1883,12 @@ void Driver::BuildJobs(Compilation &C) const {
 
   // Collect the list of architectures.
   llvm::StringSet<> ArchNames;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (C.getDefaultToolChain().getTriple().isOSBinFormatMachO())
     for (const Arg *A : C.getArgs())
       if (A->getOption().matches(options::OPT_arch))
         ArchNames.insert(A->getValue());
+#endif
 
   // Set of (Action, canonical ToolChain triple) pairs we've built jobs for.
   std::map<std::pair<const Action *, std::string>, InputInfo> CachedResults;
@@ -2617,6 +2627,7 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
     case llvm::Triple::CloudABI:
       TC = new toolchains::CloudABI(*this, Target, Args);
       break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case llvm::Triple::Darwin:
     case llvm::Triple::MacOSX:
     case llvm::Triple::IOS:
@@ -2624,6 +2635,7 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
     case llvm::Triple::WatchOS:
       TC = new toolchains::DarwinClang(*this, Target, Args);
       break;
+#endif
     case llvm::Triple::DragonFly:
       TC = new toolchains::DragonFly(*this, Target, Args);
       break;
@@ -2666,8 +2678,10 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       default:
         if (Target.isOSBinFormatELF())
           TC = new toolchains::Generic_ELF(*this, Target, Args);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
         else if (Target.isOSBinFormatMachO())
           TC = new toolchains::MachO(*this, Target, Args);
+#endif
         else
           TC = new toolchains::Generic_GCC(*this, Target, Args);
         break;
@@ -2716,8 +2730,10 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
           TC = new toolchains::MyriadToolChain(*this, Target, Args);
         else if (Target.isOSBinFormatELF())
           TC = new toolchains::Generic_ELF(*this, Target, Args);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
         else if (Target.isOSBinFormatMachO())
           TC = new toolchains::MachO(*this, Target, Args);
+#endif
         else
           TC = new toolchains::Generic_GCC(*this, Target, Args);
       }

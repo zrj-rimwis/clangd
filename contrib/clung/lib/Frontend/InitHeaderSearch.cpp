@@ -368,6 +368,7 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
   llvm::Triple::OSType os = triple.getOS();
   // FIXME: temporary hack: hard-coded paths.
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (triple.isOSDarwin()) {
     switch (triple.getArch()) {
     default: break;
@@ -405,6 +406,7 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
     }
     return;
   }
+#endif
 
   switch (os) {
   case llvm::Triple::Linux:
@@ -459,7 +461,11 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
 
   case llvm::Triple::Win32:
     if (triple.getEnvironment() != llvm::Triple::Cygnus ||
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
         triple.isOSBinFormatMachO())
+#else
+        false)
+#endif
       return;
     break;
   }
@@ -467,6 +473,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
   if (Lang.CPlusPlus && HSOpts.UseStandardCXXIncludes &&
       HSOpts.UseStandardSystemIncludes) {
     if (HSOpts.UseLibcxx) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (triple.isOSDarwin()) {
         // On Darwin, libc++ may be installed alongside the compiler in
         // include/c++/v1.
@@ -483,6 +490,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
           AddUnmappedPath(P, CXXSystem, false);
         }
       }
+#endif
       AddPath("/usr/include/c++/v1", CXXSystem, false);
     } else {
       AddDefaultCPlusPlusIncludePaths(triple, HSOpts);
@@ -493,10 +501,12 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
 
   // Add the default framework include paths on Darwin.
   if (HSOpts.UseStandardSystemIncludes) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (triple.isOSDarwin()) {
       AddPath("/System/Library/Frameworks", System, true);
       AddPath("/Library/Frameworks", System, true);
     }
+#endif
   }
 }
 

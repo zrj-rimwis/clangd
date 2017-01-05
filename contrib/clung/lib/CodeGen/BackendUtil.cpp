@@ -771,8 +771,10 @@ void clang::EmitBackendOutput(DiagnosticsEngine &Diags,
 
 static const char* getSectionNameForBitcode(const Triple &T) {
   switch (T.getObjectFormat()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Triple::MachO:
     return "__LLVM,__bitcode";
+#endif
   case Triple::COFF:
   case Triple::ELF:
   case Triple::UnknownObjectFormat:
@@ -783,8 +785,10 @@ static const char* getSectionNameForBitcode(const Triple &T) {
 
 static const char* getSectionNameForCommandline(const Triple &T) {
   switch (T.getObjectFormat()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Triple::MachO:
     return "__LLVM,__cmdline";
+#endif
   case Triple::COFF:
   case Triple::ELF:
   case Triple::UnknownObjectFormat:

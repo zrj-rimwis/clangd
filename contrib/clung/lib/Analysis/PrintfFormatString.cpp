@@ -274,9 +274,13 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
     case 'D':
       if (isFreeBSDKPrintf)
         k = ConversionSpecifier::FreeBSDDArg; // void * followed by char *
+/* XXX here kernel format expansions should be added? */
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       else if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::DArg;
+#endif
       break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case 'O':
       if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::OArg;
@@ -285,6 +289,7 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
       if (Target.getTriple().isOSDarwin())
         k = ConversionSpecifier::UArg;
       break;
+#endif
     // MS specific.
     case 'Z':
       if (Target.getTriple().isOSMSVCRT())

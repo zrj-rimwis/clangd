@@ -19,7 +19,9 @@
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCFragment.h"
 #include "llvm/MC/MCInst.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCLinkerOptimizationHint.h"
+#endif
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbol.h"
 
@@ -81,12 +83,14 @@ public:
   /// MachO specific deployment target version info.
   // A Major version of 0 indicates that no version information was supplied
   // and so the corresponding load command should not be emitted.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   typedef struct {
     MCVersionMinType Kind;
     unsigned Major;
     unsigned Minor;
     unsigned Update;
   } VersionMinInfoType;
+#endif
 
 private:
   MCAssembler(const MCAssembler &) = delete;
@@ -143,9 +147,11 @@ private:
 
   /// Used to communicate Linker Optimization Hint information between
   /// the Streamer and the .o writer
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MCLOHContainer LOHContainer;
 
   VersionMinInfoType VersionMinInfo;
+#endif
 
 private:
   /// Evaluate a fixup to a relocatable expression and the value which should be
@@ -230,6 +236,7 @@ public:
   void setELFHeaderEFlags(unsigned Flags) { ELFHeaderEFlags = Flags; }
 
   /// MachO deployment target version information.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   const VersionMinInfoType &getVersionMinInfo() const { return VersionMinInfo; }
   void setVersionMinInfo(MCVersionMinType Kind, unsigned Major, unsigned Minor,
                          unsigned Update) {
@@ -238,6 +245,7 @@ public:
     VersionMinInfo.Minor = Minor;
     VersionMinInfo.Update = Update;
   }
+#endif
 
 public:
   /// Construct a new assembler instance.
@@ -387,10 +395,12 @@ public:
   // FIXME: This is a total hack, this should not be here. Once things are
   // factored so that the streamer has direct access to the .o writer, it can
   // disappear.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MCLOHContainer &getLOHContainer() { return LOHContainer; }
   const MCLOHContainer &getLOHContainer() const {
     return const_cast<MCAssembler *>(this)->getLOHContainer();
   }
+#endif
   /// @}
   /// \name Backend Data Access
   /// @{

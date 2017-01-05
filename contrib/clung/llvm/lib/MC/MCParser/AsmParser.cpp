@@ -30,7 +30,9 @@
 #include "llvm/MC/MCParser/MCParsedAsmOperand.h"
 #include "llvm/MC/MCParser/MCTargetAsmParser.h"
 #include "llvm/MC/MCRegisterInfo.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCValue.h"
@@ -177,7 +179,9 @@ private:
   unsigned AssemblerDialect;
 
   /// \brief is Darwin compatibility enabled?
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool IsDarwin;
+#endif
 
   /// \brief Are we parsing ms-style inline assembly?
   bool ParsingInlineAsm;
@@ -546,7 +550,9 @@ private:
 
 namespace llvm {
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 extern MCAsmParserExtension *createDarwinAsmParser();
+#endif
 extern MCAsmParserExtension *createELFAsmParser();
 extern MCAsmParserExtension *createCOFFAsmParser();
 
@@ -559,7 +565,11 @@ AsmParser::AsmParser(SourceMgr &SM, MCContext &Ctx, MCStreamer &Out,
     : Lexer(MAI), Ctx(Ctx), Out(Out), MAI(MAI), SrcMgr(SM),
       PlatformParser(nullptr), CurBuffer(SM.getMainFileID()),
       MacrosEnabledFlag(true), HadError(false), CppHashInfo(),
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       AssemblerDialect(~0U), IsDarwin(false), ParsingInlineAsm(false) {
+#else
+      AssemblerDialect(~0U), ParsingInlineAsm(false) {
+#endif
   // Save the old handler.
   SavedDiagHandler = SrcMgr.getDiagHandler();
   SavedDiagContext = SrcMgr.getDiagContext();
@@ -572,10 +582,12 @@ AsmParser::AsmParser(SourceMgr &SM, MCContext &Ctx, MCStreamer &Out,
   case MCObjectFileInfo::IsCOFF:
     PlatformParser.reset(createCOFFAsmParser());
     break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case MCObjectFileInfo::IsMachO:
     PlatformParser.reset(createDarwinAsmParser());
     IsDarwin = true;
     break;
+#endif
   case MCObjectFileInfo::IsELF:
     PlatformParser.reset(createELFAsmParser());
     break;
@@ -1191,6 +1203,7 @@ bool AsmParser::parseAbsoluteExpression(int64_t &Res) {
   return false;
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static unsigned getDarwinBinOpPrecedence(AsmToken::TokenKind K,
                                          MCBinaryExpr::Opcode &Kind,
                                          bool ShouldUseLogicalShr) {
@@ -1268,6 +1281,7 @@ static unsigned getDarwinBinOpPrecedence(AsmToken::TokenKind K,
     return 6;
   }
 }
+#endif
 
 static unsigned getGNUBinOpPrecedence(AsmToken::TokenKind K,
                                       MCBinaryExpr::Opcode &Kind,
@@ -1348,8 +1362,12 @@ static unsigned getGNUBinOpPrecedence(AsmToken::TokenKind K,
 unsigned AsmParser::getBinOpPrecedence(AsmToken::TokenKind K,
                                        MCBinaryExpr::Opcode &Kind) {
   bool ShouldUseLogicalShr = MAI.shouldUseLogicalShr();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   return IsDarwin ? getDarwinBinOpPrecedence(K, Kind, ShouldUseLogicalShr)
                   : getGNUBinOpPrecedence(K, Kind, ShouldUseLogicalShr);
+#else
+  return getGNUBinOpPrecedence(K, Kind, ShouldUseLogicalShr);
+#endif
 }
 
 /// \brief Parse all binary operators with precedence >= 'Precedence'.
@@ -2013,7 +2031,11 @@ bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
                             bool EnableAtPseudoVariable, SMLoc L) {
   unsigned NParameters = Parameters.size();
   bool HasVararg = NParameters ? Parameters.back().Vararg : false;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if ((!IsDarwin || NParameters != 0) && NParameters != A.size())
+#else
+  if ((!false || NParameters != 0) && NParameters != A.size())
+#endif
     return Error(L, "Wrong number of arguments");
 
   // A macro without parameters is handled differently on Darwin:
@@ -2023,6 +2045,7 @@ bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
     std::size_t End = Body.size(), Pos = 0;
     for (; Pos != End; ++Pos) {
       // Check for a substitution or escape.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (IsDarwin && !NParameters) {
         // This macro has no parameters, look for $0, $1, etc.
         if (Body[Pos] != '$' || Pos + 1 == End)
@@ -2032,7 +2055,11 @@ bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
         if (Next == '$' || Next == 'n' ||
             isdigit(static_cast<unsigned char>(Next)))
           break;
+#else
+      if (false) {
+        /* dummy */
       } else {
+#endif
         // This macro has parameters, look for \foo, \bar, etc.
         if (Body[Pos] == '\\' && Pos + 1 != End)
           break;
@@ -2046,6 +2073,7 @@ bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
     if (Pos == End)
       break;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (IsDarwin && !NParameters) {
       switch (Body[Pos + 1]) {
       // $$ => $
@@ -2072,6 +2100,10 @@ bool AsmParser::expandMacro(raw_svector_ostream &OS, StringRef Body,
       }
       }
       Pos += 2;
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       unsigned I = Pos + 1;
 
@@ -2186,7 +2218,11 @@ bool AsmParser::parseMacroArgument(MCAsmMacroArgument &MA, bool Vararg) {
   unsigned ParenLevel = 0;
 
   // Darwin doesn't use spaces to delmit arguments.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   AsmLexerSkipSpaceRAII ScopedSkipSpace(Lexer, IsDarwin);
+#else
+  AsmLexerSkipSpaceRAII ScopedSkipSpace(Lexer, false);
+#endif
 
   bool SpaceEaten;
 
@@ -2208,7 +2244,11 @@ bool AsmParser::parseMacroArgument(MCAsmMacroArgument &MA, bool Vararg) {
       // Spaces can delimit parameters, but could also be part an expression.
       // If the token after a space is an operator, add the token and the next
       // one into this argument
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (!IsDarwin) {
+#else
+      if (!false) {
+#endif
         if (isOperator(Lexer.getKind())) {
           MA.push_back(getTok());
           Lexer.Lex();

@@ -338,6 +338,7 @@ bool LTOCodeGenerator::determineTarget() {
   Features.getDefaultSubtargetFeatures(Triple);
   FeatureStr = Features.getString();
   // Set a default CPU for Darwin triples.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (MCpu.empty() && Triple.isOSDarwin()) {
     if (Triple.getArch() == llvm::Triple::x86_64)
       MCpu = "core2";
@@ -346,6 +347,7 @@ bool LTOCodeGenerator::determineTarget() {
     else if (Triple.getArch() == llvm::Triple::aarch64)
       MCpu = "cyclone";
   }
+#endif
 
   TargetMach = createTargetMachine();
   return true;

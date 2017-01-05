@@ -27,7 +27,9 @@ class Command;
 class Driver;
 
 namespace toolchains {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class MachO;
+#endif
 }
 
 namespace tools {
@@ -327,6 +329,7 @@ public:
 };
 } // end namespace cloudabi
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 namespace darwin {
 llvm::Triple::ArchType getArchTypeForMachOArchName(StringRef Str);
 void setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str);
@@ -424,6 +427,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 } // end namespace darwin
+#endif
 
 /// openbsd -- Directly call GNU Binutils assembler and linker
 namespace openbsd {

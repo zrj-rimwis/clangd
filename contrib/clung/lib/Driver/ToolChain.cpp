@@ -421,7 +421,9 @@ std::string ToolChain::ComputeLLVMTriple(const ArgList &Args,
 
   case llvm::Triple::x86_64: {
     llvm::Triple Triple = getTriple();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (!Triple.isOSBinFormatMachO())
+#endif
       return getTripleString();
 
     if (Arg *A = Args.getLastArg(options::OPT_march_EQ)) {
@@ -435,7 +437,9 @@ std::string ToolChain::ComputeLLVMTriple(const ArgList &Args,
   }
   case llvm::Triple::aarch64: {
     llvm::Triple Triple = getTriple();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (!Triple.isOSBinFormatMachO())
+#endif
       return getTripleString();
 
     // FIXME: older versions of ld64 expect the "arm64" component in the actual
@@ -469,14 +473,22 @@ std::string ToolChain::ComputeLLVMTriple(const ArgList &Args,
     if (const Arg *A = Args.getLastArg(options::OPT_march_EQ))
       MArch = A->getValue();
     std::string CPU =
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
         Triple.isOSBinFormatMachO()
+#else
+        false
+#endif
             ? tools::arm::getARMCPUForMArch(MArch, Triple).str()
             : tools::arm::getARMTargetCPU(MCPU, MArch, Triple);
     StringRef Suffix =
       tools::arm::getLLVMArchSuffixForARM(CPU, MArch, Triple);
     bool IsMProfile = ARM::parseArchProfile(Suffix) == ARM::PK_M;
     bool ThumbDefault = IsMProfile || (ARM::parseArchVersion(Suffix) == 7 && 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
                                        getTriple().isOSBinFormatMachO());
+#else
+                                       false);
+#endif
     // FIXME: this is invalid for WindowsCE
     if (getTriple().isOSWindows())
       ThumbDefault = true;

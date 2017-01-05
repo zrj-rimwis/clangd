@@ -281,7 +281,9 @@ class DwarfDebug : public DebugHandlerBase {
   
   /// True iff there are multiple CUs in this module.
   bool SingleCU;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool IsDarwin;
+#endif
 
   AddressPool AddrPool;
 

@@ -84,7 +84,11 @@ llvm::createInstrProfilingLegacyPass(const InstrProfOptions &Options) {
 }
 
 bool InstrProfiling::isMachO() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   return Triple(M->getTargetTriple()).isOSBinFormatMachO();
+#else
+  return false;
+#endif
 }
 
 /// Get the section name for the counter variables.
@@ -312,9 +316,12 @@ static inline Comdat *getOrCreateProfileComdat(Module &M, Function &F,
 
 static bool needsRuntimeRegistrationOfSectionRange(const Module &M) {
   // Don't do this for Darwin.  compiler-rt uses linker magic.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (Triple(M.getTargetTriple()).isOSDarwin())
     return false;
+#endif
 
+/* XXX should we add DragonFly here? */
   // Use linker script magic to get data/cnts/name start/end.
   if (Triple(M.getTargetTriple()).isOSLinux() ||
       Triple(M.getTargetTriple()).isOSFreeBSD() ||

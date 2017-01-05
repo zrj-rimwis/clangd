@@ -22,7 +22,9 @@
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSectionCOFF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbolELF.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -128,14 +130,18 @@ public:
 
   void ChangeSection(MCSection *Section, const MCExpr *Subsection) override;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   void EmitLOHDirective(MCLOHType Kind, const MCLOHArgs &Args) override;
+#endif
   void EmitLabel(MCSymbol *Symbol) override;
 
   void EmitAssemblerFlag(MCAssemblerFlag Flag) override;
   void EmitLinkerOptions(ArrayRef<std::string> Options) override;
   void EmitDataRegion(MCDataRegionType Kind) override;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   void EmitVersionMin(MCVersionMinType Kind, unsigned Major, unsigned Minor,
                       unsigned Update) override;
+#endif
   void EmitThumbFunc(MCSymbol *Func) override;
 
   void EmitAssignment(MCSymbol *Symbol, const MCExpr *Value) override;
@@ -390,6 +396,7 @@ void MCAsmStreamer::EmitLabel(MCSymbol *Symbol) {
   EmitEOL();
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void MCAsmStreamer::EmitLOHDirective(MCLOHType Kind, const MCLOHArgs &Args) {
   StringRef str = MCLOHIdToName(Kind);
 
@@ -409,6 +416,7 @@ void MCAsmStreamer::EmitLOHDirective(MCLOHType Kind, const MCLOHArgs &Args) {
   }
   EmitEOL();
 }
+#endif
 
 void MCAsmStreamer::EmitAssemblerFlag(MCAssemblerFlag Flag) {
   switch (Flag) {
@@ -444,6 +452,7 @@ void MCAsmStreamer::EmitDataRegion(MCDataRegionType Kind) {
   EmitEOL();
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void MCAsmStreamer::EmitVersionMin(MCVersionMinType Kind, unsigned Major,
                                    unsigned Minor, unsigned Update) {
   switch (Kind) {
@@ -457,6 +466,7 @@ void MCAsmStreamer::EmitVersionMin(MCVersionMinType Kind, unsigned Major,
     OS << ", " << Update;
   EmitEOL();
 }
+#endif
 
 void MCAsmStreamer::EmitThumbFunc(MCSymbol *Func) {
   // This needs to emit to a temporary string to get properly quoted
@@ -667,8 +677,10 @@ void MCAsmStreamer::EmitZerofill(MCSection *Section, MCSymbol *Symbol,
   OS << ".zerofill ";
 
   // This is a mach-o specific directive.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // smth fishy here
   const MCSectionMachO *MOSection = ((const MCSectionMachO*)Section);
   OS << MOSection->getSegmentName() << "," << MOSection->getSectionName();
+#endif
 
   if (Symbol) {
     OS << ',';

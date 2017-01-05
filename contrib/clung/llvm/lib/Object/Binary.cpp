@@ -19,7 +19,9 @@
 
 // Include headers for createBinary.
 #include "llvm/Object/Archive.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/Object/MachOUniversal.h"
+#endif
 #include "llvm/Object/ObjectFile.h"
 
 using namespace llvm;
@@ -48,6 +50,7 @@ Expected<std::unique_ptr<Binary>> object::createBinary(MemoryBufferRef Buffer,
     case sys::fs::file_magic::elf_executable:
     case sys::fs::file_magic::elf_shared_object:
     case sys::fs::file_magic::elf_core:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case sys::fs::file_magic::macho_object:
     case sys::fs::file_magic::macho_executable:
     case sys::fs::file_magic::macho_fixed_virtual_memory_shared_lib:
@@ -59,13 +62,16 @@ Expected<std::unique_ptr<Binary>> object::createBinary(MemoryBufferRef Buffer,
     case sys::fs::file_magic::macho_dynamically_linked_shared_lib_stub:
     case sys::fs::file_magic::macho_dsym_companion:
     case sys::fs::file_magic::macho_kext_bundle:
+#endif
     case sys::fs::file_magic::coff_object:
     case sys::fs::file_magic::coff_import_library:
     case sys::fs::file_magic::pecoff_executable:
     case sys::fs::file_magic::bitcode:
       return ObjectFile::createSymbolicFile(Buffer, Type, Context);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case sys::fs::file_magic::macho_universal_binary:
       return MachOUniversalBinary::create(Buffer);
+#endif
     case sys::fs::file_magic::unknown:
     case sys::fs::file_magic::windows_resource:
       // Unrecognized object file format.

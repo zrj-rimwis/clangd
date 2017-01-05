@@ -638,14 +638,20 @@ static bool isSignedCharDefault(const llvm::Triple &Triple) {
   case llvm::Triple::armeb:
   case llvm::Triple::thumb:
   case llvm::Triple::thumbeb:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin() || Triple.isOSWindows())
+#else
+    if (Triple.isOSWindows())
+#endif
       return true;
     return false;
 
   case llvm::Triple::ppc:
   case llvm::Triple::ppc64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin())
       return true;
+#endif
     return false;
 
   case llvm::Triple::hexagon:
@@ -801,16 +807,19 @@ arm::FloatABI arm::getARMFloatABI(const ToolChain &TC, const ArgList &Args) {
 
     // It is incorrect to select hard float ABI on MachO platforms if the ABI is
     // "apcs-gnu".
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSBinFormatMachO() && !useAAPCSForMachO(Triple) &&
         ABI == FloatABI::Hard) {
       D.Diag(diag::err_drv_unsupported_opt_for_target) << A->getAsString(Args)
                                                        << Triple.getArchName();
     }
+#endif
   }
 
   // If unspecified, choose the default based on the platform.
   if (ABI == FloatABI::Invalid) {
     switch (Triple.getOS()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case llvm::Triple::Darwin:
     case llvm::Triple::MacOSX:
     case llvm::Triple::IOS:
@@ -823,6 +832,7 @@ arm::FloatABI arm::getARMFloatABI(const ToolChain &TC, const ArgList &Args) {
     case llvm::Triple::WatchOS:
       ABI = FloatABI::Hard;
       break;
+#endif
 
     // FIXME: this is invalid for WindowsCE
     case llvm::Triple::Win32:
@@ -859,14 +869,24 @@ arm::FloatABI arm::getARMFloatABI(const ToolChain &TC, const ArgList &Args) {
         break;
       default:
         // Assume "soft", but warn the user we are guessing.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
         if (Triple.isOSBinFormatMachO() &&
             Triple.getSubArch() == llvm::Triple::ARMSubArch_v7em)
           ABI = FloatABI::Hard;
+#else
+        if (false) {
+          /* dummy */
+        }
+#endif
         else
           ABI = FloatABI::Soft;
 
         if (Triple.getOS() != llvm::Triple::UnknownOS ||
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
             !Triple.isOSBinFormatMachO())
+#else
+            !false)
+#endif
           D.Diag(diag::warn_drv_assuming_mfloat_abi_is) << "soft";
         break;
       }
@@ -1013,8 +1033,12 @@ static void getARMTargetFeatures(const ToolChain &TC,
                                options::OPT_mno_long_calls)) {
     if (A->getOption().matches(options::OPT_mlong_calls))
       Features.push_back("+long-calls");
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   } else if (KernelOrKext && (!Triple.isiOS() || Triple.isOSVersionLT(6)) &&
              !Triple.isWatchOS()) {
+#else
+  } else if (KernelOrKext && (!false) && !false) {
+#endif
       Features.push_back("+long-calls");
   }
 
@@ -1048,7 +1072,11 @@ static void getARMTargetFeatures(const ToolChain &TC,
     //
     // The above behavior is consistent with GCC.
     int VersionNum = getARMSubArchVersionNumber(Triple);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin() || Triple.isOSNetBSD()) {
+#else
+    if (Triple.isOSNetBSD()) {
+#endif
       if (VersionNum < 6 ||
           Triple.getSubArch() == llvm::Triple::SubArchType::ARMSubArch_v6m)
         Features.push_back("+strict-align");
@@ -1078,6 +1106,7 @@ void Clang::AddARMTargetArgs(const llvm::Triple &Triple, const ArgList &Args,
   const char *ABIName = nullptr;
   if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ)) {
     ABIName = A->getValue();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   } else if (Triple.isOSBinFormatMachO()) {
     if (useAAPCSForMachO(Triple)) {
       ABIName = "aapcs";
@@ -1086,6 +1115,7 @@ void Clang::AddARMTargetArgs(const llvm::Triple &Triple, const ArgList &Args,
     } else {
       ABIName = "apcs-gnu";
     }
+#endif
   } else if (Triple.isOSWindows()) {
     // FIXME: this is invalid for WindowsCE
     ABIName = "aapcs";
@@ -1193,8 +1223,10 @@ void Clang::AddAArch64TargetArgs(const ArgList &Args,
   const char *ABIName = nullptr;
   if (Arg *A = Args.getLastArg(options::OPT_mabi_EQ))
     ABIName = A->getValue();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   else if (Triple.isOSDarwin())
     ABIName = "darwinpcs";
+#endif
   else
     ABIName = "aapcs";
 
@@ -1829,8 +1861,10 @@ static const char *getX86TargetCPU(const ArgList &Args,
                                    const llvm::Triple &Triple) {
   if (const Arg *A = Args.getLastArg(options::OPT_march_EQ)) {
     if (StringRef(A->getValue()) != "native") {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (Triple.isOSDarwin() && Triple.getArchName() == "x86_64h")
         return "core-avx2";
+#endif
 
       return A->getValue();
     }
@@ -1876,11 +1910,13 @@ static const char *getX86TargetCPU(const ArgList &Args,
   bool Is64Bit = Triple.getArch() == llvm::Triple::x86_64;
 
   // FIXME: Need target hooks.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (Triple.isOSDarwin()) {
     if (Triple.getArchName() == "x86_64h")
       return "core-avx2";
     return Is64Bit ? "core2" : "yonah";
   }
+#endif
 
   // Set up default CPU name for PS4 compilers.
   if (Triple.isPS4CPU())
@@ -1971,7 +2007,11 @@ static std::string getCPUName(const ArgList &Args, const llvm::Triple &T,
     // LLVM may default to generating code for the native CPU,
     // but, like gcc, we default to a more generic option for
     // each architecture. (except on Darwin)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (TargetCPUName.empty() && !T.isOSDarwin()) {
+#else
+    if (TargetCPUName.empty() && !false) {
+#endif
       if (T.getArch() == llvm::Triple::ppc64)
         TargetCPUName = "ppc64";
       else if (T.getArch() == llvm::Triple::ppc64le)
@@ -2662,12 +2702,16 @@ shouldUseExceptionTablesForObjCExceptions(const ObjCRuntime &runtime,
   if (runtime.isNonFragile())
     return true;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (!Triple.isMacOSX())
+#endif
     return false;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   return (!Triple.isMacOSXVersionLT(10, 5) &&
           (Triple.getArch() == llvm::Triple::x86_64 ||
            Triple.getArch() == llvm::Triple::arm));
+#endif
 }
 
 /// Adds exception related arguments to the driver command arguments. There's a
@@ -2747,11 +2791,13 @@ static void addExceptionArgs(const ArgList &Args, types::ID InputType,
 
 static bool ShouldDisableAutolink(const ArgList &Args, const ToolChain &TC) {
   bool Default = true;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TC.getTriple().isOSDarwin()) {
     // The native darwin assembler doesn't support the linker_option directives,
     // so we disable them if we think the .s file will be passed to it.
     Default = TC.useIntegratedAs();
   }
+#endif
   return !Args.hasFlag(options::OPT_fautolink, options::OPT_fno_autolink,
                        Default);
 }
@@ -3290,7 +3336,11 @@ static bool shouldUseFramePointerForTarget(const ArgList &Args,
     case llvm::Triple::x86:
       return !areOptimizationsEnabled(Args);
     case llvm::Triple::x86_64:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       return Triple.isOSBinFormatMachO();
+#else
+      return false; /* smth fishy */
+#endif
     case llvm::Triple::arm:
     case llvm::Triple::thumb:
       // Windows on ARM builds with FPO disabled to aid fast stack walking
@@ -3684,9 +3734,11 @@ ParsePICArgs(const ToolChain &ToolChain, const llvm::Triple &Triple,
   bool PIE = ToolChain.isPIEDefault();
   bool PIC = PIE || ToolChain.isPICDefault();
   // The Darwin/MachO default to use PIC does not apply when using -static.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (ToolChain.getTriple().isOSBinFormatMachO() &&
       Args.hasArg(options::OPT_static))
     PIE = PIC = false;
+#endif
   bool IsPICLevelTwo = PIC;
 
   bool KernelOrKext =
@@ -3778,19 +3830,29 @@ ParsePICArgs(const ToolChain &ToolChain, const llvm::Triple &Triple,
   // Introduce a Darwin and PS4-specific hack. If the default is PIC, but the
   // PIC level would've been set to level 1, force it back to level 2 PIC
   // instead.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (PIC && (ToolChain.getTriple().isOSDarwin() || Triple.isPS4CPU()))
+#else
+  if (PIC && (false || Triple.isPS4CPU()))
+#endif
     IsPICLevelTwo |= ToolChain.isPICDefault();
 
   // This kernel flags are a trump-card: they will disable PIC/PIE
   // generation, independent of the argument order.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (KernelOrKext && ((!Triple.isiOS() || Triple.isOSVersionLT(6)) &&
                        !Triple.isWatchOS()))
+#else
+  if (KernelOrKext && (!false && !false))
+#endif
     PIC = PIE = false;
 
   if (Arg *A = Args.getLastArg(options::OPT_mdynamic_no_pic)) {
     // This is a very special mode. It trumps the other modes, almost no one
     // uses it, and it isn't even valid on any OS but Darwin.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (!ToolChain.getTriple().isOSDarwin())
+#endif
       ToolChain.getDriver().Diag(diag::err_drv_unsupported_opt_for_target)
           << A->getSpelling() << ToolChain.getTriple().str();
 
@@ -4377,7 +4439,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // Enable -mconstructor-aliases except on darwin, where we have to work around
   // a linker bug (see <rdar://problem/7651567>), and CUDA device code, where
   // aliases aren't supported.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (!getToolChain().getTriple().isOSDarwin() &&
+#else
+  if (!false &&
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       !getToolChain().getTriple().isNVPTX())
 #else
@@ -4387,8 +4453,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // Darwin's kernel doesn't support guard variables; just die if we
   // try to use them.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (KernelOrKext && getToolChain().getTriple().isOSDarwin())
     CmdArgs.push_back("-fforbid-guard-variables");
+#endif
 
   if (Args.hasFlag(options::OPT_mms_bitfields, options::OPT_mno_ms_bitfields,
                    false)) {
@@ -4530,6 +4598,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // Explicitly error on some things we know we don't support and can't just
   // ignore.
   if (!Args.hasArg(options::OPT_fallow_unsupported)) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     Arg *Unsupported;
     if (types::isCXX(InputType) && getToolChain().getTriple().isOSDarwin() &&
         getToolChain().getArch() == llvm::Triple::x86) {
@@ -4538,6 +4607,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
         D.Diag(diag::err_drv_clang_unsupported_opt_cxx_darwin_i386)
             << Unsupported->getOption().getName();
     }
+#endif
   }
 
   Args.AddAllArgs(CmdArgs, options::OPT_v);
@@ -5598,8 +5668,12 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // turn on the option to do Array/Dictionary subscripting
   // by default.
   if (getToolChain().getArch() == llvm::Triple::x86 &&
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       getToolChain().getTriple().isMacOSX() &&
       !getToolChain().getTriple().isMacOSXVersionLT(10, 7) &&
+#else
+      false &&
+#endif
       objcRuntime.getKind() == ObjCRuntime::FragileMacOSX &&
       objcRuntime.isNeXTFamily())
     CmdArgs.push_back("-fobjc-subscripting-legacy-runtime");
@@ -5736,11 +5810,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       MaxTypeAlignStr += A->getValue();
       CmdArgs.push_back(Args.MakeArgString(MaxTypeAlignStr));
     }
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   } else if (getToolChain().getTriple().isOSDarwin()) {
     if (!SkipMaxTypeAlign) {
       std::string MaxTypeAlignStr = "-fmax-type-align=16";
       CmdArgs.push_back(Args.MakeArgString(MaxTypeAlignStr));
     }
+#endif
   }
 
   // -fcommon is the default unless compiling kernel code or the target says so
@@ -6220,10 +6296,15 @@ ObjCRuntime Clang::AddObjCRuntimeArgs(const ArgList &args,
     // -fnext-runtime
   } else if (runtimeArg->getOption().matches(options::OPT_fnext_runtime)) {
     // On Darwin, make this use the default behavior for the toolchain.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (getToolChain().getTriple().isOSDarwin()) {
       runtime = getToolChain().getDefaultObjCRuntime(isNonFragile);
 
       // Otherwise, build for a generic macosx port.
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       runtime = ObjCRuntime(ObjCRuntime::MacOSX, VersionTuple());
     }
@@ -6702,11 +6783,13 @@ void gcc::Common::ConstructJob(Compilation &C, const JobAction &JA,
   RenderExtraToolArgs(JA, CmdArgs);
 
   // If using a driver driver, force the arch.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (getToolChain().getTriple().isOSDarwin()) {
     CmdArgs.push_back("-arch");
     CmdArgs.push_back(
         Args.MakeArgString(getToolChain().getDefaultUniversalArchName()));
   }
+#endif
 
   // Try to force gcc to match the tool chain we want, if we recognize
   // the arch.
@@ -7383,6 +7466,7 @@ bool mips::shouldUseFPXX(const ArgList &Args, const llvm::Triple &Triple,
   return UseFPXX;
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 llvm::Triple::ArchType darwin::getArchTypeForMachOArchName(StringRef Str) {
   // See arch(3) and llvm-gcc's driver-driver.c. We don't implement support for
   // archs which Darwin doesn't use.
@@ -7419,7 +7503,9 @@ llvm::Triple::ArchType darwin::getArchTypeForMachOArchName(StringRef Str) {
       .Case("spir", llvm::Triple::spir)
       .Default(llvm::Triple::UnknownArch);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void darwin::setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str) {
   const llvm::Triple::ArchType Arch = getArchTypeForMachOArchName(Str);
   T.setArch(Arch);
@@ -7431,6 +7517,7 @@ void darwin::setTripleTypeForMachOArchName(llvm::Triple &T, StringRef Str) {
     T.setObjectFormat(llvm::Triple::MachO);
   }
 }
+#endif
 
 const char *Clang::getBaseInputName(const ArgList &Args,
                                     const InputInfo &Input) {
@@ -7531,6 +7618,7 @@ void cloudabi::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void darwin::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                      const InputInfo &Output,
                                      const InputInfoList &Inputs,
@@ -7624,7 +7712,9 @@ bool darwin::Linker::NeedsTempPath(const InputInfoList &Inputs) const {
 
   return false;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void darwin::Linker::AddLinkArgs(Compilation &C, const ArgList &Args,
                                  ArgStringList &CmdArgs,
                                  const InputInfoList &Inputs) const {
@@ -7827,7 +7917,9 @@ void darwin::Linker::AddLinkArgs(Compilation &C, const ArgList &Args,
   Args.AddLastArg(CmdArgs, options::OPT_dylinker);
   Args.AddLastArg(CmdArgs, options::OPT_Mach);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void darwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                   const InputInfo &Output,
                                   const InputInfoList &Inputs,
@@ -7970,7 +8062,9 @@ void darwin::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   Cmd->setInputFileList(std::move(InputFileList));
   C.addCommand(std::move(Cmd));
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void darwin::Lipo::ConstructJob(Compilation &C, const JobAction &JA,
                                 const InputInfo &Output,
                                 const InputInfoList &Inputs,
@@ -8035,6 +8129,7 @@ void darwin::VerifyDebug::ConstructJob(Compilation &C, const JobAction &JA,
       Args.MakeArgString(getToolChain().GetProgramPath("dwarfdump"));
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif
 
 void solaris::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                       const InputInfo &Output,

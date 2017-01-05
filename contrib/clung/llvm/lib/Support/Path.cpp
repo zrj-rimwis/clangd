@@ -12,7 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/COFF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/Support/MachO.h"
+#endif
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -1052,11 +1054,14 @@ file_magic identify_magic(StringRef Magic) {
           (Magic[3] == char(0xBE) || Magic[3] == char(0xBF))) {
         // This is complicated by an overlap with Java class files.
         // See the Mach-O section in /usr/share/file/magic for details.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
         if (Magic.size() >= 8 && Magic[7] < 43)
           return file_magic::macho_universal_binary;
+#endif
       }
       break;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       // The two magic numbers for mach-o are:
       // 0xfeedface - 32-bit mach-o
       // 0xfeedfacf - 64-bit mach-o
@@ -1103,6 +1108,7 @@ file_magic identify_magic(StringRef Magic) {
       }
       break;
     }
+#endif
     case 0xF0: // PowerPC Windows
     case 0x83: // Alpha 32-bit
     case 0x84: // Alpha 64-bit

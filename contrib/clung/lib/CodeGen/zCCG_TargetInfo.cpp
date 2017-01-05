@@ -853,7 +853,9 @@ class X86_32ABIInfo : public SwiftABIInfo {
 
   static const unsigned MinABIStackAlignInBytes = 4;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool IsDarwinVectorABI;
+#endif
   bool IsRetSmallStructInRegABI;
   bool IsWin32StructABI;
   bool IsSoftFloatABI;
@@ -916,7 +918,11 @@ public:
   X86_32ABIInfo(CodeGen::CodeGenTypes &CGT, bool DarwinVectorABI,
                 bool RetSmallStructInRegABI, bool Win32StructABI,
                 unsigned NumRegisterParameters, bool SoftFloatABI)
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     : SwiftABIInfo(CGT), IsDarwinVectorABI(DarwinVectorABI),
+#else
+    : SwiftABIInfo(CGT),
+#endif
       IsRetSmallStructInRegABI(RetSmallStructInRegABI), 
       IsWin32StructABI(Win32StructABI),
       IsSoftFloatABI(SoftFloatABI),
@@ -951,7 +957,9 @@ public:
 
   int getDwarfEHStackPointer(CodeGen::CodeGenModule &CGM) const override {
     // Darwin uses different dwarf register numbers for EH.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (CGM.getTarget().getTriple().isOSDarwin()) return 5;
+#endif
     return 4;
   }
 
@@ -1211,6 +1219,7 @@ ABIArgInfo X86_32ABIInfo::classifyReturnType(QualType RetTy,
 
   if (const VectorType *VT = RetTy->getAs<VectorType>()) {
     // On Darwin, some vectors are returned in registers.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (IsDarwinVectorABI) {
       uint64_t Size = getContext().getTypeSize(RetTy);
 
@@ -1230,6 +1239,7 @@ ABIArgInfo X86_32ABIInfo::classifyReturnType(QualType RetTy,
 
       return getIndirectReturnResult(RetTy, State);
     }
+#endif
 
     return ABIArgInfo::getDirect();
   }
@@ -1317,7 +1327,11 @@ unsigned X86_32ABIInfo::getTypeStackAlignInBytes(QualType Ty,
     return 0; // Use default alignment.
 
   // On non-Darwin, the stack type alignment is always 4.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (!IsDarwinVectorABI) {
+#else
+  if (!false) {
+#endif
     // Set explicit alignment, since we may need to realign the top.
     return MinABIStackAlignInBytes;
   }
@@ -1523,6 +1537,7 @@ ABIArgInfo X86_32ABIInfo::classifyArgumentType(QualType Ty,
   if (const VectorType *VT = Ty->getAs<VectorType>()) {
     // On Darwin, some vectors are passed in memory, we handle this by passing
     // it as an i8/i16/i32/i64.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (IsDarwinVectorABI) {
       uint64_t Size = getContext().getTypeSize(Ty);
       if ((Size == 8 || Size == 16 || Size == 32) ||
@@ -1530,6 +1545,7 @@ ABIArgInfo X86_32ABIInfo::classifyArgumentType(QualType Ty,
         return ABIArgInfo::getDirect(llvm::IntegerType::get(getVMContext(),
                                                             Size));
     }
+#endif
 
     if (IsX86_MMXType(CGT.ConvertType(Ty)))
       return ABIArgInfo::getDirect(llvm::IntegerType::get(getVMContext(), 64));
@@ -1718,7 +1734,11 @@ bool X86_32TargetCodeGenInfo::isStructReturnInRegABI(
     return true;
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (Triple.isOSDarwin() || Triple.isOSIAMCU())
+#else
+  if (Triple.isOSIAMCU())
+#endif
     return true;
 
   switch (Triple.getOS()) {
@@ -1768,12 +1788,17 @@ bool X86_32TargetCodeGenInfo::initDwarfEHRegSizeTable(
   // 8 is %eip.
   AssignToArrayRange(Builder, Address, Four8, 0, 8);
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (CGF.CGM.getTarget().getTriple().isOSDarwin()) {
     // 12-16 are st(0..4).  Not sure why we stop at 4.
     // These have size 16, which is sizeof(long double) on
     // platforms with 8-byte alignment for that type.
     llvm::Value *Sixteen8 = llvm::ConstantInt::get(CGF.Int8Ty, 16);
     AssignToArrayRange(Builder, Address, Sixteen8, 12, 16);
+#else
+  if (false) {
+    /* dummy */
+#endif
 
   } else {
     // 9 is %eflags, which doesn't get a size on Darwin for some
@@ -1920,17 +1945,23 @@ class X86_64ABIInfo : public SwiftABIInfo {
   /// required strict binary compatibility with older versions of GCC
   /// may need to exempt themselves.
   bool honorsRevision0_98() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     return !getTarget().getTriple().isOSDarwin();
+#else
+    return !false;
+#endif
   }
 
   /// GCC classifies <1 x long long> as SSE but compatibility with older clang
   // compilers require us to classify it as INTEGER.
   bool classifyIntegerMMXAsSSE() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     const llvm::Triple &Triple = getTarget().getTriple();
     if (Triple.isOSDarwin() || Triple.getOS() == llvm::Triple::PS4)
       return false;
     if (Triple.isOSFreeBSD() && Triple.getOSMajorVersion() >= 10)
       return false;
+#endif
     return true;
   }
 
@@ -8000,7 +8031,11 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
     return SetCGInfo(new TCETargetCodeGenInfo(Types));
 
   case llvm::Triple::x86: {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     bool IsDarwinVectorABI = Triple.isOSDarwin();
+#else
+    const bool IsDarwinVectorABI = false;
+#endif
     bool RetSmallStructInRegABI =
         X86_32TargetCodeGenInfo::isStructReturnInRegABI(Triple, CodeGenOpts);
     bool IsWin32FloatStructABI = Triple.isOSWindows() && !Triple.isOSCygMing();

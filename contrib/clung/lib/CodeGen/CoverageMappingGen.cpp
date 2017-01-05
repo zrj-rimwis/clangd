@@ -934,7 +934,11 @@ struct CounterCoverageMappingBuilder
 }
 
 static bool isMachO(const CodeGenModule &CGM) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   return CGM.getTarget().getTriple().isOSBinFormatMachO();
+#else
+  return false;
+#endif
 }
 
 static StringRef getCoverageSection(const CodeGenModule &CGM) {

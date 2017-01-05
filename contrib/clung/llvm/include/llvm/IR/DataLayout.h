@@ -108,7 +108,11 @@ private:
   enum ManglingModeT {
     MM_None,
     MM_ELF,
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MM_MachO,
+#else
+    MM_MachO_disabled,
+#endif
     MM_WinCOFF,
     MM_WinCOFFX86,
     MM_Mips
@@ -253,11 +257,17 @@ public:
     return ManglingMode == MM_WinCOFFX86;
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool hasLinkerPrivateGlobalPrefix() const { return ManglingMode == MM_MachO; }
+#else
+  bool hasLinkerPrivateGlobalPrefix() const { return false; }
+#endif
 
   const char *getLinkerPrivateGlobalPrefix() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (ManglingMode == MM_MachO)
       return "l";
+#endif
     return "";
   }
 
@@ -268,7 +278,9 @@ public:
     case MM_Mips:
     case MM_WinCOFF:
       return '\0';
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case MM_MachO:
+#endif
     case MM_WinCOFFX86:
       return '_';
     }
@@ -283,7 +295,9 @@ public:
       return ".L";
     case MM_Mips:
       return "$";
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case MM_MachO:
+#endif
     case MM_WinCOFF:
     case MM_WinCOFFX86:
       return "L";

@@ -39,6 +39,7 @@ MarkedJTDataRegions("mark-data-regions", cl::init(true),
   cl::desc("Mark code section jump table data regions."),
   cl::Hidden);
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void X86MCAsmInfoDarwin::anchor() { }
 
 X86MCAsmInfoDarwin::X86MCAsmInfoDarwin(const Triple &T) {
@@ -83,6 +84,7 @@ X86MCAsmInfoDarwin::X86MCAsmInfoDarwin(const Triple &T) {
 X86_64MCAsmInfoDarwin::X86_64MCAsmInfoDarwin(const Triple &Triple)
   : X86MCAsmInfoDarwin(Triple) {
 }
+#endif
 
 void X86ELFMCAsmInfo::anchor() { }
 
@@ -113,6 +115,7 @@ X86ELFMCAsmInfo::X86ELFMCAsmInfo(const Triple &T) {
   UseIntegratedAssembler = true;
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 const MCExpr *
 X86_64MCAsmInfoDarwin::getExprForPersonalitySymbol(const MCSymbol *Sym,
                                                    unsigned Encoding,
@@ -123,6 +126,7 @@ X86_64MCAsmInfoDarwin::getExprForPersonalitySymbol(const MCSymbol *Sym,
   const MCExpr *Four = MCConstantExpr::create(4, Context);
   return MCBinaryExpr::createAdd(Res, Four, Context);
 }
+#endif
 
 void X86MCAsmInfoMicrosoft::anchor() { }
 

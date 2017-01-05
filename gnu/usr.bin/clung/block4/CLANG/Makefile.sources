@@ -133,7 +133,6 @@ SRCS+=	BackendUtil.cpp \
 	CGLoopInfo.cpp \
 	CGObjC.cpp \
 	CGObjCGNU.cpp \
-	CGObjCMac.cpp \
 	CGObjCRuntime.cpp \
 	CGOpenCLRuntime.cpp \
 	CGOpenMPRuntime.cpp \

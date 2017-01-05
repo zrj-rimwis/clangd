@@ -256,6 +256,7 @@ private:
   mutable std::unique_ptr<tools::gcc::Compiler> Compile;
 };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class LLVM_LIBRARY_VISIBILITY MachO : public ToolChain {
 protected:
   Tool *buildAssembler() const override;
@@ -371,7 +372,9 @@ public:
 
   /// }
 };
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 /// Darwin - The base Darwin tool chain.
 class LLVM_LIBRARY_VISIBILITY Darwin : public MachO {
 public:
@@ -567,7 +570,9 @@ public:
 
   SanitizerMask getSupportedSanitizers() const override;
 };
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 /// DarwinClang - The Darwin toolchain used by Clang.
 class LLVM_LIBRARY_VISIBILITY DarwinClang : public Darwin {
 public:
@@ -606,6 +611,7 @@ private:
                                llvm::opt::ArgStringList &CmdArgs,
                                StringRef Sanitizer) const;
 };
+#endif
 
 class LLVM_LIBRARY_VISIBILITY Generic_ELF : public Generic_GCC {
   virtual void anchor();

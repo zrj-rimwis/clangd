@@ -306,7 +306,9 @@ public:
 /// Creates an instance of an Objective-C runtime class.
 //TODO: This should include some way of selecting which runtime to target.
 CGObjCRuntime *CreateGNUObjCRuntime(CodeGenModule &CGM);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 CGObjCRuntime *CreateMacObjCRuntime(CodeGenModule &CGM);
+#endif
 }
 }
 #endif

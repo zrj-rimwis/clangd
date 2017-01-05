@@ -176,12 +176,14 @@ void CodeGenModule::createObjCRuntime() {
     ObjCRuntime.reset(CreateGNUObjCRuntime(*this));
     return;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case ObjCRuntime::FragileMacOSX:
   case ObjCRuntime::MacOSX:
   case ObjCRuntime::iOS:
   case ObjCRuntime::WatchOS:
     ObjCRuntime.reset(CreateMacObjCRuntime(*this));
     return;
+#endif
   }
   llvm_unreachable("bad runtime kind");
 }
@@ -1061,8 +1063,12 @@ void CodeGenModule::SetFunctionAttributes(GlobalDecl GD, llvm::Function *F,
   // where substantial code, including the libstdc++ dylib, was compiled with
   // GCC and does not actually return "this".
   if (!IsThunk && getCXXABI().HasThisReturn(GD) &&
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       !(getTarget().getTriple().isiOS() &&
         getTarget().getTriple().isOSVersionLT(6))) {
+#else
+      !(false)) {
+#endif
     assert(!F->arg_empty() &&
            F->arg_begin()->getType()
              ->canLosslesslyBitCastTo(F->getReturnType()) &&
@@ -2582,7 +2588,11 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
   // variable. This is to preserve the ability to change the implementation
   // behind the scenes.
   if (!D->isStaticLocal() && D->getTLSKind() == VarDecl::TLS_Dynamic &&
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       Context.getTargetInfo().getTriple().isOSDarwin() &&
+#else
+      false &&
+#endif
       !llvm::GlobalVariable::isLinkOnceLinkage(Linkage) &&
       !llvm::GlobalVariable::isWeakLinkage(Linkage))
     Linkage = llvm::GlobalValue::InternalLinkage;
@@ -3217,9 +3227,11 @@ CodeGenModule::GetAddrOfConstantCFString(const StringLiteral *Literal) {
   // FIXME: We set the section explicitly to avoid a bug in ld64 224.1.
   // Without it LLVM can merge the string with a non unnamed_addr one during
   // LTO.  Doing that changes the section it ends in, which surprises ld64.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (getTarget().getTriple().isOSBinFormatMachO())
     GV->setSection(isUTF16 ? "__TEXT,__ustring"
                            : "__TEXT,__cstring,cstring_literals");
+#endif
 
   // String.
   Fields[2] =
@@ -3248,9 +3260,11 @@ CodeGenModule::GetAddrOfConstantCFString(const StringLiteral *Literal) {
   case llvm::Triple::ELF:
     GV->setSection("cfstring");
     break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case llvm::Triple::MachO:
     GV->setSection("__DATA,__cfstring");
     break;
+#endif
   }
   Entry.second = GV;
 

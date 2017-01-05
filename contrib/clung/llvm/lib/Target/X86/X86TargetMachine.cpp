@@ -44,11 +44,13 @@ extern "C" void LLVMInitializeX86Target() {
 }
 
 static std::unique_ptr<TargetLoweringObjectFile> createTLOF(const Triple &TT) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TT.isOSBinFormatMachO()) {
     if (TT.getArch() == Triple::x86_64)
       return make_unique<X86_64MachoTargetObjectFile>();
     return make_unique<TargetLoweringObjectFileMachO>();
   }
+#endif
 
   if (TT.isOSLinux() || TT.isOSNaCl())
     return make_unique<X86LinuxNaClTargetObjectFile>();
@@ -83,7 +85,11 @@ static std::string computeDataLayout(const Triple &TT) {
   // Some ABIs align long double to 128 bits, others to 32.
   if (TT.isOSNaCl() || TT.isOSIAMCU())
     ; // No f80
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   else if (TT.isArch64Bit() || TT.isOSDarwin())
+#else
+  else if (TT.isArch64Bit() || false)
+#endif
     Ret += "-f80:128";
   else
     Ret += "-f80:32";
@@ -113,11 +119,13 @@ static Reloc::Model getEffectiveRelocModel(const Triple &TT,
     // Darwin defaults to PIC in 64 bit mode and dynamic-no-pic in 32 bit mode.
     // Win64 requires rip-rel addressing, thus we force it to PIC. Otherwise we
     // use static relocation model by default.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (TT.isOSDarwin()) {
       if (is64Bit)
         return Reloc::PIC_;
       return Reloc::DynamicNoPIC;
     }
+#endif
     if (TT.isOSWindows() && is64Bit)
       return Reloc::PIC_;
     return Reloc::Static;
@@ -130,14 +138,20 @@ static Reloc::Model getEffectiveRelocModel(const Triple &TT,
   if (*RM == Reloc::DynamicNoPIC) {
     if (is64Bit)
       return Reloc::PIC_;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (!TT.isOSDarwin())
+#else
+    if (!false)
+#endif
       return Reloc::Static;
   }
 
   // If we are on Darwin, disallow static relocation model in X86-64 mode, since
   // the Mach-O file format doesn't support it.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (*RM == Reloc::Static && TT.isOSDarwin() && is64Bit)
     return Reloc::PIC_;
+#endif
 
   return *RM;
 }

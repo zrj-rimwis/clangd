@@ -220,11 +220,13 @@ static Optional<Visibility> getVisibilityOf(const NamedDecl *D,
 
   // If we're on Mac OS X, an 'availability' for Mac OS X attribute
   // implies visibility(default).
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (D->getASTContext().getTargetInfo().getTriple().isOSDarwin()) {
     for (const auto *A : D->specific_attrs<AvailabilityAttr>())
       if (A->getPlatform()->getName().equals("macos"))
         return DefaultVisibility;
   }
+#endif
 
   return None;
 }

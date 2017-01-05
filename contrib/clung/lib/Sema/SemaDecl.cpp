@@ -9004,8 +9004,10 @@ void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
   // Darwin passes an undocumented fourth argument of type char**.  If
   // other platforms start sprouting these, the logic below will start
   // getting shifty.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (nparams == 4 && Context.getTargetInfo().getTriple().isOSDarwin())
     HasExtraParameters = false;
+#endif
 
   if (HasExtraParameters) {
     Diag(FD->getLocation(), diag::err_main_surplus_args) << nparams;

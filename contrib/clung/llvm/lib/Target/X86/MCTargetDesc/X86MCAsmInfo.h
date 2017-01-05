@@ -16,12 +16,15 @@
 
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAsmInfoCOFF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCAsmInfoDarwin.h"
+#endif
 #include "llvm/MC/MCAsmInfoELF.h"
 
 namespace llvm {
 class Triple;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class X86MCAsmInfoDarwin : public MCAsmInfoDarwin {
   virtual void anchor();
 
@@ -35,6 +38,7 @@ struct X86_64MCAsmInfoDarwin : public X86MCAsmInfoDarwin {
   getExprForPersonalitySymbol(const MCSymbol *Sym, unsigned Encoding,
                               MCStreamer &Streamer) const override;
 };
+#endif
 
 class X86ELFMCAsmInfo : public MCAsmInfoELF {
   void anchor() override;

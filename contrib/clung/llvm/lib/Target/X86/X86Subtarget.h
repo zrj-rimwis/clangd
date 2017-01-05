@@ -461,7 +461,11 @@ public:
 
   const Triple &getTargetTriple() const { return TargetTriple; }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool isTargetDarwin() const { return TargetTriple.isOSDarwin(); }
+#else
+  bool isTargetDarwin() const { return false; }
+#endif
   bool isTargetFreeBSD() const { return TargetTriple.isOSFreeBSD(); }
   bool isTargetDragonFly() const { return TargetTriple.isOSDragonFly(); }
   bool isTargetSolaris() const { return TargetTriple.isOSSolaris(); }
@@ -469,7 +473,11 @@ public:
 
   bool isTargetELF() const { return TargetTriple.isOSBinFormatELF(); }
   bool isTargetCOFF() const { return TargetTriple.isOSBinFormatCOFF(); }
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool isTargetMachO() const { return TargetTriple.isOSBinFormatMachO(); }
+#else
+  bool isTargetMachO() const { return false; }
+#endif
 
   bool isTargetLinux() const { return TargetTriple.isOSLinux(); }
   bool isTargetKFreeBSD() const { return TargetTriple.isOSKFreeBSD(); }

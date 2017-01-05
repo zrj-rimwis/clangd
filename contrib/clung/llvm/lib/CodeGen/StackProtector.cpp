@@ -127,7 +127,11 @@ bool StackProtector::ContainsProtectableArray(Type *Ty, bool &IsLarge,
       // add stack protectors unless the array is a character array.
       // However, in strong mode any array, regardless of type and size,
       // triggers a protector.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (!Strong && (InStruct || !Trip.isOSDarwin()))
+#else
+      if (!Strong && (InStruct || !false))
+#endif
         return false;
     }
 

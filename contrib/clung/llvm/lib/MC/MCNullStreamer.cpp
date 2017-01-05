@@ -10,7 +10,9 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCInst.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCSymbol.h"
 
 using namespace llvm;

@@ -18,7 +18,9 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/MC/MCDirectives.h"
 #include "llvm/MC/MCDwarf.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCLinkerOptimizationHint.h"
+#endif
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCWinEH.h"
 #include "llvm/Support/DataTypes.h"
@@ -402,9 +404,11 @@ public:
   /// \brief Note in the output the specified region \p Kind.
   virtual void EmitDataRegion(MCDataRegionType Kind) {}
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   /// \brief Specify the MachO minimum deployment target version.
   virtual void EmitVersionMin(MCVersionMinType, unsigned Major, unsigned Minor,
                               unsigned Update) {}
+#endif
 
   /// \brief Note in the output that the specified \p Func is a Thumb mode
   /// function (ARM target only).
@@ -480,7 +484,9 @@ public:
 
   /// \brief Emit a Linker Optimization Hint (LOH) directive.
   /// \param Args - Arguments of the LOH.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   virtual void EmitLOHDirective(MCLOHType Kind, const MCLOHArgs &Args) {}
+#endif
 
   /// \brief Emit a common symbol.
   ///

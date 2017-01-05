@@ -38,7 +38,9 @@
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/Debug.h"
@@ -245,12 +247,14 @@ static cl::opt<bool>
                                          " variables"),
                                 cl::Hidden, cl::init(false));
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static cl::opt<bool>
     ClUseMachOGlobalsSection("asan-globals-live-support",
                              cl::desc("Use linker features to support dead "
                                       "code stripping of globals "
                                       "(Mach-O only)"),
                              cl::Hidden, cl::init(false));
+#endif
 
 // Debug flags.
 static cl::opt<int> ClDebug("asan-debug", cl::desc("debug"), cl::Hidden,
@@ -360,7 +364,9 @@ struct ShadowMapping {
 static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
                                       bool IsKasan) {
   bool IsAndroid = TargetTriple.isAndroid();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool IsIOS = TargetTriple.isiOS() || TargetTriple.isWatchOS();
+#endif
   bool IsFreeBSD = TargetTriple.isOSFreeBSD();
   bool IsLinux = TargetTriple.isOSLinux();
   bool IsPPC64 = TargetTriple.getArch() == llvm::Triple::ppc64 ||
@@ -386,9 +392,11 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
       Mapping.Offset = kMIPS32_ShadowOffset32;
     else if (IsFreeBSD)
       Mapping.Offset = kFreeBSD_ShadowOffset32;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     else if (IsIOS)
       // If we're targeting iOS and x86, the binary is built for iOS simulator.
       Mapping.Offset = IsX86 ? kIOSSimShadowOffset32 : kIOSShadowOffset32;
+#endif
     else if (IsWindows)
       Mapping.Offset = kWindowsShadowOffset32;
     else
@@ -409,9 +417,11 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
       Mapping.Offset = kWindowsShadowOffset64;
     } else if (IsMIPS64)
       Mapping.Offset = kMIPS64_ShadowOffset64;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     else if (IsIOS)
       // If we're targeting iOS and x86, the binary is built for iOS simulator.
       Mapping.Offset = IsX86_64 ? kIOSSimShadowOffset64 : kIOSShadowOffset64;
+#endif
     else if (IsAArch64)
       Mapping.Offset = kAArch64_ShadowOffset64;
     else
@@ -565,7 +575,9 @@ class AddressSanitizerModule : public ModulePass {
 
   bool InstrumentGlobals(IRBuilder<> &IRB, Module &M);
   bool ShouldInstrumentGlobal(GlobalVariable *G);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool ShouldUseMachOGlobalsSection() const;
+#endif
   void poisonOneInitializer(Function &GlobalInit, GlobalValue *ModuleName);
   void createInitializerPoisonCalls(Module &M, GlobalValue *ModuleName);
   size_t MinRedzoneSizeForGlobal() const {
@@ -1301,6 +1313,7 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
       return false;
     }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (TargetTriple.isOSBinFormatMachO()) {
       StringRef ParsedSegment, ParsedSection;
       unsigned TAA = 0, StubSize = 0;
@@ -1336,6 +1349,7 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
         return false;
       }
     }
+#endif
   }
 
   return true;
@@ -1344,7 +1358,9 @@ bool AddressSanitizerModule::ShouldInstrumentGlobal(GlobalVariable *G) {
 // On Mach-O platforms, we emit global metadata in a separate section of the
 // binary in order to allow the linker to properly dead strip. This is only
 // supported on recent versions of ld64.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 bool AddressSanitizerModule::ShouldUseMachOGlobalsSection() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (!ClUseMachOGlobalsSection)
     return false;
 
@@ -1359,7 +1375,11 @@ bool AddressSanitizerModule::ShouldUseMachOGlobalsSection() const {
     return true;
 
   return false;
+#else
+  return false; /* interesting */
+#endif
 }
+#endif
 
 void AddressSanitizerModule::initializeCallbacks(Module &M) {
   IRBuilder<> IRB(*C);
@@ -1536,6 +1556,7 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M) {
 
   // On recent Mach-O platforms, we emit the global metadata in a way that
   // allows the linker to properly strip dead globals.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (ShouldUseMachOGlobalsSection()) {
     // RegisteredFlag serves two purposes. First, we can pass it to dladdr()
     // to look up the loaded image that contains it. Second, we can store in it
@@ -1569,6 +1590,9 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M) {
       Liveness->setSection("__DATA,__asan_liveness,regular,live_support");
     }
   } else {
+#else
+  {
+#endif
     // On all other platfoms, we just emit an array of global metadata
     // structures.
     ArrayType *ArrayOfGlobalStructTy = ArrayType::get(GlobalStructTy, n);
@@ -1582,10 +1606,14 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M) {
     createInitializerPoisonCalls(M, ModuleName);
 
   // Create a call to register the globals with the runtime.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (ShouldUseMachOGlobalsSection()) {
     IRB.CreateCall(AsanRegisterImageGlobals,
                    {IRB.CreatePointerCast(RegisteredFlag, IntptrTy)});
   } else {
+#else
+  {
+#endif
     IRB.CreateCall(AsanRegisterGlobals,
                    {IRB.CreatePointerCast(AllGlobals, IntptrTy),
                     ConstantInt::get(IntptrTy, n)});
@@ -1599,10 +1627,14 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M) {
   BasicBlock *AsanDtorBB = BasicBlock::Create(*C, "", AsanDtorFunction);
   IRBuilder<> IRB_Dtor(ReturnInst::Create(*C, AsanDtorBB));
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (ShouldUseMachOGlobalsSection()) {
     IRB_Dtor.CreateCall(AsanUnregisterImageGlobals,
                         {IRB.CreatePointerCast(RegisteredFlag, IntptrTy)});
   } else {
+#else
+  {
+#endif
     IRB_Dtor.CreateCall(AsanUnregisterGlobals,
                         {IRB.CreatePointerCast(AllGlobals, IntptrTy),
                          ConstantInt::get(IntptrTy, n)});

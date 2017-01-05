@@ -40,7 +40,9 @@ namespace llvm {
   class MCRegisterInfo;
   class MCLineSection;
   class SMLoc;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   class MCSectionMachO;
+#endif
   class MCSectionELF;
   class MCSectionCOFF;
   class CodeViewContext;
@@ -78,7 +80,9 @@ namespace llvm {
 
     SpecificBumpPtrAllocator<MCSectionCOFF> COFFAllocator;
     SpecificBumpPtrAllocator<MCSectionELF> ELFAllocator;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     SpecificBumpPtrAllocator<MCSectionMachO> MachOAllocator;
+#endif
 
     /// Bindings of names to symbols.
     SymbolTable Symbols;
@@ -216,7 +220,9 @@ namespace llvm {
       }
     };
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     StringMap<MCSectionMachO *> MachOUniquingMap;
+#endif
     std::map<ELFSectionKey, MCSectionELF *> ELFUniquingMap;
     std::map<COFFSectionKey, MCSectionCOFF *> COFFUniquingMap;
     StringMap<bool> ELFRelSecNames;
@@ -327,6 +333,7 @@ namespace llvm {
 
     /// Return the MCSection for the specified mach-o section.  This requires
     /// the operands to be valid.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MCSectionMachO *getMachOSection(StringRef Segment, StringRef Section,
                                     unsigned TypeAndAttributes,
                                     unsigned Reserved2, SectionKind K,
@@ -338,6 +345,7 @@ namespace llvm {
       return getMachOSection(Segment, Section, TypeAndAttributes, 0, K,
                              BeginSymName);
     }
+#endif
 
     MCSectionELF *getELFSection(const Twine &Section, unsigned Type,
                                 unsigned Flags) {

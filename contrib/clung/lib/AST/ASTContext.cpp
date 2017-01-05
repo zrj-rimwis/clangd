@@ -8872,6 +8872,7 @@ ASTContext::getMaterializedTemporaryValue(const MaterializeTemporaryExpr *E,
 }
 
 bool ASTContext::AtomicUsesUnsupportedLibcall(const AtomicExpr *E) const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   const llvm::Triple &T = getTargetInfo().getTriple();
   if (!T.isOSDarwin())
     return false;
@@ -8887,6 +8888,9 @@ bool ASTContext::AtomicUsesUnsupportedLibcall(const AtomicExpr *E) const {
   unsigned Align = alignChars.getQuantity();
   unsigned MaxInlineWidthInBits = getTargetInfo().getMaxAtomicInlineWidth();
   return (Size != Align || toBits(sizeChars) > MaxInlineWidthInBits);
+#else
+  return false; /* interesting */
+#endif
 }
 
 namespace {

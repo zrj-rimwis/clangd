@@ -1576,10 +1576,12 @@ static void handleAliasAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   if (!S.checkStringLiteralArgumentAttr(Attr, 0, Str))
     return;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (S.Context.getTargetInfo().getTriple().isOSDarwin()) {
     S.Diag(Attr.getLoc(), diag::err_alias_not_supported_on_darwin);
     return;
   }
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (S.Context.getTargetInfo().getTriple().isNVPTX()) {
     S.Diag(Attr.getLoc(), diag::err_alias_not_supported_on_nvptx);
@@ -2168,6 +2170,7 @@ static void handleAvailabilityAttr(Sema &S, Decl *D,
 
   // Transcribe "ios" to "watchos" (and add a new attribute) if the versioning
   // matches before the start of the watchOS platform.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (S.Context.getTargetInfo().getTriple().isWatchOS()) {
     IdentifierInfo *NewII = nullptr;
     if (II->getName() == "ios")
@@ -2239,6 +2242,7 @@ static void handleAvailabilityAttr(Sema &S, Decl *D,
           D->addAttr(NewAttr);
       }
   }
+#endif
 }
 
 template <class T>
@@ -2543,7 +2547,11 @@ static void handleWeakImportAttr(Sema &S, Decl *D, const AttributeList &Attr) {
       S.Diag(Attr.getLoc(), diag::warn_attribute_invalid_on_definition)
         << "weak_import";
     else if (isa<ObjCPropertyDecl>(D) || isa<ObjCMethodDecl>(D) ||
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
              (S.Context.getTargetInfo().getTriple().isOSDarwin() &&
+#else
+             (false &&
+#endif
               (isa<ObjCInterfaceDecl>(D) || isa<EnumDecl>(D)))) {
       // Nothing to warn about here.
     } else

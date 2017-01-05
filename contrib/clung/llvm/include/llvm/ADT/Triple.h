@@ -141,14 +141,26 @@ public:
     UnknownOS,
 
     CloudABI,
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     Darwin,
+#else
+    Darwin_disabled,
+#endif
     DragonFly,
     FreeBSD,
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     IOS,
+#else
+    IOS_disabled,
+#endif
     KFreeBSD,
     Linux,
     Lv2,        // PS3
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MacOSX,
+#else
+    MacOSX_disabled,
+#endif
     NetBSD,
     OpenBSD,
     Solaris,
@@ -165,8 +177,13 @@ public:
     AMDHSA,     // AMD HSA Runtime
     PS4,
     ELFIAMCU,
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     TvOS,       // Apple tvOS
     WatchOS,    // Apple watchOS
+#else
+    TvOS_disabled,
+    WatchOS_disabled,
+#endif
     Mesa3D,
     LastOSType = Mesa3D
   };
@@ -198,7 +215,11 @@ public:
 
     COFF,
     ELF,
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MachO,
+#else
+    MachO_disabled,
+#endif
   };
 
 private:
@@ -312,6 +333,7 @@ public:
   /// translate generic "darwin" versions to the corresponding OS X versions.
   /// This may also be called with IOS triples but the OS X version number is
   /// just set to a constant 10.4.0 in that case.  Returns true if successful.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool getMacOSXVersion(unsigned &Major, unsigned &Minor,
                         unsigned &Micro) const;
 
@@ -324,6 +346,7 @@ public:
   /// should only be called with WatchOS or generic triples.
   void getWatchOSVersion(unsigned &Major, unsigned &Minor,
                          unsigned &Micro) const;
+#endif
 
   /// @}
   /// @name Direct Component Access
@@ -402,6 +425,7 @@ public:
   /// isMacOSXVersionLT - Comparison function for checking OS X version
   /// compatibility, which handles supporting skewed version numbering schemes
   /// used by the "darwin" triples.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool isMacOSXVersionLT(unsigned Major, unsigned Minor = 0,
                          unsigned Micro = 0) const {
     assert(isMacOSX() && "Not an OS X triple!");
@@ -420,12 +444,14 @@ public:
   bool isMacOSX() const {
     return getOS() == Triple::Darwin || getOS() == Triple::MacOSX;
   }
+#endif
 
   /// Is this an iOS triple.
   /// Note: This identifies tvOS as a variant of iOS. If that ever
   /// changes, i.e., if the two operating systems diverge or their version
   /// numbers get out of sync, that will need to be changed.
   /// watchOS has completely different version numbers so it is not included.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool isiOS() const {
     return getOS() == Triple::IOS || isTvOS();
   }
@@ -439,15 +465,18 @@ public:
   bool isWatchOS() const {
     return getOS() == Triple::WatchOS;
   }
+#endif
 
   bool isWatchABI() const {
     return getSubArch() == Triple::ARMSubArch_v7k;
   }
 
   /// isOSDarwin - Is this a "Darwin" OS (OS X, iOS, or watchOS).
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool isOSDarwin() const {
     return isMacOSX() || isiOS() || isWatchOS();
   }
+#endif
 
   bool isOSNetBSD() const {
     return getOS() == Triple::NetBSD;
@@ -556,10 +585,12 @@ public:
     return getObjectFormat() == Triple::COFF;
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   /// Tests whether the environment is MachO.
   bool isOSBinFormatMachO() const {
     return getObjectFormat() == Triple::MachO;
   }
+#endif
 
   /// Tests whether the target is the PS4 CPU
   bool isPS4CPU() const {
@@ -593,7 +624,11 @@ public:
 #endif
 
   /// Tests wether the target supports comdat
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool supportsCOMDAT() const { return !isOSBinFormatMachO(); }
+#else
+  bool supportsCOMDAT() const { return !false; }
+#endif
 
   /// @}
   /// @name Mutators

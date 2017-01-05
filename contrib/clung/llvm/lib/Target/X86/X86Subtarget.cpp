@@ -145,17 +145,23 @@ X86Subtarget::classifyGlobalFunctionReference(const GlobalValue *GV,
 /// passed as the second argument. Otherwise it returns null.
 const char *X86Subtarget::getBZeroEntry() const {
   // Darwin 10 has a __bzero entry point for this purpose.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (getTargetTriple().isMacOSX() &&
       !getTargetTriple().isMacOSXVersionLT(10, 6))
     return "__bzero";
+#endif
 
   return nullptr;
 }
 
 bool X86Subtarget::hasSinCos() const {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   return getTargetTriple().isMacOSX() &&
     !getTargetTriple().isMacOSXVersionLT(10, 9) &&
     is64Bit();
+#else
+  return false && is64Bit();
+#endif
 }
 
 /// Return true if the subtarget allows calls to immediate address.

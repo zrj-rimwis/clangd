@@ -196,6 +196,7 @@ bool AsmPrinter::doInitialization(Module &M) {
   // anyway.
   Triple TT(getTargetTriple());
   // If there is a version specified, Major will be non-zero.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TT.isOSDarwin() && TT.getOSMajorVersion() != 0) {
     unsigned Major, Minor, Update;
     MCVersionMinType VersionType;
@@ -216,6 +217,7 @@ bool AsmPrinter::doInitialization(Module &M) {
     if (Major != 0)
       OutStreamer->EmitVersionMin(VersionType, Major, Minor, Update);
   }
+#endif
 
   // Allow the target to emit any magic that it wants at the start of the file.
   EmitStartOfAsmFile(M);

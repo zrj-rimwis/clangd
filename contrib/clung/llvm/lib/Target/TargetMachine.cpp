@@ -23,7 +23,9 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCInstrInfo.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/MC/SectionKind.h"
 #include "llvm/Target/TargetLowering.h"
@@ -124,11 +126,13 @@ bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
   if (GV && (GV->hasLocalLinkage() || !GV->hasDefaultVisibility()))
     return true;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TT.isOSBinFormatMachO()) {
     if (RM == Reloc::Static)
       return true;
     return GV && GV->isStrongDefinitionForLinker();
   }
+#endif
 
   assert(TT.isOSBinFormatELF());
   assert(RM != Reloc::DynamicNoPIC);

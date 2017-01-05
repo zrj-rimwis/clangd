@@ -29,7 +29,9 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbolELF.h"
 #include "llvm/MC/MCValue.h"
@@ -459,6 +461,7 @@ TargetLoweringObjectFileELF::InitializeELF(bool UseInitArray_) {
 //                                 MachO
 //===----------------------------------------------------------------------===//
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 TargetLoweringObjectFileMachO::TargetLoweringObjectFileMachO()
   : TargetLoweringObjectFile() {
   SupportIndirectSymViaGOTPCRel = true;
@@ -801,6 +804,7 @@ void TargetLoweringObjectFileMachO::getNameWithPrefix(
       !canUsePrivateLabel(*TM.getMCAsmInfo(), *TheSection);
   Mang.getNameWithPrefix(OutName, GV, CannotUsePrivateLabel);
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 //                                  COFF

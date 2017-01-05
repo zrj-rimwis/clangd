@@ -270,9 +270,15 @@ public:
     ASTSym->setAlignment(8);
 
     // Mach-O also needs a segment name.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSBinFormatMachO())
       ASTSym->setSection("__CLANG,__clangast");
     // COFF has an eight character length limit.
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else if (Triple.isOSBinFormatCOFF())
       ASTSym->setSection("clangast");
     else

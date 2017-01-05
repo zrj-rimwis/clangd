@@ -15,16 +15,22 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCInst.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCMachObjectWriter.h"
+#endif
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/ELF.h"
 #include "llvm/Support/ErrorHandling.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/Support/MachO.h"
+#endif
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
@@ -474,6 +480,7 @@ namespace CU {
 
 } // end CU namespace
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinX86AsmBackend : public X86AsmBackend {
   const MCRegisterInfo &MRI;
 
@@ -793,7 +800,9 @@ public:
     StackDivide = Is64Bit ? 8 : 4;
   }
 };
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinX86_32AsmBackend : public DarwinX86AsmBackend {
 public:
   DarwinX86_32AsmBackend(const Target &T, const MCRegisterInfo &MRI,
@@ -812,7 +821,9 @@ public:
     return generateCompactUnwindEncodingImpl(Instrs);
   }
 };
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinX86_64AsmBackend : public DarwinX86AsmBackend {
   const MachO::CPUSubTypeX86 Subtype;
 public:
@@ -831,6 +842,7 @@ public:
     return generateCompactUnwindEncodingImpl(Instrs);
   }
 };
+#endif
 
 } // end anonymous namespace
 
@@ -838,8 +850,10 @@ MCAsmBackend *llvm::createX86_32AsmBackend(const Target &T,
                                            const MCRegisterInfo &MRI,
                                            const Triple &TheTriple,
                                            StringRef CPU) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TheTriple.isOSBinFormatMachO())
     return new DarwinX86_32AsmBackend(T, MRI, CPU);
+#endif
 
   if (TheTriple.isOSWindows() && TheTriple.isOSBinFormatCOFF())
     return new WindowsX86AsmBackend(T, false, CPU);
@@ -856,6 +870,7 @@ MCAsmBackend *llvm::createX86_64AsmBackend(const Target &T,
                                            const MCRegisterInfo &MRI,
                                            const Triple &TheTriple,
                                            StringRef CPU) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TheTriple.isOSBinFormatMachO()) {
     MachO::CPUSubTypeX86 CS =
         StringSwitch<MachO::CPUSubTypeX86>(TheTriple.getArchName())
@@ -863,6 +878,7 @@ MCAsmBackend *llvm::createX86_64AsmBackend(const Target &T,
             .Default(MachO::CPU_SUBTYPE_X86_64_ALL);
     return new DarwinX86_64AsmBackend(T, MRI, CPU, CS);
   }
+#endif
 
   if (TheTriple.isOSWindows() && TheTriple.isOSBinFormatCOFF())
     return new WindowsX86AsmBackend(T, true, CPU);

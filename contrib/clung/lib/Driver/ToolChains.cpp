@@ -44,6 +44,7 @@ using namespace clang::driver::toolchains;
 using namespace clang;
 using namespace llvm::opt;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 MachO::MachO(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
     : ToolChain(D, Triple, Args) {
   // We expect 'as', 'ld', etc. to be adjacent to our install dir.
@@ -65,7 +66,9 @@ types::ID MachO::LookupTypeForExtension(const char *Ext) const {
 
   return Ty;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 bool MachO::HasNativeLLVMSupport() const { return true; }
 
 ToolChain::CXXStdlibType Darwin::GetDefaultCXXStdlibType() const {
@@ -100,11 +103,13 @@ bool Darwin::hasBlocksRuntime() const {
     return !isMacosxVersionLT(10, 6);
   }
 }
+#endif
 
 // This is just a MachO name translation routine and there's no
 // way to join this into ARMTargetParser without breaking all
 // other assumptions. Maybe MachO should consider standardising
 // their nomenclature.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static const char *ArmMachOArchName(StringRef Arch) {
   return llvm::StringSwitch<const char *>(Arch)
       .Case("armv6k", "armv6")
@@ -173,7 +178,9 @@ StringRef MachO::getMachOArchName(const ArgList &Args) const {
     return "arm";
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 Darwin::~Darwin() {}
 
 MachO::~MachO() {}
@@ -208,9 +215,12 @@ std::string Darwin::ComputeEffectiveClangTriple(const ArgList &Args,
 
   return Triple.getTriple();
 }
+#endif
 
+// XXX __DragonFly__ this is sneaky, it should be moved out from here
 void Generic_ELF::anchor() {}
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 Tool *MachO::getTool(Action::ActionClass AC) const {
   switch (AC) {
   case Action::LipoJobClass:
@@ -254,9 +264,11 @@ void DarwinClang::addClangWarningOptions(ArgStringList &CC1Args) const {
       CC1Args.push_back("-Werror=implicit-function-declaration");
   }
 }
+#endif
 
 /// \brief Determine whether Objective-C automated reference counting is
 /// enabled.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static bool isObjCAutoRefCount(const ArgList &Args) {
   return Args.hasFlag(options::OPT_fobjc_arc, options::OPT_fno_objc_arc, false);
 }
@@ -1276,6 +1288,7 @@ SanitizerMask Darwin::getSupportedSanitizers() const {
   }
   return Res;
 }
+#endif // LLVM_ENABLE_MACHO // __DragonFly__
 
 /// Generic_GCC - A tool chain using the 'gcc' command to perform
 /// all subcommands; this relies on gcc translating the majority of
@@ -2333,8 +2346,13 @@ static bool findMIPSMultilibs(const Driver &D, const llvm::Triple &TargetTriple,
                   Flags);
   addMultilibFlag(ABIName == "n32", "mabi=n32", Flags);
   addMultilibFlag(ABIName == "n64", "mabi=n64", Flags);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   addMultilibFlag(isSoftFloatABI(Args), "msoft-float", Flags);
   addMultilibFlag(!isSoftFloatABI(Args), "mhard-float", Flags);
+#else
+  addMultilibFlag(false, "msoft-float", Flags);
+  addMultilibFlag(!false, "mhard-float", Flags);
+#endif
   addMultilibFlag(isMipsEL(TargetArch), "EL", Flags);
   addMultilibFlag(!isMipsEL(TargetArch), "EB", Flags);
 

@@ -334,7 +334,6 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCAsmBackend.cpp \
 	MCAsmInfo.cpp \
 	MCAsmInfoCOFF.cpp \
-	MCAsmInfoDarwin.cpp \
 	MCAsmInfoELF.cpp \
 	MCAsmStreamer.cpp \
 	MCAssembler.cpp \
@@ -349,9 +348,6 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCInst.cpp \
 	MCInstPrinter.cpp \
 	MCInstrAnalysis.cpp \
-	MCLinkerOptimizationHint.cpp \
-	MCMachOStreamer.cpp \
-	MCMachObjectTargetWriter.cpp \
 	MCNullStreamer.cpp \
 	MCObjectFileInfo.cpp \
 	MCObjectStreamer.cpp \
@@ -361,7 +357,6 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCSection.cpp \
 	MCSectionCOFF.cpp \
 	MCSectionELF.cpp \
-	MCSectionMachO.cpp \
 	MCStreamer.cpp \
 	MCSubtargetInfo.cpp \
 	MCSymbol.cpp \
@@ -370,7 +365,6 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCValue.cpp \
 	MCWin64EH.cpp \
 	MCWinEH.cpp \
-	MachObjectWriter.cpp \
 	StringTableBuilder.cpp \
 	SubtargetFeature.cpp \
 	WinCOFFObjectWriter.cpp \
@@ -385,7 +379,6 @@ LLVM_SRCDIRS+= lib/MC/MCParser
 SRCS+=	AsmLexer.cpp \
 	AsmParser.cpp \
 	COFFAsmParser.cpp \
-	DarwinAsmParser.cpp \
 	ELFAsmParser.cpp \
 	MCAsmLexer.cpp \
 	MCAsmParser.cpp \
@@ -439,8 +432,6 @@ SRCS+=	Archive.cpp \
 	ELFObjectFile.cpp \
 	zLO_Error.cpp \
 	IRObjectFile.cpp \
-	MachOObjectFile.cpp \
-	MachOUniversal.cpp \
 	ModuleSummaryIndexObjectFile.cpp \
 	ObjectFile.cpp \
 	RecordStreamer.cpp \
@@ -721,7 +712,6 @@ SRCS+=	X86AsmBackend.cpp \
 	X86MCAsmInfo.cpp \
 	X86MCCodeEmitter.cpp \
 	X86MCTargetDesc.cpp \
-	X86MachObjectWriter.cpp \
 	X86WinCOFFObjectWriter.cpp \
 	X86WinCOFFStreamer.cpp
 

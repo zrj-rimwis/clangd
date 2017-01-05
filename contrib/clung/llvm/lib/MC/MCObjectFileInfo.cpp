@@ -15,13 +15,17 @@
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/Support/COFF.h"
 
 using namespace llvm;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static bool useCompactUnwind(const Triple &T) {
   // Only on darwin.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (!T.isOSDarwin())
     return false;
 
@@ -43,8 +47,13 @@ static bool useCompactUnwind(const Triple &T) {
     return true;
 
   return false;
+#else
+  return false;  /* interesting */
+#endif
 }
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 void MCObjectFileInfo::initMachOMCObjectFileInfo(const Triple &T) {
   // MachO
   SupportsWeakOmittedEHFrame = false;
@@ -282,6 +291,7 @@ void MCObjectFileInfo::initMachOMCObjectFileInfo(const Triple &T) {
 
   TLSExtraDataSection = TLSTLVSection;
 }
+#endif
 
 void MCObjectFileInfo::initELFMCObjectFileInfo(const Triple &T) {
   switch (T.getArch()) {
@@ -858,10 +868,12 @@ void MCObjectFileInfo::InitMCObjectFileInfo(const Triple &TheTriple, bool PIC,
   TT = TheTriple;
 
   switch (TT.getObjectFormat()) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Triple::MachO:
     Env = IsMachO;
     initMachOMCObjectFileInfo(TT);
     break;
+#endif
   case Triple::COFF:
     if (!TT.isOSWindows())
       report_fatal_error(

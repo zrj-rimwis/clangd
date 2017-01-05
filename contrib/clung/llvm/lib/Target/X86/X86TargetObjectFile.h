@@ -17,6 +17,7 @@ namespace llvm {
 
   /// X86_64MachoTargetObjectFile - This TLOF implementation is used for Darwin
   /// x86-64.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   class X86_64MachoTargetObjectFile : public TargetLoweringObjectFileMachO {
   public:
     const MCExpr *
@@ -36,6 +37,7 @@ namespace llvm {
                                             MachineModuleInfo *MMI,
                                             MCStreamer &Streamer) const override;
   };
+#endif
 
   /// \brief This implemenatation is used for X86 ELF targets that don't
   /// have a further specialization.

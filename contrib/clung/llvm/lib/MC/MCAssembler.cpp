@@ -70,7 +70,9 @@ MCAssembler::MCAssembler(MCContext &Context, MCAsmBackend &Backend,
     : Context(Context), Backend(Backend), Emitter(Emitter), Writer(Writer),
       BundleAlignSize(0), RelaxAll(false), SubsectionsViaSymbols(false),
       IncrementalLinkerCompatible(false), ELFHeaderEFlags(0) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   VersionMinInfo.Major = 0; // Major version == 0 for "none specified"
+#endif
 }
 
 MCAssembler::~MCAssembler() {
@@ -89,14 +91,18 @@ void MCAssembler::reset() {
   SubsectionsViaSymbols = false;
   IncrementalLinkerCompatible = false;
   ELFHeaderEFlags = 0;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   LOHContainer.reset();
   VersionMinInfo.Major = 0;
+#endif
 
   // reset objects owned by us
   getBackend().reset();
   getEmitter().reset();
   getWriter().reset();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   getLOHContainer().reset();
+#endif
 }
 
 bool MCAssembler::registerSection(MCSection &Section) {

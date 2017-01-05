@@ -186,8 +186,10 @@ computeGUIDPreservedSymbols(const StringSet<> &PreservedSymbols,
   DenseSet<GlobalValue::GUID> GUIDPreservedSymbols(PreservedSymbols.size());
   for (auto &Entry : PreservedSymbols) {
     StringRef Name = Entry.first();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (TheTriple.isOSBinFormatMachO() && Name.size() > 0 && Name[0] == '_')
       Name = Name.drop_front();
+#endif
     GUIDPreservedSymbols.insert(GlobalValue::getGUID(Name));
   }
   return GUIDPreservedSymbols;
@@ -423,6 +425,7 @@ static void initTMBuilder(TargetMachineBuilder &TMBuilder,
                           const Triple &TheTriple) {
   // Set a default CPU for Darwin triples (copied from LTOCodeGenerator).
   // FIXME this looks pretty terrible...
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (TMBuilder.MCpu.empty() && TheTriple.isOSDarwin()) {
     if (TheTriple.getArch() == llvm::Triple::x86_64)
       TMBuilder.MCpu = "core2";
@@ -431,6 +434,7 @@ static void initTMBuilder(TargetMachineBuilder &TMBuilder,
     else if (TheTriple.getArch() == llvm::Triple::aarch64)
       TMBuilder.MCpu = "cyclone";
   }
+#endif
   TMBuilder.TheTriple = std::move(TheTriple);
 }
 

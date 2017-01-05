@@ -153,8 +153,10 @@ DataLayout::InvalidPointerElem = { 0U, 0U, 0U, ~0U };
 //===----------------------------------------------------------------------===//
 
 const char *DataLayout::getManglingComponent(const Triple &T) {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (T.isOSBinFormatMachO())
     return "-m:o";
+#endif
   if (T.isOSWindows() && T.isOSBinFormatCOFF())
     return T.getArch() == Triple::x86 ? "-m:x" : "-m:w";
   return "-m:e";
@@ -357,9 +359,11 @@ void DataLayout::parseSpecifier(StringRef Desc) {
       case 'e':
         ManglingMode = MM_ELF;
         break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       case 'o':
         ManglingMode = MM_MachO;
         break;
+#endif
       case 'm':
         ManglingMode = MM_Mips;
         break;

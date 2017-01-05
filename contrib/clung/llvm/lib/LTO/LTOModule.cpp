@@ -221,6 +221,7 @@ LTOModule::makeLTOModule(MemoryBufferRef Buffer, const TargetOptions &options,
   std::string FeatureStr = Features.getString();
   // Set a default CPU for Darwin triples.
   std::string CPU;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   if (Triple.isOSDarwin()) {
     if (Triple.getArch() == llvm::Triple::x86_64)
       CPU = "core2";
@@ -229,6 +230,7 @@ LTOModule::makeLTOModule(MemoryBufferRef Buffer, const TargetOptions &options,
     else if (Triple.getArch() == llvm::Triple::aarch64)
       CPU = "cyclone";
   }
+#endif
 
   TargetMachine *target =
       march->createTargetMachine(TripleStr, CPU, FeatureStr, options, None);

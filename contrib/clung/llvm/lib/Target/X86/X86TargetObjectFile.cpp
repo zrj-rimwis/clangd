@@ -23,6 +23,7 @@
 using namespace llvm;
 using namespace dwarf;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 const MCExpr *X86_64MachoTargetObjectFile::getTTypeGlobalReference(
     const GlobalValue *GV, unsigned Encoding, Mangler &Mang,
     const TargetMachine &TM, MachineModuleInfo *MMI,
@@ -60,6 +61,7 @@ const MCExpr *X86_64MachoTargetObjectFile::getIndirectSymViaGOTPCRel(
   const MCExpr *Off = MCConstantExpr::create(FinalOff, getContext());
   return MCBinaryExpr::createAdd(Res, Off, getContext());
 }
+#endif
 
 const MCExpr *X86ELFTargetObjectFile::getDebugThreadLocalSymbol(
     const MCSymbol *Sym) const {

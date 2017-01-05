@@ -205,7 +205,9 @@ DwarfDebug::DwarfDebug(AsmPrinter *A, Module *M)
     : DebugHandlerBase(A), DebugLocs(A->OutStreamer->isVerboseAsm()),
       InfoHolder(A, "info_string", DIEValueAllocator),
       SkeletonHolder(A, "skel_string", DIEValueAllocator),
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       IsDarwin(Triple(A->getTargetTriple()).isOSDarwin()),
+#endif
       AccelNames(DwarfAccelTable::Atom(dwarf::DW_ATOM_die_offset,
                                        dwarf::DW_FORM_data4)),
       AccelObjC(DwarfAccelTable::Atom(dwarf::DW_ATOM_die_offset,
@@ -221,8 +223,10 @@ DwarfDebug::DwarfDebug(AsmPrinter *A, Module *M)
   // precedence; fall back to triple-based defaults.
   if (Asm->TM.Options.DebuggerTuning != DebuggerKind::Default)
     DebuggerTuning = Asm->TM.Options.DebuggerTuning;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   else if (IsDarwin)
     DebuggerTuning = DebuggerKind::LLDB;
+#endif
   else if (TT.isPS4CPU())
     DebuggerTuning = DebuggerKind::SCE;
   else
@@ -1124,7 +1128,11 @@ void DwarfDebug::endFunction(const MachineFunction *MF) {
   // Under -gmlt, skip building the subprogram if there are no inlined
   // subroutines inside it.
   if (TheCU.getCUNode()->getEmissionKind() == DICompileUnit::LineTablesOnly &&
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
       LScopes.getAbstractScopesList().empty() && !IsDarwin) {
+#else
+      LScopes.getAbstractScopesList().empty() && !false) {
+#endif
     assert(InfoHolder.getScopeVariables().empty());
     assert(DbgValues.empty());
     // FIXME: This wouldn't be true in LTO with a -g (with inlining) CU followed

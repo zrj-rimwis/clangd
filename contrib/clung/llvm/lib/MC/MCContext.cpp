@@ -19,11 +19,15 @@
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
+#endif
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbolCOFF.h"
 #include "llvm/MC/MCSymbolELF.h"
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSymbolMachO.h"
+#endif
 #include "llvm/Support/COFF.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ELF.h"
@@ -75,7 +79,9 @@ void MCContext::reset() {
   // Call the destructors so the fragments are freed
   COFFAllocator.DestroyAll();
   ELFAllocator.DestroyAll();
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MachOAllocator.DestroyAll();
+#endif
 
   MCSubtargetAllocator.DestroyAll();
   UsedNames.clear();
@@ -94,7 +100,9 @@ void MCContext::reset() {
 
   CVContext.reset();
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MachOUniquingMap.clear();
+#endif
   ELFUniquingMap.clear();
   COFFUniquingMap.clear();
 
@@ -160,8 +168,10 @@ MCSymbol *MCContext::createSymbolImpl(const StringMapEntry<bool> *Name,
       return new (Name, *this) MCSymbolCOFF(Name, IsTemporary);
     case MCObjectFileInfo::IsELF:
       return new (Name, *this) MCSymbolELF(Name, IsTemporary);
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case MCObjectFileInfo::IsMachO:
       return new (Name, *this) MCSymbolMachO(Name, IsTemporary);
+#endif
     }
   }
   return new (Name, *this) MCSymbol(MCSymbol::SymbolKindUnset, Name,
@@ -264,6 +274,7 @@ MCSymbol *MCContext::lookupSymbol(const Twine &Name) const {
 // Section Management
 //===----------------------------------------------------------------------===//
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 MCSectionMachO *MCContext::getMachOSection(StringRef Segment, StringRef Section,
                                            unsigned TypeAndAttributes,
                                            unsigned Reserved2, SectionKind Kind,
@@ -292,6 +303,7 @@ MCSectionMachO *MCContext::getMachOSection(StringRef Segment, StringRef Section,
   return Entry = new (MachOAllocator.Allocate()) MCSectionMachO(
              Segment, Section, TypeAndAttributes, Reserved2, Kind, Begin);
 }
+#endif
 
 void MCContext::renameELFSection(MCSectionELF *Section, StringRef Name) {
   StringRef GroupName;
