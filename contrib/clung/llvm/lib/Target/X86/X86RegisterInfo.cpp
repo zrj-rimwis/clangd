@@ -52,7 +52,9 @@ X86RegisterInfo::X86RegisterInfo(const Triple &TT)
                          X86_MC::getDwarfRegFlavour(TT, false),
                          X86_MC::getDwarfRegFlavour(TT, true),
                          (TT.isArch64Bit() ? X86::RIP : X86::EIP)) {
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   X86_MC::initLLVMToSEHAndCVRegMapping(this);
+#endif
 
   // Cache some information.
   Is64Bit = TT.isArch64Bit();

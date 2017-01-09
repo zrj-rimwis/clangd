@@ -40,8 +40,13 @@ public:
     FT_DwarfFrame,
     FT_LEB,
     FT_SafeSEH,
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     FT_CVInlineLines,
     FT_CVDefRange,
+#else
+    FT_CVInlineLines_disabled,
+    FT_CVDefRange_disabled,
+#endif
     FT_Dummy
   };
 
@@ -213,7 +218,11 @@ public:
   static bool classof(const MCFragment *F) {
     MCFragment::FragmentType Kind = F->getKind();
     return Kind == MCFragment::FT_Relaxable || Kind == MCFragment::FT_Data ||
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
            Kind == MCFragment::FT_CVDefRange;
+#else
+           false;
+#endif
   }
 };
 
@@ -489,6 +498,7 @@ public:
 
 /// Fragment representing the binary annotations produced by the
 /// .cv_inline_linetable directive.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 class MCCVInlineLineTableFragment : public MCFragment {
   unsigned SiteFuncId;
   unsigned StartFileId;
@@ -528,8 +538,10 @@ public:
     return F->getKind() == MCFragment::FT_CVInlineLines;
   }
 };
+#endif
 
 /// Fragment representing the .cv_def_range directive.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 class MCCVDefRangeFragment : public MCEncodedFragmentWithFixups<32, 4> {
   SmallVector<std::pair<const MCSymbol *, const MCSymbol *>, 2> Ranges;
   SmallString<32> FixedSizePortion;
@@ -559,6 +571,7 @@ public:
     return F->getKind() == MCFragment::FT_CVDefRange;
   }
 };
+#endif
 
 } // end namespace llvm
 

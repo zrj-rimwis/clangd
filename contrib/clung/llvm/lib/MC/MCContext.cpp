@@ -12,7 +12,9 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAssembler.h"
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 #include "llvm/MC/MCCodeView.h"
+#endif
 #include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCLabel.h"
 #include "llvm/MC/MCObjectFileInfo.h"
@@ -98,7 +100,9 @@ void MCContext::reset() {
   DwarfCompileUnitID = 0;
   CurrentDwarfLoc = MCDwarfLoc(0, 0, 0, DWARF2_FLAG_IS_STMT, 0, 0);
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   CVContext.reset();
+#endif
 
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MachOUniquingMap.clear();
@@ -500,12 +504,15 @@ void MCContext::finalizeDwarfSections(MCStreamer &MCOS) {
       [&](MCSection *Sec) { return !MCOS.mayHaveInstructions(*Sec); });
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__ // XXX missing separator
 CodeViewContext &MCContext::getCVContext() {
   if (!CVContext.get())
     CVContext.reset(new CodeViewContext);
   return *CVContext.get();
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 unsigned MCContext::getCVFile(StringRef FileName, unsigned FileNumber) {
   return getCVContext().addFile(FileNumber, FileName) ? FileNumber : 0;
 }
@@ -513,6 +520,7 @@ unsigned MCContext::getCVFile(StringRef FileName, unsigned FileNumber) {
 bool MCContext::isValidCVFileNumber(unsigned FileNumber) {
   return getCVContext().isValidFileNumber(FileNumber);
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // Error Reporting

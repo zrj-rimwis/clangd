@@ -12,7 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/AsmPrinter.h"
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 #include "CodeViewDebug.h"
+#endif
 #include "DwarfDebug.h"
 #include "DwarfException.h"
 #include "WinException.h"
@@ -58,7 +60,9 @@ using namespace llvm;
 static const char *const DWARFGroupName = "DWARF Emission";
 static const char *const DbgTimerName = "Debug Info Emission";
 static const char *const EHTimerName = "DWARF Exception Writer";
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 static const char *const CodeViewLineTablesGroupName = "CodeView Line Tables";
+#endif
 
 STATISTIC(EmittedInsts, "Number of machine instrs printed");
 
@@ -251,6 +255,7 @@ bool AsmPrinter::doInitialization(Module &M) {
   }
 
   if (MAI->doesSupportDebugInformation()) {
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     bool EmitCodeView = MMI->getModule()->getCodeViewFlag();
     if (EmitCodeView && TM.getTargetTriple().isKnownWindowsMSVCEnvironment()) {
       Handlers.push_back(HandlerInfo(new CodeViewDebug(this),
@@ -258,6 +263,9 @@ bool AsmPrinter::doInitialization(Module &M) {
                                      CodeViewLineTablesGroupName));
     }
     if (!EmitCodeView || MMI->getModule()->getDwarfVersion()) {
+#else
+    if (!false || MMI->getModule()->getDwarfVersion()) {
+#endif
       DD = new DwarfDebug(this, &M);
       DD->beginModule();
       Handlers.push_back(HandlerInfo(DD, DbgTimerName, DWARFGroupName));

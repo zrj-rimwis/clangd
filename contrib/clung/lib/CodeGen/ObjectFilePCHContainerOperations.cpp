@@ -24,7 +24,9 @@
 #include "clang/Serialization/ASTWriter.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Bitcode/BitstreamReader.h"
+#if 0 // __DragonFly__ // does not seem to need the class DWARFContext
 #include "llvm/DebugInfo/DWARF/DWARFContext.h"
+#endif
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/LLVMContext.h"

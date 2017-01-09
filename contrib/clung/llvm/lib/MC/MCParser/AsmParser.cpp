@@ -401,8 +401,13 @@ private:
     DK_IFNB, DK_IFC, DK_IFEQS, DK_IFNC, DK_IFNES, DK_IFDEF, DK_IFNDEF,
     DK_IFNOTDEF, DK_ELSEIF, DK_ELSE, DK_ENDIF,
     DK_SPACE, DK_SKIP, DK_FILE, DK_LINE, DK_LOC, DK_STABS,
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     DK_CV_FILE, DK_CV_LOC, DK_CV_LINETABLE, DK_CV_INLINE_LINETABLE,
     DK_CV_DEF_RANGE, DK_CV_STRINGTABLE, DK_CV_FILECHECKSUMS,
+#else
+    DK_CV_FILE_z, DK_CV_LOC_z, DK_CV_LINETABLE_z, DK_CV_INLINE_LINETABLE_z,
+    DK_CV_DEF_RANGE_z, DK_CV_STRINGTABLE_z, DK_CV_FILECHECKSUMS_z,
+#endif
     DK_CFI_SECTIONS, DK_CFI_STARTPROC, DK_CFI_ENDPROC, DK_CFI_DEF_CFA,
     DK_CFI_DEF_CFA_OFFSET, DK_CFI_ADJUST_CFA_OFFSET, DK_CFI_DEF_CFA_REGISTER,
     DK_CFI_OFFSET, DK_CFI_REL_OFFSET, DK_CFI_PERSONALITY, DK_CFI_LSDA,
@@ -442,6 +447,7 @@ private:
 
   // ".cv_file", ".cv_loc", ".cv_linetable", "cv_inline_linetable",
   // ".cv_def_range"
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   bool parseDirectiveCVFile();
   bool parseDirectiveCVLoc();
   bool parseDirectiveCVLinetable();
@@ -449,6 +455,7 @@ private:
   bool parseDirectiveCVDefRange();
   bool parseDirectiveCVStringTable();
   bool parseDirectiveCVFileChecksums();
+#endif
 
   // .cfi directives
   bool parseDirectiveCFIRegister(SMLoc DirectiveLoc);
@@ -1747,6 +1754,7 @@ bool AsmParser::parseStatement(ParseStatementInfo &Info,
       return parseDirectiveLoc();
     case DK_STABS:
       return parseDirectiveStabs();
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     case DK_CV_FILE:
       return parseDirectiveCVFile();
     case DK_CV_LOC:
@@ -1761,6 +1769,7 @@ bool AsmParser::parseStatement(ParseStatementInfo &Info,
       return parseDirectiveCVStringTable();
     case DK_CV_FILECHECKSUMS:
       return parseDirectiveCVFileChecksums();
+#endif
     case DK_CFI_SECTIONS:
       return parseDirectiveCFISections();
     case DK_CFI_STARTPROC:
@@ -3170,6 +3179,7 @@ bool AsmParser::parseDirectiveStabs() {
 
 /// parseDirectiveCVFile
 /// ::= .cv_file number filename
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVFile() {
   SMLoc FileNumberLoc = getTok().getLoc();
   int64_t FileNumber;
@@ -3191,6 +3201,7 @@ bool AsmParser::parseDirectiveCVFile() {
 
   return false;
 }
+#endif
 
 /// parseDirectiveCVLoc
 /// ::= .cv_loc FunctionId FileNumber [LineNumber] [ColumnPos] [prologue_end]
@@ -3199,6 +3210,7 @@ bool AsmParser::parseDirectiveCVFile() {
 /// a .file directive, the second number is the line number and optionally the
 /// third number is a column position (zero if not specified).  The remaining
 /// optional items are .loc sub-directives.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVLoc() {
   SMLoc Loc;
   int64_t FunctionId, FileNumber;
@@ -3262,9 +3274,11 @@ bool AsmParser::parseDirectiveCVLoc() {
                                    ColumnPos, PrologueEnd, IsStmt, StringRef());
   return false;
 }
+#endif
 
 /// parseDirectiveCVLinetable
 /// ::= .cv_linetable FunctionId, FnStart, FnEnd
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVLinetable() {
   int64_t FunctionId;
   StringRef FnStartName, FnEndName;
@@ -3289,10 +3303,12 @@ bool AsmParser::parseDirectiveCVLinetable() {
   getStreamer().EmitCVLinetableDirective(FunctionId, FnStartSym, FnEndSym);
   return false;
 }
+#endif
 
 /// parseDirectiveCVInlineLinetable
 /// ::= .cv_inline_linetable PrimaryFunctionId FileId LineNum FnStart FnEnd
 ///          ("contains" SecondaryFunctionId+)?
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVInlineLinetable() {
   int64_t PrimaryFunctionId, SourceFileId, SourceLineNum;
   StringRef FnStartName, FnEndName;
@@ -3348,9 +3364,11 @@ bool AsmParser::parseDirectiveCVInlineLinetable() {
                                                FnEndSym, SecondaryFunctionIds);
   return false;
 }
+#endif
 
 /// parseDirectiveCVDefRange
 /// ::= .cv_def_range RangeStart RangeEnd (GapStart GapEnd)*, bytes*
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVDefRange() {
   SMLoc Loc;
   std::vector<std::pair<const MCSymbol *, const MCSymbol *>> Ranges;
@@ -3378,20 +3396,25 @@ bool AsmParser::parseDirectiveCVDefRange() {
   getStreamer().EmitCVDefRangeDirective(Ranges, FixedSizePortion);
   return false;
 }
+#endif
 
 /// parseDirectiveCVStringTable
 /// ::= .cv_stringtable
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVStringTable() {
   getStreamer().EmitCVStringTableDirective();
   return false;
 }
+#endif
 
 /// parseDirectiveCVFileChecksums
 /// ::= .cv_filechecksums
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool AsmParser::parseDirectiveCVFileChecksums() {
   getStreamer().EmitCVFileChecksumsDirective();
   return false;
 }
+#endif
 
 /// parseDirectiveCFISections
 /// ::= .cfi_sections section [, section]
@@ -4649,6 +4672,7 @@ void AsmParser::initializeDirectiveKindMap() {
   DirectiveKindMap[".line"] = DK_LINE;
   DirectiveKindMap[".loc"] = DK_LOC;
   DirectiveKindMap[".stabs"] = DK_STABS;
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   DirectiveKindMap[".cv_file"] = DK_CV_FILE;
   DirectiveKindMap[".cv_loc"] = DK_CV_LOC;
   DirectiveKindMap[".cv_linetable"] = DK_CV_LINETABLE;
@@ -4656,6 +4680,7 @@ void AsmParser::initializeDirectiveKindMap() {
   DirectiveKindMap[".cv_def_range"] = DK_CV_DEF_RANGE;
   DirectiveKindMap[".cv_stringtable"] = DK_CV_STRINGTABLE;
   DirectiveKindMap[".cv_filechecksums"] = DK_CV_FILECHECKSUMS;
+#endif
   DirectiveKindMap[".sleb128"] = DK_SLEB128;
   DirectiveKindMap[".uleb128"] = DK_ULEB128;
   DirectiveKindMap[".cfi_sections"] = DK_CFI_SECTIONS;

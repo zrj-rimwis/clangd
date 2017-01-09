@@ -15,7 +15,9 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCAsmLayout.h"
 #include "llvm/MC/MCCodeEmitter.h"
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 #include "llvm/MC/MCCodeView.h"
+#endif
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCExpr.h"
@@ -307,10 +309,12 @@ uint64_t MCAssembler::computeFragmentSize(const MCAsmLayout &Layout,
     return cast<MCDwarfLineAddrFragment>(F).getContents().size();
   case MCFragment::FT_DwarfFrame:
     return cast<MCDwarfCallFrameFragment>(F).getContents().size();
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   case MCFragment::FT_CVInlineLines:
     return cast<MCCVInlineLineTableFragment>(F).getContents().size();
   case MCFragment::FT_CVDefRange:
     return cast<MCCVDefRangeFragment>(F).getContents().size();
+#endif
   case MCFragment::FT_Dummy:
     llvm_unreachable("Should not have been added");
   }
@@ -548,6 +552,7 @@ static void writeFragment(const MCAssembler &Asm, const MCAsmLayout &Layout,
     OW->writeBytes(CF.getContents());
     break;
   }
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   case MCFragment::FT_CVInlineLines: {
     const auto &OF = cast<MCCVInlineLineTableFragment>(F);
     OW->writeBytes(OF.getContents());
@@ -558,6 +563,7 @@ static void writeFragment(const MCAssembler &Asm, const MCAsmLayout &Layout,
     OW->writeBytes(DRF.getContents());
     break;
   }
+#endif
   case MCFragment::FT_Dummy:
     llvm_unreachable("Should not have been added");
   }
@@ -693,7 +699,11 @@ void MCAssembler::layout(MCAsmLayout &Layout) {
       if (isa<MCEncodedFragment>(&Frag) &&
           isa<MCCompactEncodedInstFragment>(&Frag))
         continue;
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__ // XXX is this correct?
       if (!isa<MCEncodedFragment>(&Frag) && !isa<MCCVDefRangeFragment>(&Frag))
+#else
+      if (!isa<MCEncodedFragment>(&Frag) && !false)
+#endif
         continue;
       ArrayRef<MCFixup> Fixups;
       MutableArrayRef<char> Contents;
@@ -703,9 +713,11 @@ void MCAssembler::layout(MCAsmLayout &Layout) {
       } else if (auto *FragWithFixups = dyn_cast<MCRelaxableFragment>(&Frag)) {
         Fixups = FragWithFixups->getFixups();
         Contents = FragWithFixups->getContents();
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
       } else if (auto *FragWithFixups = dyn_cast<MCCVDefRangeFragment>(&Frag)) {
         Fixups = FragWithFixups->getFixups();
         Contents = FragWithFixups->getContents();
+#endif
       } else
         llvm_unreachable("Unknown fragment with fixups!");
       for (const MCFixup &Fixup : Fixups) {
@@ -839,6 +851,7 @@ bool MCAssembler::relaxDwarfCallFrameFragment(MCAsmLayout &Layout,
   return OldSize != Data.size();
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 bool MCAssembler::relaxCVInlineLineTable(MCAsmLayout &Layout,
                                          MCCVInlineLineTableFragment &F) {
   unsigned OldSize = F.getContents().size();
@@ -852,6 +865,7 @@ bool MCAssembler::relaxCVDefRange(MCAsmLayout &Layout,
   getContext().getCVContext().encodeDefRange(Layout, F);
   return OldSize != F.getContents().size();
 }
+#endif
 
 bool MCAssembler::layoutSectionOnce(MCAsmLayout &Layout, MCSection &Sec) {
   // Holds the first fragment which needed relaxing during this layout. It will
@@ -884,6 +898,7 @@ bool MCAssembler::layoutSectionOnce(MCAsmLayout &Layout, MCSection &Sec) {
     case MCFragment::FT_LEB:
       RelaxedFrag = relaxLEB(Layout, *cast<MCLEBFragment>(I));
       break;
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     case MCFragment::FT_CVInlineLines:
       RelaxedFrag =
           relaxCVInlineLineTable(Layout, *cast<MCCVInlineLineTableFragment>(I));
@@ -891,6 +906,7 @@ bool MCAssembler::layoutSectionOnce(MCAsmLayout &Layout, MCSection &Sec) {
     case MCFragment::FT_CVDefRange:
       RelaxedFrag = relaxCVDefRange(Layout, *cast<MCCVDefRangeFragment>(I));
       break;
+#endif
     }
     if (RelaxedFrag && !FirstRelaxedFragment)
       FirstRelaxedFragment = &*I;

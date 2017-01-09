@@ -470,12 +470,14 @@ unsigned Module::getDwarfVersion() const {
   return cast<ConstantInt>(Val->getValue())->getZExtValue();
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 unsigned Module::getCodeViewFlag() const {
   auto *Val = cast_or_null<ConstantAsMetadata>(getModuleFlag("CodeView"));
   if (!Val)
     return 0;
   return cast<ConstantInt>(Val->getValue())->getZExtValue();
 }
+#endif
 
 Comdat *Module::getOrInsertComdat(StringRef Name) {
   auto &Entry = *ComdatSymTab.insert(std::make_pair(Name, Comdat())).first;

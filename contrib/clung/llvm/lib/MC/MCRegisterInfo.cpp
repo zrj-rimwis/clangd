@@ -85,6 +85,7 @@ int MCRegisterInfo::getSEHRegNum(unsigned RegNum) const {
   return I->second;
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 int MCRegisterInfo::getCodeViewRegNum(unsigned RegNum) const {
   if (L2CVRegs.empty())
     report_fatal_error("target does not implement codeview register mapping");
@@ -93,3 +94,4 @@ int MCRegisterInfo::getCodeViewRegNum(unsigned RegNum) const {
     report_fatal_error("unknown codeview register");
   return I->second;
 }
+#endif

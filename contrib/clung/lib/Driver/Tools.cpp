@@ -4662,8 +4662,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // Forward -gcodeview. EmitCodeView might have been set by CL-compatibility
   // argument parsing.
   if (Args.hasArg(options::OPT_gcodeview) || EmitCodeView) {
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     // DwarfVersion remains at 0 if no explicit choice was made.
     CmdArgs.push_back("-gcodeview");
+#else
+    D.Diag(diag::err_drv_clang_unsupported) <<
+       "CodeView not available, recompile with -DLLVM_ENABLE_CODEVIEWDEBUG";
+#endif
   } else if (DwarfVersion == 0 &&
              DebugInfoKind != codegenoptions::NoDebugInfo) {
     DwarfVersion = getToolChain().GetDefaultDwarfVersion();
@@ -6463,6 +6468,7 @@ void Clang::AddClangCLArgs(const ArgList &Args, types::ID InputType,
   }
 
   // Emit CodeView if -Z7, -Zd, or -gline-tables-only are present.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   if (Arg *DebugInfoArg =
           Args.getLastArg(options::OPT__SLASH_Z7, options::OPT__SLASH_Zd,
                           options::OPT_gline_tables_only)) {
@@ -6472,6 +6478,10 @@ void Clang::AddClangCLArgs(const ArgList &Args, types::ID InputType,
     else
       *DebugInfoKind = codegenoptions::DebugLineTablesOnly;
     CmdArgs.push_back("-gcodeview");
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     *EmitCodeView = false;
   }

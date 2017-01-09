@@ -788,7 +788,9 @@ public:
 
   /// \brief Returns the CodeView Version by checking module flags.
   /// Returns zero if not present in module.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   unsigned getCodeViewFlag() const;
+#endif
 
 /// @}
 /// @name Utility functions for querying and setting PIC level

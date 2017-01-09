@@ -221,6 +221,7 @@ public:
                              StringRef FileName) override;
   MCSymbol *getDwarfLineTableSymbol(unsigned CUID) override;
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   unsigned EmitCVFileDirective(unsigned FileNo, StringRef Filename) override;
   void EmitCVLocDirective(unsigned FunctionId, unsigned FileNo, unsigned Line,
                           unsigned Column, bool PrologueEnd, bool IsStmt,
@@ -236,6 +237,7 @@ public:
       StringRef FixedSizePortion) override;
   void EmitCVStringTableDirective() override;
   void EmitCVFileChecksumsDirective() override;
+#endif
 
   void EmitIdent(StringRef IdentString) override;
   void EmitCFISections(bool EH, bool Debug) override;
@@ -1080,6 +1082,7 @@ MCSymbol *MCAsmStreamer::getDwarfLineTableSymbol(unsigned CUID) {
   return MCStreamer::getDwarfLineTableSymbol(0);
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 unsigned MCAsmStreamer::EmitCVFileDirective(unsigned FileNo,
                                             StringRef Filename) {
   if (!getContext().getCVFile(Filename, FileNo))
@@ -1092,7 +1095,9 @@ unsigned MCAsmStreamer::EmitCVFileDirective(unsigned FileNo,
 
   return FileNo;
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCAsmStreamer::EmitCVLocDirective(unsigned FunctionId, unsigned FileNo,
                                        unsigned Line, unsigned Column,
                                        bool PrologueEnd, bool IsStmt,
@@ -1121,7 +1126,9 @@ void MCAsmStreamer::EmitCVLocDirective(unsigned FunctionId, unsigned FileNo,
   this->MCStreamer::EmitCVLocDirective(FunctionId, FileNo, Line, Column,
                                        PrologueEnd, IsStmt, FileName);
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCAsmStreamer::EmitCVLinetableDirective(unsigned FunctionId,
                                              const MCSymbol *FnStart,
                                              const MCSymbol *FnEnd) {
@@ -1152,7 +1159,9 @@ void MCAsmStreamer::EmitCVInlineLinetableDirective(
       PrimaryFunctionId, SourceFileId, SourceLineNum, FnStartSym, FnEndSym,
       SecondaryFunctionIds);
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCAsmStreamer::EmitCVDefRangeDirective(
     ArrayRef<std::pair<const MCSymbol *, const MCSymbol *>> Ranges,
     StringRef FixedSizePortion) {
@@ -1168,7 +1177,9 @@ void MCAsmStreamer::EmitCVDefRangeDirective(
   EmitEOL();
   this->MCStreamer::EmitCVDefRangeDirective(Ranges, FixedSizePortion);
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCAsmStreamer::EmitCVStringTableDirective() {
   OS << "\t.cv_stringtable";
   EmitEOL();
@@ -1178,6 +1189,7 @@ void MCAsmStreamer::EmitCVFileChecksumsDirective() {
   OS << "\t.cv_filechecksums";
   EmitEOL();
 }
+#endif
 
 void MCAsmStreamer::EmitIdent(StringRef IdentString) {
   assert(MAI->hasIdentDirective() && ".ident directive not supported");

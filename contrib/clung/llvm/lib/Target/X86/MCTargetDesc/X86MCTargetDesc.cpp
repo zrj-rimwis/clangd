@@ -67,6 +67,7 @@ unsigned X86_MC::getDwarfRegFlavour(const Triple &TT, bool isEH) {
   return DWARFFlavour::X86_32_Generic;
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void X86_MC::initLLVMToSEHAndCVRegMapping(MCRegisterInfo *MRI) {
   // FIXME: TableGen these.
   for (unsigned Reg = X86::NoRegister + 1; Reg < X86::NUM_TARGET_REGS; ++Reg) {
@@ -121,6 +122,7 @@ void X86_MC::initLLVMToSEHAndCVRegMapping(MCRegisterInfo *MRI) {
   for (unsigned I = 0; I < array_lengthof(CVX64Regs); ++I)
     MRI->mapLLVMRegToCVReg(CVX64Regs[I], CVX64RegStart + I);
 }
+#endif
 
 MCSubtargetInfo *X86_MC::createX86MCSubtargetInfo(const Triple &TT,
                                                   StringRef CPU, StringRef FS) {
@@ -153,7 +155,9 @@ static MCRegisterInfo *createX86MCRegisterInfo(const Triple &TT) {
   MCRegisterInfo *X = new MCRegisterInfo();
   InitX86MCRegisterInfo(X, RA, X86_MC::getDwarfRegFlavour(TT, false),
                         X86_MC::getDwarfRegFlavour(TT, true), RA);
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   X86_MC::initLLVMToSEHAndCVRegMapping(X);
+#endif
   return X;
 }
 

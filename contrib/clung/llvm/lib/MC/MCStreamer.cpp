@@ -199,6 +199,7 @@ void MCStreamer::EnsureValidDwarfFrame() {
     report_fatal_error("No open frame");
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 unsigned MCStreamer::EmitCVFileDirective(unsigned FileNo, StringRef Filename) {
   return getContext().getCVFile(Filename, FileNo);
 }
@@ -223,6 +224,7 @@ void MCStreamer::EmitCVInlineLinetableDirective(
 void MCStreamer::EmitCVDefRangeDirective(
     ArrayRef<std::pair<const MCSymbol *, const MCSymbol *>> Ranges,
     StringRef FixedSizePortion) {}
+#endif
 
 void MCStreamer::EmitEHSymAttributes(const MCSymbol *Symbol,
                                      MCSymbol *EHSymbol) {

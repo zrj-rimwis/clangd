@@ -686,6 +686,7 @@ public:
                                      unsigned Isa, unsigned Discriminator,
                                      StringRef FileName);
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   /// \brief Associate a filename with a specified logical file number.  This
   /// implements the '.cv_file 4 "foo.c"' assembler directive.
   virtual unsigned EmitCVFileDirective(unsigned FileNo, StringRef Filename);
@@ -719,6 +720,7 @@ public:
 
   /// \brief This implements the CodeView '.cv_filechecksums' assembler directive.
   virtual void EmitCVFileChecksumsDirective() {}
+#endif
 
   /// Emit the absolute difference between two symbols.
   ///

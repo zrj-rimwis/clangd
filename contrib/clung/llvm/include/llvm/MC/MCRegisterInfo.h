@@ -182,7 +182,9 @@ private:
   const DwarfLLVMRegPair *Dwarf2LRegs;        // Dwarf to LLVM regs mapping
   const DwarfLLVMRegPair *EHDwarf2LRegs;      // Dwarf to LLVM regs mapping EH
   DenseMap<unsigned, int> L2SEHRegs;          // LLVM to SEH regs mapping
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   DenseMap<unsigned, int> L2CVRegs;           // LLVM to CV regs mapping
+#endif
 
 public:
   /// DiffListIterator - Base iterator class that can traverse the
@@ -310,9 +312,11 @@ public:
     L2SEHRegs[LLVMReg] = SEHReg;
   }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   void mapLLVMRegToCVReg(unsigned LLVMReg, int CVReg) {
     L2CVRegs[LLVMReg] = CVReg;
   }
+#endif
 
   /// \brief This method should return the register where the return
   /// address can be found.
@@ -403,7 +407,9 @@ public:
 
   /// \brief Map a target register to an equivalent CodeView register
   /// number.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   int getCodeViewRegNum(unsigned RegNum) const;
+#endif
 
   regclass_iterator regclass_begin() const { return Classes; }
   regclass_iterator regclass_end() const { return Classes+NumClasses; }

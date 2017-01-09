@@ -16,7 +16,11 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/Twine.h"
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__ // hides missing other header inclusion
 #include "llvm/MC/MCCodeView.h"
+#else
+#include "llvm/MC/MCObjectStreamer.h"
+#endif
 #include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/SectionKind.h"
@@ -45,7 +49,9 @@ namespace llvm {
 #endif
   class MCSectionELF;
   class MCSectionCOFF;
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   class CodeViewContext;
+#endif
 
   /// Context object for machine code objects.  This class owns all of the
   /// sections that it creates.
@@ -70,7 +76,9 @@ namespace llvm {
     /// The MCObjectFileInfo for this target.
     const MCObjectFileInfo *MOFI;
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     std::unique_ptr<CodeViewContext> CVContext;
+#endif
 
     /// Allocator object used for creating machine code objects.
     ///
@@ -145,9 +153,11 @@ namespace llvm {
     MCDwarfLoc CurrentDwarfLoc;
     bool DwarfLocSeen;
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     /// The current CodeView line information from the last .cv_loc directive.
     MCCVLoc CurrentCVLoc = MCCVLoc(0, 0, 0, 0, false, true);
     bool CVLocSeen = false;
+#endif
 
     /// Generate dwarf debugging info for assembly source files.
     bool GenDwarfForAssembly;
@@ -256,7 +266,9 @@ namespace llvm {
 
     const MCObjectFileInfo *getObjectFileInfo() const { return MOFI; }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     CodeViewContext &getCVContext();
+#endif
 
     void setAllowTemporaryLabels(bool Value) { AllowTemporaryLabels = Value; }
     void setUseNamesOnTempLabels(bool Value) { UseNamesOnTempLabels = Value; }
@@ -545,6 +557,7 @@ namespace llvm {
 
     /// \name CodeView Management
     /// @{
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 
     /// Creates an entry in the cv file table.
     unsigned getCVFile(StringRef FileName, unsigned FileNumber);
@@ -569,6 +582,7 @@ namespace llvm {
     const MCCVLoc &getCurrentCVLoc() { return CurrentCVLoc; }
 
     bool isValidCVFileNumber(unsigned FileNumber);
+#endif
     /// @}
 
     char *getSecureLogFile() { return SecureLogFile; }

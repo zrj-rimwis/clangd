@@ -288,12 +288,14 @@ void MCFragment::destroy() {
     case FT_SafeSEH:
       delete cast<MCSafeSEHFragment>(this);
       return;
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__ // XXX no default: ?
     case FT_CVInlineLines:
       delete cast<MCCVInlineLineTableFragment>(this);
       return;
     case FT_CVDefRange:
       delete cast<MCCVDefRangeFragment>(this);
       return;
+#endif
     case FT_Dummy:
       delete cast<MCDummyFragment>(this);
       return;
@@ -332,8 +334,10 @@ LLVM_DUMP_METHOD void MCFragment::dump() {
   case MCFragment::FT_DwarfFrame: OS << "MCDwarfCallFrameFragment"; break;
   case MCFragment::FT_LEB:   OS << "MCLEBFragment"; break;
   case MCFragment::FT_SafeSEH:    OS << "MCSafeSEHFragment"; break;
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__ // XXX no default: ?
   case MCFragment::FT_CVInlineLines: OS << "MCCVInlineLineTableFragment"; break;
   case MCFragment::FT_CVDefRange: OS << "MCCVDefRangeTableFragment"; break;
+#endif
   case MCFragment::FT_Dummy: OS << "MCDummyFragment"; break;
   }
 
@@ -432,6 +436,7 @@ LLVM_DUMP_METHOD void MCFragment::dump() {
     OS << " Sym:" << F->getSymbol();
     break;
   }
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   case MCFragment::FT_CVInlineLines: {
     const auto *F = cast<MCCVInlineLineTableFragment>(this);
     OS << "\n       ";
@@ -448,6 +453,7 @@ LLVM_DUMP_METHOD void MCFragment::dump() {
     }
     break;
   }
+#endif
   case MCFragment::FT_Dummy:
     break;
   }

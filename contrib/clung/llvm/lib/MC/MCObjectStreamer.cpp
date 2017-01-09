@@ -126,7 +126,9 @@ void MCObjectStreamer::EmitValueImpl(const MCExpr *Value, unsigned Size,
   MCDataFragment *DF = getOrCreateDataFragment();
   flushPendingLabels(DF, DF->getContents().size());
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   MCCVLineEntry::Make(this);
+#endif
   MCDwarfLineEntry::Make(this, getCurrentSection().first);
 
   // Avoid fixups when possible.
@@ -234,7 +236,9 @@ void MCObjectStreamer::EmitInstruction(const MCInst &Inst,
 
   // Now that a machine instruction has been assembled into this section, make
   // a line entry for any .loc directive that has been seen.
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   MCCVLineEntry::Make(this);
+#endif
   MCDwarfLineEntry::Make(this, getCurrentSection().first);
 
   // If this instruction doesn't need relaxation, just emit it as data.
@@ -365,6 +369,7 @@ void MCObjectStreamer::EmitDwarfAdvanceFrameAddr(const MCSymbol *LastLabel,
   insert(new MCDwarfCallFrameFragment(*AddrDelta));
 }
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCObjectStreamer::EmitCVLocDirective(unsigned FunctionId, unsigned FileNo,
                                           unsigned Line, unsigned Column,
                                           bool PrologueEnd, bool IsStmt,
@@ -384,7 +389,9 @@ void MCObjectStreamer::EmitCVLinetableDirective(unsigned FunctionId,
                                                        End);
   this->MCStreamer::EmitCVLinetableDirective(FunctionId, Begin, End);
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCObjectStreamer::EmitCVInlineLinetableDirective(
     unsigned PrimaryFunctionId, unsigned SourceFileId, unsigned SourceLineNum,
     const MCSymbol *FnStartSym, const MCSymbol *FnEndSym,
@@ -403,17 +410,22 @@ void MCObjectStreamer::EmitCVDefRangeDirective(
   getContext().getCVContext().emitDefRange(*this, Ranges, FixedSizePortion);
   this->MCStreamer::EmitCVDefRangeDirective(Ranges, FixedSizePortion);
 }
+#endif
 
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
 void MCObjectStreamer::EmitCVStringTableDirective() {
   getContext().getCVContext().emitStringTable(*this);
 }
 void MCObjectStreamer::EmitCVFileChecksumsDirective() {
   getContext().getCVContext().emitFileChecksums(*this);
 }
+#endif
 
 
 void MCObjectStreamer::EmitBytes(StringRef Data) {
+#ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   MCCVLineEntry::Make(this);
+#endif
   MCDwarfLineEntry::Make(this, getCurrentSection().first);
   MCDataFragment *DF = getOrCreateDataFragment();
   flushPendingLabels(DF, DF->getContents().size());
