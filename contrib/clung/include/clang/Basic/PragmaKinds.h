@@ -21,10 +21,12 @@ enum PragmaMSCommentKind {
   PCK_User      // #pragma comment(user, ...)
 };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 enum PragmaMSStructKind {
   PMSST_OFF, // #pragms ms_struct off
   PMSST_ON   // #pragms ms_struct on
 };
+#endif
 
 }
 

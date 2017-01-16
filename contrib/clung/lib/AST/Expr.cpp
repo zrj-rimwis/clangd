@@ -958,7 +958,9 @@ void StringLiteral::setString(const ASTContext &C, StringRef Str,
   //FIXME: we assume that the string data comes from a target that uses the same
   // code unit size and endianess for the type of string.
   this->Kind = Kind;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   this->IsPascal = IsPascal;
+#endif
   
   CharByteWidth = mapCharByteWidth(C.getTargetInfo(),Kind);
   assert((Str.size()%CharByteWidth == 0)
@@ -2857,7 +2859,9 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case ObjCEncodeExprClass:
   case ObjCBoolLiteralExprClass:
   case ObjCAvailabilityCheckExprClass:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CXXUuidofExprClass:
+#endif
   case OpaqueValueExprClass:
     // These never have a side-effect.
     return false;

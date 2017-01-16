@@ -2084,7 +2084,9 @@ public:
 
   bool isInlineDefinitionExternallyVisible() const;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // undocumented
   bool isMSExternInline() const;
+#endif
 
   bool doesDeclarationForceExternallyVisibleDefinition() const;
 
@@ -2934,7 +2936,9 @@ public:
   void setTagKind(TagKind TK) { TagDeclKind = TK; }
 
   bool isStruct() const { return getTagKind() == TTK_Struct; }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool isInterface() const { return getTagKind() == TTK_Interface; }
+#endif
   bool isClass()  const { return getTagKind() == TTK_Class; }
   bool isUnion()  const { return getTagKind() == TTK_Union; }
   bool isEnum()   const { return getTagKind() == TTK_Enum; }
@@ -3404,7 +3408,9 @@ public:
   /// isMsStrust - Get whether or not this is an ms_struct which can
   /// be turned on with an attribute, pragma, or -mms-bitfields
   /// commandline option.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isMsStruct(const ASTContext &C) const;
+#endif
 
   /// \brief Whether we are allowed to insert extra padding between fields.
   /// These padding are added to help AddressSanitizer detect

@@ -319,11 +319,15 @@ public:
   /// This is used as part of a hack to omit that class from ADL results.
   DeclarationName VAListTagName;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool MSStructPragmaOn; // True when \#pragma ms_struct on
+#endif
 
   /// \brief Controls member pointer representation format under the MS ABI.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   LangOptions::PragmaMSPointersToMembersKind
       MSPointerToMemberRepresentationMethod;
+#endif
 
   /// Stack of active SEH __finally scopes.  Can be empty.
   SmallVector<Scope*, 2> CurrentSEHFinally;
@@ -398,7 +402,9 @@ public:
   ///    structors
   /// 2: Always insert vtordisps to support RTTI on partially constructed
   ///    objects
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PragmaStack<MSVtorDispAttr::Mode> VtorDispStack;
+#endif
   // #pragma pack.
   // Sentinel to represent when the stack is set to mac68k alignment.
   static const unsigned kMac68kAlignmentSentinel = ~0U;
@@ -1936,8 +1942,10 @@ public:
                                     RecordDecl *Record,
                                     const PrintingPolicy &Policy);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Decl *BuildMicrosoftCAnonymousStruct(Scope *S, DeclSpec &DS,
                                        RecordDecl *Record);
+#endif
 
   bool isAcceptableTagRedeclaration(const TagDecl *Previous,
                                     TagTypeKind NewTag, bool isDefinition,
@@ -2181,6 +2189,7 @@ public:
   VisibilityAttr *mergeVisibilityAttr(Decl *D, SourceRange Range,
                                       VisibilityAttr::VisibilityType Vis,
                                       unsigned AttrSpellingListIndex);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   DLLImportAttr *mergeDLLImportAttr(Decl *D, SourceRange Range,
                                     unsigned AttrSpellingListIndex);
   DLLExportAttr *mergeDLLExportAttr(Decl *D, SourceRange Range,
@@ -2189,6 +2198,7 @@ public:
   mergeMSInheritanceAttr(Decl *D, SourceRange Range, bool BestCase,
                          unsigned AttrSpellingListIndex,
                          MSInheritanceAttr::Spelling SemanticSpelling);
+#endif
   FormatAttr *mergeFormatAttr(Decl *D, SourceRange Range,
                               IdentifierInfo *Format, int FormatIdx,
                               int FirstArg, unsigned AttrSpellingListIndex);
@@ -3023,9 +3033,11 @@ public:
                                       SourceLocation *ArgLocation = nullptr);
   bool checkSectionName(SourceLocation LiteralLoc, StringRef Str);
   void checkTargetAttr(SourceLocation LiteralLoc, StringRef Str);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool checkMSInheritanceAttrOnDefinition(
       CXXRecordDecl *RD, SourceRange Range, bool BestCase,
       MSInheritanceAttr::Spelling SemanticSpelling);
+#endif
 
   void CheckAlignasUnderalignment(Decl *D);
 
@@ -3507,6 +3519,7 @@ public:
   ExprResult LookupInlineAsmVarDeclField(Expr *RefExpr, StringRef Member,
                                          llvm::InlineAsmIdentifierInfo &Info,
                                          SourceLocation AsmLoc);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult ActOnMSAsmStmt(SourceLocation AsmLoc, SourceLocation LBraceLoc,
                             ArrayRef<Token> AsmToks,
                             StringRef AsmString,
@@ -3515,6 +3528,7 @@ public:
                             ArrayRef<StringRef> Clobbers,
                             ArrayRef<Expr*> Exprs,
                             SourceLocation EndLoc);
+#endif
   LabelDecl *GetOrCreateMSAsmLabel(StringRef ExternalLabelName,
                                    SourceLocation Location,
                                    bool AlwaysCreate);
@@ -4655,6 +4669,7 @@ public:
                             void *TyOrExpr,
                             SourceLocation RParenLoc);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // undocumented
   ExprResult BuildCXXUuidof(QualType TypeInfoType,
                             SourceLocation TypeidLoc,
                             TypeSourceInfo *Operand,
@@ -4663,12 +4678,15 @@ public:
                             SourceLocation TypeidLoc,
                             Expr *Operand,
                             SourceLocation RParenLoc);
+#endif
 
   /// ActOnCXXUuidof - Parse __uuidof( something ).
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ExprResult ActOnCXXUuidof(SourceLocation OpLoc,
                             SourceLocation LParenLoc, bool isType,
                             void *TyOrExpr,
                             SourceLocation RParenLoc);
+#endif
 
   /// \brief Handle a C++1z fold-expression: ( expr op ... op expr ).
   ExprResult ActOnCXXFoldExpr(SourceLocation LParenLoc, Expr *LHS,
@@ -5416,6 +5434,7 @@ public:
   /// \brief Check class-level dllimport/dllexport attribute. The caller must
   /// ensure that referenceDLLExportedClassMethods is called some point later
   /// when all outer classes of Class are complete.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void checkClassLevelDLLAttribute(CXXRecordDecl *Class);
 
   void referenceDLLExportedClassMethods();
@@ -5424,6 +5443,7 @@ public:
       CXXRecordDecl *Class, Attr *ClassAttr,
       ClassTemplateSpecializationDecl *BaseTemplateSpec,
       SourceLocation BaseLoc);
+#endif
 
   void CheckCompletedCXXClass(CXXRecordDecl *Record);
   void ActOnFinishCXXMemberSpecification(Scope* S, SourceLocation RLoc,
@@ -7746,24 +7766,30 @@ public:
                        StringRef SlotLabel, Expr *Alignment);
 
   /// ActOnPragmaMSStruct - Called on well formed \#pragma ms_struct [on|off].
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void ActOnPragmaMSStruct(PragmaMSStructKind Kind);
 
   /// ActOnPragmaMSComment - Called on well formed
   /// \#pragma comment(kind, "arg").
   void ActOnPragmaMSComment(SourceLocation CommentLoc, PragmaMSCommentKind Kind,
                             StringRef Arg);
+#endif
 
   /// ActOnPragmaMSPointersToMembers - called on well formed \#pragma
   /// pointers_to_members(representation method[, general purpose
   /// representation]).
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void ActOnPragmaMSPointersToMembers(
       LangOptions::PragmaMSPointersToMembersKind Kind,
       SourceLocation PragmaLoc);
+#endif
 
   /// \brief Called on well formed \#pragma vtordisp().
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void ActOnPragmaMSVtorDisp(PragmaMsStackAction Action,
                              SourceLocation PragmaLoc,
                              MSVtorDispAttr::Mode Value);
+#endif
 
   enum PragmaSectionKind {
     PSK_DataSeg,
@@ -7780,6 +7806,7 @@ public:
                     SourceLocation PragmaSectionLocation);
 
   /// \brief Called on well formed \#pragma bss_seg/data_seg/const_seg/code_seg.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void ActOnPragmaMSSeg(SourceLocation PragmaLocation,
                         PragmaMsStackAction Action,
                         llvm::StringRef StackSlotLabel,
@@ -7793,6 +7820,7 @@ public:
   /// \brief Called on well-formed \#pragma init_seg().
   void ActOnPragmaMSInitSeg(SourceLocation PragmaLocation,
                             StringLiteral *SegmentName);
+#endif
 
   /// \brief Called on #pragma clang __debug dump II
   void ActOnPragmaDump(Scope *S, SourceLocation Loc, IdentifierInfo *II);
@@ -7843,7 +7871,9 @@ public:
   void AddAlignmentAttributesForRecord(RecordDecl *RD);
 
   /// AddMsStructLayoutForRecord - Adds ms_struct layout attribute to record.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void AddMsStructLayoutForRecord(RecordDecl *RD);
+#endif
 
   /// FreePackedContext - Deallocate and null out PackContext.
   void FreePackedContext();

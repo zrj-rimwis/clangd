@@ -43,7 +43,9 @@ public:
   void VisitUnaryExprOrTypeTraitExpr(PTR(UnaryExprOrTypeTraitExpr) E) { }
   void VisitExpressionTraitExpr(PTR(ExpressionTraitExpr) E) { }
   void VisitBlockExpr(PTR(BlockExpr) E) { }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void VisitCXXUuidofExpr(PTR(CXXUuidofExpr) E) { }
+#endif
   void VisitCXXNoexceptExpr(PTR(CXXNoexceptExpr) E) { }
 
   void VisitMemberExpr(PTR(MemberExpr) E) {

@@ -1368,7 +1368,11 @@ public:
     // static can follow an extern, so we can have two decls with different
     // linkages.
     const LangOptions &Opts = D->getASTContext().getLangOpts();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (!Opts.CPlusPlus || Opts.MicrosoftExt)
+#else
+    if (!Opts.CPlusPlus || false)
+#endif
       return LV;
 
     // We have just computed the linkage for this decl. By induction we know
@@ -1820,7 +1824,11 @@ void VarDecl::setStorageClass(StorageClass SC) {
 VarDecl::TLSKind VarDecl::getTLSKind() const {
   switch (VarDeclBits.TSCSpec) {
   case TSCS_unspecified:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (!hasAttr<ThreadAttr>() &&
+#else
+    if (!false &&
+#endif
         !(getASTContext().getLangOpts().OpenMPUseTLS &&
           getASTContext().getTargetInfo().isTLSSupported() &&
           hasAttr<OMPThreadPrivateDeclAttr>()))
@@ -1956,9 +1964,11 @@ VarDecl::isThisDeclarationADefinition(ASTContext &C) const {
   if (hasDefiningAttr())
     return Definition;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no
   if (const auto *SAA = getAttr<SelectAnyAttr>())
     if (!SAA->isInherited())
       return Definition;
+#endif
 
   // A variable template specialization (other than a static data member
   // template or an explicit specialization) is a declaration until we
@@ -2703,9 +2713,11 @@ unsigned FunctionDecl::getBuiltinID() const {
     // FIXME: A recognised library function may not be directly in an extern "C"
     // declaration, for instance "extern "C" { namespace std { decl } }".
     if (!LinkageDecl) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (BuiltinID == Builtin::BI__GetExceptionInfo &&
           Context.getTargetInfo().getCXXABI().isMicrosoft())
         return Builtin::BI__GetExceptionInfo;
+#endif
       return 0;
     }
     if (LinkageDecl->getLanguage() != LinkageSpecDecl::lang_c)
@@ -2800,6 +2812,7 @@ unsigned FunctionDecl::getMinRequiredArguments() const {
 ///
 /// Note: This function assumes that we will only get called when isInlined()
 /// would return true for this FunctionDecl.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
 bool FunctionDecl::isMSExternInline() const {
   assert(isInlined() && "expected to get called on an inlined function!");
 
@@ -2815,6 +2828,7 @@ bool FunctionDecl::isMSExternInline() const {
 
   return false;
 }
+#endif
 
 static bool redeclForcesDefMSVC(const FunctionDecl *Redecl) {
   if (Redecl->getStorageClass() != SC_Extern)
@@ -3783,9 +3797,11 @@ void RecordDecl::completeDefinition() {
 /// isMsStruct - Get whether or not this record uses ms_struct layout.
 /// This which can be turned on with an attribute, pragma, or the
 /// -mms-bitfields command-line option.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
 bool RecordDecl::isMsStruct(const ASTContext &C) const {
   return hasAttr<MSStructAttr>() || C.getLangOpts().MSBitfields == 1;
 }
+#endif
 
 void RecordDecl::LoadFieldsFromExternalStorage() const {
   ExternalASTSource *Source = getASTContext().getExternalSource();

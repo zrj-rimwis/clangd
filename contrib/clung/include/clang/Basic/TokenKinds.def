@@ -396,15 +396,19 @@ KEYWORD(__auto_type                 , KEYALL)
 KEYWORD(typeof                      , KEYGNU)
 
 // MS Extensions
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 KEYWORD(__FUNCDNAME__               , KEYMS)
 KEYWORD(__FUNCSIG__                 , KEYMS)
 KEYWORD(L__FUNCTION__               , KEYMS)
 TYPE_TRAIT_1(__is_interface_class, IsInterfaceClass, KEYMS)
 TYPE_TRAIT_1(__is_sealed, IsSealed, KEYMS)
+#endif
 
 // MSVC12.0 / VS2013 Type Traits
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // smth iwth TYPE_TRAIT() macro
 TYPE_TRAIT_1(__is_destructible, IsDestructible, KEYMS)
 TYPE_TRAIT_1(__is_nothrow_destructible, IsNothrowDestructible, KEYMS)
+#endif
 TYPE_TRAIT_2(__is_nothrow_assignable, IsNothrowAssignable, KEYCXX)
 TYPE_TRAIT_N(__is_constructible, IsConstructible, KEYCXX)
 TYPE_TRAIT_N(__is_nothrow_constructible, IsNothrowConstructible, KEYCXX)
@@ -496,9 +500,11 @@ KEYWORD(__stdcall                   , KEYALL)
 KEYWORD(__fastcall                  , KEYALL)
 KEYWORD(__thiscall                  , KEYALL)
 KEYWORD(__vectorcall                , KEYALL)
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 KEYWORD(__forceinline               , KEYMS)
 KEYWORD(__unaligned                 , KEYMS)
 KEYWORD(__super                     , KEYMS)
+#endif
 
 // OpenCL address space qualifiers
 KEYWORD(__global                    , KEYOPENCL)
@@ -533,7 +539,9 @@ KEYWORD(__builtin_omp_required_simd_align, KEYALL)
 KEYWORD(pipe                        , KEYOPENCL)
 
 // Borland Extensions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 KEYWORD(__pascal                    , KEYALL)
+#endif
 
 // Altivec Extension.
 KEYWORD(__vector                    , KEYALTIVEC|KEYZVECTOR)
@@ -588,6 +596,7 @@ KEYWORD(_Nullable                , KEYALL)
 KEYWORD(_Null_unspecified        , KEYALL)
 
 // Microsoft extensions which should be disabled in strict conformance mode
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 KEYWORD(__ptr64                       , KEYMS)
 KEYWORD(__ptr32                       , KEYMS)
 KEYWORD(__sptr                        , KEYMS)
@@ -623,9 +632,12 @@ ALIAS("_vectorcall"      , __vectorcall, KEYMS)
 ALIAS("_uuidof"          , __uuidof   , KEYMS | KEYBORLAND)
 ALIAS("_inline"          , inline     , KEYMS)
 ALIAS("_declspec"        , __declspec , KEYMS)
+#endif
 
 // Borland Extensions which should be disabled in strict conformance mode.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ALIAS("_pascal"      , __pascal   , KEYBORLAND)
+#endif
 
 // Clang Extensions.
 KEYWORD(__builtin_convertvector   , KEYALL)
@@ -721,7 +733,9 @@ ANNOTATION(pragma_dump)
 // Annotation for #pragma ms_struct...
 // The lexer produces these so that they only take effect when the parser
 // handles them.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ANNOTATION(pragma_msstruct)
+#endif
 
 // Annotation for #pragma align...
 // The lexer produces these so that they only take effect when the parser
@@ -751,17 +765,23 @@ ANNOTATION(pragma_fp_contract)
 // Annotation for #pragma pointers_to_members...
 // The lexer produces these so that they only take effect when the parser
 // handles them.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ANNOTATION(pragma_ms_pointers_to_members)
+#endif
 
 // Annotation for #pragma vtordisp...
 // The lexer produces these so that they only take effect when the parser
 // handles them.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ANNOTATION(pragma_ms_vtordisp)
+#endif
 
 // Annotation for all microsoft #pragmas...
 // The lexer produces these so that they only take effect when the parser
 // handles them.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ANNOTATION(pragma_ms_pragma)
+#endif
 
 // Annotation for #pragma OPENCL EXTENSION...
 // The lexer produces these so that they only take effect when the parser

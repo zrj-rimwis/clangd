@@ -57,14 +57,20 @@ llvm::Constant *CodeGenModule::getTerminateFn() {
 
   // In C++, use std::terminate().
   if (getLangOpts().CPlusPlus &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
       getTarget().getCXXABI().isItaniumFamily()) {
+#else
+      true) {
+#endif
     name = "_ZSt9terminatev";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   } else if (getLangOpts().CPlusPlus &&
              getTarget().getCXXABI().isMicrosoft()) {
     if (getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2015))
       name = "__std_terminate";
     else
       name = "\01?terminate@@YAXXZ";
+#endif
   } else if (getLangOpts().ObjC1 &&
              getLangOpts().ObjCRuntime.hasTerminate())
     name = "objc_terminate";
@@ -447,8 +453,10 @@ void CodeGenFunction::EmitStartEHSpec(const Decl *D) {
   } else if (EST == EST_Dynamic || EST == EST_DynamicNone) {
     // TODO: Revisit exception specifications for the MS ABI.  There is a way to
     // encode these in an object file but MSVC doesn't do anything with it.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false // srsly?
     if (getTarget().getCXXABI().isMicrosoft())
       return;
+#endif
     unsigned NumExceptions = Proto->getNumExceptions();
     EHFilterScope *Filter = EHStack.pushFilter(NumExceptions);
 
@@ -525,8 +533,10 @@ void CodeGenFunction::EmitEndEHSpec(const Decl *D) {
   } else if (EST == EST_Dynamic || EST == EST_DynamicNone) {
     // TODO: Revisit exception specifications for the MS ABI.  There is a way to
     // encode these in an object file but MSVC doesn't do anything with it.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     if (getTarget().getCXXABI().isMicrosoft())
       return;
+#endif
     EHFilterScope &filterScope = cast<EHFilterScope>(*EHStack.begin());
     emitFilterDispatchBlock(*this, filterScope);
     EHStack.popFilter();
@@ -692,7 +702,11 @@ llvm::BasicBlock *CodeGenFunction::getInvokeDestImpl() {
   // consistent with MSVC's behavior.
   const LangOptions &LO = CGM.getLangOpts();
   if (!LO.Exceptions) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (!LO.Borland && !LO.MicrosoftExt)
+#else
+    if (!false && !false)
+#endif
       return nullptr;
     if (!currentFunctionUsesSEHTry())
       return nullptr;
@@ -1478,6 +1492,7 @@ struct CaptureFinder : ConstStmtVisitor<CaptureFinder> {
     if (ParentCGF.getTarget().getTriple().getArch() != llvm::Triple::x86)
       return;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume for msc++ only
     unsigned ID = E->getBuiltinCallee();
     switch (ID) {
     case Builtin::BI__exception_code:
@@ -1489,6 +1504,7 @@ struct CaptureFinder : ConstStmtVisitor<CaptureFinder> {
         SEHCodeSlot = ParentCGF.SEHCodeSlotStack.back();
       break;
     }
+#endif
   }
 };
 } // end anonymous namespace

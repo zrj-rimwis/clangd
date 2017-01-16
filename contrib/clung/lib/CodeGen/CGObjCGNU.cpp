@@ -1078,10 +1078,12 @@ llvm::Value *CGObjCGNU::GetClass(CodeGenFunction &CGF,
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     if (auto *ClassSymbol = dyn_cast<llvm::GlobalVariable>(Value)) {
       auto DLLStorage = llvm::GlobalValue::DefaultStorageClass;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (OID->hasAttr<DLLExportAttr>())
         DLLStorage = llvm::GlobalValue::DLLExportStorageClass;
       else if (OID->hasAttr<DLLImportAttr>())
         DLLStorage = llvm::GlobalValue::DLLImportStorageClass;
+#endif
       ClassSymbol->setDLLStorageClass(DLLStorage);
     }
   }
@@ -1102,10 +1104,12 @@ llvm::Value *CGObjCGNU::EmitNSAutoreleasePoolClassRef(CodeGenFunction &CGF) {
           break;
 
       auto DLLStorage = llvm::GlobalValue::DefaultStorageClass;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (!VD || VD->hasAttr<DLLImportAttr>())
         DLLStorage = llvm::GlobalValue::DLLImportStorageClass;
       else if (VD->hasAttr<DLLExportAttr>())
         DLLStorage = llvm::GlobalValue::DLLExportStorageClass;
+#endif
 
       ClassSymbol->setDLLStorageClass(DLLStorage);
     }
@@ -2389,10 +2393,12 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
       NULLPtr, ZeroPtr, ZeroPtr, true);
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     auto Storage = llvm::GlobalValue::DefaultStorageClass;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (OID->getClassInterface()->hasAttr<DLLImportAttr>())
       Storage = llvm::GlobalValue::DLLImportStorageClass;
     else if (OID->getClassInterface()->hasAttr<DLLExportAttr>())
       Storage = llvm::GlobalValue::DLLExportStorageClass;
+#endif
     cast<llvm::GlobalValue>(MetaClassStruct)->setDLLStorageClass(Storage);
   }
 
@@ -2404,10 +2410,12 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
       StrongIvarBitmap, WeakIvarBitmap);
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     auto Storage = llvm::GlobalValue::DefaultStorageClass;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (OID->getClassInterface()->hasAttr<DLLImportAttr>())
       Storage = llvm::GlobalValue::DLLImportStorageClass;
     else if (OID->getClassInterface()->hasAttr<DLLExportAttr>())
       Storage = llvm::GlobalValue::DLLExportStorageClass;
+#endif
     cast<llvm::GlobalValue>(ClassStruct)->setDLLStorageClass(Storage);
   }
 
@@ -2907,6 +2915,7 @@ llvm::Value *CGObjCGNU::EmitIvarOffset(CodeGenFunction &CGF,
     // The MSVC linker cannot have a single global defined as LinkOnceAnyLinkage
     // and ExternalLinkage, so create a reference to the ivar global and rely on
     // the definition being created as part of GenerateClass.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
     if (RuntimeVersion < 10 ||
         CGF.CGM.getTarget().getTriple().isKnownWindowsMSVCEnvironment())
       return CGF.Builder.CreateZExtOrBitCast(
@@ -2914,6 +2923,7 @@ llvm::Value *CGObjCGNU::EmitIvarOffset(CodeGenFunction &CGF,
                   ObjCIvarOffsetVariable(Interface, Ivar),
                   CGF.getPointerAlign(), "ivar")),
           PtrDiffTy);
+#endif
     std::string name = "__objc_ivar_offset_value_" +
       Interface->getNameAsString() +"." + Ivar->getNameAsString();
     CharUnits Align = CGM.getIntAlign();

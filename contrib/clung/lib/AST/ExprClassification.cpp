@@ -382,8 +382,10 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     return Cl::CL_PRValue;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
     return Cl::CL_LValue;
+#endif
 
   case Expr::PackExpansionExprClass:
     return ClassifyInternal(Ctx, cast<PackExpansionExpr>(E)->getPattern());

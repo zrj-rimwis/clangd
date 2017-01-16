@@ -62,8 +62,10 @@ public:
 
 IdentifierInfo *Parser::getSEHExceptKeyword() {
   // __except is accepted as a (contextual) keyword 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!Ident__except && (getLangOpts().MicrosoftExt || getLangOpts().Borland))
     Ident__except = PP.getIdentifierInfo("__except");
+#endif
 
   return Ident__except;
 }
@@ -496,12 +498,15 @@ void Parser::Initialize() {
 
   Ident__except = nullptr;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Ident__exception_code = Ident__exception_info = nullptr;
   Ident__abnormal_termination = Ident___exception_code = nullptr;
   Ident___exception_info = Ident___abnormal_termination = nullptr;
   Ident_GetExceptionCode = Ident_GetExceptionInfo = nullptr;
   Ident_AbnormalTermination = nullptr;
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if(getLangOpts().Borland) {
     Ident__exception_info        = PP.getIdentifierInfo("_exception_info");
     Ident___exception_info       = PP.getIdentifierInfo("__exception_info");
@@ -523,6 +528,7 @@ void Parser::Initialize() {
     PP.SetPoisonReason(Ident___abnormal_termination,diag::err_seh___finally_block);
     PP.SetPoisonReason(Ident_AbnormalTermination,diag::err_seh___finally_block);
   }
+#endif
 
   Actions.Initialize();
 
@@ -638,9 +644,11 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
   case tok::annot_pragma_pack:
     HandlePragmaPack();
     return nullptr;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::annot_pragma_msstruct:
     HandlePragmaMSStruct();
     return nullptr;
+#endif
   case tok::annot_pragma_align:
     HandlePragmaAlign();
     return nullptr;
@@ -663,6 +671,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
     AccessSpecifier AS = AS_none;
     return ParseOpenMPDeclarativeDirectiveWithExtDecl(AS, attrs);
   }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::annot_pragma_ms_pointers_to_members:
     HandlePragmaMSPointersToMembers();
     return nullptr;
@@ -672,6 +681,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
   case tok::annot_pragma_ms_pragma:
     HandlePragmaMSPragma();
     return nullptr;
+#endif
   case tok::annot_pragma_dump:
     HandlePragmaDump();
     return nullptr;
@@ -797,10 +807,12 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
     }
     goto dont_know;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___if_exists:
   case tok::kw___if_not_exists:
     ParseMicrosoftIfExistsExternalDeclaration();
     return nullptr;
+#endif
 
   default:
   dont_know:
@@ -975,7 +987,9 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
                                       const ParsedTemplateInfo &TemplateInfo,
                                       LateParsedAttrList *LateParsedAttrs) {
   // Poison SEH identifiers so they are flagged as illegal in function bodies.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PoisonSEHIdentifiersRAIIObject PoisonSEHIdentifiers(*this, true);
+#endif
   const DeclaratorChunk::FunctionTypeInfo &FTI = D.getFunctionTypeInfo();
 
   // If this is C90 and the declspecs were completely missing, fudge in an
@@ -1582,7 +1596,11 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
   assert((Tok.is(tok::identifier) || Tok.is(tok::coloncolon) ||
           Tok.is(tok::kw_typename) || Tok.is(tok::annot_cxxscope) ||
           Tok.is(tok::kw_decltype) || Tok.is(tok::annot_template_id) ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           Tok.is(tok::kw___super)) &&
+#else
+          false) &&
+#endif
          "Cannot be a type or scope token!");
 
   if (Tok.is(tok::kw_typename)) {
@@ -1625,8 +1643,10 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
           unsigned DiagID = diag::err_expected_qualified_after_typename;
           // MS compatibility: MSVC permits using known types with typename.
           // e.g. "typedef typename T* pointer_type"
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           if (getLangOpts().MicrosoftExt)
             DiagID = diag::warn_expected_qualified_after_typename;
+#endif
           Diag(Tok.getLocation(), DiagID);
           return false;
         }
@@ -1808,7 +1828,11 @@ bool Parser::TryAnnotateCXXScopeToken(bool EnteringContext) {
          "Call sites of this function should be guarded by checking for C++");
   assert((Tok.is(tok::identifier) || Tok.is(tok::coloncolon) ||
           (Tok.is(tok::annot_template_id) && NextToken().is(tok::coloncolon)) ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           Tok.is(tok::kw_decltype) || Tok.is(tok::kw___super)) &&
+#else
+          Tok.is(tok::kw_decltype)) &&
+#endif
          "Cannot be a type or scope token!");
 
   CXXScopeSpec SS;
@@ -1901,6 +1925,7 @@ void Parser::CodeCompleteNaturalLanguage() {
   Actions.CodeCompleteNaturalLanguage();
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Parser::ParseMicrosoftIfExistsCondition(IfExistsCondition& Result) {
   assert((Tok.is(tok::kw___if_exists) || Tok.is(tok::kw___if_not_exists)) &&
          "Expected '__if_exists' or '__if_not_exists'");
@@ -1958,7 +1983,9 @@ bool Parser::ParseMicrosoftIfExistsCondition(IfExistsCondition& Result) {
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::ParseMicrosoftIfExistsExternalDeclaration() {
   IfExistsCondition Result;
   if (ParseMicrosoftIfExistsCondition(Result))
@@ -1995,6 +2022,7 @@ void Parser::ParseMicrosoftIfExistsExternalDeclaration() {
   }
   Braces.consumeClose();
 }
+#endif
 
 Parser::DeclGroupPtrTy Parser::ParseModuleImport(SourceLocation AtLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_import) && 

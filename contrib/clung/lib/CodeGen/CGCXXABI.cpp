@@ -302,6 +302,7 @@ CharUnits CGCXXABI::getMemberPointerPathAdjustment(const APValue &MP) {
   return ThisAdjustment;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // MS only
 llvm::BasicBlock *
 CGCXXABI::EmitCtorCompleteObjectHandler(CodeGenFunction &CGF,
                                         const CXXRecordDecl *RD) {
@@ -311,6 +312,7 @@ CGCXXABI::EmitCtorCompleteObjectHandler(CodeGenFunction &CGF,
   ErrorUnsupportedABI(CGF, "complete object detection in ctor");
   return nullptr;
 }
+#endif
 
 bool CGCXXABI::NeedsVTTParameter(GlobalDecl GD) {
   return false;

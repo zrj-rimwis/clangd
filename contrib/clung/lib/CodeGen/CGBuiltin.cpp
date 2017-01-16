@@ -484,13 +484,20 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     return RValue::get(CGM.EmitConstantExpr(E, E->getType(), nullptr));
   case Builtin::BI__builtin_stdarg_start:
   case Builtin::BI__builtin_va_start:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__va_start:
+#endif
   case Builtin::BI__builtin_va_end:
     return RValue::get(
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // srsly???
         EmitVAStartEnd(BuiltinID == Builtin::BI__va_start
                            ? EmitScalarExpr(E->getArg(0))
                            : EmitVAListRef(E->getArg(0)).getPointer(),
                        BuiltinID != Builtin::BI__builtin_va_end));
+#else
+        EmitVAStartEnd(EmitVAListRef(E->getArg(0)).getPointer(),
+                       BuiltinID != Builtin::BI__builtin_va_end));
+#endif
   case Builtin::BI__builtin_va_copy: {
     Value *DstPtr = EmitVAListRef(E->getArg(0)).getPointer();
     Value *SrcPtr = EmitVAListRef(E->getArg(1)).getPointer();
@@ -730,7 +737,9 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     EmitAlignmentAssumption(PtrValue, Alignment, OffsetValue);
     return RValue::get(PtrValue);
   }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__assume:
+#endif
   case Builtin::BI__builtin_assume: {
     if (E->getArg(0)->HasSideEffects(getContext()))
       return RValue::get(nullptr);
@@ -782,8 +791,10 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
   }
   case Builtin::BI__builtin_trap:
     return RValue::get(EmitTrapCall(Intrinsic::trap));
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__debugbreak:
     return RValue::get(EmitTrapCall(Intrinsic::debugtrap));
+#endif
   case Builtin::BI__builtin_unreachable: {
     if (SanOpts.has(SanitizerKind::Unreachable)) {
       SanitizerScope SanScope(this);
@@ -960,7 +971,9 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
   }
 
   case Builtin::BIalloca:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_alloca:
+#endif
   case Builtin::BI__builtin_alloca: {
     Value *Size = EmitScalarExpr(E->getArg(0));
     return RValue::get(Builder.CreateAlloca(Builder.getInt8Ty(), Size));
@@ -1898,9 +1911,11 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
   case Builtin::BI__builtin_operator_delete:
     return EmitBuiltinNewDeleteCall(FD->getType()->castAs<FunctionProtoType>(),
                                     E->getArg(0), true);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__noop:
     // __noop always evaluates to an integer literal zero.
     return RValue::get(ConstantInt::get(IntTy, 0));
+#endif
   case Builtin::BI__builtin_call_with_static_chain: {
     const CallExpr *Call = cast<CallExpr>(E->getArg(0));
     const Expr *Chain = E->getArg(1);
@@ -1908,9 +1923,12 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
                     EmitScalarExpr(Call->getCallee()), Call, ReturnValue,
                     Call->getCalleeDecl(), EmitScalarExpr(Chain));
   }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_InterlockedExchange:
   case Builtin::BI_InterlockedExchangePointer:
     return EmitBinaryAtomic(*this, llvm::AtomicRMWInst::Xchg, E);
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_InterlockedCompareExchangePointer: {
     llvm::Type *RTy;
     llvm::IntegerType *IntType =
@@ -1938,6 +1956,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
                                                                          0),
                                               RTy));
   }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_InterlockedCompareExchange: {
     AtomicCmpXchgInst *CXI = Builder.CreateAtomicCmpXchg(
         EmitScalarExpr(E->getArg(0)),
@@ -1948,6 +1968,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
       CXI->setVolatile(true);
       return RValue::get(Builder.CreateExtractValue(CXI, 0));
   }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_InterlockedIncrement: {
     llvm::Type *IntTy = ConvertType(E->getType());
     AtomicRMWInst *RMWI = Builder.CreateAtomicRMW(
@@ -1958,6 +1980,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     RMWI->setVolatile(true);
     return RValue::get(Builder.CreateAdd(RMWI, ConstantInt::get(IntTy, 1)));
   }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_InterlockedDecrement: {
     llvm::Type *IntTy = ConvertType(E->getType());
     AtomicRMWInst *RMWI = Builder.CreateAtomicRMW(
@@ -1968,6 +1992,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     RMWI->setVolatile(true);
     return RValue::get(Builder.CreateSub(RMWI, ConstantInt::get(IntTy, 1)));
   }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_InterlockedExchangeAdd: {
     AtomicRMWInst *RMWI = Builder.CreateAtomicRMW(
       AtomicRMWInst::Add,
@@ -1977,6 +2003,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     RMWI->setVolatile(true);
     return RValue::get(RMWI);
   }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__readfsdword: {
     llvm::Type *IntTy = ConvertType(E->getType());
     Value *IntToPtr =
@@ -1986,7 +2014,9 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
         Builder.CreateDefaultAlignedLoad(IntToPtr, /*isVolatile=*/true);
     return RValue::get(Load);
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__exception_code:
   case Builtin::BI_exception_code:
     return RValue::get(EmitSEHExceptionCode());
@@ -1996,6 +2026,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
   case Builtin::BI__abnormal_termination:
   case Builtin::BI_abnormal_termination:
     return RValue::get(EmitSEHAbnormalTermination());
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_setjmpex: {
     if (getTarget().getTriple().isOSMSVCRT()) {
       llvm::Type *ArgTypes[] = {Int8PtrTy, Int8PtrTy};
@@ -2017,6 +2049,8 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     }
     break;
   }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_setjmp: {
     if (getTarget().getTriple().isOSMSVCRT()) {
       llvm::AttributeSet ReturnsTwiceAttr =
@@ -2049,13 +2083,16 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     }
     break;
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__GetExceptionInfo: {
     if (llvm::GlobalVariable *GV =
             CGM.getCXXABI().getThrowInfo(FD->getParamDecl(0)->getType()))
       return RValue::get(llvm::ConstantExpr::getBitCast(GV, CGM.Int8PtrTy));
     break;
   }
+#endif
 
   // OpenCL v2.0 s6.13.16.2, Built-in pipe read and write functions
   case Builtin::BIread_pipe:
@@ -3831,23 +3868,33 @@ Value *CodeGenFunction::GetValueForARMHint(unsigned BuiltinID) {
     Value = 0;
     break;
   case ARM::BI__builtin_arm_yield:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI__yield:
+#endif
     Value = 1;
     break;
   case ARM::BI__builtin_arm_wfe:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI__wfe:
+#endif
     Value = 2;
     break;
   case ARM::BI__builtin_arm_wfi:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI__wfi:
+#endif
     Value = 3;
     break;
   case ARM::BI__builtin_arm_sev:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI__sev:
+#endif
     Value = 4;
     break;
   case ARM::BI__builtin_arm_sevl:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI__sevl:
+#endif
     Value = 5;
     break;
   }
@@ -3949,8 +3996,10 @@ static bool HasExtraNeonArgument(unsigned BuiltinID) {
   case NEON::BI__builtin_neon_vsha1cq_u32:
   case NEON::BI__builtin_neon_vsha1pq_u32:
   case NEON::BI__builtin_neon_vsha1mq_u32:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI_MoveToCoprocessor:
   case ARM::BI_MoveToCoprocessor2:
+#endif
     return false;
   }
   return true;
@@ -3961,6 +4010,7 @@ Value *CodeGenFunction::EmitARMBuiltinExpr(unsigned BuiltinID,
   if (auto Hint = GetValueForARMHint(BuiltinID))
     return Hint;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (BuiltinID == ARM::BI__emit) {
     bool IsThumb = getTarget().getTriple().getArch() == llvm::Triple::thumb;
     llvm::FunctionType *FTy =
@@ -3980,6 +4030,7 @@ Value *CodeGenFunction::EmitARMBuiltinExpr(unsigned BuiltinID,
 
     return Builder.CreateCall(Emit);
   }
+#endif
 
   if (BuiltinID == ARM::BI__builtin_arm_dbg) {
     Value *Option = EmitScalarExpr(E->getArg(0));
@@ -4088,7 +4139,11 @@ Value *CodeGenFunction::EmitARMBuiltinExpr(unsigned BuiltinID,
       ((BuiltinID == ARM::BI__builtin_arm_ldrex ||
         BuiltinID == ARM::BI__builtin_arm_ldaex) &&
        getContext().getTypeSize(E->getType()) == 64) ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       BuiltinID == ARM::BI__ldrexd) {
+#else
+      false) {
+#endif
     Function *F;
 
     switch (BuiltinID) {
@@ -4098,7 +4153,9 @@ Value *CodeGenFunction::EmitARMBuiltinExpr(unsigned BuiltinID,
       break;
     case ARM::BI__builtin_arm_ldrexd:
     case ARM::BI__builtin_arm_ldrex:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case ARM::BI__ldrexd:
+#endif
       F = CGM.getIntrinsic(Intrinsic::arm_ldrexd);
       break;
     }
@@ -4394,6 +4451,7 @@ Value *CodeGenFunction::EmitARMBuiltinExpr(unsigned BuiltinID,
 
   // The ARM _MoveToCoprocessor builtins put the input register value as
   // the first argument, but the LLVM intrinsic expects it as the third one.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ARM::BI_MoveToCoprocessor:
   case ARM::BI_MoveToCoprocessor2: {
     Function *F = CGM.getIntrinsic(BuiltinID == ARM::BI_MoveToCoprocessor ?
@@ -4401,6 +4459,7 @@ Value *CodeGenFunction::EmitARMBuiltinExpr(unsigned BuiltinID,
     return Builder.CreateCall(F, {Ops[1], Ops[2], Ops[0],
                                   Ops[3], Ops[4], Ops[5]});
   }
+#endif
   }
 
   // Get the last argument, which specifies the vector type.

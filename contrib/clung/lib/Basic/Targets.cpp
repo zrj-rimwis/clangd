@@ -760,6 +760,7 @@ protected:
       }
     }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Opts.MicrosoftExt) {
       Builder.defineMacro("_MSC_EXTENSIONS");
 
@@ -769,6 +770,7 @@ protected:
         Builder.defineMacro("_NATIVE_NULLPTR_SUPPORTED");
       }
     }
+#endif
 
     Builder.defineMacro("_INTEGRAL_MAX_BITS", "64");
   }
@@ -2812,7 +2814,9 @@ public:
     case CC_X86VectorCall:
     case CC_C:
     case CC_Swift:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case CC_X86Pascal:
+#endif
     case CC_IntelOclBicc:
       return CCCR_OK;
     default:
@@ -3719,6 +3723,7 @@ void X86TargetInfo::getTargetDefines(const LangOptions &Opts,
     break;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Opts.MicrosoftExt && getTriple().getArch() == llvm::Triple::x86) {
     switch (SSELevel) {
     case AVX512F:
@@ -3738,6 +3743,7 @@ void X86TargetInfo::getTargetDefines(const LangOptions &Opts,
       Builder.defineMacro("_M_IX86_FP", Twine(0));
     }
   }
+#endif
 
   // Each case falls through to the previous one here.
   switch (MMX3DNowLevel) {
@@ -4181,12 +4187,18 @@ static void addCygMingDefines(const LangOptions &Opts, MacroBuilder &Builder) {
   // Mingw and cygwin define __declspec(a) to __attribute__((a)).  Clang
   // supports __declspec natively under -fms-extensions, but we define a no-op
   // __declspec macro anyway for pre-processor compatibility.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Opts.MicrosoftExt)
     Builder.defineMacro("__declspec", "__declspec");
   else
+#endif
     Builder.defineMacro("__declspec(a)", "__attribute__((a))");
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!Opts.MicrosoftExt) {
+#else
+  if (!false) {
+#endif
     // Provide macros for all the calling convention keywords.  Provide both
     // single and double underscore prefixed variants.  These are available on
     // x64 as well as x86, even though they have no effect.
@@ -4370,7 +4382,9 @@ public:
     ComplexLongDoubleUsesFP2Ret = true;
 
     // Make __builtin_ms_va_list available.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     HasBuiltinMSVaList = true;
+#endif
 
     // x86-64 has atomics up to 16 bytes.
     MaxAtomicPromoteWidth = 128;
@@ -5606,6 +5620,7 @@ public:
 };
 
 // Windows ARM, MS (C++) ABI
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MicrosoftARMleTargetInfo : public WindowsARMTargetInfo {
 public:
   MicrosoftARMleTargetInfo(const llvm::Triple &Triple,
@@ -5620,6 +5635,7 @@ public:
     WindowsARMTargetInfo::getVisualStudioDefines(Opts, Builder);
   }
 };
+#endif
 
 // ARM MinGW target
 class MinGWARMTargetInfo : public WindowsARMTargetInfo {
@@ -8260,7 +8276,11 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
         return new ItaniumWindowsARMleTargetInfo(Triple, Opts);
       case llvm::Triple::MSVC:
       default: // Assume MSVC for unknown environments
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // hmm
         return new MicrosoftARMleTargetInfo(Triple, Opts);
+#else
+        return new MinGWARMTargetInfo(Triple, Opts);
+#endif
       }
     default:
       return new ARMleTargetInfo(Triple, Opts);

@@ -330,48 +330,60 @@ AttributedStmt *AttributedStmt::CreateEmpty(const ASTContext &C,
 std::string AsmStmt::generateAsmString(const ASTContext &C) const {
   if (const GCCAsmStmt *gccAsmStmt = dyn_cast<GCCAsmStmt>(this))
     return gccAsmStmt->generateAsmString(C);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const MSAsmStmt *msAsmStmt = dyn_cast<MSAsmStmt>(this))
     return msAsmStmt->generateAsmString(C);
+#endif
   llvm_unreachable("unknown asm statement kind!");
 }
 
 StringRef AsmStmt::getOutputConstraint(unsigned i) const {
   if (const GCCAsmStmt *gccAsmStmt = dyn_cast<GCCAsmStmt>(this))
     return gccAsmStmt->getOutputConstraint(i);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const MSAsmStmt *msAsmStmt = dyn_cast<MSAsmStmt>(this))
     return msAsmStmt->getOutputConstraint(i);
+#endif
   llvm_unreachable("unknown asm statement kind!");
 }
 
 const Expr *AsmStmt::getOutputExpr(unsigned i) const {
   if (const GCCAsmStmt *gccAsmStmt = dyn_cast<GCCAsmStmt>(this))
     return gccAsmStmt->getOutputExpr(i);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const MSAsmStmt *msAsmStmt = dyn_cast<MSAsmStmt>(this))
     return msAsmStmt->getOutputExpr(i);
+#endif
   llvm_unreachable("unknown asm statement kind!");
 }
 
 StringRef AsmStmt::getInputConstraint(unsigned i) const {
   if (const GCCAsmStmt *gccAsmStmt = dyn_cast<GCCAsmStmt>(this))
     return gccAsmStmt->getInputConstraint(i);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const MSAsmStmt *msAsmStmt = dyn_cast<MSAsmStmt>(this))
     return msAsmStmt->getInputConstraint(i);
+#endif
   llvm_unreachable("unknown asm statement kind!");
 }
 
 const Expr *AsmStmt::getInputExpr(unsigned i) const {
   if (const GCCAsmStmt *gccAsmStmt = dyn_cast<GCCAsmStmt>(this))
     return gccAsmStmt->getInputExpr(i);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const MSAsmStmt *msAsmStmt = dyn_cast<MSAsmStmt>(this))
     return msAsmStmt->getInputExpr(i);
+#endif
   llvm_unreachable("unknown asm statement kind!");
 }
 
 StringRef AsmStmt::getClobber(unsigned i) const {
   if (const GCCAsmStmt *gccAsmStmt = dyn_cast<GCCAsmStmt>(this))
     return gccAsmStmt->getClobber(i);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const MSAsmStmt *msAsmStmt = dyn_cast<MSAsmStmt>(this))
     return msAsmStmt->getClobber(i);
+#endif
   llvm_unreachable("unknown asm statement kind!");
 }
 
@@ -668,6 +680,7 @@ std::string GCCAsmStmt::generateAsmString(const ASTContext &C) const {
 }
 
 /// Assemble final IR asm string (MS-style).
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 std::string MSAsmStmt::generateAsmString(const ASTContext &C) const {
   // FIXME: This needs to be translated into the IR string representation.
   return AsmStr;
@@ -683,6 +696,7 @@ Expr *MSAsmStmt::getInputExpr(unsigned i) {
 void MSAsmStmt::setInputExpr(unsigned i, Expr *E) {
   Exprs[i + NumOutputs] = E;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // Constructors
@@ -712,6 +726,7 @@ GCCAsmStmt::GCCAsmStmt(const ASTContext &C, SourceLocation asmloc,
   std::copy(clobbers, clobbers + NumClobbers, Clobbers);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 MSAsmStmt::MSAsmStmt(const ASTContext &C, SourceLocation asmloc,
                      SourceLocation lbraceloc, bool issimple, bool isvolatile,
                      ArrayRef<Token> asmtoks, unsigned numoutputs,
@@ -725,11 +740,15 @@ MSAsmStmt::MSAsmStmt(const ASTContext &C, SourceLocation asmloc,
 
   initialize(C, asmstr, asmtoks, constraints, exprs, clobbers);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static StringRef copyIntoContext(const ASTContext &C, StringRef str) {
   return str.copy(C);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MSAsmStmt::initialize(const ASTContext &C, StringRef asmstr,
                            ArrayRef<Token> asmtoks,
                            ArrayRef<StringRef> constraints,
@@ -762,6 +781,7 @@ void MSAsmStmt::initialize(const ASTContext &C, StringRef asmstr,
                    return copyIntoContext(C, Clobber);
                  });
 }
+#endif
 
 IfStmt::IfStmt(const ASTContext &C, SourceLocation IL, bool IsConstexpr,
                Stmt *init, VarDecl *var, Expr *cond, Stmt *then,

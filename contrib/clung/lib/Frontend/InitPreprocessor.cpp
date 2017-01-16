@@ -607,8 +607,10 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   if (LangOpts.ObjC2)
     Builder.defineMacro("OBJC_NEW_PROPERTIES");
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (LangOpts.PascalStrings)
     Builder.defineMacro("__PASCAL_STRINGS__");
+#endif
 
   if (LangOpts.Blocks) {
     Builder.defineMacro("__block", "__attribute__((__blocks__(byref)))");
@@ -631,6 +633,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("__private_extern__", "extern");
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (LangOpts.MicrosoftExt) {
     if (LangOpts.WChar) {
       // wchar_t supported as a keyword.
@@ -638,6 +641,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
       Builder.defineMacro("_NATIVE_WCHAR_T_DEFINED");
     }
   }
+#endif
 
   if (LangOpts.Optimize)
     Builder.defineMacro("__OPTIMIZE__");

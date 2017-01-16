@@ -66,8 +66,12 @@ bool Builtin::Context::builtinIsSupported(const Builtin::Info &BuiltinInfo,
     LangOpts.NoMathBuiltin && BuiltinInfo.HeaderName &&
     llvm::StringRef(BuiltinInfo.HeaderName).equals("math.h");
   bool GnuModeUnsupported = !LangOpts.GNUMode && (BuiltinInfo.Langs & GNU_LANG);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // XXX assume false?
   bool MSModeUnsupported =
       !LangOpts.MicrosoftExt && (BuiltinInfo.Langs & MS_LANG);
+#else
+  bool MSModeUnsupported = false;
+#endif
   bool ObjCUnsupported = !LangOpts.ObjC1 && BuiltinInfo.Langs == OBJC_LANG;
   bool OclCUnsupported = LangOpts.OpenCLVersion != 200 &&
                          BuiltinInfo.Langs == OCLC20_LANG;

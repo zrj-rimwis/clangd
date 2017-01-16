@@ -104,6 +104,7 @@ BUILTIN(__builtin_arm_wsr64, "vcC*LLUi", "nc")
 BUILTIN(__builtin_arm_wsrp, "vcC*vC*", "nc")
 
 // MSVC
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LANGBUILTIN(__emit, "vIUiC", "", ALL_MS_LANGUAGES)
 
 LANGBUILTIN(__yield, "v", "", ALL_MS_LANGUAGES)
@@ -120,6 +121,7 @@ LANGBUILTIN(_MoveFromCoprocessor, "UiIUiIUiIUiIUiIUi", "", ALL_MS_LANGUAGES)
 LANGBUILTIN(_MoveFromCoprocessor2, "UiIUiIUiIUiIUiIUi", "", ALL_MS_LANGUAGES)
 LANGBUILTIN(_MoveToCoprocessor, "vUiIUiIUiIUiIUiIUi", "", ALL_MS_LANGUAGES)
 LANGBUILTIN(_MoveToCoprocessor2, "vUiIUiIUiIUiIUiIUi", "", ALL_MS_LANGUAGES)
+#endif
 
 #undef BUILTIN
 #undef LANGBUILTIN

@@ -267,6 +267,7 @@ void ASTStmtWriter::VisitGCCAsmStmt(GCCAsmStmt *S) {
   Code = serialization::STMT_GCCASM;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtWriter::VisitMSAsmStmt(MSAsmStmt *S) {
   VisitAsmStmt(S);
   Record.AddSourceLocation(S->getLBraceLoc());
@@ -299,6 +300,7 @@ void ASTStmtWriter::VisitMSAsmStmt(MSAsmStmt *S) {
 
   Code = serialization::STMT_MSASM;
 }
+#endif
 
 void ASTStmtWriter::VisitCoroutineBodyStmt(CoroutineBodyStmt *S) {
   // FIXME: Implement coroutine serialization.
@@ -440,7 +442,11 @@ void ASTStmtWriter::VisitStringLiteral(StringLiteral *E) {
   Record.push_back(E->getByteLength());
   Record.push_back(E->getNumConcatenated());
   Record.push_back(E->getKind());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Record.push_back(E->isPascal());
+#else
+  Record.push_back(false);
+#endif
   // FIXME: String data should be stored as a blob at the end of the
   // StringLiteral. However, we can't do so now because we have no
   // provision for coping with abbreviations when we're jumping around
@@ -1726,6 +1732,7 @@ void ASTStmtWriter::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *E) {
   Code = serialization::EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtWriter::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
   VisitExpr(E);
   Record.AddSourceRange(E->getSourceRange());
@@ -1738,6 +1745,7 @@ void ASTStmtWriter::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
     Code = serialization::EXPR_CXX_UUIDOF_EXPR;
   }
 }
+#endif
 
 void ASTStmtWriter::VisitSEHExceptStmt(SEHExceptStmt *S) {
   VisitStmt(S);

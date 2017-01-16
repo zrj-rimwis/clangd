@@ -720,6 +720,7 @@ Sema::LookupInlineAsmVarDeclField(Expr *E, StringRef Member,
   return Result;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc, SourceLocation LBraceLoc,
                                 ArrayRef<Token> AsmToks,
                                 StringRef AsmString,
@@ -737,6 +738,7 @@ StmtResult Sema::ActOnMSAsmStmt(SourceLocation AsmLoc, SourceLocation LBraceLoc,
                             Clobbers, EndLoc);
   return NS;
 }
+#endif
 
 LabelDecl *Sema::GetOrCreateMSAsmLabel(StringRef ExternalLabelName,
                                        SourceLocation Location,

@@ -1552,6 +1552,7 @@ public:
 private:
   /// Identifiers used for SEH handling in Borland. These are only
   /// allowed in particular circumstances
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   // __except block
   IdentifierInfo *Ident__exception_code,
                  *Ident___exception_code,
@@ -1564,11 +1565,14 @@ private:
   IdentifierInfo *Ident__abnormal_termination,
                  *Ident___abnormal_termination,
                  *Ident_AbnormalTermination;
+#endif
 
   const char *getCurLexerEndPos();
 
 public:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void PoisonSEHIdentifiers(bool Poison = true); // Borland
+#endif
 
   /// \brief Callback invoked when the lexer reads an identifier and has
   /// filled in the tokens IdentifierInfo member. 

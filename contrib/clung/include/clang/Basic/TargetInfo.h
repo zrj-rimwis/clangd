@@ -91,7 +91,9 @@ protected:
   unsigned RealTypeUsesObjCFPRet : 3;
   unsigned ComplexLongDoubleUsesFP2Ret : 1;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   unsigned HasBuiltinMSVaList : 1;
+#endif
 
   // TargetInfo Constructor.  Default initializes all fields.
   TargetInfo(const llvm::Triple &T);
@@ -564,7 +566,9 @@ public:
 
   /// Returns whether or not type \c __builtin_ms_va_list type is
   /// available on this target.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool hasBuiltinMSVaList() const { return HasBuiltinMSVaList; }
+#endif
 
   /// \brief Returns whether the passed in string is a valid clobber in an
   /// inline asm statement.

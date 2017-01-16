@@ -735,7 +735,9 @@ bool Sema::containsUnexpandedParameterPacks(Declarator &D) {
   case TST_enum:
   case TST_union:
   case TST_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TST_interface:
+#endif
   case TST_class:
   case TST_auto:
   case TST_auto_type:

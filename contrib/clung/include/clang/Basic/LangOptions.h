@@ -58,12 +58,14 @@ public:
     SOB_Trapping    // -ftrapv
   };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   enum PragmaMSPointersToMembersKind {
     PPTMK_BestCase,
     PPTMK_FullGeneralitySingleInheritance,
     PPTMK_FullGeneralityMultipleInheritance,
     PPTMK_FullGeneralityVirtualInheritance
   };
+#endif
 
   enum DefaultCallingConvention {
     DCC_None,

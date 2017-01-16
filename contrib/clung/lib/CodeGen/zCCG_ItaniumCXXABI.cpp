@@ -483,8 +483,10 @@ CodeGen::CGCXXABI *CodeGen::CreateItaniumCXXABI(CodeGenModule &CGM) {
     }
     return new ItaniumCXXABI(CGM);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TargetCXXABI::Microsoft:
     llvm_unreachable("Microsoft ABI is not Itanium-based");
+#endif
   }
   llvm_unreachable("bad ABI kind");
 }
@@ -1325,7 +1327,9 @@ ItaniumCXXABI::GetVirtualBaseClassOffset(CodeGenFunction &CGF,
 
 void ItaniumCXXABI::EmitCXXConstructors(const CXXConstructorDecl *D) {
   // Just make sure we're in sync with TargetCXXABI.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // we are :)
   assert(CGM.getTarget().getCXXABI().hasConstructorVariants());
+#endif
 
   // The constructor used for constructing this as a base class;
   // ignores virtual bases.
@@ -1577,10 +1581,12 @@ llvm::GlobalVariable *ItaniumCXXABI::getAddrOfVTable(const CXXRecordDecl *RD,
       Name, ArrayType, llvm::GlobalValue::ExternalLinkage);
   VTable->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // what these are doing here?
   if (RD->hasAttr<DLLImportAttr>())
     VTable->setDLLStorageClass(llvm::GlobalValue::DLLImportStorageClass);
   else if (RD->hasAttr<DLLExportAttr>())
     VTable->setDLLStorageClass(llvm::GlobalValue::DLLExportStorageClass);
+#endif
 
   return VTable;
 }
@@ -2512,8 +2518,10 @@ ItaniumRTTIBuilder::GetAddrOfExternalRTTIDescriptor(QualType Ty) {
                                   Name);
     if (const RecordType *RecordTy = dyn_cast<RecordType>(Ty)) {
       const CXXRecordDecl *RD = cast<CXXRecordDecl>(RecordTy->getDecl());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (RD->hasAttr<DLLImportAttr>())
         GV->setDLLStorageClass(llvm::GlobalVariable::DLLImportStorageClass);
+#endif
     }
   }
 
@@ -2648,12 +2656,20 @@ static bool ShouldUseExternalRTTIDescriptor(CodeGenModule &CGM,
     // changes.
     // N.B. We must always emit the RTTI data ourselves if there exists a key
     // function.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     bool IsDLLImport = RD->hasAttr<DLLImportAttr>();
+#endif
     if (CGM.getVTables().isVTableExternal(RD))
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       return IsDLLImport ? false : true;
+#else
+      return true;
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (IsDLLImport)
       return true;
+#endif
   }
 
   return false;
@@ -2889,9 +2905,11 @@ static llvm::GlobalVariable::LinkageTypes getTypeInfoLinkage(CodeGenModule &CGM,
         llvm::GlobalValue::LinkageTypes LT = CGM.getVTableLinkage(RD);
         // MinGW won't export the RTTI information when there is a key function.
         // Make sure we emit our own copy instead of attempting to dllimport it.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (RD->hasAttr<DLLImportAttr>() &&
             llvm::GlobalValue::isAvailableExternallyLinkage(LT))
           LT = llvm::GlobalValue::LinkOnceODRLinkage;
+#endif
         return LT;
       }
     }

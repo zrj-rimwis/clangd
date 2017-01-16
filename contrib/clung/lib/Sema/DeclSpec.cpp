@@ -297,7 +297,9 @@ bool Declarator::isDeclarationOfFunction() const {
     case TST_int:
     case TST_int128:
     case TST_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case TST_interface:
+#endif
     case TST_union:
     case TST_unknown_anytype:
     case TST_unspecified:
@@ -450,7 +452,11 @@ const char *DeclSpec::getSpecifierName(DeclSpec::TST T,
   case DeclSpec::TST_unspecified: return "unspecified";
   case DeclSpec::TST_void:        return "void";
   case DeclSpec::TST_char:        return "char";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case DeclSpec::TST_wchar:       return Policy.MSWChar ? "__wchar_t" : "wchar_t";
+#else
+  case DeclSpec::TST_wchar:       return "wchar_t";
+#endif
   case DeclSpec::TST_char16:      return "char16_t";
   case DeclSpec::TST_char32:      return "char32_t";
   case DeclSpec::TST_int:         return "int";
@@ -467,7 +473,9 @@ const char *DeclSpec::getSpecifierName(DeclSpec::TST T,
   case DeclSpec::TST_class:       return "class";
   case DeclSpec::TST_union:       return "union";
   case DeclSpec::TST_struct:      return "struct";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case DeclSpec::TST_interface:   return "__interface";
+#endif
   case DeclSpec::TST_typename:    return "type-name";
   case DeclSpec::TST_typeofType:
   case DeclSpec::TST_typeofExpr:  return "typeof";

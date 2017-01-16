@@ -461,6 +461,7 @@ struct VirtualBaseInfo {
   VPtrInfoVector VBPtrPaths;
 };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MicrosoftVTableContext : public VTableContextBase {
 public:
   struct MethodVFTableLocation {
@@ -560,6 +561,7 @@ public:
 
   static bool classof(const VTableContextBase *VT) { return VT->isMicrosoft(); }
 };
+#endif
 
 } // namespace clang
 

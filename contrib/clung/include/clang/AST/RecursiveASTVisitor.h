@@ -1995,11 +1995,13 @@ DEF_TRAVERSE_STMT(GCCAsmStmt, {
   // children() iterates over inputExpr and outputExpr.
 })
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // wow... so lets hook it anyway?
 DEF_TRAVERSE_STMT(
     MSAsmStmt,
     {// FIXME: MS Asm doesn't currently parse Constraints, Clobbers, etc.  Once
      // added this needs to be implemented.
     })
+#endif
 
 DEF_TRAVERSE_STMT(CXXCatchStmt, {
   TRY_TO(TraverseDecl(S->getExceptionDecl()));
@@ -2218,12 +2220,14 @@ DEF_TRAVERSE_STMT(MSPropertyRefExpr, {
 
 DEF_TRAVERSE_STMT(MSPropertySubscriptExpr, {})
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 DEF_TRAVERSE_STMT(CXXUuidofExpr, {
   // The child-iterator will pick up the arg if it's an expression,
   // but not if it's a type.
   if (S->isTypeOperand())
     TRY_TO(TraverseTypeLoc(S->getTypeOperandSourceInfo()->getTypeLoc()));
 })
+#endif
 
 DEF_TRAVERSE_STMT(TypeTraitExpr, {
   for (unsigned I = 0, N = S->getNumArgs(); I != N; ++I)

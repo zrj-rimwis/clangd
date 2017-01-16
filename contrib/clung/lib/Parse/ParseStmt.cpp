@@ -274,14 +274,19 @@ Retry:
 
   case tok::kw_asm: {
     ProhibitAttributes(Attrs);
+//#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // pretend false
     bool msAsm = false;
+//#endif
     Res = ParseAsmStatement(msAsm);
     Res = Actions.ActOnFinishFullStmt(Res.get());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (msAsm) return Res;
+#endif
     SemiError = "asm";
     break;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___if_exists:
   case tok::kw___if_not_exists:
     ProhibitAttributes(Attrs);
@@ -289,18 +294,23 @@ Retry:
     // An __if_exists block is like a compound statement, but it doesn't create
     // a new scope.
     return StmtEmpty();
+#endif
 
   case tok::kw_try:                 // C++ 15: try-block
     return ParseCXXTryBlock();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___try:
     ProhibitAttributes(Attrs); // TODO: is it correct?
     return ParseSEHTryBlock();
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___leave:
     Res = ParseSEHLeaveStatement();
     SemiError = "__leave";
     break;
+#endif
 
   case tok::annot_pragma_vis:
     ProhibitAttributes(Attrs);
@@ -312,10 +322,12 @@ Retry:
     HandlePragmaPack();
     return StmtEmpty();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::annot_pragma_msstruct:
     ProhibitAttributes(Attrs);
     HandlePragmaMSStruct();
     return StmtEmpty();
+#endif
 
   case tok::annot_pragma_align:
     ProhibitAttributes(Attrs);
@@ -356,6 +368,7 @@ Retry:
     ProhibitAttributes(Attrs);
     return ParseOpenMPDeclarativeOrExecutableDirective(Allowed);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::annot_pragma_ms_pointers_to_members:
     ProhibitAttributes(Attrs);
     HandlePragmaMSPointersToMembers();
@@ -370,6 +383,7 @@ Retry:
     ProhibitAttributes(Attrs);
     HandlePragmaMSVtorDisp();
     return StmtEmpty();
+#endif
 
   case tok::annot_pragma_loop_hint:
     ProhibitAttributes(Attrs);
@@ -435,6 +449,7 @@ StmtResult Parser::ParseExprStatement() {
 ///   seh-except-block
 ///   seh-finally-block
 ///
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Parser::ParseSEHTryBlock() {
   assert(Tok.is(tok::kw___try) && "Expected '__try'");
   SourceLocation TryLoc = ConsumeToken();
@@ -467,6 +482,7 @@ StmtResult Parser::ParseSEHTryBlock() {
                                   TryBlock.get(),
                                   Handler.get());
 }
+#endif
 
 /// ParseSEHExceptBlock - Handle __except
 ///
@@ -474,9 +490,11 @@ StmtResult Parser::ParseSEHTryBlock() {
 ///   '__except' '(' seh-filter-expression ')' compound-statement
 ///
 StmtResult Parser::ParseSEHExceptBlock(SourceLocation ExceptLoc) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PoisonIdentifierRAIIObject raii(Ident__exception_code, false),
     raii2(Ident___exception_code, false),
     raii3(Ident_GetExceptionCode, false);
+#endif
 
   if (ExpectAndConsume(tok::l_paren))
     return StmtError();
@@ -484,11 +502,13 @@ StmtResult Parser::ParseSEHExceptBlock(SourceLocation ExceptLoc) {
   ParseScope ExpectScope(this, Scope::DeclScope | Scope::ControlScope |
                                    Scope::SEHExceptScope);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().Borland) {
     Ident__exception_info->setIsPoisoned(false);
     Ident___exception_info->setIsPoisoned(false);
     Ident_GetExceptionInfo->setIsPoisoned(false);
   }
+#endif
 
   ExprResult FilterExpr;
   {
@@ -497,11 +517,13 @@ StmtResult Parser::ParseSEHExceptBlock(SourceLocation ExceptLoc) {
     FilterExpr = Actions.CorrectDelayedTyposInExpr(ParseExpression());
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().Borland) {
     Ident__exception_info->setIsPoisoned(true);
     Ident___exception_info->setIsPoisoned(true);
     Ident_GetExceptionInfo->setIsPoisoned(true);
   }
+#endif
 
   if(FilterExpr.isInvalid())
     return StmtError();
@@ -526,9 +548,11 @@ StmtResult Parser::ParseSEHExceptBlock(SourceLocation ExceptLoc) {
 ///   '__finally' compound-statement
 ///
 StmtResult Parser::ParseSEHFinallyBlock(SourceLocation FinallyLoc) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PoisonIdentifierRAIIObject raii(Ident__abnormal_termination, false),
     raii2(Ident___abnormal_termination, false),
     raii3(Ident_AbnormalTermination, false);
+#endif
 
   if (Tok.isNot(tok::l_brace))
     return StmtError(Diag(Tok, diag::err_expected) << tok::l_brace);
@@ -550,10 +574,12 @@ StmtResult Parser::ParseSEHFinallyBlock(SourceLocation FinallyLoc) {
 /// seh-leave-statement:
 ///   '__leave' ';'
 ///
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Parser::ParseSEHLeaveStatement() {
   SourceLocation LeaveLoc = ConsumeToken();  // eat the '__leave'.
   return Actions.ActOnSEHLeaveStmt(LeaveLoc, getCurScope());
 }
+#endif
 
 /// ParseLabeledStatement - We have an identifier and a ':' after it.
 ///
@@ -879,9 +905,11 @@ void Parser::ParseCompoundStatementLeadingPragmas() {
     case tok::annot_pragma_pack:
       HandlePragmaPack();
       break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::annot_pragma_msstruct:
       HandlePragmaMSStruct();
       break;
+#endif
     case tok::annot_pragma_align:
       HandlePragmaAlign();
       break;
@@ -900,6 +928,7 @@ void Parser::ParseCompoundStatementLeadingPragmas() {
     case tok::annot_pragma_fp_contract:
       HandlePragmaFPContract();
       break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::annot_pragma_ms_pointers_to_members:
       HandlePragmaMSPointersToMembers();
       break;
@@ -909,6 +938,7 @@ void Parser::ParseCompoundStatementLeadingPragmas() {
     case tok::annot_pragma_ms_vtordisp:
       HandlePragmaMSVtorDisp();
       break;
+#endif
     case tok::annot_pragma_dump:
       HandlePragmaDump();
       break;
@@ -2079,7 +2109,11 @@ StmtResult Parser::ParseCXXTryBlockCommon(SourceLocation TryLoc, bool FnTry) {
 
   if ((Tok.is(tok::identifier) &&
        Tok.getIdentifierInfo() == getSEHExceptKeyword()) ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       Tok.is(tok::kw___finally)) {
+#else
+      false) {
+#endif
     // TODO: Factor into common return ParseSEHHandlerCommon(...)
     StmtResult Handler;
     if(Tok.getIdentifierInfo() == getSEHExceptKeyword()) {
@@ -2180,6 +2214,7 @@ StmtResult Parser::ParseCXXCatchBlock(bool FnCatch) {
   return Actions.ActOnCXXCatchBlock(CatchLoc, ExceptionDecl, Block.get());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::ParseMicrosoftIfExistsStatement(StmtVector &Stmts) {
   IfExistsCondition Result;
   if (ParseMicrosoftIfExistsCondition(Result))
@@ -2236,6 +2271,7 @@ void Parser::ParseMicrosoftIfExistsStatement(StmtVector &Stmts) {
   }
   Braces.consumeClose();
 }
+#endif
 
 bool Parser::ParseOpenCLUnrollHintAttribute(ParsedAttributes &Attrs) {
   MaybeParseGNUAttributes(Attrs);

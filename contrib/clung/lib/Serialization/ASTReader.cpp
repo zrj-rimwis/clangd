@@ -3190,6 +3190,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
       OptimizeOffPragmaLocation = ReadSourceLocation(F, Record[0]);
       break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case MSSTRUCT_PRAGMA_OPTIONS:
       if (Record.size() != 1) {
         Error("invalid pragma ms_struct record");
@@ -3197,6 +3198,7 @@ ASTReader::ReadASTBlock(ModuleFile &F, unsigned ClientLoadCapabilities) {
       }
       PragmaMSStructState = Record[0];
       break;
+#endif
 
     case POINTERS_TO_MEMBERS_PRAGMA_OPTIONS:
       if (Record.size() != 2) {
@@ -6957,14 +6959,18 @@ void ASTReader::UpdateSema() {
   // pragma in the source.
   if(OptimizeOffPragmaLocation.isValid())
     SemaObj->ActOnPragmaOptimize(/* IsOn = */ false, OptimizeOffPragmaLocation);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume -1
   if (PragmaMSStructState != -1)
     SemaObj->ActOnPragmaMSStruct((PragmaMSStructKind)PragmaMSStructState);
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op
   if (PointersToMembersPragmaLocation.isValid()) {
     SemaObj->ActOnPragmaMSPointersToMembers(
         (LangOptions::PragmaMSPointersToMembersKind)
             PragmaMSPointersToMembersState,
         PointersToMembersPragmaLocation);
   }
+#endif
 }
 
 IdentifierInfo *ASTReader::get(StringRef Name) {
@@ -8705,7 +8711,9 @@ ASTReader::ASTReader(
       Consumer(nullptr), ModuleMgr(PP.getFileManager(), PCHContainerRdr),
       DummyIdResolver(PP),
       ReadTimer(std::move(ReadTimer)),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       PragmaMSStructState(-1),
+#endif
       PragmaMSPointersToMembersState(-1),
       isysroot(isysroot), DisableValidation(DisableValidation),
       AllowASTWithCompilerErrors(AllowASTWithCompilerErrors),

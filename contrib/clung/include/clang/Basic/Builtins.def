@@ -706,6 +706,7 @@ BUILTIN(__builtin_index, "c*cC*i", "Fn")
 BUILTIN(__builtin_rindex, "c*cC*i", "Fn")
 
 // Microsoft builtins.  These are only active with -fms-extensions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LANGBUILTIN(_alloca,          "v*z", "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(__assume,         "vb",  "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(__debugbreak,     "v",   "n", ALL_MS_LANGUAGES)
@@ -726,9 +727,12 @@ LANGBUILTIN(_InterlockedIncrement,       "LiLiD*",     "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(__noop,           "i.",  "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(__readfsdword,    "ULiULi", "n", ALL_MS_LANGUAGES)
 LANGBUILTIN(__va_start,       "vc**.", "nt", ALL_MS_LANGUAGES)
+#endif
 
 // Microsoft library builtins.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LIBBUILTIN(_setjmpex, "iJ", "fj",   "setjmpex.h", ALL_MS_LANGUAGES)
+#endif
 
 // C99 library functions
 // C99 stdlib.h

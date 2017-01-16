@@ -1484,7 +1484,9 @@ private:
   unsigned Length;
   unsigned CharByteWidth : 4;
   unsigned Kind : 3;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   unsigned IsPascal : 1;
+#endif
   unsigned NumConcatenated;
   SourceLocation TokLocs[1];
 
@@ -1559,7 +1561,9 @@ public:
   bool isUTF8() const { return Kind == UTF8; }
   bool isUTF16() const { return Kind == UTF16; }
   bool isUTF32() const { return Kind == UTF32; }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool isPascal() const { return IsPascal; }
+#endif
 
   bool containsNonAsciiOrNull() const {
     StringRef Str = getString();
@@ -3675,8 +3679,10 @@ public:
   void setSubExpr(Expr *E) { Val = E; }
 
   /// Returns whether this is really a Win64 ABI va_arg expression.
+//#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // must be present for ms_abi!
   bool isMicrosoftABI() const { return TInfo.getInt(); }
   void setIsMicrosoftABI(bool IsMS) { TInfo.setInt(IsMS); }
+//#endif
 
   TypeSourceInfo *getWrittenTypeInfo() const { return TInfo.getPointer(); }
   void setWrittenTypeInfo(TypeSourceInfo *TI) { TInfo.setPointer(TI); }

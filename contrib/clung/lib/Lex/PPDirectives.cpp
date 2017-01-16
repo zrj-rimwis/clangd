@@ -238,9 +238,13 @@ bool Preprocessor::CheckMacroName(Token &MacroNameTok, MacroUse isDefineUndef,
 
     // C++ 2.5p2: Alternative tokens behave the same as its primary token
     // except for their spellings.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     Diag(MacroNameTok, getLangOpts().MicrosoftExt
                            ? diag::ext_pp_operator_used_as_macro_name
                            : diag::err_pp_operator_used_as_macro_name)
+#else
+    Diag(MacroNameTok, diag::err_pp_operator_used_as_macro_name)
+#endif
         << II << MacroNameTok.getKind();
 
     // Allow #defining |and| and friends for Microsoft compatibility or
@@ -1181,10 +1185,12 @@ void Preprocessor::HandleLineDirective(Token &Tok) {
     assert(Literal.isAscii() && "Didn't allow wide strings in");
     if (Literal.hadError)
       return DiscardUntilEndOfDirective();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Literal.Pascal) {
       Diag(StrTok, diag::err_pp_linemarker_invalid_filename);
       return DiscardUntilEndOfDirective();
     }
+#endif
     FilenameID = SourceMgr.getLineTableFilenameID(Literal.GetString());
 
     // Verify that there is nothing after the string, other than EOD.  Because
@@ -1317,10 +1323,12 @@ void Preprocessor::HandleDigitDirective(Token &DigitTok) {
     assert(Literal.isAscii() && "Didn't allow wide strings in");
     if (Literal.hadError)
       return DiscardUntilEndOfDirective();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Literal.Pascal) {
       Diag(StrTok, diag::err_pp_linemarker_invalid_filename);
       return DiscardUntilEndOfDirective();
     }
+#endif
     FilenameID = SourceMgr.getLineTableFilenameID(Literal.GetString());
 
     // If a filename was present, read any flags that are present.
@@ -2485,7 +2493,11 @@ void Preprocessor::HandleDefineDirective(Token &DefineTok,
       if ((!getDiagnostics().getSuppressSystemWarnings() ||
            !SourceMgr.isInSystemHeader(DefineTok.getLocation())) &&
           !MI->isIdenticalTo(*OtherMI, *this,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                              /*Syntactic=*/LangOpts.MicrosoftExt)) {
+#else
+                             /*Syntactic=*/false)) {
+#endif
         Diag(MI->getDefinitionLoc(), diag::warn_pp_objc_macro_redef_ignored);
       }
       assert(!OtherMI->isWarnIfUnused());
@@ -2507,7 +2519,11 @@ void Preprocessor::HandleDefineDirective(Token &DefineTok,
       // Macros must be identical.  This means all tokens and whitespace
       // separation must be the same.  C99 6.10.3p2.
       else if (!OtherMI->isAllowRedefinitionsWithoutWarning() &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                !MI->isIdenticalTo(*OtherMI, *this, /*Syntactic=*/LangOpts.MicrosoftExt)) {
+#else
+               !MI->isIdenticalTo(*OtherMI, *this, /*Syntactic=*/false)) {
+#endif
         Diag(MI->getDefinitionLoc(), diag::ext_pp_macro_redef)
           << MacroNameTok.getIdentifierInfo();
         Diag(OtherMI->getDefinitionLoc(), diag::note_previous_definition);

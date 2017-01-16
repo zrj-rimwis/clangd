@@ -3341,6 +3341,7 @@ void Sema::CheckAlignasUnderalignment(Decl *D) {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Sema::checkMSInheritanceAttrOnDefinition(
     CXXRecordDecl *RD, SourceRange Range, bool BestCase,
     MSInheritanceAttr::Spelling SemanticSpelling) {
@@ -3369,6 +3370,7 @@ bool Sema::checkMSInheritanceAttrOnDefinition(
       << RD->getNameAsString();
   return true;
 }
+#endif
 
 /// parseModeAttrArg - Parses attribute mode string and returns parsed type
 /// attribute.
@@ -3789,11 +3791,13 @@ static void handleCallConvAttr(Sema &S, Decl *D, const AttributeList &Attr) {
                CDeclAttr(Attr.getRange(), S.Context,
                          Attr.getAttributeSpellingListIndex()));
     return;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributeList::AT_Pascal:
     D->addAttr(::new (S.Context)
                PascalAttr(Attr.getRange(), S.Context,
                           Attr.getAttributeSpellingListIndex()));
     return;
+#endif
   case AttributeList::AT_SwiftCall:
     D->addAttr(::new (S.Context)
                SwiftCallAttr(Attr.getRange(), S.Context,
@@ -3872,7 +3876,9 @@ bool Sema::CheckCallingConvAttr(const AttributeList &attr, CallingConv &CC,
   case AttributeList::AT_FastCall: CC = CC_X86FastCall; break;
   case AttributeList::AT_StdCall: CC = CC_X86StdCall; break;
   case AttributeList::AT_ThisCall: CC = CC_X86ThisCall; break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributeList::AT_Pascal: CC = CC_X86Pascal; break;
+#endif
   case AttributeList::AT_SwiftCall: CC = CC_Swift; break;
   case AttributeList::AT_VectorCall: CC = CC_X86VectorCall; break;
   case AttributeList::AT_MSABI:
@@ -4622,6 +4628,7 @@ static void handleObjCPreciseLifetimeAttr(Sema &S, Decl *D,
 // Microsoft specific attribute handlers.
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void handleUuidAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   if (!S.LangOpts.CPlusPlus) {
     S.Diag(Attr.getLoc(), diag::err_attribute_not_supported_in_lang)
@@ -4666,7 +4673,9 @@ static void handleUuidAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   D->addAttr(::new (S.Context) UuidAttr(Attr.getRange(), S.Context, StrRef,
                                         Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void handleMSInheritanceAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   if (!S.LangOpts.CPlusPlus) {
     S.Diag(Attr.getLoc(), diag::err_attribute_not_supported_in_lang)
@@ -4682,7 +4691,9 @@ static void handleMSInheritanceAttr(Sema &S, Decl *D, const AttributeList &Attr)
     S.Consumer.AssignInheritanceModel(cast<CXXRecordDecl>(D));
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void handleDeclspecThreadAttr(Sema &S, Decl *D,
                                      const AttributeList &Attr) {
   VarDecl *VD = cast<VarDecl>(D);
@@ -4701,6 +4712,7 @@ static void handleDeclspecThreadAttr(Sema &S, Decl *D,
   VD->addAttr(::new (S.Context) ThreadAttr(
       Attr.getRange(), S.Context, Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
 static void handleAbiTagAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   SmallVector<StringRef, 4> Tags;
@@ -5013,6 +5025,7 @@ static void handleLayoutVersion(Sema &S, Decl *D, const AttributeList &Attr) {
                                    Attr.getAttributeSpellingListIndex()));
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 DLLImportAttr *Sema::mergeDLLImportAttr(Decl *D, SourceRange Range,
                                         unsigned AttrSpellingListIndex) {
   if (D->hasAttr<DLLExportAttr>()) {
@@ -5038,7 +5051,9 @@ DLLExportAttr *Sema::mergeDLLExportAttr(Decl *D, SourceRange Range,
 
   return ::new (Context) DLLExportAttr(Range, Context, AttrSpellingListIndex);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void handleDLLAttr(Sema &S, Decl *D, const AttributeList &A) {
   if (isa<ClassTemplatePartialSpecializationDecl>(D) &&
       S.Context.getTargetInfo().getCXXABI().isMicrosoft()) {
@@ -5072,7 +5087,9 @@ static void handleDLLAttr(Sema &S, Decl *D, const AttributeList &A) {
   if (NewAttr)
     D->addAttr(NewAttr);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 MSInheritanceAttr *
 Sema::mergeMSInheritanceAttr(Decl *D, SourceRange Range, bool BestCase,
                              unsigned AttrSpellingListIndex,
@@ -5108,6 +5125,7 @@ Sema::mergeMSInheritanceAttr(Decl *D, SourceRange Range, bool BestCase,
   return ::new (Context)
       MSInheritanceAttr(Range, Context, BestCase, AttrSpellingListIndex);
 }
+#endif
 
 static void handleCapabilityAttr(Sema &S, Decl *D, const AttributeList &Attr) {
   // The capability attributes take a single string parameter for the name of
@@ -5409,10 +5427,12 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_X86ForceAlignArgPointer:
     handleX86ForceAlignArgPointerAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributeList::AT_DLLExport:
   case AttributeList::AT_DLLImport:
     handleDLLAttr(S, D, Attr);
     break;
+#endif
   case AttributeList::AT_Mips16:
     handleSimpleAttributeWithExclusions<Mips16Attr, MipsInterruptAttr>(S, D,
                                                                        Attr);
@@ -5765,7 +5785,9 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_CDecl:
   case AttributeList::AT_FastCall:
   case AttributeList::AT_ThisCall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributeList::AT_Pascal:
+#endif
   case AttributeList::AT_SwiftCall:
   case AttributeList::AT_VectorCall:
   case AttributeList::AT_MSABI:
@@ -5808,6 +5830,7 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_LayoutVersion:
     handleLayoutVersion(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributeList::AT_MSNoVTable:
     handleSimpleAttribute<MSNoVTableAttr>(S, D, Attr);
     break;
@@ -5826,6 +5849,7 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_Thread:
     handleDeclspecThreadAttr(S, D, Attr);
     break;
+#endif
 
   case AttributeList::AT_AbiTag:
     handleAbiTagAttr(S, D, Attr);

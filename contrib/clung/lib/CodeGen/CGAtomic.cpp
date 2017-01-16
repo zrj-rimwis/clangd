@@ -1269,6 +1269,7 @@ llvm::Value *AtomicInfo::EmitAtomicLoadOp(llvm::AtomicOrdering AO,
 /// we are operating under /volatile:ms *and* the LValue itself is volatile and
 /// performing such an operation can be performed without a libcall.
 bool CodeGenFunction::LValueIsSuitableForInlineAtomic(LValue LV) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // XXX assume not needed
   if (!CGM.getCodeGenOpts().MSVolatile) return false;
   AtomicInfo AI(*this, LV);
   bool IsVolatile = LV.isVolatile() || hasVolatileMember(LV.getType());
@@ -1279,6 +1280,9 @@ bool CodeGenFunction::LValueIsSuitableForInlineAtomic(LValue LV) {
       getContext().getTypeSize(getContext().getIntPtrType()))
     return false;
   return IsVolatile && AtomicIsInline;
+#else
+  return false;
+#endif
 }
 
 RValue CodeGenFunction::EmitAtomicLoad(LValue LV, SourceLocation SL,

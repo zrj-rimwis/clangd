@@ -1075,9 +1075,11 @@ void TargetLoweringObjectFileCOFF::emitLinkerFlagsForGlobal(
 
   const Triple &TT = getTargetTriple();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (TT.isKnownWindowsMSVCEnvironment())
     OS << " /EXPORT:";
   else
+#endif
     OS << " -export:";
 
   if (TT.isWindowsGNUEnvironment() || TT.isWindowsCygwinEnvironment()) {
@@ -1094,9 +1096,11 @@ void TargetLoweringObjectFileCOFF::emitLinkerFlagsForGlobal(
   }
 
   if (!GV->getValueType()->isFunctionTy()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (TT.isKnownWindowsMSVCEnvironment())
       OS << ",DATA";
     else
+#endif
       OS << ",data";
   }
 }

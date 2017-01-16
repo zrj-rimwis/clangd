@@ -77,7 +77,11 @@ ASTRecordLayout::ASTRecordLayout(const ASTContext &Ctx,
 #ifndef NDEBUG
     if (const CXXRecordDecl *PrimaryBase = getPrimaryBase()) {
       if (isPrimaryBaseVirtual()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
         if (Ctx.getTargetInfo().getCXXABI().hasPrimaryVBases()) {
+#else
+        if (true) {
+#endif
           assert(getVBaseClassOffset(PrimaryBase).isZero() &&
                  "Primary virtual base must be at offset 0!");
         }

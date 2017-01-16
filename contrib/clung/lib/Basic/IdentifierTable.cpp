@@ -97,11 +97,19 @@ namespace {
     KEYCXX = 0x2,
     KEYCXX11 = 0x4,
     KEYGNU = 0x8,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     KEYMS = 0x10,
+#else
+    KEYMSz = 0x10,
+#endif
     BOOLSUPPORT = 0x20,
     KEYALTIVEC = 0x40,
     KEYNOCXX = 0x80,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     KEYBORLAND = 0x100,
+#else
+    KEYBORLANDz = 0x100,
+#endif
     KEYOPENCL = 0x200,
     KEYC11 = 0x400,
     KEYARC = 0x800,
@@ -135,8 +143,10 @@ static KeywordStatus getKeywordStatus(const LangOptions &LangOpts,
   if (LangOpts.CPlusPlus11 && (Flags & KEYCXX11)) return KS_Enabled;
   if (LangOpts.C99 && (Flags & KEYC99)) return KS_Enabled;
   if (LangOpts.GNUKeywords && (Flags & KEYGNU)) return KS_Extension;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (LangOpts.MicrosoftExt && (Flags & KEYMS)) return KS_Extension;
   if (LangOpts.Borland && (Flags & KEYBORLAND)) return KS_Extension;
+#endif
   if (LangOpts.Bool && (Flags & BOOLSUPPORT)) return KS_Enabled;
   if (LangOpts.Half && (Flags & HALFSUPPORT)) return KS_Enabled;
   if (LangOpts.WChar && (Flags & WCHARSUPPORT)) return KS_Enabled;

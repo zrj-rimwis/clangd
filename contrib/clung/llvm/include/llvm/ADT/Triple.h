@@ -519,9 +519,11 @@ public:
   }
 
   /// Checks if the environment is MSVC.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isKnownWindowsMSVCEnvironment() const {
     return getOS() == Triple::Win32 && getEnvironment() == Triple::MSVC;
   }
+#endif
 
   bool isWindowsCoreCLREnvironment() const {
     return getOS() == Triple::Win32 && getEnvironment() == Triple::CoreCLR;

@@ -34,8 +34,6 @@ SRCS+=	APValue.cpp \
 	zCA_ItaniumCXXABI.cpp \
 	ItaniumMangle.cpp \
 	Mangle.cpp \
-	zCA_MicrosoftCXXABI.cpp \
-	MicrosoftMangle.cpp \
 	NestedNameSpecifier.cpp \
 	NSAPI.cpp \
 	OpenMPClause.cpp \
@@ -149,7 +147,6 @@ SRCS+=	BackendUtil.cpp \
 	CodeGenTypes.cpp \
 	CoverageMappingGen.cpp \
 	zCCG_ItaniumCXXABI.cpp \
-	zCCG_MicrosoftCXXABI.cpp \
 	ModuleBuilder.cpp \
 	ObjectFilePCHContainerOperations.cpp \
 	SanitizerMetadata.cpp \

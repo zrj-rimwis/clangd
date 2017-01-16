@@ -635,9 +635,11 @@ public:
     return VTables.getItaniumVTableContext();
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   MicrosoftVTableContext &getMicrosoftVTableContext() {
     return VTables.getMicrosoftVTableContext();
   }
+#endif
 
   CtorList &getGlobalCtors() { return GlobalCtors; }
   CtorList &getGlobalDtors() { return GlobalDtors; }
@@ -728,7 +730,9 @@ public:
   llvm::Constant *GetAddrOfRTTIDescriptor(QualType Ty, bool ForEH = false);
 
   /// Get the address of a uuid descriptor .
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ConstantAddress GetAddrOfUuidDescriptor(const CXXUuidofExpr* E);
+#endif
 
   /// Get the address of the thunk for the given global decl.
   llvm::Constant *GetAddrOfThunk(GlobalDecl GD, const ThunkInfo &Thunk);
@@ -1250,7 +1254,9 @@ private:
   void EmitCoverageFile();
 
   /// Emits the initializer for a uuidof string.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   llvm::Constant *EmitUuidofInitializer(StringRef uuidstr);
+#endif
 
   /// Determine whether the definition must be emitted; if this returns \c
   /// false, the definition can be emitted lazily if it's used.

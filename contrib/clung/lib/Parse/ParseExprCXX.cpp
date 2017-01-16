@@ -243,6 +243,7 @@ bool Parser::ParseOptionalCXXScopeSpecifier(CXXScopeSpec &SS,
     }
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Tok.is(tok::kw___super)) {
     SourceLocation SuperLoc = ConsumeToken();
     if (!Tok.is(tok::coloncolon)) {
@@ -252,6 +253,7 @@ bool Parser::ParseOptionalCXXScopeSpecifier(CXXScopeSpec &SS,
 
     return Actions.ActOnSuperScopeSpecifier(SuperLoc, ConsumeToken(), SS);
   }
+#endif
 
   if (!HasScopeSpecifier &&
       Tok.isOneOf(tok::kw_decltype, tok::annot_decltype)) {
@@ -550,8 +552,10 @@ bool Parser::ParseOptionalCXXScopeSpecifier(CXXScopeSpec &SS,
         // parse correctly as a template, so suggest the keyword 'template'
         // before 'getAs' and treat this as a dependent template name.
         unsigned DiagID = diag::err_missing_dependent_template_keyword;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (getLangOpts().MicrosoftExt)
           DiagID = diag::warn_missing_dependent_template_keyword;
+#endif
         
         Diag(Tok.getLocation(), DiagID)
           << II.getName()
@@ -1407,6 +1411,7 @@ ExprResult Parser::ParseCXXTypeid() {
 ///         '__uuidof' '(' expression ')'
 ///         '__uuidof' '(' type-id ')'
 ///
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ExprResult Parser::ParseCXXUuidof() {
   assert(Tok.is(tok::kw___uuidof) && "Not '__uuidof'!");
 
@@ -1449,6 +1454,7 @@ ExprResult Parser::ParseCXXUuidof() {
 
   return Result;
 }
+#endif
 
 /// \brief Parse a C++ pseudo-destructor expression after the base,
 /// . or -> operator, and nested-name-specifier have already been
@@ -1852,9 +1858,11 @@ void Parser::ParseCXXSimpleTypeSpecifier(DeclSpec &DS) {
   case tok::kw_long:
     DS.SetTypeSpecWidth(DeclSpec::TSW_long, Loc, PrevSpec, DiagID, Policy);
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
     DS.SetTypeSpecWidth(DeclSpec::TSW_longlong, Loc, PrevSpec, DiagID, Policy);
     break;
+#endif
   case tok::kw_signed:
     DS.SetTypeSpecSign(DeclSpec::TSS_signed, Loc, PrevSpec, DiagID);
     break;
@@ -2315,7 +2323,11 @@ bool Parser::ParseUnqualifiedIdOperator(CXXScopeSpec &SS, bool EnteringContext,
     }
 
     // The string literal must be empty.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (!Literal.GetString().empty() || Literal.Pascal) {
+#else
+    if (!Literal.GetString().empty() || false) {
+#endif
       // C++11 [over.literal]p1:
       //   The string-literal or user-defined-string-literal in a
       //   literal-operator-id shall [...] contain no characters

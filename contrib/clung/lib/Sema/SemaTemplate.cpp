@@ -464,8 +464,10 @@ void Sema::DiagnoseTemplateParameterShadow(SourceLocation Loc, Decl *PrevDecl) {
   assert(PrevDecl->isTemplateParameter() && "Not a template parameter");
 
   // Microsoft Visual C++ permits template parameters to be shadowed.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt)
     return;
+#endif
 
   // C++ [temp.local]p4:
   //   A template-parameter shall not be redeclared within its
@@ -1116,7 +1118,9 @@ Sema::CheckClassTemplate(Scope *S, unsigned TagSpec, TagUseKind TUK,
   // the ASTContext lays out the structure.
   if (TUK == TUK_Definition) {
     AddAlignmentAttributesForRecord(NewClass);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op
     AddMsStructLayoutForRecord(NewClass);
+#endif
   }
 
   ClassTemplateDecl *NewTemplate
@@ -4479,6 +4483,7 @@ CheckTemplateArgumentAddressOfObjectOrFunction(Sema &S,
 
   bool AddressTaken = false;
   SourceLocation AddrOpLoc;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (S.getLangOpts().MicrosoftExt) {
     // Microsoft Visual C++ strips all casts, allows an arbitrary number of
     // dereference and address-of operators.
@@ -4515,6 +4520,10 @@ CheckTemplateArgumentAddressOfObjectOrFunction(Sema &S,
           << Arg->getSourceRange();
       }
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     // See through any implicit casts we added to fix the type.
     Arg = Arg->IgnoreImpCasts();
@@ -4572,9 +4581,11 @@ CheckTemplateArgumentAddressOfObjectOrFunction(Sema &S,
     NullPointerValueKind NPV;
     // dllimport'd entities aren't constant but are available inside of template
     // arguments.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Entity && Entity->hasAttr<DLLImportAttr>())
       NPV = NPV_NotNullPointer;
     else
+#endif
       NPV = isNullPointerValueTemplateArgument(S, Param, ParamType, ArgIn);
     switch (NPV) {
     case NPV_NullPointer:
@@ -4598,6 +4609,7 @@ CheckTemplateArgumentAddressOfObjectOrFunction(Sema &S,
     return false;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (isa<CXXUuidofExpr>(Arg)) {
     if (CheckTemplateArgumentIsCompatibleWithParameter(S, Param, ParamType,
                                                        ArgIn, Arg, ArgType))
@@ -4606,6 +4618,7 @@ CheckTemplateArgumentAddressOfObjectOrFunction(Sema &S,
     Converted = TemplateArgument(ArgIn);
     return false;
   }
+#endif
 
   if (!DRE) {
     S.Diag(Arg->getLocStart(), diag::err_template_arg_not_decl_ref)
@@ -4987,10 +5000,12 @@ ExprResult Sema::CheckTemplateArgument(NonTypeTemplateParmDecl *Param,
       // -- the result of a typeid expression, or
       // -- a predefind __func__ variable
       if (auto *E = Value.getLValueBase().dyn_cast<const Expr*>()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (isa<CXXUuidofExpr>(E)) {
           Converted = TemplateArgument(const_cast<Expr*>(E));
           break;
         }
+#endif
         Diag(Arg->getLocStart(), diag::err_template_arg_not_decl_ref)
           << Arg->getSourceRange();
         return ExprError();
@@ -5935,6 +5950,7 @@ static bool CheckTemplateSpecializationScope(Sema &S,
   }
 
   if (S.CurContext->isRecord() && !IsPartialSpecialization) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (S.getLangOpts().MicrosoftExt) {
       // Do not warn for class scope explicit specialization during
       // instantiation, warning was already emitted during pattern
@@ -5942,6 +5958,10 @@ static bool CheckTemplateSpecializationScope(Sema &S,
       if (!S.ActiveTemplateInstantiations.size())
         S.Diag(Loc, diag::ext_function_specialization_in_class)
           << Specialized;
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       S.Diag(Loc, diag::err_template_spec_decl_class_scope)
         << Specialized;
@@ -5983,8 +6003,10 @@ static bool CheckTemplateSpecializationScope(Sema &S,
         << EntityKind << Specialized;
     else if (isa<NamespaceDecl>(SpecializedContext)) {
       int Diag = diag::err_template_spec_redecl_out_of_scope;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (S.getLangOpts().MicrosoftExt)
         Diag = diag::ext_ms_template_spec_redecl_out_of_scope;
+#endif
       S.Diag(Loc, Diag) << EntityKind << Specialized
                         << cast<NamedDecl>(SpecializedContext);
     } else
@@ -6455,7 +6477,11 @@ Sema::ActOnClassTemplateSpecialization(Scope *S, unsigned TagSpec,
     if (CurContext->isDependentContext()) {
       // -fms-extensions permits specialization of nested classes without
       // fully specializing the outer class(es).
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       assert(getLangOpts().MicrosoftExt &&
+#else
+      assert(false &&
+#endif
              "Only possible with -fms-extensions!");
       TemplateName CanonTemplate = Context.getCanonicalTemplateName(Name);
       CanonType = Context.getTemplateSpecializationType(
@@ -6524,7 +6550,9 @@ Sema::ActOnClassTemplateSpecialization(Scope *S, unsigned TagSpec,
   // the ASTContext lays out the structure.
   if (TUK == TUK_Definition) {
     AddAlignmentAttributesForRecord(Specialization);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op
     AddMsStructLayoutForRecord(Specialization);
+#endif
   }
 
   if (ModulePrivateLoc.isValid())
@@ -6588,8 +6616,10 @@ Decl *Sema::ActOnTemplateDeclarator(Scope *S,
 /// \brief Strips various properties off an implicit instantiation
 /// that has just been explicitly specialized.
 static void StripImplicitInstantiation(NamedDecl *D) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op
   D->dropAttr<DLLImportAttr>();
   D->dropAttr<DLLExportAttr>();
+#endif
 
   if (FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
     FD->setInlineSpecified(false);
@@ -7376,6 +7406,7 @@ Sema::ActOnExplicitInstantiation(Scope *S,
                                        ? TSK_ExplicitInstantiationDefinition
                                        : TSK_ExplicitInstantiationDeclaration;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op
   if (TSK == TSK_ExplicitInstantiationDeclaration) {
     // Check for dllexport class template instantiation declarations.
     for (AttributeList *A = Attr; A; A = A->getNext()) {
@@ -7393,9 +7424,11 @@ Sema::ActOnExplicitInstantiation(Scope *S,
       Diag(A->getLocation(), diag::note_attribute);
     }
   }
+#endif
 
   // In MSVC mode, dllimported explicit instantiation definitions are treated as
   // instantiation declarations for most purposes.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool DLLImportExplicitInstantiationDef = false;
   if (TSK == TSK_ExplicitInstantiationDefinition &&
       Context.getTargetInfo().getCXXABI().isMicrosoft()) {
@@ -7416,6 +7449,7 @@ Sema::ActOnExplicitInstantiation(Scope *S,
       DLLImportExplicitInstantiationDef = true;
     }
   }
+#endif
 
   // Translate the parser's template argument list in our AST format.
   TemplateArgumentListInfo TemplateArgs(LAngleLoc, RAngleLoc);
@@ -7471,11 +7505,13 @@ Sema::ActOnExplicitInstantiation(Scope *S,
       PrevDecl = nullptr;
     }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (PrevDecl_TSK == TSK_ExplicitInstantiationDeclaration &&
         DLLImportExplicitInstantiationDef) {
       // The new specialization might add a dllimport attribute.
       HasNoEffect = false;
     }
+#endif
   }
 
   if (!Specialization) {
@@ -7556,10 +7592,15 @@ Sema::ActOnExplicitInstantiation(Scope *S,
     // TSK_ExplicitInstantiationDefinition
     if (Old_TSK == TSK_ExplicitInstantiationDeclaration &&
         (TSK == TSK_ExplicitInstantiationDefinition ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
          DLLImportExplicitInstantiationDef)) {
+#else
+         false)) {
+#endif
       // FIXME: Need to notify the ASTMutationListener that we did this.
       Def->setTemplateSpecializationKind(TSK);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op
       if (!getDLLAttr(Def) && getDLLAttr(Specialization) &&
           Context.getTargetInfo().getCXXABI().isMicrosoft()) {
         // In the MS ABI, an explicit instantiation definition can add a dll
@@ -7584,6 +7625,7 @@ Sema::ActOnExplicitInstantiation(Scope *S,
             propagateDLLAttrToBaseClassTemplate(Def, A, BT, B.getLocStart());
         }
       }
+#endif
     }
 
     // Set the template specialization kind. Make sure it is set before
@@ -8020,8 +8062,10 @@ DeclResult Sema::ActOnExplicitInstantiation(Scope *S,
     if (FPT->hasExceptionSpec()) {
       unsigned DiagID =
           diag::err_mismatched_exception_spec_explicit_instantiation;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (getLangOpts().MicrosoftExt)
         DiagID = diag::ext_mismatched_exception_spec_explicit_instantiation;
+#endif
       bool Result = CheckEquivalentExceptionSpec(
           PDiag(DiagID) << Specialization->getType(),
           PDiag(diag::note_explicit_instantiation_here),
@@ -8029,7 +8073,11 @@ DeclResult Sema::ActOnExplicitInstantiation(Scope *S,
           Specialization->getLocation(), FPT, D.getLocStart());
       // In Microsoft mode, mismatching exception specifications just cause a
       // warning.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (!getLangOpts().MicrosoftExt && Result)
+#else
+      if (!false && Result)
+#endif
         return true;
     }
 

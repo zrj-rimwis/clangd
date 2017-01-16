@@ -179,10 +179,12 @@ void StmtProfiler::VisitGCCAsmStmt(const GCCAsmStmt *S) {
     VisitStringLiteral(S->getClobberStringLiteral(I));
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtProfiler::VisitMSAsmStmt(const MSAsmStmt *S) {
   // FIXME: Implement MS style inline asm statement profiler.
   VisitStmt(S);
 }
+#endif
 
 void StmtProfiler::VisitCXXCatchStmt(const CXXCatchStmt *S) {
   VisitStmt(S);
@@ -1265,11 +1267,13 @@ void StmtProfiler::VisitCXXTypeidExpr(const CXXTypeidExpr *S) {
     VisitType(S->getTypeOperandSourceInfo()->getType());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtProfiler::VisitCXXUuidofExpr(const CXXUuidofExpr *S) {
   VisitExpr(S);
   if (S->isTypeOperand())
     VisitType(S->getTypeOperandSourceInfo()->getType());
 }
+#endif
 
 void StmtProfiler::VisitMSPropertyRefExpr(const MSPropertyRefExpr *S) {
   VisitExpr(S);

@@ -783,7 +783,9 @@ private:
   SourceLocation OptimizeOffPragmaLocation;
 
   /// \brief The PragmaMSStructKind pragma ms_struct state if set, or -1.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   int PragmaMSStructState;
+#endif
 
   /// \brief The PragmaMSPointersToMembersKind pragma pointers_to_members state.
   int PragmaMSPointersToMembersState;

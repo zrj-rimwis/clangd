@@ -372,13 +372,21 @@ bool Type::isObjCBoxableRecordType() const {
 }
 bool Type::isInterfaceType() const {
   if (const RecordType *RT = getAs<RecordType>())
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return RT->getDecl()->isInterface();
+#else
+    return false;
+#endif
   return false;
 }
 bool Type::isStructureOrClassType() const {
   if (const RecordType *RT = getAs<RecordType>()) {
     RecordDecl *RD = RT->getDecl();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return RD->isStruct() || RD->isClass() || RD->isInterface();
+#else
+    return RD->isStruct() || RD->isClass();
+#endif
   }
   return false;
 }
@@ -1940,15 +1948,19 @@ bool Type::isIncompleteType(NamedDecl **Def) const {
     const CXXRecordDecl *RD = ClassTy->getAsCXXRecordDecl();
     ASTContext &Context = RD->getASTContext();
     // Member pointers not in the MS ABI don't get special treatment.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // confusing
     if (!Context.getTargetInfo().getCXXABI().isMicrosoft())
+#endif
       return false;
     // The inheritance attribute might only be present on the most recent
     // CXXRecordDecl, use that one.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     RD = RD->getMostRecentDecl();
     // Nothing interesting to do if the inheritance attribute is already set.
     if (RD->hasAttr<MSInheritanceAttr>())
       return false;
     return true;
+#endif
   }
   case ObjCObject:
     return cast<ObjCObjectType>(CanonicalType)->getBaseType()
@@ -2381,7 +2393,9 @@ TypeWithKeyword::getKeywordForTypeSpec(unsigned TypeSpec) {
   case TST_typename: return ETK_Typename;
   case TST_class: return ETK_Class;
   case TST_struct: return ETK_Struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TST_interface: return ETK_Interface;
+#endif
   case TST_union: return ETK_Union;
   case TST_enum: return ETK_Enum;
   }
@@ -2392,7 +2406,9 @@ TypeWithKeyword::getTagTypeKindForTypeSpec(unsigned TypeSpec) {
   switch(TypeSpec) {
   case TST_class: return TTK_Class;
   case TST_struct: return TTK_Struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TST_interface: return TTK_Interface;
+#endif
   case TST_union: return TTK_Union;
   case TST_enum: return TTK_Enum;
   }
@@ -2405,7 +2421,9 @@ TypeWithKeyword::getKeywordForTagTypeKind(TagTypeKind Kind) {
   switch (Kind) {
   case TTK_Class: return ETK_Class;
   case TTK_Struct: return ETK_Struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TTK_Interface: return ETK_Interface;
+#endif
   case TTK_Union: return ETK_Union;
   case TTK_Enum: return ETK_Enum;
   }
@@ -2417,7 +2435,9 @@ TypeWithKeyword::getTagTypeKindForKeyword(ElaboratedTypeKeyword Keyword) {
   switch (Keyword) {
   case ETK_Class: return TTK_Class;
   case ETK_Struct: return TTK_Struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ETK_Interface: return TTK_Interface;
+#endif
   case ETK_Union: return TTK_Union;
   case ETK_Enum: return TTK_Enum;
   case ETK_None: // Fall through.
@@ -2435,7 +2455,9 @@ TypeWithKeyword::KeywordIsTagTypeKind(ElaboratedTypeKeyword Keyword) {
     return false;
   case ETK_Class:
   case ETK_Struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ETK_Interface:
+#endif
   case ETK_Union:
   case ETK_Enum:
     return true;
@@ -2449,7 +2471,9 @@ StringRef TypeWithKeyword::getKeywordName(ElaboratedTypeKeyword Keyword) {
   case ETK_Typename: return "typename";
   case ETK_Class:  return "class";
   case ETK_Struct: return "struct";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case ETK_Interface: return "__interface";
+#endif
   case ETK_Union:  return "union";
   case ETK_Enum:   return "enum";
   }
@@ -2562,7 +2586,11 @@ StringRef BuiltinType::getName(const PrintingPolicy &Policy) const {
     return "__float128";
   case WChar_S:
   case WChar_U:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return Policy.MSWChar ? "__wchar_t" : "wchar_t";
+#else
+    return "wchar_t";
+#endif
   case Char16:
     return "char16_t";
   case Char32:
@@ -2634,7 +2662,9 @@ StringRef FunctionType::getNameForCallConv(CallingConv CC) {
   case CC_X86StdCall: return "stdcall";
   case CC_X86FastCall: return "fastcall";
   case CC_X86ThisCall: return "thiscall";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CC_X86Pascal: return "pascal";
+#endif
   case CC_X86VectorCall: return "vectorcall";
   case CC_X86_64Win64: return "ms_abi";
   case CC_X86_64SysV: return "sysv_abi";
@@ -2992,7 +3022,9 @@ bool AttributedType::isQualifier() const {
   case AttributedType::attr_fastcall:
   case AttributedType::attr_stdcall:
   case AttributedType::attr_thiscall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributedType::attr_pascal:
+#endif
   case AttributedType::attr_swiftcall:
   case AttributedType::attr_vectorcall:
   case AttributedType::attr_inteloclbicc:
@@ -3051,7 +3083,9 @@ bool AttributedType::isCallingConv() const {
   case attr_thiscall:
   case attr_swiftcall:
   case attr_vectorcall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case attr_pascal:
+#endif
   case attr_ms_abi:
   case attr_sysv_abi:
   case attr_inteloclbicc:

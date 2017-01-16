@@ -168,7 +168,9 @@ Parser::TPResult Parser::TryConsumeDeclarationSpecifier() {
   case tok::kw_class:
   case tok::kw_struct:
   case tok::kw_union:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
   case tok::kw_enum:
     // elaborated-type-specifier:
     //     class-key attribute-specifier-seq[opt]
@@ -1001,11 +1003,15 @@ Parser::isExpressionOrTypeSpecifierSimple(tok::TokenKind Kind) {
   case tok::kw___imag:
   case tok::kw___real:
   case tok::kw___FUNCTION__:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___FUNCDNAME__:
   case tok::kw___FUNCSIG__:
   case tok::kw_L__FUNCTION__:
+#endif
   case tok::kw___PRETTY_FUNCTION__:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___uuidof:
+#endif
 #define TYPE_TRAIT(N,Spelling,K) \
   case tok::kw_##Spelling:
 #include "clang/Basic/TokenKinds.def"
@@ -1021,7 +1027,9 @@ Parser::isExpressionOrTypeSpecifierSimple(tok::TokenKind Kind) {
   case tok::kw_float:
   case tok::kw_int:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_restrict:
   case tok::kw_short:
@@ -1041,7 +1049,9 @@ Parser::isExpressionOrTypeSpecifierSimple(tok::TokenKind Kind) {
   case tok::kw__Decimal32:
   case tok::kw__Decimal64:
   case tok::kw__Decimal128:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
   case tok::kw___thread:
   case tok::kw_thread_local:
   case tok::kw__Thread_local:
@@ -1052,7 +1062,9 @@ Parser::isExpressionOrTypeSpecifierSimple(tok::TokenKind Kind) {
   case tok::kw___fastcall:
   case tok::kw___thiscall:
   case tok::kw___vectorcall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___unaligned:
+#endif
   case tok::kw___vector:
   case tok::kw___pixel:
   case tok::kw___bool:
@@ -1271,7 +1283,9 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
       return TPResult::False;
   }
     // Fall through.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___super:
+#endif
   case tok::kw_decltype:
     // Annotate typenames and C++ scope specifiers.  If we get one, just
     // recurse to handle whatever we get.
@@ -1324,7 +1338,9 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
   case tok::kw_class:
   case tok::kw_struct:
   case tok::kw_union:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
     // enum-specifier
   case tok::kw_enum:
     // cv-qualifier
@@ -1345,6 +1361,7 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
   case tok::kw___fastcall:
   case tok::kw___thiscall:
   case tok::kw___vectorcall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___w64:
   case tok::kw___sptr:
   case tok::kw___uptr:
@@ -1352,6 +1369,7 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
   case tok::kw___ptr32:
   case tok::kw___forceinline:
   case tok::kw___unaligned:
+#endif
   case tok::kw__Nonnull:
   case tok::kw__Nullable:
   case tok::kw__Null_unspecified:
@@ -1359,8 +1377,10 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
     return TPResult::True;
 
     // Borland
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___pascal:
     return TPResult::True;
+#endif
   
     // AltiVec
   case tok::kw___vector:
@@ -1488,7 +1508,9 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
   case tok::kw_short:
   case tok::kw_int:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:
@@ -1565,7 +1587,9 @@ bool Parser::isCXXDeclarationSpecifierAType() {
   case tok::kw_class:
   case tok::kw_struct:
   case tok::kw_union:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
   case tok::kw_enum:
     return true;
 
@@ -1578,7 +1602,9 @@ bool Parser::isCXXDeclarationSpecifierAType() {
   case tok::kw_short:
   case tok::kw_int:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:

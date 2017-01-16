@@ -139,8 +139,12 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
   case Stmt::ReturnStmtClass:   EmitReturnStmt(cast<ReturnStmt>(*S));     break;
 
   case Stmt::SwitchStmtClass:   EmitSwitchStmt(cast<SwitchStmt>(*S));     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // you must be joking.. just no!
   case Stmt::GCCAsmStmtClass:   // Intentional fall-through.
   case Stmt::MSAsmStmtClass:    EmitAsmStmt(cast<AsmStmt>(*S));           break;
+#else
+  case Stmt::GCCAsmStmtClass:   EmitAsmStmt(cast<AsmStmt>(*S));           break;
+#endif
   case Stmt::CoroutineBodyStmtClass:
   case Stmt::CoreturnStmtClass:
     CGM.ErrorUnsupported(S, "coroutine");
@@ -1959,6 +1963,7 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
 
   // If this is a Microsoft-style asm blob, store the return registers (EAX:EDX)
   // to the return value slot. Only do this when returning in registers.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (isa<MSAsmStmt>(&S)) {
     const ABIArgInfo &RetAI = CurFnInfo->getReturnInfo();
     if (RetAI.isDirect() || RetAI.isExtend()) {
@@ -1970,6 +1975,7 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
       SawAsmBlock = true;
     }
   }
+#endif
 
   for (unsigned i = 0, e = S.getNumInputs(); i != e; i++) {
     const Expr *InputExpr = S.getInputExpr(i);
@@ -2076,8 +2082,12 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
     llvm::FunctionType::get(ResultType, ArgTypes, false);
 
   bool HasSideEffect = S.isVolatile() || S.getNumOutputs() == 0;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // o_0
   llvm::InlineAsm::AsmDialect AsmDialect = isa<MSAsmStmt>(&S) ?
     llvm::InlineAsm::AD_Intel : llvm::InlineAsm::AD_ATT;
+#else
+  llvm::InlineAsm::AsmDialect AsmDialect = llvm::InlineAsm::AD_ATT;
+#endif
   llvm::InlineAsm *IA =
     llvm::InlineAsm::get(FTy, AsmString, Constraints, HasSideEffect,
                          /* IsAlignStack */ false, AsmDialect);
@@ -2085,6 +2095,7 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
   Result->addAttribute(llvm::AttributeSet::FunctionIndex,
                        llvm::Attribute::NoUnwind);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (isa<MSAsmStmt>(&S)) {
     // If the assembly contains any labels, mark the call noduplicate to prevent
     // defining the same ASM label twice (PR23715). This is pretty hacky, but it
@@ -2093,6 +2104,7 @@ void CodeGenFunction::EmitAsmStmt(const AsmStmt &S) {
       Result->addAttribute(llvm::AttributeSet::FunctionIndex,
                            llvm::Attribute::NoDuplicate);
   }
+#endif
 
   // Attach readnone and readonly attributes.
   if (!HasSideEffect) {

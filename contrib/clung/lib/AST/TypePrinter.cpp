@@ -706,9 +706,11 @@ void TypePrinter::printFunctionProtoAfter(const FunctionProtoType *T,
     case CC_X86VectorCall:
       OS << " __attribute__((vectorcall))";
       break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case CC_X86Pascal:
       OS << " __attribute__((pascal))";
       break;
+#endif
     case CC_AAPCS:
       OS << " __attribute__((pcs(\"aapcs\")))";
       break;
@@ -1335,7 +1337,9 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
   case AttributedType::attr_thiscall: OS << "thiscall"; break;
   case AttributedType::attr_swiftcall: OS << "swiftcall"; break;
   case AttributedType::attr_vectorcall: OS << "vectorcall"; break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributedType::attr_pascal: OS << "pascal"; break;
+#endif
   case AttributedType::attr_ms_abi: OS << "ms_abi"; break;
   case AttributedType::attr_sysv_abi: OS << "sysv_abi"; break;
   case AttributedType::attr_pcs:

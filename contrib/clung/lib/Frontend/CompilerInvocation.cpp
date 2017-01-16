@@ -616,7 +616,9 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
     Opts.ThinLTOIndexFile = Args.getLastArgValue(OPT_fthinlto_index_EQ);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.MSVolatile = Args.hasArg(OPT_fms_volatile);
+#endif
 
   Opts.VectorizeBB = Args.hasArg(OPT_vectorize_slp_aggressive);
   Opts.VectorizeLoop = Args.hasArg(OPT_vectorize_loops);
@@ -1844,8 +1846,10 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
     Opts.setSignedOverflowBehavior(LangOptions::SOB_Defined);
 
   Opts.MSVCCompat = Args.hasArg(OPT_fms_compatibility);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.MicrosoftExt = Opts.MSVCCompat || Args.hasArg(OPT_fms_extensions);
   Opts.AsmBlocks = Args.hasArg(OPT_fasm_blocks) || Opts.MicrosoftExt;
+#endif
   Opts.MSCompatibilityVersion = 0;
   if (const Arg *A = Args.getLastArg(OPT_fms_compatibility_version)) {
     VersionTuple VT;
@@ -1867,9 +1871,13 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   Opts.DollarIdents = Args.hasFlag(OPT_fdollars_in_identifiers,
                                    OPT_fno_dollars_in_identifiers,
                                    Opts.DollarIdents);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.PascalStrings = Args.hasArg(OPT_fpascal_strings);
+#endif
   Opts.VtorDispMode = getLastArgIntValue(Args, OPT_vtordisp_mode_EQ, 1, Diags);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.Borland = Args.hasArg(OPT_fborland_extensions);
+#endif
   Opts.WritableStrings = Args.hasArg(OPT_fwritable_strings);
   Opts.ConstStrings = Args.hasFlag(OPT_fconst_strings, OPT_fno_const_strings,
                                    Opts.ConstStrings);
@@ -1928,7 +1936,9 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   Opts.DelayedTemplateParsing = Args.hasArg(OPT_fdelayed_template_parsing);
   Opts.NumLargeByValueCopy =
       getLastArgIntValue(Args, OPT_Wlarge_by_value_copy_EQ, 0, Diags);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.MSBitfields = Args.hasArg(OPT_mms_bitfields);
+#endif
   Opts.ObjCConstantStringClass =
     Args.getLastArgValue(OPT_fconstant_string_class);
   Opts.ObjCDefaultSynthProperties =
@@ -1978,11 +1988,15 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   // something more generic, remove the Opts.CUDA term here.
   Opts.DeclSpecKeyword =
       Args.hasFlag(OPT_fdeclspec, OPT_fno_declspec,
-#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
-                   (Opts.MicrosoftExt || Opts.Borland || Opts.CUDA));
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // rewrite
+                   (Opts.MicrosoftExt || Opts.Borland
 #else
-                   (Opts.MicrosoftExt || Opts.Borland));
+                   (false || false
 #endif
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
+                    || Opts.CUDA
+#endif
+                   ));
 
   // For now, we only support local submodule visibility in C++ (because we
   // heavily depend on the ODR for merging redefinitions).
@@ -2012,6 +2026,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
     }
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Arg *A = Args.getLastArg(OPT_fms_memptr_rep_EQ)) {
     LangOptions::PragmaMSPointersToMembersKind InheritanceModel =
         llvm::StringSwitch<LangOptions::PragmaMSPointersToMembersKind>(
@@ -2029,6 +2044,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 
     Opts.setMSPointerToMemberRepresentationMethod(InheritanceModel);
   }
+#endif
 
   // Check for MS default calling conventions being specified.
   if (Arg *A = Args.getLastArg(OPT_fdefault_calling_conv_EQ)) {

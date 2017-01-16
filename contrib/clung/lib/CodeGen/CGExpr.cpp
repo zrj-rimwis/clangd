@@ -1017,8 +1017,10 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
     return EmitCXXConstructLValue(cast<CXXConstructExpr>(E));
   case Expr::CXXBindTemporaryExprClass:
     return EmitCXXBindTemporaryLValue(cast<CXXBindTemporaryExpr>(E));
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
     return EmitCXXUuidofLValue(cast<CXXUuidofExpr>(E));
+#endif
   case Expr::LambdaExprClass:
     return EmitLambdaLValue(cast<LambdaExpr>(E));
 
@@ -3892,15 +3894,19 @@ CodeGenFunction::EmitCXXTypeidLValue(const CXXTypeidExpr *E) {
   return MakeNaturalAlignAddrLValue(EmitCXXTypeidExpr(E), E->getType());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 Address CodeGenFunction::EmitCXXUuidofExpr(const CXXUuidofExpr *E) {
   return Builder.CreateElementBitCast(CGM.GetAddrOfUuidDescriptor(E),
                                       ConvertType(E->getType()));
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LValue CodeGenFunction::EmitCXXUuidofLValue(const CXXUuidofExpr *E) {
   return MakeAddrLValue(EmitCXXUuidofExpr(E), E->getType(),
                         AlignmentSource::Decl);
 }
+#endif
 
 LValue
 CodeGenFunction::EmitCXXBindTemporaryLValue(const CXXBindTemporaryExpr *E) {

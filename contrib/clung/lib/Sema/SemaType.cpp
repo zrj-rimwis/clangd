@@ -100,13 +100,19 @@ static void diagnoseBadTypeAttribute(Sema &S, const AttributeList &attr,
     case AttributeList::AT_ObjCGC: \
     case AttributeList::AT_ObjCOwnership
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
+#define CALLING_CONV_ATTRS_CASELIST_pascal case AttributeList::AT_Pascal:
+#else
+#define CALLING_CONV_ATTRS_CASELIST_pascal
+#endif
+
 // Calling convention attributes.
 #define CALLING_CONV_ATTRS_CASELIST \
     case AttributeList::AT_CDecl: \
     case AttributeList::AT_FastCall: \
     case AttributeList::AT_StdCall: \
     case AttributeList::AT_ThisCall: \
-    case AttributeList::AT_Pascal: \
+    CALLING_CONV_ATTRS_CASELIST_pascal \
     case AttributeList::AT_SwiftCall: \
     case AttributeList::AT_VectorCall: \
     case AttributeList::AT_MSABI: \
@@ -123,11 +129,13 @@ static void diagnoseBadTypeAttribute(Sema &S, const AttributeList &attr,
     CALLING_CONV_ATTRS_CASELIST
 
 // Microsoft-specific type qualifiers.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 #define MS_TYPE_ATTRS_CASELIST  \
     case AttributeList::AT_Ptr32: \
     case AttributeList::AT_Ptr64: \
     case AttributeList::AT_SPtr: \
     case AttributeList::AT_UPtr
+#endif
 
 // Nullability qualifiers.
 #define NULLABILITY_TYPE_ATTRS_CASELIST         \
@@ -295,9 +303,11 @@ static bool handleFunctionTypeAttr(TypeProcessingState &state,
                                    AttributeList &attr,
                                    QualType &type);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool handleMSPointerTypeQualifierAttr(TypeProcessingState &state,
                                              AttributeList &attr,
                                              QualType &type);
+#endif
 
 static bool handleObjCGCTypeAttr(TypeProcessingState &state,
                                  AttributeList &attr, QualType &type);
@@ -646,9 +656,11 @@ static void distributeTypeAttrsFromDeclarator(TypeProcessingState &state,
       distributeFunctionTypeAttrFromDeclarator(state, *attr, declSpecType);
       break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     MS_TYPE_ATTRS_CASELIST:
       // Microsoft type attributes cannot go after the declarator-id.
       continue;
+#endif
 
     NULLABILITY_TYPE_ATTRS_CASELIST:
       // Nullability specifiers cannot go after the declarator-id.
@@ -1439,7 +1451,11 @@ static QualType ConvertDeclSpecToType(TypeProcessingState &state) {
   case DeclSpec::TST_enum:
   case DeclSpec::TST_union:
   case DeclSpec::TST_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case DeclSpec::TST_interface: {
+#else
+  {
+#endif
     TypeDecl *D = dyn_cast_or_null<TypeDecl>(DS.getRepAsDecl());
     if (!D) {
       // This can happen in C++ with ambiguous lookups.
@@ -2116,10 +2132,12 @@ QualType Sema::BuildArrayType(QualType T, ArrayType::ArraySizeModifier ASM,
 
     // Mentioning a member pointer type for an array type causes us to lock in
     // an inheritance model, even if it's inside an unused typedef.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Context.getTargetInfo().getCXXABI().isMicrosoft())
       if (const MemberPointerType *MPTy = T->getAs<MemberPointerType>())
         if (!MPTy->getClass()->isDependentType())
           (void)isCompleteType(Loc, T);
+#endif
 
   } else {
     // C99 6.7.5.2p1: If the element type is an incomplete or function type,
@@ -4738,8 +4756,10 @@ static AttributeList::Kind getAttrListKind(AttributedType::Kind kind) {
     return AttributeList::AT_StdCall;
   case AttributedType::attr_thiscall:
     return AttributeList::AT_ThisCall;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributedType::attr_pascal:
     return AttributeList::AT_Pascal;
+#endif
   case AttributedType::attr_swiftcall:
     return AttributeList::AT_SwiftCall;
   case AttributedType::attr_vectorcall:
@@ -4757,6 +4777,7 @@ static AttributeList::Kind getAttrListKind(AttributedType::Kind kind) {
     return AttributeList::AT_PreserveMost;
   case AttributedType::attr_preserve_all:
     return AttributeList::AT_PreserveAll;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributedType::attr_ptr32:
     return AttributeList::AT_Ptr32;
   case AttributedType::attr_ptr64:
@@ -4765,6 +4786,7 @@ static AttributeList::Kind getAttrListKind(AttributedType::Kind kind) {
     return AttributeList::AT_SPtr;
   case AttributedType::attr_uptr:
     return AttributeList::AT_UPtr;
+#endif
   case AttributedType::attr_nonnull:
     return AttributeList::AT_TypeNonNull;
   case AttributedType::attr_nullable:
@@ -5742,6 +5764,7 @@ namespace {
   };
 } // end anonymous namespace
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool handleMSPointerTypeQualifierAttr(TypeProcessingState &State,
                                              AttributeList &Attr,
                                              QualType &Type) {
@@ -5807,6 +5830,7 @@ static bool handleMSPointerTypeQualifierAttr(TypeProcessingState &State,
   Type = S.Context.getAttributedType(TAK, Type, Type);
   return false;
 }
+#endif
 
 bool Sema::checkNullabilityTypeSpecifier(QualType &type,
                                          NullabilityKind nullability,
@@ -6070,8 +6094,10 @@ static AttributedType::Kind getCCTypeAttrKind(AttributeList &Attr) {
     return AttributedType::attr_stdcall;
   case AttributeList::AT_ThisCall:
     return AttributedType::attr_thiscall;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributeList::AT_Pascal:
     return AttributedType::attr_pascal;
+#endif
   case AttributeList::AT_SwiftCall:
     return AttributedType::attr_swiftcall;
   case AttributeList::AT_VectorCall:
@@ -6267,6 +6293,7 @@ void Sema::adjustMemberFunctionCC(QualType &T, bool IsStatic, bool IsCtorOrDtor,
 
   // MS compiler ignores explicit calling convention attributes on structors. We
   // should do the same.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Context.getTargetInfo().getCXXABI().isMicrosoft() && IsCtorOrDtor) {
     // Issue a warning on ignored calling convention -- except of __stdcall.
     // Again, this is what MS compiler does.
@@ -6274,6 +6301,10 @@ void Sema::adjustMemberFunctionCC(QualType &T, bool IsStatic, bool IsCtorOrDtor,
       Diag(Loc, diag::warn_cconv_structors)
           << FunctionType::getNameForCallConv(CurCC);
   // Default adjustment.
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     // Only adjust types with the default convention.  For example, on Windows
     // we should adjust a __cdecl type to __thiscall for instance methods, and a
@@ -6626,10 +6657,12 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
       attr.setUsedAsTypeAttr();
       break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     MS_TYPE_ATTRS_CASELIST:
       if (!handleMSPointerTypeQualifierAttr(state, attr, type))
         attr.setUsedAsTypeAttr();
       break;
+#endif
 
 
     NULLABILITY_TYPE_ATTRS_CASELIST:
@@ -6897,6 +6930,7 @@ bool Sema::hasVisibleDefinition(NamedDecl *D, NamedDecl **Suggested,
 }
 
 /// Locks in the inheritance model for the given class and all of its bases.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void assignInheritanceModel(Sema &S, CXXRecordDecl *RD) {
   RD = RD->getMostRecentDecl();
   if (!RD->hasAttr<MSInheritanceAttr>()) {
@@ -6927,6 +6961,7 @@ static void assignInheritanceModel(Sema &S, CXXRecordDecl *RD) {
     S.Consumer.AssignInheritanceModel(RD);
   }
 }
+#endif
 
 /// \brief The implementation of RequireCompleteType
 bool Sema::RequireCompleteTypeImpl(SourceLocation Loc, QualType T,
@@ -6941,6 +6976,7 @@ bool Sema::RequireCompleteTypeImpl(SourceLocation Loc, QualType T,
 
   // We lock in the inheritance model once somebody has asked us to ensure
   // that a pointer-to-member type is complete.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
     if (const MemberPointerType *MPTy = T->getAs<MemberPointerType>()) {
       if (!MPTy->getClass()->isDependentType()) {
@@ -6949,6 +6985,7 @@ bool Sema::RequireCompleteTypeImpl(SourceLocation Loc, QualType T,
       }
     }
   }
+#endif
 
   NamedDecl *Def = nullptr;
   bool Incomplete = T->isIncompleteType(&Def);

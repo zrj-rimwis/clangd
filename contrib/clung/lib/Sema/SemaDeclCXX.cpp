@@ -510,6 +510,7 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
       // MSVC accepts that default parameters be redefined for member functions
       // of template class. The new default parameter's value is ignored.
       Invalid = true;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (getLangOpts().MicrosoftExt) {
         CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(New);
         if (MD && MD->getParent()->getDescribedClassTemplate()) {
@@ -524,6 +525,7 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
           Invalid = false;
         }
       }
+#endif
       
       // FIXME: If we knew where the '=' was, we could easily provide a fix-it 
       // hint here. Alternatively, we could walk the type-source information
@@ -1410,6 +1412,7 @@ Sema::CheckBaseSpecifier(CXXRecordDecl *Class,
   }
 
   // For the MS ABI, propagate DLL attributes to base class templates.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // nope
   if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
     if (Attr *ClassAttr = getDLLAttr(Class)) {
       if (auto *BaseTemplate = dyn_cast_or_null<ClassTemplateSpecializationDecl>(
@@ -1419,6 +1422,7 @@ Sema::CheckBaseSpecifier(CXXRecordDecl *Class,
       }
     }
   }
+#endif
 
   // C++ [class.derived]p2:
   //   The class-name in a base-specifier shall not be an incompletely
@@ -1602,6 +1606,7 @@ bool Sema::AttachBaseSpecifiers(CXXRecordDecl *Class,
       
       if (const RecordType *Record = NewBaseType->getAs<RecordType>()) {
         const CXXRecordDecl *RD = cast<CXXRecordDecl>(Record->getDecl());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
         if (Class->isInterface() &&
               (!RD->isInterface() ||
                KnownBase->getAccessSpecifier() != AS_public)) {
@@ -1612,6 +1617,7 @@ bool Sema::AttachBaseSpecifiers(CXXRecordDecl *Class,
             << RD->getSourceRange();
           Invalid = true;
         }
+#endif
         if (RD->hasAttr<WeakAttr>())
           Class->addAttr(WeakAttr::CreateImplicit(Context));
       }
@@ -2022,6 +2028,7 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
 
   bool isFunc = D.isDeclarationOfFunction();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // facepalm
   if (cast<CXXRecordDecl>(CurContext)->isInterface()) {
     // The Microsoft extension __interface only permits public member functions
     // and prohibits constructors, destructors, operators, non-public member
@@ -2065,6 +2072,7 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
       return nullptr;
     }
   }
+#endif
 
   // C++ 9.2p6: A member shall not be declared to have automatic storage
   // duration (auto, register) or with the extern storage-class-specifier.
@@ -4644,6 +4652,7 @@ static void CheckAbstractClassUsage(AbstractUsageInfo &Info,
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void ReferenceDllExportedMethods(Sema &S, CXXRecordDecl *Class) {
   Attr *ClassAttr = getDLLAttr(Class);
   if (!ClassAttr)
@@ -4697,8 +4706,10 @@ static void ReferenceDllExportedMethods(Sema &S, CXXRecordDecl *Class) {
     }
   }
 }
+#endif
 
 /// \brief Check class-level dllimport/dllexport attribute.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
   Attr *ClassAttr = getDLLAttr(Class);
 
@@ -4812,9 +4823,11 @@ void Sema::checkClassLevelDLLAttribute(CXXRecordDecl *Class) {
   if (ClassExported)
     DelayedDllExportClasses.push_back(Class);
 }
+#endif
 
 /// \brief Perform propagation of DLL attributes from a derived class to a
 /// templated base class for MS compatibility.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::propagateDLLAttrToBaseClassTemplate(
     CXXRecordDecl *Class, Attr *ClassAttr,
     ClassTemplateSpecializationDecl *BaseTemplateSpec, SourceLocation BaseLoc) {
@@ -4867,6 +4880,7 @@ void Sema::propagateDLLAttrToBaseClassTemplate(
         << BaseTemplateSpec;
   }
 }
+#endif
 
 static void DefineImplicitSpecialMember(Sema &S, CXXMethodDecl *MD,
                                         SourceLocation DefaultLoc) {
@@ -5000,6 +5014,7 @@ void Sema::CheckCompletedCXXClass(CXXRecordDecl *Record) {
         }
       }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // deals witg dll only
       if (!M->isInvalidDecl() && M->isExplicitlyDefaulted() &&
           M->hasAttr<DLLExportAttr>()) {
         if (getLangOpts().isCompatibleWithMSVC(LangOptions::MSVC2015) &&
@@ -5013,6 +5028,7 @@ void Sema::CheckCompletedCXXClass(CXXRecordDecl *Record) {
           ActOnFinishInlineFunctionDef(M);
         }
       }
+#endif
     }
   }
 
@@ -5033,12 +5049,16 @@ void Sema::CheckCompletedCXXClass(CXXRecordDecl *Record) {
   // headers, sweeping up a bunch of types that the project doesn't
   // really rely on MSVC-compatible layout for.  We must therefore
   // support "ms_struct except for C++ stuff" as a secondary ABI.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Record->isMsStruct(Context) &&
       (Record->isPolymorphic() || Record->getNumBases())) {
     Diag(Record->getLocation(), diag::warn_cxx_ms_struct);
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // nope
   checkClassLevelDLLAttribute(Record);
+#endif
 }
 
 /// Look up the special member function that would be called by a special
@@ -9582,7 +9602,11 @@ static void getDefaultArgExprsForConstructors(Sema &S, CXXRecordDecl *Class) {
       if (auto *NestedRD = dyn_cast<CXXRecordDecl>(Member))
         getDefaultArgExprsForConstructors(S, NestedRD);
       continue;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     } else if (!CD->isDefaultConstructor() || !CD->hasAttr<DLLExportAttr>()) {
+#else
+    } else if (!CD->isDefaultConstructor() || !false) {
+#endif
       continue;
     }
 
@@ -9623,12 +9647,17 @@ void Sema::ActOnFinishCXXNonNestedClass(Decl *D) {
   // Default constructors that are annotated with __declspec(dllexport) which
   // have default arguments or don't use the standard calling convention are
   // wrapped with a thunk called the default constructor closure.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // ehem
   if (RD && Context.getTargetInfo().getCXXABI().isMicrosoft())
     getDefaultArgExprsForConstructors(*this, RD);
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // nope
   referenceDLLExportedClassMethods();
+#endif
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::referenceDLLExportedClassMethods() {
   if (!DelayedDllExportClasses.empty()) {
     // Calling ReferenceDllExportedMethods might cause the current function to
@@ -9639,6 +9668,7 @@ void Sema::referenceDLLExportedClassMethods() {
       ReferenceDllExportedMethods(*this, Class);
   }
 }
+#endif
 
 void Sema::AdjustDestructorExceptionSpec(CXXRecordDecl *ClassDecl,
                                          CXXDestructorDecl *Destructor) {
@@ -13056,10 +13086,12 @@ void Sema::SetDeclDeleted(Decl *Dcl, SourceLocation DelLoc) {
   }
 
   // dllimport/dllexport cannot be deleted.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume nullptr
   if (const InheritableAttr *DLLAttr = getDLLAttr(Fn)) {
     Diag(Fn->getLocation(), diag::err_attribute_dll_deleted) << DLLAttr;
     Fn->setInvalidDecl();
   }
+#endif
 
   if (Fn->isDeleted())
     return;
@@ -13436,6 +13468,7 @@ void Sema::MarkVTableUsed(SourceLocation Loc, CXXRecordDecl *Class,
     // checks (i.e. operator delete() lookup) when the vtable is marked used, as
     // the deleting destructor is emitted with the vtable, not with the
     // destructor definition as in the Itanium ABI.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
       CXXDestructorDecl *DD = Class->getDestructor();
       if (DD && DD->isVirtual() && !DD->isDeleted()) {
@@ -13450,6 +13483,7 @@ void Sema::MarkVTableUsed(SourceLocation Loc, CXXRecordDecl *Class,
         }
       }
     }
+#endif
   }
 
   // Local classes need to have their virtual members marked

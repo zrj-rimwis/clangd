@@ -5515,7 +5515,11 @@ Expr *ASTNodeImporter::VisitStringLiteral(StringLiteral *E) {
   ImportArray(E->tokloc_begin(), E->tokloc_end(), Locations.begin());
 
   return StringLiteral::Create(Importer.getToContext(), E->getBytes(),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                                E->getKind(), E->isPascal(), T,
+#else
+                               E->getKind(), false, T,
+#endif
                                Locations.data(), Locations.size());
 }
 

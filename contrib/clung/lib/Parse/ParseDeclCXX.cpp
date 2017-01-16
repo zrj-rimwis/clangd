@@ -509,11 +509,13 @@ Decl *Parser::ParseUsingDeclaration(unsigned Context,
   if (TryConsumeToken(tok::kw_typename, TypenameLoc))
     HasTypenameKeyword = true;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Tok.is(tok::kw___super)) {
     Diag(Tok.getLocation(), diag::err_super_in_using_declaration);
     SkipUntil(tok::semi);
     return nullptr;
   }
+#endif
 
   // Parse nested-name-specifier.
   IdentifierInfo *LastII = nullptr;
@@ -1064,6 +1066,7 @@ TypeResult Parser::ParseBaseTypeSpecifier(SourceLocation &BaseLoc,
   return Actions.ActOnTypeName(getCurScope(), DeclaratorInfo);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::ParseMicrosoftInheritanceClassAttributes(ParsedAttributes &attrs) {
   while (Tok.isOneOf(tok::kw___single_inheritance,
                      tok::kw___multiple_inheritance,
@@ -1074,6 +1077,7 @@ void Parser::ParseMicrosoftInheritanceClassAttributes(ParsedAttributes &attrs) {
                  AttributeList::AS_Keyword);
   }
 }
+#endif
 
 /// Determine whether the following tokens are valid after a type-specifier
 /// which could be a standalone declaration. This will conservatively return
@@ -1102,11 +1106,13 @@ bool Parser::isValidAfterTypeSpecifier(bool CouldBeBitfield) {
   case tok::kw___attribute:     // struct foo __attribute__((used)) x;
   case tok::annot_pragma_pack:  // struct foo {...} _Pragma(pack(pop));
   // struct foo {...} _Pragma(section(...));
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::annot_pragma_ms_pragma:
   // struct foo {...} _Pragma(vtordisp(pop));
   case tok::annot_pragma_ms_vtordisp:
   // struct foo {...} _Pragma(pointers_to_members(...));
   case tok::annot_pragma_ms_pointers_to_members:
+#endif
     return true;
   case tok::colon:
     return CouldBeBitfield;     // enum E { ... }   :         2;
@@ -1118,13 +1124,19 @@ bool Parser::isValidAfterTypeSpecifier(bool CouldBeBitfield) {
   case tok::kw___vectorcall:    // struct foo {...} __vectorcall x;
     // We will diagnose these calling-convention specifiers on non-function
     // declarations later, so claim they are valid after a type specifier.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return getLangOpts().MicrosoftExt;
+#else
+    return false;
+#endif
   // Type qualifiers
   case tok::kw_const:           // struct foo {...} const     x;
   case tok::kw_volatile:        // struct foo {...} volatile  x;
   case tok::kw_restrict:        // struct foo {...} restrict  x;
   case tok::kw__Atomic:         // struct foo {...} _Atomic   x;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___unaligned:     // struct foo {...} __unaligned *x;
+#endif
   // Function specifiers
   // Note, no 'explicit'. An explicit function must be either a conversion
   // operator or a constructor. Either way, it can't have a return type.
@@ -1219,8 +1231,10 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
   DeclSpec::TST TagType;
   if (TagTokKind == tok::kw_struct)
     TagType = DeclSpec::TST_struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   else if (TagTokKind == tok::kw___interface)
     TagType = DeclSpec::TST_interface;
+#endif
   else if (TagTokKind == tok::kw_class)
     TagType = DeclSpec::TST_class;
   else {
@@ -1255,10 +1269,12 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
   MaybeParseMicrosoftDeclSpecs(attrs);
 
   // Parse inheritance specifiers.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Tok.isOneOf(tok::kw___single_inheritance,
                   tok::kw___multiple_inheritance,
                   tok::kw___virtual_inheritance))
     ParseMicrosoftInheritanceClassAttributes(attrs);
+#endif
 
   // If C++0x attributes exist here, parse them.
   // FIXME: Are we consistent with the ordering of parsing of different
@@ -1285,7 +1301,9 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
                   tok::kw___is_constructible,
                   tok::kw___is_convertible,
                   tok::kw___is_convertible_to,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                   tok::kw___is_destructible,
+#endif
                   tok::kw___is_empty,
                   tok::kw___is_enum,
                   tok::kw___is_floating_point,
@@ -1293,7 +1311,9 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
                   tok::kw___is_function,
                   tok::kw___is_fundamental,
                   tok::kw___is_integral,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                   tok::kw___is_interface_class,
+#endif
                   tok::kw___is_literal,
                   tok::kw___is_lvalue_expr,
                   tok::kw___is_lvalue_reference,
@@ -1302,7 +1322,9 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
                   tok::kw___is_member_pointer,
                   tok::kw___is_nothrow_assignable,
                   tok::kw___is_nothrow_constructible,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                   tok::kw___is_nothrow_destructible,
+#endif
                   tok::kw___is_object,
                   tok::kw___is_pod,
                   tok::kw___is_pointer,
@@ -1312,7 +1334,9 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
                   tok::kw___is_rvalue_reference,
                   tok::kw___is_same,
                   tok::kw___is_scalar,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                   tok::kw___is_sealed,
+#endif
                   tok::kw___is_signed,
                   tok::kw___is_standard_layout,
                   tok::kw___is_trivial,
@@ -2014,8 +2038,10 @@ VirtSpecifiers::Specifier Parser::isCXX11VirtSpecifier(const Token &Tok) const {
   // Initialize the contextual keywords.
   if (!Ident_final) {
     Ident_final = &PP.getIdentifierTable().get("final");
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (getLangOpts().MicrosoftExt)
       Ident_sealed = &PP.getIdentifierTable().get("sealed");
+#endif
     Ident_override = &PP.getIdentifierTable().get("override");
   }
 
@@ -2282,7 +2308,11 @@ Parser::ParseCXXClassMemberDeclaration(AccessSpecifier AS,
   // Access declarations.
   bool MalformedTypeSpec = false;
   if (!TemplateInfo.Kind &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       Tok.isOneOf(tok::identifier, tok::coloncolon, tok::kw___super)) {
+#else
+      Tok.isOneOf(tok::identifier, tok::coloncolon)) {
+#endif
     if (TryAnnotateCXXScopeToken())
       MalformedTypeSpec = true;
 
@@ -2473,8 +2503,10 @@ Parser::ParseCXXClassMemberDeclaration(AccessSpecifier AS,
   if (BitfieldSize.isUnset()) {
     // MSVC permits pure specifier on inline functions defined at class scope.
     // Hence check for =0 before checking for function definition.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (getLangOpts().MicrosoftExt && DeclaratorInfo.isDeclarationOfFunction())
       TryConsumePureSpecifier(/*AllowDefinition*/ true);
+#endif
 
     FunctionDefinitionKind DefinitionKind = FDK_Declaration;
     // function-definition:
@@ -2811,7 +2843,11 @@ void Parser::SkipCXXMemberSpecification(SourceLocation RecordLoc,
     // Enter the scope of the class so that we can correctly parse its bases.
     ParseScope ClassScope(this, Scope::ClassScope|Scope::DeclScope);
     ParsingClassDefinition ParsingDef(*this, TagDecl, /*NonNestedClass*/ true,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                                       TagType == DeclSpec::TST_interface);
+#else
+                                      false);
+#endif
     auto OldContext =
         Actions.ActOnTagStartSkippedDefinition(getCurScope(), TagDecl);
 
@@ -2842,11 +2878,13 @@ void Parser::SkipCXXMemberSpecification(SourceLocation RecordLoc,
 Parser::DeclGroupPtrTy Parser::ParseCXXClassMemberDeclarationWithPragmas(
     AccessSpecifier &AS, ParsedAttributesWithRange &AccessAttrs,
     DeclSpec::TST TagType, Decl *TagDecl) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt &&
       Tok.isOneOf(tok::kw___if_exists, tok::kw___if_not_exists)) {
     ParseMicrosoftIfExistsClassDeclaration(TagType, AS);
     return nullptr;
   }
+#endif
 
   // Check for extraneous top-level semicolon.
   if (Tok.is(tok::semi)) {
@@ -2869,6 +2907,7 @@ Parser::DeclGroupPtrTy Parser::ParseCXXClassMemberDeclarationWithPragmas(
     return nullptr;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Tok.is(tok::annot_pragma_ms_pointers_to_members)) {
     HandlePragmaMSPointersToMembers();
     return nullptr;
@@ -2883,6 +2922,7 @@ Parser::DeclGroupPtrTy Parser::ParseCXXClassMemberDeclarationWithPragmas(
     HandlePragmaMSVtorDisp();
     return nullptr;
   }
+#endif
 
   // If we see a namespace here, a close brace was missing somewhere.
   if (Tok.is(tok::kw_namespace)) {
@@ -2913,9 +2953,11 @@ Parser::DeclGroupPtrTy Parser::ParseCXXClassMemberDeclarationWithPragmas(
 
     // The Microsoft extension __interface does not permit non-public
     // access specifiers.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (TagType == DeclSpec::TST_interface && AS != AS_public) {
       Diag(ASLoc, diag::err_access_specifier_interface) << (AS == AS_protected);
     }
+#endif
 
     if (Actions.ActOnAccessSpecifier(NewAS, ASLoc, EndLoc,
                                      AccessAttrs.getList())) {
@@ -2945,7 +2987,9 @@ void Parser::ParseCXXMemberSpecification(SourceLocation RecordLoc,
                                          ParsedAttributesWithRange &Attrs,
                                          unsigned TagType, Decl *TagDecl) {
   assert((TagType == DeclSpec::TST_struct ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
          TagType == DeclSpec::TST_interface ||
+#endif
          TagType == DeclSpec::TST_union  ||
          TagType == DeclSpec::TST_class) && "Invalid TagType!");
 
@@ -2984,7 +3028,11 @@ void Parser::ParseCXXMemberSpecification(SourceLocation RecordLoc,
 
   // Note that we are parsing a new (potentially-nested) class definition.
   ParsingClassDefinition ParsingDef(*this, TagDecl, NonNestedClass,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                                     TagType == DeclSpec::TST_interface);
+#else
+                                    false);
+#endif
 
   if (TagDecl)
     Actions.ActOnTagStartDefinition(getCurScope(), TagDecl);
@@ -3001,9 +3049,15 @@ void Parser::ParseCXXMemberSpecification(SourceLocation RecordLoc,
     FinalLoc = ConsumeToken();
     IsFinalSpelledSealed = Specifier == VirtSpecifiers::VS_Sealed;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (TagType == DeclSpec::TST_interface)
       Diag(FinalLoc, diag::err_override_control_interface)
         << VirtSpecifiers::getSpecifierName(Specifier);
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else if (Specifier == VirtSpecifiers::VS_Final)
       Diag(FinalLoc, getLangOpts().CPlusPlus11
                          ? diag::warn_cxx98_compat_override_control_keyword
@@ -3198,7 +3252,9 @@ void Parser::ParseConstructorInitializer(Decl *ConstructorDecl) {
 
   // Poison the SEH identifiers so they are flagged as illegal in constructor
   // initializers.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PoisonSEHIdentifiersRAIIObject PoisonSEHIdentifiers(*this, true);
+#endif
   SourceLocation ColonLoc = ConsumeToken();
 
   SmallVector<CXXCtorInitializer*, 4> MemInitializers;
@@ -3491,7 +3547,9 @@ ExceptionSpecificationType Parser::ParseDynamicExceptionSpecification(
   // can throw anything".
   if (Tok.is(tok::ellipsis)) {
     SourceLocation EllipsisLoc = ConsumeToken();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // take as !false
     if (!getLangOpts().MicrosoftExt)
+#endif
       Diag(EllipsisLoc, diag::ext_ellipsis_exception_spec);
     T.consumeClose();
     SpecificationRange.setEnd(T.getCloseLocation());
@@ -3936,6 +3994,7 @@ void Parser::ParseMicrosoftAttributes(ParsedAttributes &attrs,
   } while (Tok.is(tok::l_square));
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::ParseMicrosoftIfExistsClassDeclaration(DeclSpec::TST TagType,
                                                     AccessSpecifier& CurAS) {
   IfExistsCondition Result;
@@ -3996,3 +4055,4 @@ void Parser::ParseMicrosoftIfExistsClassDeclaration(DeclSpec::TST TagType,
   
   Braces.consumeClose();
 }
+#endif

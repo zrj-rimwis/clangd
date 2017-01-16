@@ -687,8 +687,10 @@ CXXABI *ASTContext::createCXXABI(const TargetInfo &T) {
   case TargetCXXABI::GenericItanium:
   case TargetCXXABI::WebAssembly:
     return CreateItaniumCXXABI(*this);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TargetCXXABI::Microsoft:
     return CreateMicrosoftCXXABI(*this);
+#endif
   }
   llvm_unreachable("Invalid CXXABI type!");
 }
@@ -1479,7 +1481,11 @@ static getConstantArrayInfoInChars(const ASTContext &Context,
          "Overflow in array type char size evaluation");
   uint64_t Width = EltInfo.first.getQuantity() * Size;
   unsigned Align = EltInfo.second.getQuantity();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!Context.getTargetInfo().getCXXABI().isMicrosoft() ||
+#else
+  if (!false ||
+#endif
       Context.getTargetInfo().getPointerWidth(0) == 64)
     Width = llvm::alignTo(Width, Align);
   return std::make_pair(CharUnits::fromQuantity(Width),
@@ -1563,7 +1569,11 @@ TypeInfo ASTContext::getTypeInfoImpl(const Type *T) const {
            "Overflow in array type bit size evaluation");
     Width = EltInfo.Width * Size;
     Align = EltInfo.Align;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (!getTargetInfo().getCXXABI().isMicrosoft() ||
+#else
+    if (!false ||
+#endif
         getTargetInfo().getPointerWidth(0) == 64)
       Width = llvm::alignTo(Width, Align);
     break;
@@ -5136,12 +5146,14 @@ CharUnits ASTContext::getObjCEncodingTypeSize(QualType type) const {
   return sz;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
 bool ASTContext::isMSStaticDataMemberInlineDefinition(const VarDecl *VD) const {
   return getTargetInfo().getCXXABI().isMicrosoft() &&
          VD->isStaticDataMember() &&
          VD->getType()->isIntegralOrEnumerationType() &&
          !VD->getFirstDecl()->isOutOfLine() && VD->getFirstDecl()->hasInit();
 }
+#endif
 
 ASTContext::InlineVariableDefinitionKind
 ASTContext::getInlineVariableDefinitionKind(const VarDecl *VD) const {
@@ -8378,8 +8390,10 @@ QualType ASTContext::GetBuiltinType(unsigned Id,
     ArgTypes.push_back(Ty);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Id == Builtin::BI__GetExceptionInfo)
     return QualType();
+#endif
 
   assert((TypeStr[0] != '.' || TypeStr[1] == 0) &&
          "'.' should only occur at end of builtin type list!");
@@ -8433,8 +8447,12 @@ static GVALinkage basicGVALinkageForFunction(const ASTContext &Context,
     return External;
 
   if ((!Context.getLangOpts().CPlusPlus &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
        !Context.getTargetInfo().getCXXABI().isMicrosoft() &&
        !FD->hasAttr<DLLExportAttr>()) ||
+#else
+       !false && !false) ||
+#endif
       FD->hasAttr<GNUInlineAttr>()) {
     // FIXME: This doesn't match gcc's behavior for dllexport inline functions.
 
@@ -8450,8 +8468,10 @@ static GVALinkage basicGVALinkageForFunction(const ASTContext &Context,
   // Functions specified with extern and inline in -fms-compatibility mode
   // forcibly get emitted.  While the body of the function cannot be later
   // replaced, the function definition cannot be discarded.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (FD->isMSExternInline())
     return GVA_StrongODR;
+#endif
 
   return GVA_DiscardableODR;
 }
@@ -8460,12 +8480,17 @@ static GVALinkage adjustGVALinkageForAttributes(const ASTContext &Context,
                                                 GVALinkage L, const Decl *D) {
   // See http://msdn.microsoft.com/en-us/library/xa0d9ste.aspx
   // dllexport/dllimport on inline functions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // uch cuda
   if (D->hasAttr<DLLImportAttr>()) {
     if (L == GVA_DiscardableODR || L == GVA_StrongODR)
       return GVA_AvailableExternally;
   } else if (D->hasAttr<DLLExportAttr>()) {
     if (L == GVA_DiscardableODR)
       return GVA_StrongODR;
+#else
+  if (false) {
+   /* dummy */
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   } else if (Context.getLangOpts().CUDA && Context.getLangOpts().CUDAIsDevice &&
              D->hasAttr<CUDAGlobalAttr>()) {
@@ -8510,8 +8535,10 @@ static GVALinkage basicGVALinkageForVariable(const ASTContext &Context,
   // MSVC treats in-class initialized static data members as definitions.
   // By giving them non-strong linkage, out-of-line definitions won't
   // cause link errors.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Context.isMSStaticDataMemberInlineDefinition(VD))
     return GVA_DiscardableODR;
+#endif
 
   // Most non-template variables have strong linkage; inline variables are
   // linkonce_odr or (occasionally, for compatibility) weak_odr.
@@ -8534,10 +8561,14 @@ static GVALinkage basicGVALinkageForVariable(const ASTContext &Context,
     return StrongLinkage;
 
   case TSK_ExplicitSpecialization:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume takes false
     return Context.getTargetInfo().getCXXABI().isMicrosoft() &&
                    VD->isStaticDataMember()
                ? GVA_StrongODR
                : StrongLinkage;
+#else
+    return StrongLinkage;
+#endif
 
   case TSK_ExplicitInstantiationDefinition:
     return GVA_StrongODR;
@@ -8634,7 +8665,11 @@ bool ASTContext::DeclMustBeEmitted(const Decl *D) {
   assert(VD->isFileVarDecl() && "Expected file scoped var");
 
   if (VD->isThisDeclarationADefinition() == VarDecl::DeclarationOnly &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       !isMSStaticDataMemberInlineDefinition(VD))
+#else
+      !false)
+#endif
     return false;
 
   // Variables that can be needed in other TUs are required.
@@ -8690,9 +8725,11 @@ bool ASTContext::isNearlyEmpty(const CXXRecordDecl *RD) const {
 
 VTableContextBase *ASTContext::getVTableContext() {
   if (!VTContext.get()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Target->getCXXABI().isMicrosoft())
       VTContext.reset(new MicrosoftVTableContext(*this));
     else
+#endif
       VTContext.reset(new ItaniumVTableContext(*this));
   }
   return VTContext.get();
@@ -8709,8 +8746,10 @@ MangleContext *ASTContext::createMangleContext() {
   case TargetCXXABI::WebAssembly:
   case TargetCXXABI::WatchOS:
     return ItaniumMangleContext::create(*this, getDiagnostics());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TargetCXXABI::Microsoft:
     return MicrosoftMangleContext::create(*this, getDiagnostics());
+#endif
   }
   llvm_unreachable("Unsupported ABI");
 }

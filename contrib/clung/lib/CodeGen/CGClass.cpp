@@ -919,14 +919,22 @@ void CodeGenFunction::EmitConstructorBody(FunctionArgList &Args) {
   const CXXConstructorDecl *Ctor = cast<CXXConstructorDecl>(CurGD.getDecl());
   CXXCtorType CtorType = CurGD.getCtorType();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   assert((CGM.getTarget().getCXXABI().hasConstructorVariants() ||
+#else
+  assert((true ||
+#endif
           CtorType == Ctor_Complete) &&
          "can only generate complete ctor for this ABI");
 
   // Before we go any further, try the complete->base constructor
   // delegation optimization.
   if (CtorType == Ctor_Complete && IsConstructorDelegationValid(Ctor) &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
       CGM.getTarget().getCXXABI().hasConstructorVariants()) {
+#else
+      true) {
+#endif
     EmitDelegateCXXConstructorCall(Ctor, Ctor_Base, Args, Ctor->getLocEnd());
     return;
   }
@@ -1361,6 +1369,7 @@ void CodeGenFunction::EmitCtorPrologue(const CXXConstructorDecl *CD,
                                           E = CD->init_end();
 
   llvm::BasicBlock *BaseCtorContinueBB = nullptr;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !true
   if (ClassDecl->getNumVBases() &&
       !CGM.getTarget().getCXXABI().hasConstructorVariants()) {
     // The ABIs that don't have constructor variants need to put a branch
@@ -1369,6 +1378,7 @@ void CodeGenFunction::EmitCtorPrologue(const CXXConstructorDecl *CD,
       CGM.getCXXABI().EmitCtorCompleteObjectHandler(*this, ClassDecl);
     assert(BaseCtorContinueBB);
   }
+#endif
 
   llvm::Value *const OldThis = CXXThisValue;
   // Virtual base initializers first.
@@ -1541,7 +1551,11 @@ void CodeGenFunction::EmitDestructorBody(FunctionArgList &Args) {
   case Dtor_Deleting: llvm_unreachable("already handled deleting case");
 
   case Dtor_Complete:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     assert((Body || getTarget().getCXXABI().isMicrosoft()) &&
+#else
+    assert((Body || false) &&
+#endif
            "can't emit a dtor without a body for non-Microsoft ABIs");
 
     // Enter the cleanup scopes for virtual bases.
@@ -1806,7 +1820,11 @@ namespace {
 /// in reverse order of their construction.
 void CodeGenFunction::EnterDtorCleanups(const CXXDestructorDecl *DD,
                                         CXXDtorType DtorType) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   assert((!DD->isTrivial() || DD->hasAttr<DLLExportAttr>()) &&
+#else
+  assert((!DD->isTrivial() || false) &&
+#endif
          "Should not emit dtor epilogue for non-exported trivial dtor!");
 
   // The deleting-destructor phase just needs to call the appropriate
@@ -2081,6 +2099,7 @@ static bool canEmitDelegateCallArgs(CodeGenFunction &CGF,
   if (Ctor->isVariadic())
     return false;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   if (CGF.getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee()) {
     // If the parameters are callee-cleanup, it's not safe to forward.
     for (auto *P : Ctor->parameters())
@@ -2093,6 +2112,7 @@ static bool canEmitDelegateCallArgs(CodeGenFunction &CGF,
     if (Info.usesInAlloca())
       return false;
   }
+#endif
 
   // Anything else should be OK.
   return true;
@@ -2178,7 +2198,11 @@ void CodeGenFunction::EmitInheritedCXXConstructorCall(
 
   // Forward the parameters.
   if (InheritedFromVBase &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
       CGM.getTarget().getCXXABI().hasConstructorVariants()) {
+#else
+      true) {
+#endif
     // Nothing to do; this construction is not responsible for constructing
     // the base class containing the inherited constructor.
     // FIXME: Can we just pass undef's for the remaining arguments if we don't

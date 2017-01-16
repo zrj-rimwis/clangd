@@ -336,6 +336,8 @@ namespace clang {
     }
   };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
+PoisonSEHIdentifiers
   class PoisonSEHIdentifiersRAIIObject {
     PoisonIdentifierRAIIObject Ident_AbnormalTermination;
     PoisonIdentifierRAIIObject Ident_GetExceptionCode;
@@ -359,6 +361,7 @@ namespace clang {
         Ident___exception_info(Self.Ident___exception_info, NewValue) {
     }
   };
+#endif
 
   /// \brief RAII class that helps handle the parsing of an open/close delimiter
   /// pair, such as braces { ... } or parentheses ( ... ).

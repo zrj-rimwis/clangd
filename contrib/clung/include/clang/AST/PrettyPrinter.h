@@ -49,7 +49,11 @@ struct PrintingPolicy {
       Alignof(LO.CPlusPlus11), UnderscoreAlignof(LO.C11),
       UseVoidForZeroParams(!LO.CPlusPlus),
       TerseOutput(false), PolishForDeclaration(false),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // always false
       Half(LO.Half), MSWChar(LO.MicrosoftExt && !LO.WChar),
+#else
+      Half(LO.Half),
+#endif
       IncludeNewlines(true), MSVCFormatting(false) { }
 
   /// \brief Adjust this printing policy for cases where it's known that
@@ -191,7 +195,9 @@ struct PrintingPolicy {
 
   /// \brief When true, print the built-in wchar_t type as __wchar_t. For use in
   /// Microsoft mode when wchar_t is not available.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   unsigned MSWChar : 1;
+#endif
 
   /// \brief When true, include newlines after statements like "break", etc.
   unsigned IncludeNewlines : 1;

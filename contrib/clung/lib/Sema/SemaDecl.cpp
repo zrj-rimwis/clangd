@@ -98,7 +98,9 @@ bool Sema::isSimpleTypeSpecifier(tok::TokenKind Kind) const {
   // token kind is a valid type specifier
   case tok::kw_short:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:
@@ -556,7 +558,9 @@ DeclSpec::TST Sema::isTagName(IdentifierInfo &II, Scope *S) {
     if (const TagDecl *TD = R.getAsSingle<TagDecl>()) {
       switch (TD->getTagKind()) {
       case TTK_Struct: return DeclSpec::TST_struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       case TTK_Interface: return DeclSpec::TST_interface;
+#endif
       case TTK_Union:  return DeclSpec::TST_union;
       case TTK_Class:  return DeclSpec::TST_class;
       case TTK_Enum:   return DeclSpec::TST_enum;
@@ -2044,8 +2048,10 @@ void Sema::MergeTypedefNameDecl(Scope *S, TypedefNameDecl *New,
     mergeDeclAttributes(New, Old);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt)
     return;
+#endif
 
   if (getLangOpts().CPlusPlus) {
     // C++ [dcl.typedef]p2:
@@ -2262,12 +2268,14 @@ static bool mergeDeclAttribute(Sema &S, NamedDecl *D,
   else if (const auto *VA = dyn_cast<TypeVisibilityAttr>(Attr))
     NewAttr = S.mergeTypeVisibilityAttr(D, VA->getRange(), VA->getVisibility(),
                                         AttrSpellingListIndex);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   else if (const auto *ImportA = dyn_cast<DLLImportAttr>(Attr))
     NewAttr = S.mergeDLLImportAttr(D, ImportA->getRange(),
                                    AttrSpellingListIndex);
   else if (const auto *ExportA = dyn_cast<DLLExportAttr>(Attr))
     NewAttr = S.mergeDLLExportAttr(D, ExportA->getRange(),
                                    AttrSpellingListIndex);
+#endif
   else if (const auto *FA = dyn_cast<FormatAttr>(Attr))
     NewAttr = S.mergeFormatAttr(D, FA->getRange(), FA->getType(),
                                 FA->getFormatIdx(), FA->getFirstArg(),
@@ -2275,10 +2283,12 @@ static bool mergeDeclAttribute(Sema &S, NamedDecl *D,
   else if (const auto *SA = dyn_cast<SectionAttr>(Attr))
     NewAttr = S.mergeSectionAttr(D, SA->getRange(), SA->getName(),
                                  AttrSpellingListIndex);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   else if (const auto *IA = dyn_cast<MSInheritanceAttr>(Attr))
     NewAttr = S.mergeMSInheritanceAttr(D, IA->getRange(), IA->getBestCase(),
                                        AttrSpellingListIndex,
                                        IA->getSemanticSpelling());
+#endif
   else if (const auto *AA = dyn_cast<AlwaysInlineAttr>(Attr))
     NewAttr = S.mergeAlwaysInlineAttr(D, AA->getRange(),
                                       &S.Context.Idents.get(AA->getSpelling()),
@@ -2310,8 +2320,10 @@ static bool mergeDeclAttribute(Sema &S, NamedDecl *D,
   if (NewAttr) {
     NewAttr->setInherited(true);
     D->addAttr(NewAttr);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (isa<MSInheritanceAttr>(NewAttr))
       S.Consumer.AssignInheritanceModel(cast<CXXRecordDecl>(D));
+#endif
     return true;
   }
 
@@ -2781,9 +2793,14 @@ bool Sema::MergeFunctionDecl(FunctionDecl *New, NamedDecl *&OldD,
       Old->hasExternalFormalLinkage() &&
       !New->getTemplateSpecializationInfo() &&
       !canRedefineFunction(Old, getLangOpts())) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (getLangOpts().MicrosoftExt) {
       Diag(New->getLocation(), diag::ext_static_non_static) << New;
       Diag(OldLocation, PrevDiag);
+#else
+    if (false) {
+     /* dummy */
+#endif
     } else {
       Diag(New->getLocation(), diag::err_static_non_static) << New;
       Diag(OldLocation, PrevDiag);
@@ -3564,10 +3581,15 @@ void Sema::MergeVarDecl(VarDecl *New, LookupResult &Previous) {
   if (New->getStorageClass() == SC_Static &&
       !New->isStaticDataMember() &&
       Old->hasExternalFormalLinkage()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (getLangOpts().MicrosoftExt) {
       Diag(New->getLocation(), diag::ext_static_non_static)
           << New->getDeclName();
       Diag(OldLocation, PrevDiag);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       Diag(New->getLocation(), diag::err_static_non_static)
           << New->getDeclName();
@@ -3806,8 +3828,10 @@ static unsigned GetDiagnosticTypeSpecifierID(DeclSpec::TST T) {
     return 0;
   case DeclSpec::TST_struct:
     return 1;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case DeclSpec::TST_interface:
     return 2;
+#endif
   case DeclSpec::TST_union:
     return 3;
   case DeclSpec::TST_enum:
@@ -3829,7 +3853,9 @@ Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS, DeclSpec &DS,
   TagDecl *Tag = nullptr;
   if (DS.getTypeSpecType() == DeclSpec::TST_class ||
       DS.getTypeSpecType() == DeclSpec::TST_struct ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       DS.getTypeSpecType() == DeclSpec::TST_interface ||
+#endif
       DS.getTypeSpecType() == DeclSpec::TST_union ||
       DS.getTypeSpecType() == DeclSpec::TST_enum) {
     TagD = DS.getRepAsDecl();
@@ -3967,11 +3993,13 @@ Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS, DeclSpec &DS,
       else if (const RecordType *UT = DS.getRepAsType().get()->getAsUnionType())
         Record = UT->getDecl();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Record && getLangOpts().MicrosoftExt) {
         Diag(DS.getLocStart(), diag::ext_ms_anonymous_record)
           << Record->isUnion() << DS.getSourceRange();
         return BuildMicrosoftCAnonymousStruct(S, DS, Record);
       }
+#endif
 
       DeclaresAnything = false;
     }
@@ -4068,7 +4096,9 @@ Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS, DeclSpec &DS,
     DeclSpec::TST TypeSpecType = DS.getTypeSpecType();
     if (TypeSpecType == DeclSpec::TST_class ||
         TypeSpecType == DeclSpec::TST_struct ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         TypeSpecType == DeclSpec::TST_interface ||
+#endif
         TypeSpecType == DeclSpec::TST_union ||
         TypeSpecType == DeclSpec::TST_enum) {
       for (AttributeList* attrs = DS.getAttributes().getList(); attrs;
@@ -4359,9 +4389,15 @@ Decl *Sema::BuildAnonymousStructOrUnion(Scope *S, DeclSpec &DS,
         if (!MemRecord->isAnonymousStructOrUnion() &&
             MemRecord->getDeclName()) {
           // Visual C++ allows type definition in anonymous struct or union.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           if (getLangOpts().MicrosoftExt)
             Diag(MemRecord->getLocation(), diag::ext_anonymous_record_with_type)
               << Record->isUnion();
+#else
+          if (false) {
+            /* dummy */
+          }
+#endif
           else {
             // This is a nested type declaration.
             Diag(MemRecord->getLocation(), diag::err_anonymous_record_with_type)
@@ -4392,10 +4428,16 @@ Decl *Sema::BuildAnonymousStructOrUnion(Scope *S, DeclSpec &DS,
           DK = diag::err_anonymous_record_with_static;
 
         // Visual C++ allows type definition in anonymous struct or union.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (getLangOpts().MicrosoftExt &&
             DK == diag::err_anonymous_record_with_type)
           Diag(Mem->getLocation(), diag::ext_anonymous_record_with_type)
             << Record->isUnion();
+#else
+        if (false) {
+          /* dummy */
+        }
+#endif
         else {
           Diag(Mem->getLocation(), DK) << Record->isUnion();
           Invalid = true;
@@ -4511,6 +4553,7 @@ Decl *Sema::BuildAnonymousStructOrUnion(Scope *S, DeclSpec &DS,
 ///   var.a = 3;
 /// }
 ///
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 Decl *Sema::BuildMicrosoftCAnonymousStruct(Scope *S, DeclSpec &DS,
                                            RecordDecl *Record) {
   assert(Record && "expected a record!");
@@ -4555,6 +4598,7 @@ Decl *Sema::BuildMicrosoftCAnonymousStruct(Scope *S, DeclSpec &DS,
 
   return Anon;
 }
+#endif
 
 /// GetNameForDeclarator - Determine the full declaration name for the
 /// given Declarator.
@@ -4849,8 +4893,12 @@ bool Sema::diagnoseQualifiedDeclaration(CXXScopeSpec &SS, DeclContext *DC,
   // contexts, but that rule was removed by DR482.
   if (Cur->Equals(DC)) {
     if (Cur->isRecord()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       Diag(Loc, LangOpts.MicrosoftExt ? diag::warn_member_extra_qualification
                                       : diag::err_member_extra_qualification)
+#else
+      Diag(Loc, diag::err_member_extra_qualification)
+#endif
         << Name << FixItHint::CreateRemoval(SS.getRange());
       SS.clear();
     } else {
@@ -5561,6 +5609,7 @@ static void checkAttributesAfterMerging(Sema &S, NamedDecl &ND) {
 
   // 'selectany' only applies to externally visible variable declarations.
   // It does not apply to functions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (SelectAnyAttr *Attr = ND.getAttr<SelectAnyAttr>()) {
     if (isa<FunctionDecl>(ND) || !ND.isExternallyVisible()) {
       S.Diag(Attr->getLocation(),
@@ -5568,7 +5617,9 @@ static void checkAttributesAfterMerging(Sema &S, NamedDecl &ND) {
       ND.dropAttr<SelectAnyAttr>();
     }
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume nullptr
   if (const InheritableAttr *Attr = getDLLAttr(&ND)) {
     // dll attributes require external linkage. Static locals may have external
     // linkage but still cannot be explicitly imported or exported.
@@ -5579,6 +5630,7 @@ static void checkAttributesAfterMerging(Sema &S, NamedDecl &ND) {
       ND.setInvalidDecl();
     }
   }
+#endif
 
   // Virtual functions cannot be marked as 'notail'.
   if (auto *Attr = ND.getAttr<NotTailCalledAttr>())
@@ -5591,6 +5643,7 @@ static void checkAttributesAfterMerging(Sema &S, NamedDecl &ND) {
       }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void checkDLLAttributeRedeclaration(Sema &S, NamedDecl *OldDecl,
                                            NamedDecl *NewDecl,
                                            bool IsSpecialization,
@@ -5700,6 +5753,7 @@ static void checkDLLAttributeRedeclaration(Sema &S, NamedDecl *OldDecl,
         << NewDecl << OldImportAttr;
   }
 }
+#endif
 
 /// Given that we are within the definition of the given function,
 /// will that definition behave like C99's 'inline', where the
@@ -5871,10 +5925,12 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
 
   // dllimport globals without explicit storage class are treated as extern. We
   // have to change the storage class this early to get the right DeclContext.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // la bug
   if (SC == SC_None && !DC->isRecord() &&
       hasParsedAttr(S, D, AttributeList::AT_DLLImport) &&
       !hasParsedAttr(S, D, AttributeList::AT_DLLExport))
     SC = SC_Extern;
+#endif
 
   DeclContext *OriginalDC = DC;
   bool IsLocalExternDecl = SC == SC_Extern &&
@@ -6301,9 +6357,11 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   // Ensure that dllimport globals without explicit storage class are treated as
   // extern. The storage class is set above using parsed attributes. Now we can
   // check the VarDecl itself.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   assert(!NewVD->hasAttr<DLLImportAttr>() ||
          NewVD->getAttr<DLLImportAttr>()->isInherited() ||
          NewVD->isStaticDataMember() || NewVD->getStorageClass() != SC_None);
+#endif
 
   // In auto-retain/release, infer strong retension for variables of
   // retainable type.
@@ -6501,11 +6559,13 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       Diag(D.getLocStart(), diag::warn_main_redefined);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // there should be none, skip it
   if (D.isRedeclaration() && !Previous.empty()) {
     checkDLLAttributeRedeclaration(
         *this, dyn_cast<NamedDecl>(Previous.getRepresentativeDecl()), NewVD,
         IsExplicitSpecialization, D.isFunctionDefinition());
   }
+#endif
 
   if (NewTemplate) {
     if (NewVD->isInvalidDecl())
@@ -7734,8 +7794,10 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     // return true).
     if (const CXXRecordDecl *Parent =
           dyn_cast<CXXRecordDecl>(NewFD->getDeclContext())) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Parent->isInterface() && cast<CXXMethodDecl>(NewFD)->isUserProvided())
         NewFD->setPure(true);
+#endif
 
       // C++ [class.union]p2
       //   A union can have member functions, but not virtual functions.
@@ -8326,9 +8388,13 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       if (CurContext->isDependentContext() && CurContext->isRecord()
           && !isFriend) {
         isDependentClassScopeExplicitSpecialization = true;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         Diag(NewFD->getLocation(), getLangOpts().MicrosoftExt ?
           diag::ext_function_specialization_in_class :
           diag::err_function_specialization_in_class)
+#else
+        Diag(NewFD->getLocation(), diag::err_function_specialization_in_class)
+#endif
           << NewFD->getDeclName();
       } else if (CheckFunctionTemplateSpecialization(NewFD,
                                   (HasExplicitTemplateArgs ? &TemplateArgs
@@ -8534,12 +8600,14 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   // Set this FunctionDecl's range up to the right paren.
   NewFD->setRangeEnd(D.getSourceRange().getEnd());
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // there should be none, skip it
   if (D.isRedeclaration() && !Previous.empty()) {
     checkDLLAttributeRedeclaration(
         *this, dyn_cast<NamedDecl>(Previous.getRepresentativeDecl()), NewFD,
         isExplicitSpecialization || isFunctionTemplateSpecialization,
         D.isFunctionDefinition());
   }
+#endif
 
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (getLangOpts().CUDA) {
@@ -9593,11 +9661,13 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init,
   }
 
   // dllimport cannot be used on variable definitions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (VDecl->hasAttr<DLLImportAttr>() && !VDecl->isStaticDataMember()) {
     Diag(VDecl->getLocation(), diag::err_attribute_dllimport_data_definition);
     VDecl->setInvalidDecl();
     return;
   }
+#endif
 
   if (VDecl->isLocalVarDecl() && VDecl->hasExternalStorage()) {
     // C99 6.7.8p5. C++ has no such restriction, but that is a defect.
@@ -10531,11 +10601,13 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
     if (FunctionDecl *FD =
             dyn_cast_or_null<FunctionDecl>(VD->getParentFunctionOrMethod())) {
       // Static locals inherit dll attributes from their function.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume nullptr
       if (Attr *A = getDLLAttr(FD)) {
         auto *NewAttr = cast<InheritableAttr>(A->clone(getASTContext()));
         NewAttr->setInherited(true);
         VD->addAttr(NewAttr);
       }
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       // CUDA E.2.9.4: Within the body of a __device__ or __global__
       // function, only __shared__ variables may be declared with
@@ -10592,6 +10664,7 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
 #endif
 
   // Grab the dllimport or dllexport attribute off of the VarDecl.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // wow**2
   const InheritableAttr *DLLAttr = getDLLAttr(VD);
 
   // Imported static data members cannot be defined out-of-line.
@@ -10638,6 +10711,7 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
       VD->dropAttr<UsedAttr>();
     }
   }
+#endif
 
   const DeclContext *DC = VD->getDeclContext();
   // If there's a #pragma GCC visibility in scope, and this isn't a class
@@ -11366,6 +11440,7 @@ Decl *Sema::ActOnStartOfFunctionDef(Scope *FnBodyScope, Decl *D,
     ResolveExceptionSpec(D->getLocation(), FPT);
 
   // dllimport cannot be applied to non-inline function definitions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (FD->hasAttr<DLLImportAttr>() && !FD->isInlined() &&
       !FD->isTemplateInstantiation()) {
     assert(!FD->hasAttr<DLLExportAttr>());
@@ -11373,6 +11448,7 @@ Decl *Sema::ActOnStartOfFunctionDef(Scope *FnBodyScope, Decl *D,
     FD->setInvalidDecl();
     return D;
   }
+#endif
   // We want to attach documentation to original Decl (which might be
   // a function template).
   ActOnDocumentableDecl(D);
@@ -11525,8 +11601,10 @@ Decl *Sema::ActOnFinishFunctionBody(Decl *dcl, Stmt *Body,
 
     // MSVC permits the use of pure specifier (=0) on function definition,
     // defined at class scope, warn about this non-standard construct.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (getLangOpts().MicrosoftExt && FD->isPure() && FD->isCanonicalDecl())
       Diag(FD->getLocation(), diag::ext_pure_function_definition);
+#endif
 
     if (!FD->isInvalidDecl()) {
       // Don't diagnose unused parameters of defaulted or deleted functions.
@@ -11993,7 +12071,9 @@ TypedefDecl *Sema::ParseTypedefDecl(Scope *S, Declarator &D, QualType T,
   switch (D.getDeclSpec().getTypeSpecType()) {
   case TST_enum:
   case TST_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TST_interface:
+#endif
   case TST_union:
   case TST_class: {
     TagDecl *tagFromDeclSpec = cast<TagDecl>(D.getDeclSpec().getRepAsDecl());
@@ -12367,12 +12447,14 @@ Decl *Sema::ActOnTag(Scope *S, unsigned TagSpec, TagUseKind TUK,
                                           UPPC_FixedUnderlyingType))
         EnumUnderlying = Context.IntTy.getTypePtr();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // sure?
     } else if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
       if (getLangOpts().MSVCCompat || TUK == TUK_Definition) {
         // Microsoft enums are always of int type.
         EnumUnderlying = Context.IntTy.getTypePtr();
         EnumUnderlyingIsImplicit = true;
       }
+#endif
     }
   }
 
@@ -13028,7 +13110,9 @@ CreateNewDecl:
     // parsing of the struct).
     if (TUK == TUK_Definition) {
       AddAlignmentAttributesForRecord(RD);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // dummify
       AddMsStructLayoutForRecord(RD);
+#endif
     }
   }
 
@@ -13315,10 +13399,14 @@ ExprResult Sema::VerifyBitField(SourceLocation FieldLoc,
     // ABI.
     bool CStdConstraintViolation =
         BitfieldIsOverwide && !getLangOpts().CPlusPlus;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume unkn && (false || false)
     bool MSBitfieldViolation =
         Value.ugt(TypeStorageSize) &&
         (IsMsStruct || Context.getTargetInfo().getCXXABI().isMicrosoft());
     if (CStdConstraintViolation || MSBitfieldViolation) {
+#else
+    if (CStdConstraintViolation || false) {
+#endif
       unsigned DiagWidth =
           CStdConstraintViolation ? TypeWidth : TypeStorageSize;
       if (FieldName)
@@ -13549,7 +13637,11 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
     BitWidth = nullptr;
   // If this is declared as a bit-field, check the bit-field.
   if (BitWidth) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     BitWidth = VerifyBitField(Loc, II, T, Record->isMsStruct(Context), BitWidth,
+#else
+    BitWidth = VerifyBitField(Loc, II, T, false, BitWidth,
+#endif
                               &ZeroWidth).get();
     if (!BitWidth) {
       InvalidDecl = true;
@@ -13615,11 +13707,17 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
       // the program is ill-formed, except when compiling with MSVC extensions
       // enabled.
       if (EltTy->isReferenceType()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         Diag(NewFD->getLocation(), getLangOpts().MicrosoftExt ?
                                     diag::ext_union_member_of_reference_type :
                                     diag::err_union_member_of_reference_type)
+#else
+        Diag(NewFD->getLocation(), diag::err_union_member_of_reference_type)
+#endif
           << NewFD->getDeclName() << EltTy;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (!getLangOpts().MicrosoftExt)
+#endif
           NewFD->setInvalidDecl();
       }
     }
@@ -13947,7 +14045,11 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
       continue;
     } else if (FDTy->isIncompleteArrayType() && Record &&
                ((i + 1 == Fields.end() && !Record->isUnion()) ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                 ((getLangOpts().MicrosoftExt ||
+#else
+                ((false ||
+#endif
                   getLangOpts().CPlusPlus) &&
                  (i + 1 == Fields.end() || Record->isUnion())))) {
       // Flexible array member.
@@ -13956,17 +14058,29 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
       // as the sole element of a struct/class.
       unsigned DiagID = 0;
       if (Record->isUnion())
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // hmm nested
         DiagID = getLangOpts().MicrosoftExt
                      ? diag::ext_flexible_array_union_ms
                      : getLangOpts().CPlusPlus
                            ? diag::ext_flexible_array_union_gnu
                            : diag::err_flexible_array_union;
+#else
+        DiagID = getLangOpts().CPlusPlus
+                           ? diag::ext_flexible_array_union_gnu
+                           : diag::err_flexible_array_union;
+#endif
       else if (NumNamedMembers < 1)
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         DiagID = getLangOpts().MicrosoftExt
                      ? diag::ext_flexible_array_empty_aggregate_ms
                      : getLangOpts().CPlusPlus
                            ? diag::ext_flexible_array_empty_aggregate_gnu
                            : diag::err_flexible_array_empty_aggregate;
+#else
+        DiagID = getLangOpts().CPlusPlus
+                           ? diag::ext_flexible_array_empty_aggregate_gnu
+                           : diag::err_flexible_array_empty_aggregate;
+#endif
 
       if (DiagID)
         Diag(FD->getLocation(), DiagID) << FD->getDeclName()
@@ -14161,10 +14275,12 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
     if (Record->hasAttrs()) {
       CheckAlignasUnderalignment(Record);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // just like that?
       if (const MSInheritanceAttr *IA = Record->getAttr<MSInheritanceAttr>())
         checkMSInheritanceAttrOnDefinition(cast<CXXRecordDecl>(Record),
                                            IA->getRange(), IA->getBestCase(),
                                            IA->getSemanticSpelling());
+#endif
     }
 
     // Check if the structure/union declaration is a type that can have zero

@@ -2387,8 +2387,12 @@ void Clang::AddLanaiTargetArgs(const ArgList &Args,
 void Clang::AddWebAssemblyTargetArgs(const ArgList &Args,
                                      ArgStringList &CmdArgs) const {
   // Default to "hidden" visibility.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!Args.hasArg(options::OPT_fvisibility_EQ,
                    options::OPT_fvisibility_ms_compat)) {
+#else
+  if (!Args.hasArg(options::OPT_fvisibility_EQ)) {
+#endif
     CmdArgs.push_back("-fvisibility");
     CmdArgs.push_back("hidden");
   }
@@ -3537,6 +3541,7 @@ VersionTuple visualstudio::getMSVCVersion(const Driver *D, const ToolChain &TC,
                                           const llvm::Triple &Triple,
                                           const llvm::opt::ArgList &Args,
                                           bool IsWindowsMSVC) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // just assume false
   if (Args.hasFlag(options::OPT_fms_extensions, options::OPT_fno_ms_extensions,
                    IsWindowsMSVC) ||
       Args.hasArg(options::OPT_fmsc_version) ||
@@ -3584,6 +3589,7 @@ VersionTuple visualstudio::getMSVCVersion(const Driver *D, const ToolChain &TC,
       return VersionTuple(18);
     }
   }
+#endif
   return VersionTuple();
 }
 
@@ -4458,10 +4464,12 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-fforbid-guard-variables");
 #endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Args.hasFlag(options::OPT_mms_bitfields, options::OPT_mno_ms_bitfields,
                    false)) {
     CmdArgs.push_back("-mms-bitfields");
   }
+#endif
 
   // This is a coarse approximation of what llvm-gcc actually does, both
   // -fasynchronous-unwind-tables and -fnon-call-exceptions interact in more
@@ -5075,17 +5083,23 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // -fvisibility= and -fvisibility-ms-compat are of a piece.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (const Arg *A = Args.getLastArg(options::OPT_fvisibility_EQ,
                                      options::OPT_fvisibility_ms_compat)) {
+#else
+  if (const Arg *A = Args.getLastArg(options::OPT_fvisibility_EQ)) {
+#endif
     if (A->getOption().matches(options::OPT_fvisibility_EQ)) {
       CmdArgs.push_back("-fvisibility");
       CmdArgs.push_back(A->getValue());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     } else {
       assert(A->getOption().matches(options::OPT_fvisibility_ms_compat));
       CmdArgs.push_back("-fvisibility");
       CmdArgs.push_back("hidden");
       CmdArgs.push_back("-ftype-visibility");
       CmdArgs.push_back("default");
+#endif
     }
   }
 
@@ -5561,9 +5575,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-fno-use-cxa-atexit");
 
   // -fms-extensions=0 is default.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Args.hasFlag(options::OPT_fms_extensions, options::OPT_fno_ms_extensions,
                    IsWindowsMSVC))
     CmdArgs.push_back("-fms-extensions");
+#endif
 
   // -fno-use-line-directives is default.
   if (Args.hasFlag(options::OPT_fuse_line_directives,
@@ -5571,12 +5587,14 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-fuse-line-directives");
 
   // -fms-compatibility=0 is default.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Args.hasFlag(options::OPT_fms_compatibility,
                    options::OPT_fno_ms_compatibility,
                    (IsWindowsMSVC &&
                     Args.hasFlag(options::OPT_fms_extensions,
                                  options::OPT_fno_ms_extensions, true))))
     CmdArgs.push_back("-fms-compatibility");
+#endif
 
   // -fms-compatibility-version=18.00 is default.
   VersionTuple MSVT = visualstudio::getMSVCVersion(
@@ -5609,9 +5627,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // -fno-borland-extensions is default.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Args.hasFlag(options::OPT_fborland_extensions,
                    options::OPT_fno_borland_extensions, false))
     CmdArgs.push_back("-fborland-extensions");
+#endif
 
   // -fno-declspec is default, except for PS4.
   if (Args.hasFlag(options::OPT_fdeclspec, options::OPT_fno_declspec,
@@ -5792,9 +5812,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     A->render(Args, CmdArgs);
 
   // -fno-pascal-strings is default, only pass non-default.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Args.hasFlag(options::OPT_fpascal_strings,
                    options::OPT_fno_pascal_strings, false))
     CmdArgs.push_back("-fpascal-strings");
+#endif
 
   // Honor -fpack-struct= and -fpack-struct, if given. Note that
   // -fno-pack-struct doesn't apply to -fpack-struct=.
@@ -5934,9 +5956,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-fno-spell-checking");
 
   // -fno-asm-blocks is default.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Args.hasFlag(options::OPT_fasm_blocks, options::OPT_fno_asm_blocks,
                    false))
     CmdArgs.push_back("-fasm-blocks");
+#endif
 
   // -fgnu-inline-asm is default.
   if (!Args.hasFlag(options::OPT_fgnu_inline_asm,
@@ -9409,6 +9433,7 @@ static void AddRunTimeLibs(const ToolChain &TC, const Driver &D,
     break;
   case ToolChain::RLT_Libgcc:
     // Make sure libgcc is not used under MSVC environment by default
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (TC.getTriple().isKnownWindowsMSVCEnvironment()) {
       // Issue error diagnostic if libgcc is explicitly specified
       // through command line as --rtlib option argument.
@@ -9417,6 +9442,7 @@ static void AddRunTimeLibs(const ToolChain &TC, const Driver &D,
             << Args.getLastArg(options::OPT_rtlib_EQ)->getValue() << "MSVC";
       }
     } else
+#endif
       AddLibgcc(TC.getTriple(), D, CmdArgs, Args);
     break;
   }

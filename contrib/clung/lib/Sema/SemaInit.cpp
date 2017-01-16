@@ -177,8 +177,10 @@ static void CheckStringInit(Expr *Str, QualType &DeclT, const ArrayType *AT,
       // so the example below is valid:
       //
       // unsigned char a[2] = "\pa";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (SL->isPascal())
         StrLength--;
+#endif
     }
   
     // [dcl.init.string]p2
@@ -4322,7 +4324,11 @@ static void TryReferenceInitializationCore(Sema &S,
       //
       //   The constructor that would be used to make the copy shall
       //   be callable whether or not the copy is actually done.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (!S.getLangOpts().CPlusPlus11 && !S.getLangOpts().MicrosoftExt)
+#else
+      if (!S.getLangOpts().CPlusPlus11 && !false)
+#endif
         Sequence.AddExtraneousCopyToTemporary(cv2T2);
       else if (S.getLangOpts().CPlusPlus11)
         CheckCXX98CompatAccessibleCopy(S, Entity, Initializer);
@@ -6216,9 +6222,11 @@ InitializationSequence::Perform(Sema &S,
   }
   if (!ZeroInitializationFixit.empty()) {
     unsigned DiagID = diag::err_default_init_const;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume n // assume noo
     if (Decl *D = Entity.getDecl())
       if (S.getLangOpts().MSVCCompat && D->hasAttr<SelectAnyAttr>())
         DiagID = diag::ext_default_init_const;
+#endif
 
     // The initialization would have succeeded with this fixit. Since the fixit
     // is on the error, we need to build a valid AST in this case, so this isn't
@@ -7758,7 +7766,11 @@ static void DiagnoseNarrowingInInitList(Sema &S,
     // narrowing conversion even if the value is a constant and can be
     // represented exactly as an integer.
     S.Diag(PostInit->getLocStart(),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
            (S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11)
+#else
+           (false || !S.getLangOpts().CPlusPlus11)
+#endif
                ? diag::warn_init_list_type_narrowing
                : diag::ext_init_list_type_narrowing)
       << PostInit->getSourceRange()
@@ -7769,7 +7781,11 @@ static void DiagnoseNarrowingInInitList(Sema &S,
   case NK_Constant_Narrowing:
     // A constant value was narrowed.
     S.Diag(PostInit->getLocStart(),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
            (S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11)
+#else
+           (false || !S.getLangOpts().CPlusPlus11)
+#endif
                ? diag::warn_init_list_constant_narrowing
                : diag::ext_init_list_constant_narrowing)
       << PostInit->getSourceRange()
@@ -7780,7 +7796,11 @@ static void DiagnoseNarrowingInInitList(Sema &S,
   case NK_Variable_Narrowing:
     // A variable's value may have been narrowed.
     S.Diag(PostInit->getLocStart(),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
            (S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11)
+#else
+           (false || !S.getLangOpts().CPlusPlus11)
+#endif
                ? diag::warn_init_list_variable_narrowing
                : diag::ext_init_list_variable_narrowing)
       << PostInit->getSourceRange()

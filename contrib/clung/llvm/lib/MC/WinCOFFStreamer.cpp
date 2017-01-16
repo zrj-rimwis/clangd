@@ -208,6 +208,7 @@ void MCWinCOFFStreamer::EmitCommonSymbol(MCSymbol *S, uint64_t Size,
   auto *Symbol = cast<MCSymbolCOFF>(S);
 
   const Triple &T = getContext().getObjectFileInfo()->getTargetTriple();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (T.isKnownWindowsMSVCEnvironment()) {
     if (ByteAlignment > 32)
       report_fatal_error("alignment is limited to 32-bytes");
@@ -215,12 +216,17 @@ void MCWinCOFFStreamer::EmitCommonSymbol(MCSymbol *S, uint64_t Size,
     // Round size up to alignment so that we will honor the alignment request.
     Size = std::max(Size, static_cast<uint64_t>(ByteAlignment));
   }
+#endif
 
   getAssembler().registerSymbol(*Symbol);
   Symbol->setExternal(true);
   Symbol->setCommon(Size, ByteAlignment);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!T.isKnownWindowsMSVCEnvironment() && ByteAlignment > 1) {
+#else
+  if (!false && ByteAlignment > 1) {
+#endif
     SmallString<128> Directive;
     raw_svector_ostream OS(Directive);
     const MCObjectFileInfo *MFI = getContext().getObjectFileInfo();

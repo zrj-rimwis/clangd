@@ -171,9 +171,11 @@ namespace {
 
       // Handle friend functions.
       if (D->isInIdentifierNamespace(Decl::IDNS_OrdinaryFriend)) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (Ctx->getTargetInfo().getCXXABI().isMicrosoft()
             && !D->getLexicalDeclContext()->isDependentContext())
           Builder->EmitTopLevelDecl(D);
+#endif
         return;
       }
 
@@ -213,6 +215,7 @@ namespace {
 
       // For MSVC compatibility, treat declarations of static data members with
       // inline initializers as definitions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Ctx->getTargetInfo().getCXXABI().isMicrosoft()) {
         for (Decl *Member : D->decls()) {
           if (VarDecl *VD = dyn_cast<VarDecl>(Member)) {
@@ -223,6 +226,7 @@ namespace {
           }
         }
       }
+#endif
       // For OpenMP emit declare reduction functions, if required.
       if (Ctx->getLangOpts().OpenMP) {
         for (Decl *Member : D->decls()) {

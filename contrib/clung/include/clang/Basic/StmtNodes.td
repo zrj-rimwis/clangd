@@ -32,7 +32,6 @@ def CapturedStmt : Stmt;
 // Asm statements
 def AsmStmt : Stmt<1>;
 def GCCAsmStmt : DStmt<AsmStmt>;
-def MSAsmStmt : DStmt<AsmStmt>;
 
 // Obj-C statements
 def ObjCAtTryStmt : Stmt;
@@ -182,7 +181,6 @@ def TypoExpr : DStmt<Expr>;
 // Microsoft Extensions.
 def MSPropertyRefExpr : DStmt<Expr>;
 def MSPropertySubscriptExpr : DStmt<Expr>;
-def CXXUuidofExpr : DStmt<Expr>; 
 def SEHTryStmt : Stmt;
 def SEHExceptStmt : Stmt;
 def SEHFinallyStmt : Stmt;

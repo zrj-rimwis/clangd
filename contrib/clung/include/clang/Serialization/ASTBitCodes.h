@@ -581,7 +581,11 @@ namespace clang {
       DELETE_EXPRS_TO_ANALYZE = 54,
 
       /// \brief Record code for \#pragma ms_struct options.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       MSSTRUCT_PRAGMA_OPTIONS = 55,
+#else
+      MSSTRUCT_PRAGMA_OPTIONS_disabled = 55,
+#endif
 
       /// \brief Record code for \#pragma ms_struct options.
       POINTERS_TO_MEMBERS_PRAGMA_OPTIONS = 56
@@ -1230,7 +1234,11 @@ namespace clang {
       /// \brief A GCC-style AsmStmt record.
       STMT_GCCASM,
       /// \brief A MS-style AsmStmt record.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       STMT_MSASM,
+#else
+      STMT_MSASM_disabled,
+#endif
       /// \brief A PredefinedExpr record.
       EXPR_PREDEFINED,
       /// \brief A DeclRefExpr record.
@@ -1444,8 +1452,13 @@ namespace clang {
       // Microsoft
       EXPR_CXX_PROPERTY_REF_EXPR, // MSPropertyRefExpr
       EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR, // MSPropertySubscriptExpr
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       EXPR_CXX_UUIDOF_EXPR,       // CXXUuidofExpr (of expr).
       EXPR_CXX_UUIDOF_TYPE,       // CXXUuidofExpr (of type).
+#else
+      EXPR_CXX_UUIDOF_EXPR_disabled,
+      EXPR_CXX_UUIDOF_TYPE_disabled,
+#endif
       STMT_SEH_LEAVE,             // SEHLeaveStmt
       STMT_SEH_EXCEPT,            // SEHExceptStmt
       STMT_SEH_FINALLY,           // SEHFinallyStmt

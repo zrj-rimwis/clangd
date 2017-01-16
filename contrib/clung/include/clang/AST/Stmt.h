@@ -1496,7 +1496,11 @@ public:
 
   static bool classof(const Stmt *T) {
     return T->getStmtClass() == GCCAsmStmtClass ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       T->getStmtClass() == MSAsmStmtClass;
+#else
+      false;
+#endif
   }
 
   // Input expr iterators.
@@ -1741,6 +1745,7 @@ public:
 
 /// This represents a Microsoft inline-assembly statement extension.
 ///
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MSAsmStmt : public AsmStmt {
   SourceLocation LBraceLoc, EndLoc;
   StringRef AsmStr;
@@ -1840,6 +1845,7 @@ public:
     return child_range(&Exprs[0], &Exprs[NumInputs + NumOutputs]);
   }
 };
+#endif
 
 class SEHExceptStmt : public Stmt {
   SourceLocation  Loc;

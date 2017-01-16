@@ -492,9 +492,11 @@ public:
     return TargetTriple.isWindowsMSVCEnvironment();
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isTargetKnownWindowsMSVC() const {
     return TargetTriple.isKnownWindowsMSVCEnvironment();
   }
+#endif
 
   bool isTargetWindowsCoreCLR() const {
     return TargetTriple.isWindowsCoreCLREnvironment();
@@ -521,7 +523,11 @@ public:
   }
 
   bool isTargetWin32() const {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return !In64BitMode && (isTargetCygMing() || isTargetKnownWindowsMSVC());
+#else
+    return !In64BitMode && (isTargetCygMing() || false);
+#endif
   }
 
   bool isPICStyleGOT() const { return PICStyle == PICStyles::GOT; }

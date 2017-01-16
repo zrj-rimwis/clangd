@@ -622,7 +622,11 @@ void CodeGenPGO::assignRegionCounters(GlobalDecl GD, llvm::Function *Fn) {
   // Constructors and destructors may be represented by several functions in IR.
   // If so, instrument only base variant, others are implemented by delegation
   // to the base one, it would be counted twice otherwise.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   if (CGM.getTarget().getCXXABI().hasConstructorVariants() &&
+#else
+  if (true &&
+#endif
       ((isa<CXXConstructorDecl>(GD.getDecl()) &&
         GD.getCtorType() != Ctor_Base) ||
        (isa<CXXDestructorDecl>(GD.getDecl()) &&

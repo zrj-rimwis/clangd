@@ -1362,7 +1362,9 @@ static bool IsGlobalLValue(APValue::LValueBase B) {
   case Expr::ObjCStringLiteralClass:
   case Expr::ObjCEncodeExprClass:
   case Expr::CXXTypeidExprClass:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
+#endif
     return true;
   case Expr::CallExprClass:
     return IsStringLiteralCall(cast<CallExpr>(E));
@@ -1431,8 +1433,10 @@ static bool CheckLValueConstantExpression(EvalInfo &Info, SourceLocation Loc,
         return false;
 
       // A dllimport variable never acts like a constant.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no
       if (Var->hasAttr<DLLImportAttr>())
         return false;
+#endif
     }
     if (const auto *FD = dyn_cast<const FunctionDecl>(VD)) {
       // __declspec(dllimport) must be handled very carefully:
@@ -1445,8 +1449,10 @@ static bool CheckLValueConstantExpression(EvalInfo &Info, SourceLocation Loc,
       // The C language has no notion of ODR; furthermore, it has no notion of
       // dynamic initialization.  This means that we are permitted to
       // perform initialization with the address of the thunk.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
       if (Info.getLangOpts().CPlusPlus && FD->hasAttr<DLLImportAttr>())
         return false;
+#endif
     }
   }
 
@@ -4719,7 +4725,9 @@ public:
   bool VisitStringLiteral(const StringLiteral *E) { return Success(E); }
   bool VisitObjCEncodeExpr(const ObjCEncodeExpr *E) { return Success(E); }
   bool VisitCXXTypeidExpr(const CXXTypeidExpr *E);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool VisitCXXUuidofExpr(const CXXUuidofExpr *E);
+#endif
   bool VisitArraySubscriptExpr(const ArraySubscriptExpr *E);
   bool VisitUnaryDeref(const UnaryOperator *E);
   bool VisitUnaryReal(const UnaryOperator *E);
@@ -4881,9 +4889,11 @@ bool LValueExprEvaluator::VisitCXXTypeidExpr(const CXXTypeidExpr *E) {
   return false;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool LValueExprEvaluator::VisitCXXUuidofExpr(const CXXUuidofExpr *E) {
   return Success(E);
 }
+#endif
 
 bool LValueExprEvaluator::VisitMemberExpr(const MemberExpr *E) {
   // Handle static data members.
@@ -8962,7 +8972,9 @@ public:
     switch (E->getBuiltinCallee()) {
     default:
       return ExprEvaluatorBaseTy::VisitCallExpr(E);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Builtin::BI__assume:
+#endif
     case Builtin::BI__builtin_assume:
       // The argument is not evaluated!
       return true;
@@ -9354,7 +9366,9 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
 #endif
   case Expr::CXXDynamicCastExprClass:
   case Expr::CXXTypeidExprClass:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
+#endif
   case Expr::MSPropertyRefExprClass:
   case Expr::MSPropertySubscriptExprClass:
   case Expr::CXXNullPtrLiteralExprClass:

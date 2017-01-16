@@ -43,7 +43,11 @@ class MangleContext {
 public:
   enum ManglerKind {
     MK_Itanium,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     MK_Microsoft
+#else
+    MK_Microsoft_disabled
+#endif
   };
 
 private:
@@ -177,6 +181,7 @@ public:
                                       DiagnosticsEngine &Diags);
 };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MicrosoftMangleContext : public MangleContext {
 public:
   explicit MicrosoftMangleContext(ASTContext &C, DiagnosticsEngine &D)
@@ -241,6 +246,7 @@ public:
   static MicrosoftMangleContext *create(ASTContext &Context,
                                         DiagnosticsEngine &Diags);
 };
+#endif
 }
 
 #endif

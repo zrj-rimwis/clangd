@@ -798,7 +798,9 @@ static void AddStmtsExprs(llvm::BitstreamWriter &Stream,
   RECORD(STMT_RETURN);
   RECORD(STMT_DECL);
   RECORD(STMT_GCCASM);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   RECORD(STMT_MSASM);
+#endif
   RECORD(EXPR_PREDEFINED);
   RECORD(EXPR_DECL_REF);
   RECORD(EXPR_INTEGER_LITERAL);
@@ -899,8 +901,10 @@ static void AddStmtsExprs(llvm::BitstreamWriter &Stream,
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   RECORD(EXPR_CUDA_KERNEL_CALL);
 #endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   RECORD(EXPR_CXX_UUIDOF_EXPR);
   RECORD(EXPR_CXX_UUIDOF_TYPE);
+#endif
   RECORD(EXPR_LAMBDA);
 #undef RECORD
 }
@@ -983,7 +987,9 @@ void ASTWriter::WriteBlockInfoBlock() {
   RECORD(UNDEFINED_BUT_USED);
   RECORD(LATE_PARSED_TEMPLATE);
   RECORD(OPTIMIZE_PRAGMA_OPTIONS);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   RECORD(MSSTRUCT_PRAGMA_OPTIONS);
+#endif
   RECORD(POINTERS_TO_MEMBERS_PRAGMA_OPTIONS);
   RECORD(UNUSED_LOCAL_TYPEDEF_NAME_CANDIDATES);
   RECORD(DELETE_EXPRS_TO_ANALYZE);
@@ -3921,20 +3927,24 @@ void ASTWriter::WriteOptimizePragmaOptions(Sema &SemaRef) {
 }
 
 /// \brief Write the state of 'pragma ms_struct' at the end of the module.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTWriter::WriteMSStructPragmaOptions(Sema &SemaRef) {
   RecordData Record;
   Record.push_back(SemaRef.MSStructPragmaOn ? PMSST_ON : PMSST_OFF);
   Stream.EmitRecord(MSSTRUCT_PRAGMA_OPTIONS, Record);
 }
+#endif
 
 /// \brief Write the state of 'pragma pointers_to_members' at the end of the
 //module.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTWriter::WriteMSPointersToMembersPragmaOptions(Sema &SemaRef) {
   RecordData Record;
   Record.push_back(SemaRef.MSPointerToMemberRepresentationMethod);
   AddSourceLocation(SemaRef.ImplicitMSInheritanceAttrLoc, Record);
   Stream.EmitRecord(POINTERS_TO_MEMBERS_PRAGMA_OPTIONS, Record);
 }
+#endif
 
 void ASTWriter::WriteModuleFileExtension(Sema &SemaRef,
                                          ModuleFileExtensionWriter &Writer) {
@@ -4630,8 +4640,10 @@ uint64_t ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
   WriteObjCCategories();
   if(!WritingModule) {
     WriteOptimizePragmaOptions(SemaRef);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ //assume no-op
     WriteMSStructPragmaOptions(SemaRef);
     WriteMSPointersToMembersPragmaOptions(SemaRef);
+#endif
   }
 
   // Some simple statistics

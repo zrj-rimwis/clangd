@@ -288,7 +288,9 @@ public:
   static const TST TST_enum = clang::TST_enum;
   static const TST TST_union = clang::TST_union;
   static const TST TST_struct = clang::TST_struct;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   static const TST TST_interface = clang::TST_interface;
+#endif
   static const TST TST_class = clang::TST_class;
   static const TST TST_typename = clang::TST_typename;
   static const TST TST_typeofType = clang::TST_typeofType;
@@ -412,7 +414,11 @@ private:
 public:
   static bool isDeclRep(TST T) {
     return (T == TST_enum || T == TST_struct ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
             T == TST_interface || T == TST_union ||
+#else
+            T == TST_union ||
+#endif
             T == TST_class);
   }
 

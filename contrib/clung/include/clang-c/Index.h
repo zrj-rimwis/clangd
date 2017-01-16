@@ -3006,7 +3006,11 @@ enum CXCallingConv {
   CXCallingConv_X86StdCall = 2,
   CXCallingConv_X86FastCall = 3,
   CXCallingConv_X86ThisCall = 4,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   CXCallingConv_X86Pascal = 5,
+#else
+  CXCallingConv_X86Pascal_disabled = 5,
+#endif
   CXCallingConv_AAPCS = 6,
   CXCallingConv_AAPCS_VFP = 7,
   /* Value 8 was PnaclCall, but it was never used, so it could safely be re-used. */

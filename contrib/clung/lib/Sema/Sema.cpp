@@ -80,10 +80,12 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
     Diags(PP.getDiagnostics()), SourceMgr(PP.getSourceManager()),
     CollectStats(false), CodeCompleter(CodeCompleter),
     CurContext(nullptr), OriginalLexicalContext(nullptr),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     MSStructPragmaOn(false),
     MSPointerToMemberRepresentationMethod(
         LangOpts.getMSPointerToMemberRepresentationMethod()),
     VtorDispStack(MSVtorDispAttr::Mode(LangOpts.VtorDispMode)),
+#endif
     PackStack(0), DataSegStack(nullptr), BSSSegStack(nullptr),
     ConstSegStack(nullptr), CodeSegStack(nullptr), CurInitSeg(nullptr),
     VisContext(nullptr),
@@ -248,11 +250,13 @@ void Sema::Initialize() {
     }
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // XXX needed for uefi on sysv?
   if (Context.getTargetInfo().hasBuiltinMSVaList()) {
     DeclarationName MSVaList = &Context.Idents.get("__builtin_ms_va_list");
     if (IdResolver.begin(MSVaList) == IdResolver.end())
       PushOnScopeChains(Context.getBuiltinMSVaListDecl(), TUScope);
   }
+#endif
 
   DeclarationName BuiltinVaList = &Context.Idents.get("__builtin_va_list");
   if (IdResolver.begin(BuiltinVaList) == IdResolver.end())
@@ -514,12 +518,14 @@ static void checkUndefinedButUsed(Sema &S) {
          I = Undefined.begin(), E = Undefined.end(); I != E; ++I) {
     NamedDecl *ND = I->first;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (ND->hasAttr<DLLImportAttr>() || ND->hasAttr<DLLExportAttr>()) {
       // An exported function will always be emitted when defined, so even if
       // the function is inline, it doesn't have to be emitted in this TU. An
       // imported function implies that it has been exported somewhere else.
       continue;
     }
+#endif
 
     if (!ND->isExternallyVisible()) {
       S.Diag(ND->getLocation(), diag::warn_undefined_internal)

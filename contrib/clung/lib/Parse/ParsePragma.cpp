@@ -49,11 +49,13 @@ struct PragmaPackHandler : public PragmaHandler {
                     Token &FirstToken) override;
 };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct PragmaMSStructHandler : public PragmaHandler {
   explicit PragmaMSStructHandler() : PragmaHandler("ms_struct") {}
   void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                     Token &FirstToken) override;
 };
+#endif
 
 struct PragmaUnusedHandler : public PragmaHandler {
   PragmaUnusedHandler() : PragmaHandler("unused") {}
@@ -117,6 +119,7 @@ private:
   Sema &Actions;
 };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct PragmaMSPointersToMembers : public PragmaHandler {
   explicit PragmaMSPointersToMembers() : PragmaHandler("pointers_to_members") {}
   void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
@@ -134,6 +137,7 @@ struct PragmaMSPragma : public PragmaHandler {
   void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
                     Token &FirstToken) override;
 };
+#endif
 
 /// PragmaOptimizeHandler - "\#pragma clang optimize on/off".
 struct PragmaOptimizeHandler : public PragmaHandler {
@@ -157,9 +161,11 @@ struct PragmaUnrollHintHandler : public PragmaHandler {
                     Token &FirstToken) override;
 };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct PragmaMSRuntimeChecksHandler : public EmptyPragmaHandler {
   PragmaMSRuntimeChecksHandler() : EmptyPragmaHandler("runtime_checks") {}
 };
+#endif
 
 }  // end namespace
 
@@ -176,8 +182,10 @@ void Parser::initializePragmaHandlers() {
   PackHandler.reset(new PragmaPackHandler());
   PP.AddPragmaHandler(PackHandler.get());
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   MSStructHandler.reset(new PragmaMSStructHandler());
   PP.AddPragmaHandler(MSStructHandler.get());
+#endif
 
   UnusedHandler.reset(new PragmaUnusedHandler());
   PP.AddPragmaHandler(UnusedHandler.get());
@@ -203,11 +211,14 @@ void Parser::initializePragmaHandlers() {
     OpenMPHandler.reset(new PragmaNoOpenMPHandler());
   PP.AddPragmaHandler(OpenMPHandler.get());
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // nah smth is off, isPS4?
   if (getLangOpts().MicrosoftExt || getTargetInfo().getTriple().isPS4()) {
     MSCommentHandler.reset(new PragmaCommentHandler(Actions));
     PP.AddPragmaHandler(MSCommentHandler.get());
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt) {
     MSDetectMismatchHandler.reset(new PragmaDetectMismatchHandler(Actions));
     PP.AddPragmaHandler(MSDetectMismatchHandler.get());
@@ -230,6 +241,7 @@ void Parser::initializePragmaHandlers() {
     MSRuntimeChecks.reset(new PragmaMSRuntimeChecksHandler());
     PP.AddPragmaHandler(MSRuntimeChecks.get());
   }
+#endif
 
   OptimizeHandler.reset(new PragmaOptimizeHandler(Actions));
   PP.AddPragmaHandler("clang", OptimizeHandler.get());
@@ -254,8 +266,10 @@ void Parser::resetPragmaHandlers() {
   OptionsHandler.reset();
   PP.RemovePragmaHandler(PackHandler.get());
   PackHandler.reset();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PP.RemovePragmaHandler(MSStructHandler.get());
   MSStructHandler.reset();
+#endif
   PP.RemovePragmaHandler(UnusedHandler.get());
   UnusedHandler.reset();
   PP.RemovePragmaHandler(WeakHandler.get());
@@ -271,11 +285,14 @@ void Parser::resetPragmaHandlers() {
   PP.RemovePragmaHandler(OpenMPHandler.get());
   OpenMPHandler.reset();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt || getTargetInfo().getTriple().isPS4()) {
     PP.RemovePragmaHandler(MSCommentHandler.get());
     MSCommentHandler.reset();
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt) {
     PP.RemovePragmaHandler(MSDetectMismatchHandler.get());
     MSDetectMismatchHandler.reset();
@@ -298,6 +315,7 @@ void Parser::resetPragmaHandlers() {
     PP.RemovePragmaHandler(MSRuntimeChecks.get());
     MSRuntimeChecks.reset();
   }
+#endif
 
   PP.RemovePragmaHandler("STDC", FPContractHandler.get());
   FPContractHandler.reset();
@@ -358,6 +376,7 @@ void Parser::HandlePragmaPack() {
                           Alignment.get());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::HandlePragmaMSStruct() {
   assert(Tok.is(tok::annot_pragma_msstruct));
   PragmaMSStructKind Kind = static_cast<PragmaMSStructKind>(
@@ -365,6 +384,7 @@ void Parser::HandlePragmaMSStruct() {
   Actions.ActOnPragmaMSStruct(Kind);
   ConsumeToken(); // The annotation token.
 }
+#endif
 
 void Parser::HandlePragmaAlign() {
   assert(Tok.is(tok::annot_pragma_align));
@@ -493,6 +513,7 @@ void Parser::HandlePragmaOpenCLExtension() {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::HandlePragmaMSPointersToMembers() {
   assert(Tok.is(tok::annot_pragma_ms_pointers_to_members));
   LangOptions::PragmaMSPointersToMembersKind RepresentationMethod =
@@ -501,7 +522,9 @@ void Parser::HandlePragmaMSPointersToMembers() {
   SourceLocation PragmaLoc = ConsumeToken(); // The annotation token.
   Actions.ActOnPragmaMSPointersToMembers(RepresentationMethod, PragmaLoc);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::HandlePragmaMSVtorDisp() {
   assert(Tok.is(tok::annot_pragma_ms_vtordisp));
   uintptr_t Value = reinterpret_cast<uintptr_t>(Tok.getAnnotationValue());
@@ -511,7 +534,9 @@ void Parser::HandlePragmaMSVtorDisp() {
   SourceLocation PragmaLoc = ConsumeToken(); // The annotation token.
   Actions.ActOnPragmaMSVtorDisp(Action, PragmaLoc, Mode);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::HandlePragmaMSPragma() {
   assert(Tok.is(tok::annot_pragma_ms_pragma));
   // Grab the tokens out of the annotation and enter them into the stream.
@@ -542,7 +567,9 @@ void Parser::HandlePragmaMSPragma() {
     PP.Lex(Tok);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Parser::HandlePragmaMSSection(StringRef PragmaName,
                                    SourceLocation PragmaLocation) {
   if (Tok.isNot(tok::l_paren)) {
@@ -623,7 +650,9 @@ bool Parser::HandlePragmaMSSection(StringRef PragmaName,
   Actions.ActOnPragmaMSSection(PragmaLocation, SectionFlags, SegmentName);
   return true;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Parser::HandlePragmaMSSegment(StringRef PragmaName,
                                    SourceLocation PragmaLocation) {
   if (Tok.isNot(tok::l_paren)) {
@@ -706,8 +735,10 @@ bool Parser::HandlePragmaMSSegment(StringRef PragmaName,
                            SegmentName, PragmaName);
   return true;
 }
+#endif
 
 // #pragma init_seg({ compiler | lib | user | "section-name" [, func-name]} )
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Parser::HandlePragmaMSInitSeg(StringRef PragmaName,
                                    SourceLocation PragmaLocation) {
   if (getTargetInfo().getTriple().getEnvironment() != llvm::Triple::MSVC) {
@@ -768,6 +799,7 @@ bool Parser::HandlePragmaMSInitSeg(StringRef PragmaName,
   Actions.ActOnPragmaMSInitSeg(PragmaLocation, SegmentName);
   return true;
 }
+#endif
 
 namespace {
 struct PragmaLoopHintInfo {
@@ -1075,6 +1107,7 @@ void PragmaPackHandler::HandlePragma(Preprocessor &PP,
 
 // #pragma ms_struct on
 // #pragma ms_struct off
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void PragmaMSStructHandler::HandlePragma(Preprocessor &PP, 
                                          PragmaIntroducerKind Introducer,
                                          Token &MSStructTok) {
@@ -1115,6 +1148,7 @@ void PragmaMSStructHandler::HandlePragma(Preprocessor &PP,
                              static_cast<uintptr_t>(Kind)));
   PP.EnterTokenStream(Toks, /*DisableMacroExpansion=*/true);
 }
+#endif
 
 // #pragma 'align' '=' {'native','natural','mac68k','power','reset'}
 // #pragma 'options 'align' '=' {'native','natural','mac68k','power','reset'}
@@ -1510,6 +1544,7 @@ PragmaOpenMPHandler::HandlePragma(Preprocessor &PP,
 // #pragma pointers_to_members '(' 'best_case' ')'
 // #pragma pointers_to_members '(' 'full_generality' [',' inheritance-model] ')'
 // #pragma pointers_to_members '(' inheritance-model ')'
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void PragmaMSPointersToMembers::HandlePragma(Preprocessor &PP,
                                              PragmaIntroducerKind Introducer,
                                              Token &Tok) {
@@ -1599,6 +1634,7 @@ void PragmaMSPointersToMembers::HandlePragma(Preprocessor &PP,
       reinterpret_cast<void *>(static_cast<uintptr_t>(RepresentationMethod)));
   PP.EnterToken(AnnotTok);
 }
+#endif
 
 /// \brief Handle '#pragma vtordisp'
 // The grammar for this pragma is as follows:
@@ -1608,6 +1644,7 @@ void PragmaMSPointersToMembers::HandlePragma(Preprocessor &PP,
 // #pragma vtordisp '(' ['push' ','] vtordisp-mode ')'
 // #pragma vtordisp '(' 'pop' ')'
 // #pragma vtordisp '(' ')'
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void PragmaMSVtorDisp::HandlePragma(Preprocessor &PP,
                                     PragmaIntroducerKind Introducer,
                                     Token &Tok) {
@@ -1692,9 +1729,11 @@ void PragmaMSVtorDisp::HandlePragma(Preprocessor &PP,
       static_cast<uintptr_t>((Action << 16) | (Value & 0xFFFF))));
   PP.EnterToken(AnnotTok);
 }
+#endif
 
 /// \brief Handle all MS pragmas.  Simply forwards the tokens after inserting
 /// an annotation token.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void PragmaMSPragma::HandlePragma(Preprocessor &PP,
                                   PragmaIntroducerKind Introducer,
                                   Token &Tok) {
@@ -1723,6 +1762,7 @@ void PragmaMSPragma::HandlePragma(Preprocessor &PP,
   AnnotTok.setAnnotationValue(Value);
   PP.EnterToken(AnnotTok);
 }
+#endif
 
 /// \brief Handle the Microsoft \#pragma detect_mismatch extension.
 ///
@@ -1790,6 +1830,7 @@ void PragmaDetectMismatchHandler::HandlePragma(Preprocessor &PP,
 /// 'linker' is one of five identifiers: compiler, exestr, lib, linker, user.
 /// "foo" is a string, which is fully macro expanded, and permits string
 /// concatenation, embedded escape characters etc.  See MSDN for more details.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // XXX what PS4 is doing here?
 void PragmaCommentHandler::HandlePragma(Preprocessor &PP,
                                         PragmaIntroducerKind Introducer,
                                         Token &Tok) {
@@ -1862,6 +1903,7 @@ void PragmaCommentHandler::HandlePragma(Preprocessor &PP,
 
   Actions.ActOnPragmaMSComment(CommentLoc, Kind, ArgumentString);
 }
+#endif
 
 // #pragma clang optimize off
 // #pragma clang optimize on

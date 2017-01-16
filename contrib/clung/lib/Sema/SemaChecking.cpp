@@ -749,6 +749,7 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     if (SemaBuiltinVAStart(TheCall))
       return ExprError();
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__va_start: {
     switch (Context.getTargetInfo().getTriple().getArch()) {
     case llvm::Triple::arm:
@@ -763,6 +764,7 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     }
     break;
   }
+#endif
   case Builtin::BI__builtin_isgreater:
   case Builtin::BI__builtin_isgreaterequal:
   case Builtin::BI__builtin_isless:
@@ -792,7 +794,9 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     if (SemaBuiltinPrefetch(TheCall))
       return ExprError();
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__assume:
+#endif
   case Builtin::BI__builtin_assume:
     if (SemaBuiltinAssume(TheCall))
       return ExprError();
@@ -814,7 +818,9 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
       return ExprError();
     break;
   case Builtin::BI_setjmp:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI_setjmpex:
+#endif
     if (checkArgCount(*this, TheCall, 1))
       return true;
     break;
@@ -990,6 +996,7 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
     if (SemaBuiltinCallWithStaticChain(*this, TheCall))
       return ExprError();
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Builtin::BI__exception_code:
   case Builtin::BI_exception_code:
     if (SemaBuiltinSEHScopeCheck(*this, TheCall, Scope::SEHExceptScope,
@@ -1014,6 +1021,7 @@ Sema::CheckBuiltinFunctionCall(FunctionDecl *FDecl, unsigned BuiltinID,
 
     TheCall->setType(Context.VoidPtrTy);
     break;
+#endif
   // OpenCL v2.0, s6.13.16 - Pipe functions
   case Builtin::BIread_pipe:
   case Builtin::BIwrite_pipe:
@@ -9667,6 +9675,7 @@ bool Sema::CheckParmsForFunctionDef(ArrayRef<ParmVarDecl *> Parameters,
     // function definition which takes such a parameter must be able to call the
     // object's destructor.  However, we don't perform any direct access check
     // on the dtor.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     if (getLangOpts().CPlusPlus && Context.getTargetInfo()
                                        .getCXXABI()
                                        .areArgsDestroyedLeftToRightInCallee()) {
@@ -9683,6 +9692,7 @@ bool Sema::CheckParmsForFunctionDef(ArrayRef<ParmVarDecl *> Parameters,
         }
       }
     }
+#endif
 
     // Parameters with the pass_object_size attribute only need to be marked
     // constant at function definitions. Because we lack information about

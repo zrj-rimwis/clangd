@@ -54,7 +54,9 @@ unsigned CodeGenTypes::ClangCallConvToLLVMCallConv(CallingConv CC) {
   case CC_AAPCS_VFP: return llvm::CallingConv::ARM_AAPCS_VFP;
   case CC_IntelOclBicc: return llvm::CallingConv::Intel_OCL_BI;
   // TODO: Add support for __pascal to LLVM.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CC_X86Pascal: return llvm::CallingConv::C;
+#endif
   // TODO: Add support for __vectorcall to LLVM.
   case CC_X86VectorCall: return llvm::CallingConv::X86_VectorCall;
   case CC_SpirFunction: return llvm::CallingConv::SPIR_FUNC;
@@ -178,8 +180,10 @@ static CallingConv getCallingConventionForDecl(const Decl *D, bool IsWindows) {
   if (D->hasAttr<VectorCallAttr>())
     return CC_X86VectorCall;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (D->hasAttr<PascalAttr>())
     return CC_X86Pascal;
+#endif
 
   if (PcsAttr *PCS = D->getAttr<PcsAttr>())
     return (PCS->getPCS() == PcsAttr::AAPCS ? CC_AAPCS : CC_AAPCS_VFP);
@@ -251,7 +255,11 @@ bool CodeGenTypes::inheritingCtorHasParams(
   // and the inherited constructor lives in a virtual base.
   return Type == Ctor_Complete ||
          !Inherited.getShadowDecl()->constructsVirtualBase() ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !true
          !Target.getCXXABI().hasConstructorVariants();
+#else
+         !true;
+#endif
   }
 
 const CGFunctionInfo &
@@ -2434,9 +2442,14 @@ void CodeGenFunction::EmitFunctionProlog(const CGFunctionInfo &FI,
     }
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   if (getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee()) {
     for (int I = Args.size() - 1; I >= 0; --I)
       EmitParmDecl(*Args[I], ArgVals[I], I + 1);
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     for (unsigned I = 0, E = Args.size(); I != E; ++I)
       EmitParmDecl(*Args[I], ArgVals[I], I + 1);
@@ -2981,6 +2994,7 @@ static void emitWritebacks(CodeGenFunction &CGF,
     emitWriteback(CGF, I);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void deactivateArgCleanupsBeforeCall(CodeGenFunction &CGF,
                                             const CallArgList &CallArgs) {
   assert(CGF.getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee());
@@ -2992,6 +3006,7 @@ static void deactivateArgCleanupsBeforeCall(CodeGenFunction &CGF,
     I.IsActiveIP->eraseFromParent();
   }
 }
+#endif
 
 static const Expr *maybeGetUnaryAddrOfOperand(const Expr *E) {
   if (const UnaryOperator *uop = dyn_cast<UnaryOperator>(E->IgnoreParens()))
@@ -3194,6 +3209,7 @@ void CodeGenFunction::EmitCallArgs(
 
   // We *have* to evaluate arguments from right to left in the MS C++ ABI,
   // because arguments are destroyed left to right in the callee.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (CGM.getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee()) {
     // Insert a stack save if we're going to need any inalloca args.
     bool HasInAllocaArgs = false;
@@ -3220,6 +3236,7 @@ void CodeGenFunction::EmitCallArgs(
     std::reverse(Args.begin() + CallArgsStart, Args.end());
     return;
   }
+#endif
 
   for (unsigned I = 0, E = ArgTypes.size(); I != E; ++I) {
     CallExpr::const_arg_iterator Arg = ArgRange.begin() + I;
@@ -3286,6 +3303,7 @@ void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
   // In the Microsoft C++ ABI, aggregate arguments are destructed by the callee.
   // However, we still have to push an EH-only cleanup in case we unwind before
   // we make it to the call.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   if (HasAggregateEvalKind &&
       CGM.getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee()) {
     // If we're using inalloca, use the argument memory.  Otherwise, use a
@@ -3319,6 +3337,7 @@ void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
     }
     return;
   }
+#endif
 
   if (HasAggregateEvalKind && isa<ImplicitCastExpr>(E) &&
       cast<CastExpr>(E)->getCastKind() == CK_LValueToRValue) {
@@ -3862,8 +3881,10 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
     IRCallArgs[IRFunctionArgs.getInallocaArgNo()] = Arg;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume only for msc++
   if (!CallArgs.getCleanupsToDeactivate().empty())
     deactivateArgCleanupsBeforeCall(*this, CallArgs);
+#endif
 
   // If the callee is a bitcast of a function to a varargs pointer to function
   // type, check to see if we can remove the bitcast.  This handles some cases

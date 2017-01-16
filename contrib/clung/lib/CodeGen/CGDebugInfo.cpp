@@ -697,7 +697,11 @@ static SmallString<256> getUniqueTagTypeName(const TagType *Ty,
 /// \return the approproate DWARF tag for a composite type.
 static llvm::dwarf::Tag getTagForRecord(const RecordDecl *RD) {
    llvm::dwarf::Tag Tag;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (RD->isStruct() || RD->isInterface())
+#else
+  if (RD->isStruct())
+#endif
     Tag = llvm::dwarf::DW_TAG_structure_type;
   else if (RD->isUnion())
     Tag = llvm::dwarf::DW_TAG_union_type;
@@ -871,16 +875,20 @@ static unsigned getDwarfCC(CallingConv CC) {
     // Avoid emitting DW_AT_calling_convention if the C convention was used.
     return 0;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CC_X86StdCall:
     return llvm::dwarf::DW_CC_BORLAND_stdcall;
   case CC_X86FastCall:
     return llvm::dwarf::DW_CC_BORLAND_msfastcall;
   case CC_X86ThisCall:
     return llvm::dwarf::DW_CC_BORLAND_thiscall;
+#endif
   case CC_X86VectorCall:
     return llvm::dwarf::DW_CC_LLVM_vectorcall;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CC_X86Pascal:
     return llvm::dwarf::DW_CC_BORLAND_pascal;
+#endif
 
   // FIXME: Create new DW_CC_ codes for these calling conventions.
   case CC_X86_64Win64:
@@ -1245,11 +1253,14 @@ llvm::DISubprogram *CGDebugInfo::CreateCXXMemberFunction(
     else
       Virtuality = llvm::dwarf::DW_VIRTUALITY_virtual;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
     if (CGM.getTarget().getCXXABI().isItaniumFamily()) {
+#endif
       // It doesn't make sense to give a virtual destructor a vtable index,
       // since a single destructor has two entries in the vtable.
       if (!isa<CXXDestructorDecl>(Method))
         VIndex = CGM.getItaniumVTableContext().getMethodVTableIndex(Method);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     } else {
       // Emit MS ABI vftable information.  There is only one entry for the
       // deleting dtor.
@@ -1274,6 +1285,7 @@ llvm::DISubprogram *CGDebugInfo::CreateCXXMemberFunction(
                            .getVirtualFunctionPrologueThisAdjustment(GD)
                            .getQuantity();
     }
+#endif
     ContainingType = RecordTy;
   }
 
@@ -1356,18 +1368,22 @@ void CGDebugInfo::CollectCXXBases(const CXXRecordDecl *RD, llvm::DIFile *Unit,
         cast<CXXRecordDecl>(BI.getType()->getAs<RecordType>()->getDecl());
 
     if (BI.isVirtual()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
       if (CGM.getTarget().getCXXABI().isItaniumFamily()) {
+#endif
         // virtual base offset offset is -ve. The code generator emits dwarf
         // expression where it expects +ve number.
         BaseOffset = 0 - CGM.getItaniumVTableContext()
                              .getVirtualBaseOffsetOffset(RD, Base)
                              .getQuantity();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
       } else {
         // In the MS ABI, store the vbtable offset, which is analogous to the
         // vbase offset offset in Itanium.
         BaseOffset =
             4 * CGM.getMicrosoftVTableContext().getVBTableIndex(RD, Base);
       }
+#endif
       BFlags = llvm::DINode::FlagVirtual;
     } else
       BaseOffset = CGM.getContext().toBits(RL.getBaseClassOffset(Base));
@@ -2130,6 +2146,7 @@ llvm::DIType *CGDebugInfo::CreateType(const MemberPointerType *Ty,
     Size = CGM.getContext().getTypeSize(Ty);
 
     // Set the MS inheritance model. There is no flag for the unspecified model.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (CGM.getTarget().getCXXABI().isMicrosoft()) {
       switch (Ty->getMostRecentCXXRecordDecl()->getMSInheritanceModel()) {
       case MSInheritanceAttr::Keyword_single_inheritance:
@@ -2145,6 +2162,7 @@ llvm::DIType *CGDebugInfo::CreateType(const MemberPointerType *Ty,
         break;
       }
     }
+#endif
   }
 
   llvm::DIType *ClassType = getOrCreateType(QualType(Ty->getClass(), 0), U);

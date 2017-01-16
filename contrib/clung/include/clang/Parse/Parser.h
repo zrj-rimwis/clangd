@@ -89,6 +89,7 @@ class Parser : public CodeCompletionHandler {
 
   /// Identifiers used for SEH handling in Borland. These are only
   /// allowed in particular circumstances
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   // __except block
   IdentifierInfo *Ident__exception_code,
                  *Ident___exception_code,
@@ -101,6 +102,7 @@ class Parser : public CodeCompletionHandler {
   IdentifierInfo *Ident__abnormal_termination,
                  *Ident___abnormal_termination,
                  *Ident_AbnormalTermination;
+#endif
 
   /// Contextual keywords for Microsoft extensions.
   IdentifierInfo *Ident__except;
@@ -153,13 +155,16 @@ class Parser : public CodeCompletionHandler {
   std::unique_ptr<PragmaHandler> GCCVisibilityHandler;
   std::unique_ptr<PragmaHandler> OptionsHandler;
   std::unique_ptr<PragmaHandler> PackHandler;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   std::unique_ptr<PragmaHandler> MSStructHandler;
+#endif
   std::unique_ptr<PragmaHandler> UnusedHandler;
   std::unique_ptr<PragmaHandler> WeakHandler;
   std::unique_ptr<PragmaHandler> RedefineExtnameHandler;
   std::unique_ptr<PragmaHandler> FPContractHandler;
   std::unique_ptr<PragmaHandler> OpenCLExtensionHandler;
   std::unique_ptr<PragmaHandler> OpenMPHandler;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   std::unique_ptr<PragmaHandler> MSCommentHandler;
   std::unique_ptr<PragmaHandler> MSDetectMismatchHandler;
   std::unique_ptr<PragmaHandler> MSPointersToMembers;
@@ -171,6 +176,7 @@ class Parser : public CodeCompletionHandler {
   std::unique_ptr<PragmaHandler> MSCodeSeg;
   std::unique_ptr<PragmaHandler> MSSection;
   std::unique_ptr<PragmaHandler> MSRuntimeChecks;
+#endif
   std::unique_ptr<PragmaHandler> OptimizeHandler;
   std::unique_ptr<PragmaHandler> LoopHintHandler;
   std::unique_ptr<PragmaHandler> UnrollHintHandler;
@@ -486,12 +492,15 @@ private:
 
   /// \brief Handle the annotation token produced for
   /// #pragma ms_struct...
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void HandlePragmaMSStruct();
 
   /// \brief Handle the annotation token produced for
   /// #pragma comment...
   void HandlePragmaMSComment();
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void HandlePragmaMSPointersToMembers();
 
   void HandlePragmaMSVtorDisp();
@@ -503,6 +512,7 @@ private:
                              SourceLocation PragmaLocation);
   bool HandlePragmaMSInitSeg(StringRef PragmaName,
                              SourceLocation PragmaLocation);
+#endif
 
   /// \brief Handle the annotation token produced for
   /// #pragma align...
@@ -1538,7 +1548,9 @@ private:
 
   //===--------------------------------------------------------------------===//
   //  C++ : Microsoft __uuidof Expression
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ExprResult ParseCXXUuidof();
+#endif
 
   //===--------------------------------------------------------------------===//
   // C++ 5.2.4: C++ Pseudo-Destructor Expressions
@@ -1706,7 +1718,9 @@ private:
   StmtResult ParseBreakStatement();
   StmtResult ParseReturnStatement();
   StmtResult ParseAsmStatement(bool &msAsm);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult ParseMicrosoftAsmStatement(SourceLocation AsmLoc);
+#endif
   StmtResult ParsePragmaLoopHint(StmtVector &Stmts,
                                  AllowedContsructsKind Allowed,
                                  SourceLocation *TrailingElseLoc,
@@ -1744,6 +1758,7 @@ private:
     IfExistsBehavior Behavior;
   };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool ParseMicrosoftIfExistsCondition(IfExistsCondition& Result);
   void ParseMicrosoftIfExistsStatement(StmtVector &Stmts);
   void ParseMicrosoftIfExistsExternalDeclaration();
@@ -1751,6 +1766,7 @@ private:
                                               AccessSpecifier& CurAS);
   bool ParseMicrosoftIfExistsBraceInitializer(ExprVector &InitExprs,
                                               bool &InitExprsOk);
+#endif
   bool ParseAsmOperandsOpt(SmallVectorImpl<IdentifierInfo *> &Names,
                            SmallVectorImpl<Expr *> &Constraints,
                            SmallVectorImpl<Expr *> &Exprs);
@@ -1765,10 +1781,14 @@ private:
   //===--------------------------------------------------------------------===//
   // MS: SEH Statements and Blocks
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult ParseSEHTryBlock();
+#endif
   StmtResult ParseSEHExceptBlock(SourceLocation Loc);
   StmtResult ParseSEHFinallyBlock(SourceLocation Loc);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult ParseSEHLeaveStatement();
+#endif
 
   //===--------------------------------------------------------------------===//
   // Objective-C Statements
@@ -2200,8 +2220,10 @@ private:
 
   void MaybeParseMicrosoftAttributes(ParsedAttributes &attrs,
                                      SourceLocation *endLoc = nullptr) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // nope
     if (getLangOpts().MicrosoftExt && Tok.is(tok::l_square))
       ParseMicrosoftAttributes(attrs, endLoc);
+#endif
   }
   void ParseMicrosoftAttributes(ParsedAttributes &attrs,
                                 SourceLocation *endLoc = nullptr);
@@ -2217,10 +2239,12 @@ private:
                                   SourceLocation AttrNameLoc,
                                   ParsedAttributes &Attrs);
   void ParseMicrosoftTypeAttributes(ParsedAttributes &attrs);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void DiagnoseAndSkipExtendedMicrosoftTypeAttributes();
   SourceLocation SkipExtendedMicrosoftTypeAttributes();
   void ParseMicrosoftInheritanceClassAttributes(ParsedAttributes &attrs);
   void ParseBorlandTypeAttributes(ParsedAttributes &attrs);
+#endif
   void ParseOpenCLKernelAttributes(ParsedAttributes &attrs);
   void ParseOpenCLQualifiers(ParsedAttributes &Attrs);
   /// \brief Parses opencl_unroll_hint attribute if language is OpenCL v2.0

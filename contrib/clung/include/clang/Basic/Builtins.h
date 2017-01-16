@@ -35,11 +35,19 @@ enum LanguageID {
   C_LANG = 0x2,       // builtin for c only.
   CXX_LANG = 0x4,     // builtin for cplusplus only.
   OBJC_LANG = 0x8,    // builtin for objective-c and objective-c++
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   MS_LANG = 0x10,     // builtin requires MS mode.
+#else
+  MS_LANGz = 0x10,
+#endif
   OCLC20_LANG = 0x20, // builtin for OpenCL C only.
   ALL_LANGUAGES = C_LANG | CXX_LANG | OBJC_LANG, // builtin for all languages.
   ALL_GNU_LANGUAGES = ALL_LANGUAGES | GNU_LANG,  // builtin requires GNU mode.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ALL_MS_LANGUAGES = ALL_LANGUAGES | MS_LANG     // builtin requires MS mode.
+#else
+  ALL_MS_LANGUAGESz = ALL_LANGUAGES | MS_LANGz
+#endif
 };
 
 namespace Builtin {

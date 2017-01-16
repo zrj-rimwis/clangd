@@ -95,6 +95,7 @@ inline void MarkVarDeclODRUsed(VarDecl *Var,
 }
 
 /// Return a DLL attribute from the declaration.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // for this inline??
 inline InheritableAttr *getDLLAttr(Decl *D) {
   assert(!(D->hasAttr<DLLImportAttr>() && D->hasAttr<DLLExportAttr>()) &&
          "A declaration cannot be both dllimport and dllexport.");
@@ -104,6 +105,7 @@ inline InheritableAttr *getDLLAttr(Decl *D) {
     return Export;
   return nullptr;
 }
+#endif
 
 class TypoCorrectionConsumer : public VisibleDeclConsumer {
   typedef SmallVector<TypoCorrection, 1> TypoResultList;

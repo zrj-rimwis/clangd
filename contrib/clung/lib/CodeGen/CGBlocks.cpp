@@ -2313,7 +2313,11 @@ static void configureBlocksRuntimeObject(CodeGenModule &CGM,
         break;
 
     // TODO: support static blocks runtime
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (GV->isDeclaration() && (!ND || !ND->hasAttr<DLLExportAttr>())) {
+#else
+    if (GV->isDeclaration() && (!ND || !false)) {
+#endif
       GV->setDLLStorageClass(llvm::GlobalValue::DLLImportStorageClass);
       GV->setLinkage(llvm::GlobalValue::ExternalLinkage);
     } else {

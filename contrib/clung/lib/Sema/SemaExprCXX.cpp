@@ -510,6 +510,7 @@ Sema::ActOnCXXTypeid(SourceLocation OpLoc, SourceLocation LParenLoc,
 
 /// Grabs __declspec(uuid()) off a type, or returns 0 if we cannot resolve to
 /// a single GUID.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void
 getUuidAttrOfType(Sema &SemaRef, QualType QT,
                   llvm::SmallSetVector<const UuidAttr *, 1> &UuidAttrs) {
@@ -544,8 +545,10 @@ getUuidAttrOfType(Sema &SemaRef, QualType QT,
     }
   }
 }
+#endif
 
 /// \brief Build a Microsoft __uuidof expression with a type operand.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ExprResult Sema::BuildCXXUuidof(QualType TypeInfoType,
                                 SourceLocation TypeidLoc,
                                 TypeSourceInfo *Operand,
@@ -564,8 +567,10 @@ ExprResult Sema::BuildCXXUuidof(QualType TypeInfoType,
   return new (Context) CXXUuidofExpr(TypeInfoType.withConst(), Operand, UuidStr,
                                      SourceRange(TypeidLoc, RParenLoc));
 }
+#endif
 
 /// \brief Build a Microsoft __uuidof expression with an expression operand.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ExprResult Sema::BuildCXXUuidof(QualType TypeInfoType,
                                 SourceLocation TypeidLoc,
                                 Expr *E,
@@ -588,8 +593,10 @@ ExprResult Sema::BuildCXXUuidof(QualType TypeInfoType,
   return new (Context) CXXUuidofExpr(TypeInfoType.withConst(), E, UuidStr,
                                      SourceRange(TypeidLoc, RParenLoc));
 }
+#endif
 
 /// ActOnCXXUuidof - Parse __uuidof( type-id ) or __uuidof (expression);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ExprResult
 Sema::ActOnCXXUuidof(SourceLocation OpLoc, SourceLocation LParenLoc,
                      bool isType, void *TyOrExpr, SourceLocation RParenLoc) {
@@ -622,6 +629,7 @@ Sema::ActOnCXXUuidof(SourceLocation OpLoc, SourceLocation LParenLoc,
   // The operand is an expression.
   return BuildCXXUuidof(GuidType, OpLoc, (Expr*)TyOrExpr, RParenLoc);
 }
+#endif
 
 /// ActOnCXXBoolLiteral - Parse {true,false} literals.
 ExprResult
@@ -823,6 +831,7 @@ bool Sema::CheckCXXThrowOperand(SourceLocation ThrowLoc,
   // The MSVC ABI creates a list of all types which can catch the exception
   // object.  This list also references the appropriate copy constructor to call
   // if the object is caught by value and has a non-trivial copy constructor.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // big block
   if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
     // We are only interested in the public, unambiguous bases contained within
     // the exception object.  Bases which are ambiguous or otherwise
@@ -868,6 +877,7 @@ bool Sema::CheckCXXThrowOperand(SourceLocation ThrowLoc,
       }
     }
   }
+#endif
 
   return false;
 }
@@ -3575,10 +3585,12 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
 
     // We may not have been able to figure out what this member pointer resolved
     // to up until this exact point.  Attempt to lock-in it's inheritance model.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
       (void)isCompleteType(From->getExprLoc(), From->getType());
       (void)isCompleteType(From->getExprLoc(), ToType);
     }
+#endif
 
     From = ImpCastExprToType(From, ToType, Kind, VK_RValue, &BasePath, CCK)
              .get();

@@ -2565,12 +2565,14 @@ Sema::InstantiateClassMembers(SourceLocation PointOfInstantiation,
                                                 == TSK_ExplicitSpecialization)
         continue;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Context.getTargetInfo().getCXXABI().isMicrosoft() &&
           TSK == TSK_ExplicitInstantiationDeclaration) {
         // In MSVC mode, explicit instantiation decl of the outer class doesn't
         // affect the inner class.
         continue;
       }
+#endif
 
       if (CheckSpecializationInstantiationRedecl(PointOfInstantiation, TSK, 
                                                  Record, 

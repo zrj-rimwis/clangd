@@ -237,8 +237,6 @@ class LangOpt<string name, bit negated = 0> {
   string Name = name;
   bit Negated = negated;
 }
-def MicrosoftExt : LangOpt<"MicrosoftExt">;
-def Borland : LangOpt<"Borland">;
 def COnly : LangOpt<"CPlusPlus", 1>;
 def OpenCL : LangOpt<"OpenCL">;
 def RenderScript : LangOpt<"RenderScript">;
@@ -258,9 +256,6 @@ def TargetX86 : TargetArch<["x86"]>;
 def TargetAnyX86 : TargetArch<["x86", "x86_64"]>;
 def TargetWindows : TargetArch<["x86", "x86_64", "arm", "thumb"]> {
   let OSes = ["Win32"];
-}
-def TargetMicrosoftCXXABI : TargetArch<["x86", "x86_64", "arm", "thumb"]> {
-  let CXXABIs = ["Microsoft"];
 }
 
 class Attr {
@@ -699,7 +694,7 @@ def Destructor : InheritableAttr {
   let Documentation = [Undocumented];
 }
 
-def EmptyBases : InheritableAttr, TargetSpecificAttr<TargetMicrosoftCXXABI> {
+def EmptyBases : InheritableAttr {
   let Spellings = [Declspec<"empty_bases">];
   let Subjects = SubjectList<[CXXRecord]>;
   let Documentation = [EmptyBasesDocs];
@@ -828,7 +823,7 @@ def Restrict : InheritableAttr {
   let Documentation = [Undocumented];
 }
 
-def LayoutVersion : InheritableAttr, TargetSpecificAttr<TargetMicrosoftCXXABI> {
+def LayoutVersion : InheritableAttr {
   let Spellings = [Declspec<"layout_version">];
   let Args = [UnsignedArgument<"Version">];
   let Subjects = SubjectList<[CXXRecord]>;
@@ -1382,12 +1377,6 @@ def VectorCall : InheritableAttr {
   let Documentation = [VectorCallDocs];
 }
 
-def Pascal : InheritableAttr {
-  let Spellings = [GNU<"pascal">, Keyword<"__pascal">, Keyword<"_pascal">];
-//  let Subjects = [Function, ObjCMethod];
-  let Documentation = [Undocumented];
-}
-
 def PreserveMost : InheritableAttr {
   let Spellings = [GNU<"preserve_most">];
   let Documentation = [PreserveMostDocs];
@@ -1492,14 +1481,6 @@ def Unused : InheritableAttr {
 
 def Used : InheritableAttr {
   let Spellings = [GCC<"used">];
-  let Documentation = [Undocumented];
-}
-
-def Uuid : InheritableAttr {
-  let Spellings = [Declspec<"uuid">];
-  let Args = [StringArgument<"Guid">];
-//  let Subjects = SubjectList<[CXXRecord]>;
-  let LangOpts = [MicrosoftExt, Borland];
   let Documentation = [Undocumented];
 }
 
@@ -1991,121 +1972,7 @@ def TypeTagForDatatype : InheritableAttr {
 
 // Microsoft-related attributes
 
-def MSNoVTable : InheritableAttr, TargetSpecificAttr<TargetMicrosoftCXXABI> {
-  let Spellings = [Declspec<"novtable">];
-  let Subjects = SubjectList<[CXXRecord]>;
-  let Documentation = [MSNoVTableDocs];
-}
-
-def : IgnoredAttr {
-  let Spellings = [Declspec<"property">];
-}
-
-def MSStruct : InheritableAttr {
-  let Spellings = [GCC<"ms_struct">];
-  let Subjects = SubjectList<[Record]>;
-  let Documentation = [Undocumented];
-}
-
-def DLLExport : InheritableAttr, TargetSpecificAttr<TargetWindows> {
-  let Spellings = [Declspec<"dllexport">, GCC<"dllexport">];
-  let Subjects = SubjectList<[Function, Var, CXXRecord, ObjCInterface]>;
-  let Documentation = [DLLExportDocs];
-}
-
-def DLLImport : InheritableAttr, TargetSpecificAttr<TargetWindows> {
-  let Spellings = [Declspec<"dllimport">, GCC<"dllimport">];
-  let Subjects = SubjectList<[Function, Var, CXXRecord, ObjCInterface]>;
-  let Documentation = [DLLImportDocs];
-}
-
-def SelectAny : InheritableAttr {
-  let Spellings = [Declspec<"selectany">];
-  let LangOpts = [MicrosoftExt];
-  let Documentation = [Undocumented];
-}
-
-def Thread : Attr {
-  let Spellings = [Declspec<"thread">];
-  let LangOpts = [MicrosoftExt];
-  let Documentation = [ThreadDocs];
-  let Subjects = SubjectList<[Var]>;
-}
-
-def Win64 : IgnoredAttr {
-  let Spellings = [Keyword<"__w64">];
-  let LangOpts = [MicrosoftExt];
-}
-
-def Ptr32 : TypeAttr {
-  let Spellings = [Keyword<"__ptr32">];
-  let Documentation = [Undocumented];
-}
-
-def Ptr64 : TypeAttr {
-  let Spellings = [Keyword<"__ptr64">];
-  let Documentation = [Undocumented];
-}
-
-def SPtr : TypeAttr {
-  let Spellings = [Keyword<"__sptr">];
-  let Documentation = [Undocumented];
-}
-
-def UPtr : TypeAttr {
-  let Spellings = [Keyword<"__uptr">];
-  let Documentation = [Undocumented];
-}
-
-def MSInheritance : InheritableAttr {
-  let LangOpts = [MicrosoftExt];
-  let Args = [DefaultBoolArgument<"BestCase", 1>];
-  let Spellings = [Keyword<"__single_inheritance">,
-                   Keyword<"__multiple_inheritance">,
-                   Keyword<"__virtual_inheritance">,
-                   Keyword<"__unspecified_inheritance">];
-  let AdditionalMembers = [{
-  static bool hasVBPtrOffsetField(Spelling Inheritance) {
-    return Inheritance == Keyword_unspecified_inheritance;
-  }
-
-  // Only member pointers to functions need a this adjustment, since it can be
-  // combined with the field offset for data pointers.
-  static bool hasNVOffsetField(bool IsMemberFunction, Spelling Inheritance) {
-    return IsMemberFunction && Inheritance >= Keyword_multiple_inheritance;
-  }
-
-  static bool hasVBTableOffsetField(Spelling Inheritance) {
-    return Inheritance >= Keyword_virtual_inheritance;
-  }
-
-  static bool hasOnlyOneField(bool IsMemberFunction,
-                              Spelling Inheritance) {
-    if (IsMemberFunction)
-      return Inheritance <= Keyword_single_inheritance;
-    return Inheritance <= Keyword_multiple_inheritance;
-  }
-  }];
-  let Documentation = [MSInheritanceDocs];
-}
-
-def MSVtorDisp : InheritableAttr {
-  // This attribute has no spellings as it is only ever created implicitly.
-  let Spellings = [];
-  let Args = [UnsignedArgument<"vdm">];
-  let SemaHandler = 0;
-
-  let AdditionalMembers = [{
-  enum Mode {
-    Never,
-    ForVBaseOverride,
-    ForVFTable
-  };
-
-  Mode getVtorDispMode() const { return Mode(vdm); }
-  }];
-  let Documentation = [Undocumented];
-}
+// MSEXT removed
 
 def InitSeg : Attr {
   let Spellings = [Pragma<"", "init_seg">];

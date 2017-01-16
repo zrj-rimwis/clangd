@@ -47,12 +47,14 @@ QualType CXXTypeidExpr::getTypeOperand(ASTContext &Context) const {
       Operand.get<TypeSourceInfo *>()->getType().getNonReferenceType(), Quals);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 QualType CXXUuidofExpr::getTypeOperand(ASTContext &Context) const {
   assert(isTypeOperand() && "Cannot call getTypeOperand for __uuidof(expr)");
   Qualifiers Quals;
   return Context.getUnqualifiedArrayType(
       Operand.get<TypeSourceInfo *>()->getType().getNonReferenceType(), Quals);
 }
+#endif
 
 // CXXScalarValueInitExpr
 SourceLocation CXXScalarValueInitExpr::getLocStart() const {

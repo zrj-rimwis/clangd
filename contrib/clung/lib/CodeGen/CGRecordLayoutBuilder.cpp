@@ -105,18 +105,22 @@ struct CGRecordLowering {
   /// fields of the same formal type.  We want to emit a layout with
   /// these discrete storage units instead of combining them into a
   /// continuous run.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false || false
   bool isDiscreteBitFieldABI() {
     return Context.getTargetInfo().getCXXABI().isMicrosoft() ||
            D->isMsStruct(Context);
   }
+#endif
 
   /// The Itanium base layout rule allows virtual bases to overlap
   /// other bases, which complicates layout in specific ways.
   ///
   /// Note specifically that the ms_struct attribute doesn't change this.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool isOverlappingVBaseABI() {
     return !Context.getTargetInfo().getCXXABI().isMicrosoft();
   }
+#endif
 
   /// \brief Wraps llvm::Type::getIntNTy with some implicit arguments.
   llvm::Type *getIntNType(uint64_t NumBits) {
@@ -135,7 +139,9 @@ struct CGRecordLowering {
   llvm::Type *getStorageType(const FieldDecl *FD) {
     llvm::Type *Type = Types.ConvertTypeForMem(FD->getType());
     if (!FD->isBitField()) return Type;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     if (isDiscreteBitFieldABI()) return Type;
+#endif
     return getIntNType(std::min(FD->getBitWidthValue(Context),
                              (unsigned)Context.toBits(getSize(Type))));
   }
@@ -376,6 +382,7 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
   // used to determine if the ASTRecordLayout is treating these two bitfields as
   // contiguous.  StartBitOffset is offset of the beginning of the Run.
   uint64_t StartBitOffset, Tail = 0;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   if (isDiscreteBitFieldABI()) {
     for (; Field != FieldEnd; ++Field) {
       uint64_t BitOffset = getFieldBitOffset(*Field);
@@ -403,6 +410,7 @@ CGRecordLowering::accumulateBitFields(RecordDecl::field_iterator Field,
     }
     return;
   }
+#endif
   for (;;) {
     // Check to see if we need to start a new run.
     if (Run == FieldEnd) {
@@ -476,7 +484,11 @@ void CGRecordLowering::accumulateVBases() {
   // smaller than the nvsize.  Here we check to see if such a base is placed
   // before the nvsize and set the scissor offset to that, instead of the
   // nvsize.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (isOverlappingVBaseABI())
+#else
+  if (true)
+#endif
     for (const auto &Base : RD->vbases()) {
       const CXXRecordDecl *BaseDecl = Base.getType()->getAsCXXRecordDecl();
       if (BaseDecl->isEmpty())
@@ -497,7 +509,11 @@ void CGRecordLowering::accumulateVBases() {
     CharUnits Offset = Layout.getVBaseClassOffset(BaseDecl);
     // If the vbase is a primary virtual base of some base, then it doesn't
     // get its own storage location but instead lives inside of that base.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (isOverlappingVBaseABI() &&
+#else
+    if (true &&
+#endif
         Context.isNearlyEmpty(BaseDecl) &&
         !hasOwnStorage(RD, BaseDecl)) {
       Members.push_back(MemberInfo(Offset, MemberInfo::VBase, nullptr,

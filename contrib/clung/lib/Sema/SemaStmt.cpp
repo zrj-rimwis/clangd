@@ -3650,7 +3650,11 @@ StmtResult Sema::ActOnCXXTryBlock(SourceLocation TryLoc, Stmt *TryBlock,
   sema::FunctionScopeInfo *FSI = getCurFunction();
 
   // C++ try is incompatible with SEH __try.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!getLangOpts().Borland && FSI->FirstSEHTryLoc.isValid()) {
+#else
+  if (!false && FSI->FirstSEHTryLoc.isValid()) {
+#endif
     Diag(TryLoc, diag::err_mixing_cxx_try_seh_try);
     Diag(FSI->FirstSEHTryLoc, diag::note_conflicting_try_here) << "'__try'";
   }
@@ -3734,7 +3738,11 @@ StmtResult Sema::ActOnSEHTryBlock(bool IsCXXTry, SourceLocation TryLoc,
 
   // SEH __try is incompatible with C++ try. Borland appears to support this,
   // however.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!getLangOpts().Borland) {
+#else
+  if (!false) {
+#endif
     if (FSI->FirstCXXTryLoc.isValid()) {
       Diag(TryLoc, diag::err_mixing_cxx_try_seh_try);
       Diag(FSI->FirstCXXTryLoc, diag::note_conflicting_try_here) << "'try'";

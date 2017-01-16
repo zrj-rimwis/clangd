@@ -30,7 +30,9 @@ namespace clang {
 class CXXTemporary;
 class MSPropertyDecl;
 class TemplateArgumentListInfo;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class UuidAttr;
+#endif
 
 //===--------------------------------------------------------------------===//
 // C++ Expressions.
@@ -783,6 +785,7 @@ public:
 /// the _GUID that corresponds to the supplied type or expression.
 ///
 /// This represents code like @c __uuidof(COMTYPE) or @c __uuidof(*comPtr)
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class CXXUuidofExpr : public Expr {
 private:
   llvm::PointerUnion<Stmt *, TypeSourceInfo *> Operand;
@@ -859,6 +862,7 @@ public:
     return child_range(begin, begin + 1);
   }
 };
+#endif
 
 /// \brief Represents the \c this expression in C++.
 ///

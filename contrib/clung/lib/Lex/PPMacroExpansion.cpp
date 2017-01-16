@@ -310,9 +310,14 @@ void Preprocessor::RegisterBuiltinMacros() {
   Ident__TIMESTAMP__     = RegisterBuiltinMacro(*this, "__TIMESTAMP__");
 
   // Microsoft Extensions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (LangOpts.MicrosoftExt) {
     Ident__identifier = RegisterBuiltinMacro(*this, "__identifier");
     Ident__pragma = RegisterBuiltinMacro(*this, "__pragma");
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     Ident__identifier = nullptr;
     Ident__pragma = nullptr;
@@ -1209,7 +1214,9 @@ static bool HasFeature(const Preprocessor &PP, StringRef Feature) {
       .Case("is_standard_layout", LangOpts.CPlusPlus)
       .Case("is_pod", LangOpts.CPlusPlus)
       .Case("is_polymorphic", LangOpts.CPlusPlus)
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       .Case("is_sealed", LangOpts.CPlusPlus && LangOpts.MicrosoftExt)
+#endif
       .Case("is_trivial", LangOpts.CPlusPlus)
       .Case("is_trivially_assignable", LangOpts.CPlusPlus)
       .Case("is_trivially_constructible", LangOpts.CPlusPlus)

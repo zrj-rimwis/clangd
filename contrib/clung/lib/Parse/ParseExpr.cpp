@@ -766,12 +766,18 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
     ConsumeToken();
     break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___super:
+#endif
   case tok::kw_decltype:
     // Annotate the token and tail recurse.
     if (TryAnnotateTypeOrScopeToken())
       return ExprError();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     assert(Tok.isNot(tok::kw_decltype) && Tok.isNot(tok::kw___super));
+#else
+    assert(Tok.isNot(tok::kw_decltype));
+#endif
     return ParseCastExpression(isUnaryExpression, isAddressOfOperand);
       
   case tok::identifier: {      // primary-expression: identifier
@@ -810,7 +816,9 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           REVERTIBLE_TYPE_TRAIT(__is_constructible);
           REVERTIBLE_TYPE_TRAIT(__is_convertible);
           REVERTIBLE_TYPE_TRAIT(__is_convertible_to);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           REVERTIBLE_TYPE_TRAIT(__is_destructible);
+#endif
           REVERTIBLE_TYPE_TRAIT(__is_empty);
           REVERTIBLE_TYPE_TRAIT(__is_enum);
           REVERTIBLE_TYPE_TRAIT(__is_floating_point);
@@ -818,7 +826,9 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           REVERTIBLE_TYPE_TRAIT(__is_function);
           REVERTIBLE_TYPE_TRAIT(__is_fundamental);
           REVERTIBLE_TYPE_TRAIT(__is_integral);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           REVERTIBLE_TYPE_TRAIT(__is_interface_class);
+#endif
           REVERTIBLE_TYPE_TRAIT(__is_literal);
           REVERTIBLE_TYPE_TRAIT(__is_lvalue_expr);
           REVERTIBLE_TYPE_TRAIT(__is_lvalue_reference);
@@ -827,7 +837,9 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           REVERTIBLE_TYPE_TRAIT(__is_member_pointer);
           REVERTIBLE_TYPE_TRAIT(__is_nothrow_assignable);
           REVERTIBLE_TYPE_TRAIT(__is_nothrow_constructible);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           REVERTIBLE_TYPE_TRAIT(__is_nothrow_destructible);
+#endif
           REVERTIBLE_TYPE_TRAIT(__is_object);
           REVERTIBLE_TYPE_TRAIT(__is_pod);
           REVERTIBLE_TYPE_TRAIT(__is_pointer);
@@ -837,7 +849,9 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           REVERTIBLE_TYPE_TRAIT(__is_rvalue_reference);
           REVERTIBLE_TYPE_TRAIT(__is_same);
           REVERTIBLE_TYPE_TRAIT(__is_scalar);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           REVERTIBLE_TYPE_TRAIT(__is_sealed);
+#endif
           REVERTIBLE_TYPE_TRAIT(__is_signed);
           REVERTIBLE_TYPE_TRAIT(__is_standard_layout);
           REVERTIBLE_TYPE_TRAIT(__is_trivial);
@@ -993,9 +1007,11 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
     break;
   case tok::kw___func__:       // primary-expression: __func__ [C99 6.4.2.2]
   case tok::kw___FUNCTION__:   // primary-expression: __FUNCTION__ [GNU]
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___FUNCDNAME__:   // primary-expression: __FUNCDNAME__ [MS]
   case tok::kw___FUNCSIG__:     // primary-expression: __FUNCSIG__ [MS]
   case tok::kw_L__FUNCTION__:   // primary-expression: L__FUNCTION__ [MS]
+#endif
   case tok::kw___PRETTY_FUNCTION__:  // primary-expression: __P..Y_F..N__ [GNU]
     Res = Actions.ActOnPredefinedExpr(Tok.getLocation(), SavedKind);
     ConsumeToken();
@@ -1124,9 +1140,11 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
   case tok::kw_typeid:
     Res = ParseCXXTypeid();
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___uuidof:
     Res = ParseCXXUuidof();
     break;
+#endif
   case tok::kw_this:
     Res = ParseCXXThis();
     break;
@@ -1167,7 +1185,9 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
   case tok::kw_short:
   case tok::kw_int:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:
@@ -1694,7 +1714,11 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
                                     /*EnteringContext=*/false, 
                                     /*AllowDestructorName=*/true,
                                     /*AllowConstructorName=*/
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                                       getLangOpts().MicrosoftExt, 
+#else
+                                      false,
+#endif
                                     ObjectType, TemplateKWLoc, Name)) {
         (void)Actions.CorrectDelayedTyposInExpr(LHS);
         LHS = ExprError();

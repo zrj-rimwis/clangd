@@ -3788,7 +3788,11 @@ public:
     attr_fastcall,
     attr_stdcall,
     attr_thiscall,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     attr_pascal,
+#else
+    attr_pascal_disabled,
+#endif
     attr_swiftcall,
     attr_vectorcall,
     attr_inteloclbicc,
@@ -4358,7 +4362,11 @@ enum ElaboratedTypeKeyword {
   /// \brief The "struct" keyword introduces the elaborated-type-specifier.
   ETK_Struct,
   /// \brief The "__interface" keyword introduces the elaborated-type-specifier.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ETK_Interface,
+#else
+  ETK_Interface_disabled,
+#endif
   /// \brief The "union" keyword introduces the elaborated-type-specifier.
   ETK_Union,
   /// \brief The "class" keyword introduces the elaborated-type-specifier.

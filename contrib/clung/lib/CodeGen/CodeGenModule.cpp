@@ -76,8 +76,10 @@ static CGCXXABI *createCXXABI(CodeGenModule &CGM) {
   case TargetCXXABI::GenericItanium:
   case TargetCXXABI::WebAssembly:
     return CreateItaniumCXXABI(CGM);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TargetCXXABI::Microsoft:
     return CreateMicrosoftCXXABI(CGM);
+#endif
   }
 
   llvm_unreachable("invalid C++ ABI kind");
@@ -661,12 +663,14 @@ StringRef CodeGenModule::getMangledName(GlobalDecl GD) {
   // Some ABIs don't have constructor variants.  Make sure that base and
   // complete constructors get mangled the same.
   if (const auto *CD = dyn_cast<CXXConstructorDecl>(CanonicalGD.getDecl())) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !true
     if (!getTarget().getCXXABI().hasConstructorVariants()) {
       CXXCtorType OrigCtorType = GD.getCtorType();
       assert(OrigCtorType == Ctor_Base || OrigCtorType == Ctor_Complete);
       if (OrigCtorType == Ctor_Base)
         CanonicalGD = GlobalDecl(CD, Ctor_Complete);
     }
+#endif
   }
 
   StringRef &FoundStr = MangledDeclNames[CanonicalGD];
@@ -781,6 +785,7 @@ CodeGenModule::getFunctionLinkage(GlobalDecl GD) {
                                    : llvm::GlobalValue::LinkOnceODRLinkage;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume only for msc++
   if (isa<CXXConstructorDecl>(D) &&
       cast<CXXConstructorDecl>(D)->isInheritingConstructor() &&
       Context.getTargetInfo().getCXXABI().isMicrosoft()) {
@@ -789,6 +794,7 @@ CodeGenModule::getFunctionLinkage(GlobalDecl GD) {
     // internal rather than trying to pick an unambiguous mangling for them.
     return llvm::GlobalValue::InternalLinkage;
   }
+#endif
 
   return getLLVMLinkageForDeclarator(D, Linkage, /*isConstantVariable=*/false);
 }
@@ -804,11 +810,13 @@ void CodeGenModule::setFunctionDLLStorageClass(GlobalDecl GD, llvm::Function *F)
     }
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (FD->hasAttr<DLLImportAttr>())
     F->setDLLStorageClass(llvm::GlobalVariable::DLLImportStorageClass);
   else if (FD->hasAttr<DLLExportAttr>())
     F->setDLLStorageClass(llvm::GlobalVariable::DLLExportStorageClass);
   else
+#endif
     F->setDLLStorageClass(llvm::GlobalVariable::DefaultStorageClass);
 }
 
@@ -962,8 +970,10 @@ void CodeGenModule::setAliasAttributes(const Decl *D,
 
   // Process the dllexport attribute based on whether the original definition
   // (not necessarily the aliasee) was exported.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (D->hasAttr<DLLExportAttr>())
     GV->setDLLStorageClass(llvm::GlobalValue::DLLExportStorageClass);
+#endif
 }
 
 void CodeGenModule::setNonAliasAttributes(const Decl *D,
@@ -995,12 +1005,17 @@ static void setLinkageAndVisibilityForGV(llvm::GlobalValue *GV,
   if (LV.getLinkage() != ExternalLinkage) {
     // Don't set internal linkage on declarations.
   } else {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (ND->hasAttr<DLLImportAttr>()) {
       GV->setLinkage(llvm::GlobalValue::ExternalLinkage);
       GV->setDLLStorageClass(llvm::GlobalValue::DLLImportStorageClass);
     } else if (ND->hasAttr<DLLExportAttr>()) {
       GV->setLinkage(llvm::GlobalValue::ExternalLinkage);
       GV->setDLLStorageClass(llvm::GlobalValue::DLLExportStorageClass);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (ND->hasAttr<WeakAttr>() || ND->isWeakImported()) {
       // "extern_weak" is overloaded in LLVM; we probably should have
       // separate linkage types for this.
@@ -1482,6 +1497,7 @@ bool CodeGenModule::MayBeEmittedEagerly(const ValueDecl *Global) {
   return true;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ConstantAddress CodeGenModule::GetAddrOfUuidDescriptor(
     const CXXUuidofExpr* E) {
   // Sema has verified that IIDSource has a __declspec(uuid()), and that its
@@ -1507,6 +1523,7 @@ ConstantAddress CodeGenModule::GetAddrOfUuidDescriptor(
     GV->setComdat(TheModule.getOrInsertComdat(GV->getName()));
   return ConstantAddress(GV, Alignment);
 }
+#endif
 
 ConstantAddress CodeGenModule::GetWeakRefReference(const ValueDecl *VD) {
   const AliasAttr *AA = VD->getAttr<AliasAttr>();
@@ -1627,7 +1644,11 @@ void CodeGenModule::EmitGlobal(GlobalDecl GD) {
 #endif
     if (!MustEmitForCuda &&
         VD->isThisDeclarationADefinition() != VarDecl::Definition &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !false
         !Context.isMSStaticDataMemberInlineDefinition(VD)) {
+#else
+        !false) {
+#endif
       // If this declaration may have caused an inline variable definition to
       // change linkage, make sure that it's emitted.
       if (Context.getInlineVariableDefinitionKind(VD) ==
@@ -1703,6 +1724,7 @@ namespace {
     }
   };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   struct DLLImportFunctionVisitor
       : public RecursiveASTVisitor<DLLImportFunctionVisitor> {
     bool SafeToInline = true;
@@ -1731,6 +1753,7 @@ namespace {
       return SafeToInline;
     }
   };
+#endif
 }
 
 // isTriviallyRecursive - Check if this function calls another
@@ -1762,6 +1785,7 @@ CodeGenModule::shouldEmitFunction(GlobalDecl GD) {
   if (CodeGenOpts.OptimizationLevel == 0 && !F->hasAttr<AlwaysInlineAttr>())
     return false;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (F->hasAttr<DLLImportAttr>()) {
     // Check whether it would be safe to inline this dllimport function.
     DLLImportFunctionVisitor Visitor;
@@ -1769,6 +1793,7 @@ CodeGenModule::shouldEmitFunction(GlobalDecl GD) {
     if (!Visitor.SafeToInline)
       return false;
   }
+#endif
 
   // PR9614. Avoid cases where the source code is lying to us. An available
   // externally function should have an equivalent function somewhere else,
@@ -1862,7 +1887,11 @@ CodeGenModule::GetOrCreateLLVMFunction(StringRef MangledName,
     }
 
     // Handle dropped DLL attributes.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (D && !D->hasAttr<DLLImportAttr>() && !D->hasAttr<DLLExportAttr>())
+#else
+    if (D && !false && !false)
+#endif
       Entry->setDLLStorageClass(llvm::GlobalValue::DefaultStorageClass);
 
     // If there are two attempts to define the same mangled name, issue an
@@ -2098,7 +2127,11 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName,
     }
 
     // Handle dropped DLL attributes.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (D && !D->hasAttr<DLLImportAttr>() && !D->hasAttr<DLLExportAttr>())
+#else
+    if (D && !false && !false)
+#endif
       Entry->setDLLStorageClass(llvm::GlobalValue::DefaultStorageClass);
 
     if (Entry->getType() == Ty)
@@ -2183,9 +2216,11 @@ CodeGenModule::GetOrCreateLLVMGlobal(StringRef MangledName,
 
     // If required by the ABI, treat declarations of static data members with
     // inline initializers as definitions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     if (getContext().isMSStaticDataMemberInlineDefinition(D)) {
       EmitGlobalVarDefinition(D);
     }
+#endif
 
     // Handle XCore specific ABI requirements.
     if (getTarget().getTriple().getArch() == llvm::Triple::xcore &&
@@ -2382,8 +2417,10 @@ static bool shouldBeInCOMDAT(CodeGenModule &CGM, const Decl &D) {
   if (!CGM.supportsCOMDAT())
     return false;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (D.hasAttr<SelectAnyAttr>())
     return true;
+#endif
 
   GVALinkage Linkage;
   if (auto *VD = dyn_cast<VarDecl>(&D))
@@ -2598,11 +2635,13 @@ void CodeGenModule::EmitGlobalVarDefinition(const VarDecl *D,
     Linkage = llvm::GlobalValue::InternalLinkage;
 
   GV->setLinkage(Linkage);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (D->hasAttr<DLLImportAttr>())
     GV->setDLLStorageClass(llvm::GlobalVariable::DLLImportStorageClass);
   else if (D->hasAttr<DLLExportAttr>())
     GV->setDLLStorageClass(llvm::GlobalVariable::DLLExportStorageClass);
   else
+#endif
     GV->setDLLStorageClass(llvm::GlobalVariable::DefaultStorageClass);
 
   if (Linkage == llvm::GlobalVariable::CommonLinkage)
@@ -2664,6 +2703,7 @@ static bool isVarDeclStrongDefinition(const ASTContext &Context,
 
   // Declarations with a required alignment do not have common linkage in MSVC
   // mode.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
     if (D->hasAttr<AlignedAttr>())
       return true;
@@ -2683,6 +2723,7 @@ static bool isVarDeclStrongDefinition(const ASTContext &Context,
       }
     }
   }
+#endif
 
   return false;
 }
@@ -2749,8 +2790,10 @@ llvm::GlobalValue::LinkageTypes CodeGenModule::getLLVMLinkageForDeclarator(
   // linkonce.  MSVC optimizes away references to const selectany globals, so
   // all definitions should be the same and ODR linkage should be used.
   // http://msdn.microsoft.com/en-us/library/5tkz6s71.aspx
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (D->hasAttr<SelectAnyAttr>())
     return llvm::GlobalVariable::WeakODRLinkage;
+#endif
 
   // Otherwise, we have strong external linkage.
   assert(Linkage == GVA_StrongExternal);
@@ -2894,8 +2937,10 @@ static void ReplaceUsesOfNonProtoTypeWithRealFunction(llvm::GlobalValue *Old,
 
 void CodeGenModule::HandleCXXStaticMemberVarInstantiation(VarDecl *VD) {
   auto DK = VD->isThisDeclarationADefinition();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (DK == VarDecl::Definition && VD->hasAttr<DLLImportAttr>())
     return;
+#endif
 
   TemplateSpecializationKind TSK = VD->getTemplateSpecializationKind();
   // If we have a definition, this might be a deferred decl. If the
@@ -3170,9 +3215,14 @@ CodeGenModule::GetAddrOfConstantCFString(const StringLiteral *Literal) {
         if ((VD = dyn_cast<VarDecl>(Result)))
           break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (!VD || !VD->hasAttr<DLLExportAttr>()) {
         CGV->setDLLStorageClass(llvm::GlobalValue::DLLImportStorageClass);
         CGV->setLinkage(llvm::GlobalValue::ExternalLinkage);
+#else
+      if (false) {
+        /* dummy */
+#endif
       } else {
         CGV->setDLLStorageClass(llvm::GlobalValue::DLLExportStorageClass);
         CGV->setLinkage(llvm::GlobalValue::ExternalLinkage);
@@ -4218,6 +4268,7 @@ void CodeGenModule::EmitCoverageFile() {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 llvm::Constant *CodeGenModule::EmitUuidofInitializer(StringRef Uuid) {
   // Sema has checked that all uuid strings are of the form
   // "12345678-1234-1234-1234-1234567890ab".
@@ -4244,6 +4295,7 @@ llvm::Constant *CodeGenModule::EmitUuidofInitializer(StringRef Uuid) {
 
   return llvm::ConstantStruct::getAnon(Fields);
 }
+#endif
 
 llvm::Constant *CodeGenModule::GetAddrOfRTTIDescriptor(QualType Ty,
                                                        bool ForEH) {

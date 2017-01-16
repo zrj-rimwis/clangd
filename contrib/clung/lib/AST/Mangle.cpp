@@ -72,7 +72,11 @@ static CCMangling getCallingConvMangling(const ASTContext &Context,
     return CCM_Other;
 
   if (Context.getLangOpts().CPlusPlus && !isExternC(ND) &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       TI.getCXXABI() == TargetCXXABI::Microsoft)
+#else
+      false)
+#endif
     return CCM_Other;
 
   const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND);
@@ -139,7 +143,11 @@ void MangleContext::mangleName(const NamedDecl *D, raw_ostream &Out) {
   CCMangling CC = getCallingConvMangling(ASTContext, D);
   bool MCXX = shouldMangleCXXName(D);
   const TargetInfo &TI = Context.getTargetInfo();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (CC == CCM_Other || (MCXX && TI.getCXXABI() == TargetCXXABI::Microsoft)) {
+#else
+  if (CC == CCM_Other || (MCXX && false)) {
+#endif
     if (const ObjCMethodDecl *OMD = dyn_cast<ObjCMethodDecl>(D))
       mangleObjCMethodName(OMD, Out);
     else

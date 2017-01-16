@@ -79,7 +79,9 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : TargetOpts(), Triple(T) {
   RegParmMax = 0;
   SSERegParmMax = 0;
   HasAlignMac68kSupport = false;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   HasBuiltinMSVaList = false;
+#endif
 
   // Default to no types using fpret.
   RealTypeUsesObjCFPRet = 0;
@@ -88,9 +90,13 @@ TargetInfo::TargetInfo(const llvm::Triple &T) : TargetOpts(), Triple(T) {
   ComplexLongDoubleUsesFP2Ret = false;
 
   // Set the C++ ABI based on the triple.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   TheCXXABI.set(Triple.isKnownWindowsMSVCEnvironment()
                     ? TargetCXXABI::Microsoft
                     : TargetCXXABI::GenericItanium);
+#else
+  TheCXXABI.set(TargetCXXABI::GenericItanium);
+#endif
 
   // Default to an empty address space map.
   AddrSpaceMap = &DefaultAddrSpaceMap;

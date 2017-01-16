@@ -264,8 +264,10 @@ static llvm::Value *BuildAppleKextVirtualCall(CodeGenFunction &CGF,
                                               GlobalDecl GD,
                                               llvm::Type *Ty,
                                               const CXXRecordDecl *RD) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // someone had to spent some time here
   assert(!CGF.CGM.getTarget().getCXXABI().isMicrosoft() &&
          "No kext in Microsoft ABI");
+#endif
   GD = GD.getCanonicalDecl();
   CodeGenModule &CGM = CGF.CGM;
   llvm::Value *VTable = CGM.getCXXABI().getAddrOfVTable(RD, CharUnits());

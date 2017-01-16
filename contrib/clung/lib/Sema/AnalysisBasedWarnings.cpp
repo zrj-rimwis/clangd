@@ -382,12 +382,14 @@ static ControlFlowKind CheckFallThrough(AnalysisDeclContext &AC) {
       HasFakeEdge = true;
       continue;
     }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // yeah
     if (isa<MSAsmStmt>(S)) {
       // TODO: Verify this is correct.
       HasFakeEdge = true;
       HasLiveReturn = true;
       continue;
     }
+#endif
     if (isa<CXXTryStmt>(S)) {
       HasAbnormalEdge = true;
       continue;

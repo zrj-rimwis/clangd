@@ -757,15 +757,27 @@ void clang::DoPrintPreprocessedInput(Preprocessor &PP, raw_ostream *OS,
   // the majority of pragmas in such a file will be Microsoft pragmas.
   PP.AddPragmaHandler(new UnknownPragmaHandler(
       "#pragma", Callbacks,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // ehem
       /*RequireTokenExpansion=*/PP.getLangOpts().MicrosoftExt));
+#else
+      /*RequireTokenExpansion=*/false));
+#endif
   PP.AddPragmaHandler(
       "GCC", new UnknownPragmaHandler(
                  "#pragma GCC", Callbacks,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                  /*RequireTokenExpansion=*/PP.getLangOpts().MicrosoftExt));
+#else
+                 /*RequireTokenExpansion=*/false));
+#endif
   PP.AddPragmaHandler(
       "clang", new UnknownPragmaHandler(
                    "#pragma clang", Callbacks,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                    /*RequireTokenExpansion=*/PP.getLangOpts().MicrosoftExt));
+#else
+                   /*RequireTokenExpansion=*/false));
+#endif
 
   // The tokens after pragma omp need to be expanded.
   //

@@ -229,10 +229,12 @@ llvm::Constant *CodeGenModule::getOrCreateStaticVarDecl(
     setTLSMode(GV, D);
 
   if (D.isExternallyVisible()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (D.hasAttr<DLLImportAttr>())
       GV->setDLLStorageClass(llvm::GlobalVariable::DLLImportStorageClass);
     else if (D.hasAttr<DLLExportAttr>())
       GV->setDLLStorageClass(llvm::GlobalVariable::DLLExportStorageClass);
+#endif
   }
 
   // Make sure the result is of the correct type.
@@ -1050,12 +1052,18 @@ CodeGenFunction::EmitAutoVarAlloca(const VarDecl &D) {
       // Don't emit lifetime markers for MSVC catch parameters. The lifetime of
       // the catch parameter starts in the catchpad instruction, and we can't
       // insert code in those basic blocks.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
       bool IsMSCatchParam =
           D.isExceptionVariable() && getTarget().getCXXABI().isMicrosoft();
+#endif
 
       // Emit a lifetime intrinsic if meaningful.  There's no point
       // in doing this if we don't have a valid insertion point (?).
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !false // srsly?
       if (HaveInsertPoint() && !IsMSCatchParam) {
+#else
+      if (HaveInsertPoint() && !false) {
+#endif
         uint64_t size = CGM.getDataLayout().getTypeAllocSize(allocaTy);
         emission.SizeForLifetimeMarkers =
           EmitLifetimeStart(size, address.getPointer());
@@ -1784,7 +1792,11 @@ void CodeGenFunction::EmitParmDecl(const VarDecl &D, ParamValue Arg,
     // Don't push a cleanup in a thunk for a method that will also emit a
     // cleanup.
     if (!IsScalar && !CurFuncIsThunk &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
         getTarget().getCXXABI().areArgsDestroyedLeftToRightInCallee()) {
+#else
+        false) {
+#endif
       const CXXRecordDecl *RD = Ty->getAsCXXRecordDecl();
       if (RD && RD->hasNonTrivialDestructor())
         pushDestroy(QualType::DK_cxx_destructor, DeclPtr, Ty);

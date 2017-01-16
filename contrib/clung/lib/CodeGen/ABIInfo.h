@@ -96,9 +96,11 @@ namespace swiftcall {
 
     /// Emit the target dependent code to load a value of
     /// \arg Ty from the \c __builtin_ms_va_list pointed to by \arg VAListAddr.
+//#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // must be present for ms_abi
     virtual CodeGen::Address EmitMSVAArg(CodeGen::CodeGenFunction &CGF,
                                          CodeGen::Address VAListAddr,
                                          QualType Ty) const;
+//#endif
 
     virtual bool isHomogeneousAggregateBaseType(QualType Ty) const;
 

@@ -697,9 +697,11 @@ ExprResult Sema::DefaultLvalueConversion(Expr *E) {
     T = T.getUnqualifiedType();
 
   // Under the MS ABI, lock down the inheritance model now.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (T->isMemberPointerType() &&
       Context.getTargetInfo().getCXXABI().isMicrosoft())
     (void)isCompleteType(E->getExprLoc(), T);
+#endif
 
   UpdateMarkingForLValueToRValue(E);
   
@@ -1625,8 +1627,10 @@ Sema::ActOnStringLiteral(ArrayRef<Token> StringToks, Scope *UDLScope) {
   } else if (Literal.isUTF32()) {
     CharTy = Context.Char32Ty;
     Kind = StringLiteral::UTF32;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (Literal.isPascal()) {
     CharTy = Context.UnsignedCharTy;
+#endif
   }
 
   QualType CharTyConst = CharTy;
@@ -1648,7 +1652,11 @@ Sema::ActOnStringLiteral(ArrayRef<Token> StringToks, Scope *UDLScope) {
 
   // Pass &StringTokLocs[0], StringTokLocs.size() to factory!
   StringLiteral *Lit = StringLiteral::Create(Context, Literal.GetString(),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                                              Kind, Literal.Pascal, StrTy,
+#else
+                                             Kind, false, StrTy,
+#endif
                                              &StringTokLocs[0],
                                              StringTokLocs.size());
   if (Literal.getUDSuffix().empty())
@@ -3112,9 +3120,11 @@ ExprResult Sema::ActOnPredefinedExpr(SourceLocation Loc, tok::TokenKind Kind) {
   default: llvm_unreachable("Unknown simple primary expr!");
   case tok::kw___func__: IT = PredefinedExpr::Func; break; // [C99 6.4.2.2]
   case tok::kw___FUNCTION__: IT = PredefinedExpr::Function; break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___FUNCDNAME__: IT = PredefinedExpr::FuncDName; break; // [MS]
   case tok::kw___FUNCSIG__: IT = PredefinedExpr::FuncSig; break; // [MS]
   case tok::kw_L__FUNCTION__: IT = PredefinedExpr::LFunction; break;
+#endif
   case tok::kw___PRETTY_FUNCTION__: IT = PredefinedExpr::PrettyFunction; break;
   }
 
@@ -3495,7 +3505,11 @@ ExprResult Sema::ActOnNumericConstant(const Token &Tok, Scope *UDLScope) {
           // To be compatible with MSVC, hex integer literals ending with the
           // LL or i64 suffix are always signed in Microsoft mode.
           if (!Literal.isUnsigned && (ResultVal[LongLongSize-1] == 0 ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
               (getLangOpts().MicrosoftExt && Literal.isLongLong)))
+#else
+              (false)))
+#endif
             Ty = Context.LongLongTy;
           else if (AllowUnsigned)
             Ty = Context.UnsignedLongLongTy;
@@ -10467,8 +10481,10 @@ QualType Sema::CheckAddressOfOperand(ExprResult &OrigOp, SourceLocation OpLoc) {
     QualType MPTy = Context.getMemberPointerType(
         op->getType(), Context.getTypeDeclType(MD->getParent()).getTypePtr());
     // Under the MS ABI, lock down the inheritance model now.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Context.getTargetInfo().getCXXABI().isMicrosoft())
       (void)isCompleteType(OpLoc, MPTy);
+#endif
     return MPTy;
   } else if (lval != Expr::LV_Valid && lval != Expr::LV_IncompleteVoidType) {
     // C99 6.5.3.2p1
@@ -10524,8 +10540,10 @@ QualType Sema::CheckAddressOfOperand(ExprResult &OrigOp, SourceLocation OpLoc) {
               op->getType(),
               Context.getTypeDeclType(cast<RecordDecl>(Ctx)).getTypePtr());
           // Under the MS ABI, lock down the inheritance model now.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           if (Context.getTargetInfo().getCXXABI().isMicrosoft())
             (void)isCompleteType(OpLoc, MPTy);
+#endif
           return MPTy;
         }
       }
@@ -12243,6 +12261,7 @@ ExprResult Sema::BuildVAArgExpr(SourceLocation BuiltinLoc,
   // It might be a __builtin_ms_va_list. (But don't ever mark a va_arg()
   // as Microsoft ABI on an actual Microsoft platform, where
   // __builtin_ms_va_list and __builtin_va_list are the same.)
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // XXX recheck
   if (!E->isTypeDependent() && Context.getTargetInfo().hasBuiltinMSVaList() &&
       Context.getTargetInfo().getBuiltinVaListKind() != TargetInfo::CharPtrBuiltinVaList) {
     QualType MSVaListType = Context.getBuiltinMSVaListType();
@@ -12252,6 +12271,7 @@ ExprResult Sema::BuildVAArgExpr(SourceLocation BuiltinLoc,
       IsMS = true;
     }
   }
+#endif
 
   // Get the va_list type
   QualType VaListType = Context.getBuiltinVaListType();
@@ -13028,7 +13048,11 @@ void Sema::MarkFunctionReferenced(SourceLocation Loc, FunctionDecl *Func,
     Constructor = cast<CXXConstructorDecl>(Constructor->getFirstDecl());
     if (Constructor->isDefaulted() && !Constructor->isDeleted()) {
       if (Constructor->isDefaultConstructor()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (Constructor->isTrivial() && !Constructor->hasAttr<DLLExportAttr>())
+#else
+        if (Constructor->isTrivial() && !false)
+#endif
           return;
         DefineImplicitDefaultConstructor(Loc, Constructor);
       } else if (Constructor->isCopyConstructor()) {
@@ -13043,7 +13067,11 @@ void Sema::MarkFunctionReferenced(SourceLocation Loc, FunctionDecl *Func,
                  dyn_cast<CXXDestructorDecl>(Func)) {
     Destructor = cast<CXXDestructorDecl>(Destructor->getFirstDecl());
     if (Destructor->isDefaulted() && !Destructor->isDeleted()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Destructor->isTrivial() && !Destructor->hasAttr<DLLExportAttr>())
+#else
+      if (Destructor->isTrivial() && !false)
+#endif
         return;
       DefineImplicitDestructor(Loc, Destructor);
     }
@@ -15043,12 +15071,14 @@ ExprResult Sema::CheckPlaceholderExpr(Expr *E) {
     auto *DRE = dyn_cast<DeclRefExpr>(E->IgnoreParenImpCasts());
     if (DRE) {
       auto *FD = cast<FunctionDecl>(DRE->getDecl());
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (FD->getBuiltinID() == Builtin::BI__noop) {
         E = ImpCastExprToType(E, Context.getPointerType(FD->getType()),
                               CK_BuiltinFnToFnPtr).get();
         return new (Context) CallExpr(Context, E, None, Context.IntTy,
                                       VK_RValue, SourceLocation());
       }
+#endif
     }
 
     Diag(E->getLocStart(), diag::err_builtin_fn_use);

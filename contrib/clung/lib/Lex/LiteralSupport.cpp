@@ -602,6 +602,7 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
       continue;  // Success.
     case 'i':
     case 'I':
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (PP.getLangOpts().MicrosoftExt) {
         if (isLong || isLongLong || MicrosoftInteger)
           break;
@@ -640,6 +641,7 @@ NumericLiteralParser::NumericLiteralParser(StringRef TokSpelling,
           break;
         }
       }
+#endif
       // "i", "if", and "il" are user-defined suffixes in C++1y.
       if (*s == 'i' && PP.getLangOpts().CPlusPlus14)
         break;
@@ -1268,7 +1270,11 @@ StringLiteralParser(ArrayRef<Token> StringToks,
   : SM(PP.getSourceManager()), Features(PP.getLangOpts()),
     Target(PP.getTargetInfo()), Diags(Complain ? &PP.getDiagnostics() :nullptr),
     MaxTokenLength(0), SizeBound(0), CharByteWidth(0), Kind(tok::unknown),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     ResultPtr(ResultBuf.data()), hadError(false), Pascal(false) {
+#else
+    ResultPtr(ResultBuf.data()), hadError(false) {
+#endif
   init(StringToks);
 }
 
@@ -1344,7 +1350,9 @@ void StringLiteralParser::init(ArrayRef<Token> StringToks){
   // wide strings as appropriate.
   ResultPtr = &ResultBuf[0];   // Next byte to fill in.
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Pascal = false;
+#endif
 
   SourceLocation UDSuffixTokLoc;
 
@@ -1456,6 +1464,7 @@ void StringLiteralParser::init(ArrayRef<Token> StringToks){
       ++ThisTokBuf; // skip "
 
       // Check if this is a pascal string
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Features.PascalStrings && ThisTokBuf + 1 != ThisTokEnd &&
           ThisTokBuf[0] == '\\' && ThisTokBuf[1] == 'p') {
 
@@ -1467,6 +1476,7 @@ void StringLiteralParser::init(ArrayRef<Token> StringToks){
         } else if (Pascal)
           ThisTokBuf += 2;
       }
+#endif
 
       while (ThisTokBuf != ThisTokEnd) {
         // Is this a span of non-escape characters?
@@ -1516,6 +1526,7 @@ void StringLiteralParser::init(ArrayRef<Token> StringToks){
     }
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Pascal) {
     if (CharByteWidth == 4) {
       // FIXME: Make the type of the result buffer correct instead of
@@ -1542,6 +1553,10 @@ void StringLiteralParser::init(ArrayRef<Token> StringToks){
       hadError = true;
       return;
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (Diags) {
     // Complain if this string literal has too many characters.
     unsigned MaxChars = Features.CPlusPlus? 65536 : Features.C99 ? 4095 : 509;

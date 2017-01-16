@@ -524,9 +524,11 @@ bool TokenLexer::PasteTokens(Token &Tok) {
   // MSVC: If previous token was pasted, this must be a recovery from an invalid
   // paste operation. Ignore spaces before this token to mimic MSVC output.
   // Required for generating valid UUID strings in some MS headers.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (PP.getLangOpts().MicrosoftExt && (CurToken >= 2) &&
       Tokens[CurToken - 2].is(tok::hashhash))
     Tok.clearFlag(Token::LeadingSpace);
+#endif
   
   SmallString<128> Buffer;
   const char *ResultTokStrPtr = nullptr;
@@ -632,19 +634,25 @@ bool TokenLexer::PasteTokens(Token &Tok) {
 
         // Test for the Microsoft extension of /##/ turning into // here on the
         // error path.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (PP.getLangOpts().MicrosoftExt && Tok.is(tok::slash) &&
             RHS.is(tok::slash)) {
           HandleMicrosoftCommentPaste(Tok, Loc);
           return true;
         }
+#endif
 
         // Do not emit the error when preprocessing assembler code.
         if (!PP.getLangOpts().AsmPreprocessor) {
           // If we're in microsoft extensions mode, downgrade this from a hard
           // error to an extension that defaults to an error.  This allows
           // disabling it.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           PP.Diag(Loc, PP.getLangOpts().MicrosoftExt ? diag::ext_pp_bad_paste_ms
                                                      : diag::err_pp_bad_paste)
+#else
+          PP.Diag(Loc, diag::err_pp_bad_paste)
+#endif
               << Buffer;
         }
 

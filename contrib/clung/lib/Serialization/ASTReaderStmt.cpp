@@ -340,6 +340,7 @@ void ASTStmtReader::VisitGCCAsmStmt(GCCAsmStmt *S) {
                                     Clobbers.data(), NumClobbers);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtReader::VisitMSAsmStmt(MSAsmStmt *S) {
   VisitAsmStmt(S);
   S->LBraceLoc = ReadSourceLocation(Record, Idx);
@@ -384,6 +385,7 @@ void ASTStmtReader::VisitMSAsmStmt(MSAsmStmt *S) {
   S->initialize(Reader.getContext(), AsmStr, AsmToks,
                 Constraints, Exprs, Clobbers);
 }
+#endif
 
 void ASTStmtReader::VisitCoroutineBodyStmt(CoroutineBodyStmt *S) {
   // FIXME: Implement coroutine serialization.
@@ -1697,6 +1699,7 @@ void ASTStmtReader::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *E) {
   E->setRBracketLoc(ReadSourceLocation(Record, Idx));
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtReader::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
   VisitExpr(E);
   E->setSourceRange(ReadSourceRange(Record, Idx));
@@ -1711,6 +1714,7 @@ void ASTStmtReader::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
   // __uuidof(expr)
   E->setExprOperand(Reader.ReadSubExpr());
 }
+#endif
 
 void ASTStmtReader::VisitSEHLeaveStmt(SEHLeaveStmt *S) {
   VisitStmt(S);
@@ -2936,9 +2940,11 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       S = new (Context) GCCAsmStmt(Empty);
       break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case STMT_MSASM:
       S = new (Context) MSAsmStmt(Empty);
       break;
+#endif
 
     case STMT_CAPTURED:
       S = CapturedStmt::CreateDeserialized(Context,
@@ -3551,18 +3557,22 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_CXX_TYPEID_TYPE:
       S = new (Context) CXXTypeidExpr(Empty, false);
       break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case EXPR_CXX_UUIDOF_EXPR:
       S = new (Context) CXXUuidofExpr(Empty, true);
       break;
+#endif
     case EXPR_CXX_PROPERTY_REF_EXPR:
       S = new (Context) MSPropertyRefExpr(Empty);
       break;
     case EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR:
       S = new (Context) MSPropertySubscriptExpr(Empty);
       break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case EXPR_CXX_UUIDOF_TYPE:
       S = new (Context) CXXUuidofExpr(Empty, false);
       break;
+#endif
     case EXPR_CXX_THIS:
       S = new (Context) CXXThisExpr(Empty);
       break;

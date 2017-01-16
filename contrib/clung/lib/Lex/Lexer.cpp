@@ -1601,7 +1601,11 @@ bool Lexer::LexNumericConstant(Token &Result, const char *CurPtr) {
   if ((C == '-' || C == '+') && (PrevCh == 'E' || PrevCh == 'e')) {
     // If we are in Microsoft mode, don't continue if the constant is hex.
     // For example, MSVC will accept the following as 3 tokens: 0x1234567e+1
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (!LangOpts.MicrosoftExt || !isHexaLiteral(BufferPtr, LangOpts))
+#else
+    if (!false || !isHexaLiteral(BufferPtr, LangOpts))
+#endif
       return LexNumericConstant(Result, ConsumeChar(CurPtr, Size, Result));
   }
 
@@ -2988,11 +2992,13 @@ LexNextToken:
       
   case 26:  // DOS & CP/M EOF: "^Z".
     // If we're in Microsoft extensions mode, treat this as end of file.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (LangOpts.MicrosoftExt) {
       if (!isLexingRawMode())
         Diag(CurPtr-1, diag::ext_ctrl_z_eof_microsoft);
       return LexEndOfFile(Result, CurPtr-1);
     }
+#endif
 
     // If Microsoft extensions are disabled, this is just random garbage.
     Kind = tok::unknown;
@@ -3397,11 +3403,13 @@ LexNextToken:
         Kind = tok::hashhash;                          // '%:%:' -> '##'
         CurPtr = ConsumeChar(ConsumeChar(CurPtr, SizeTmp, Result),
                              SizeTmp2, Result);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       } else if (Char == '@' && LangOpts.MicrosoftExt) {// %:@ -> #@ -> Charize
         CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
         if (!isLexingRawMode())
           Diag(BufferPtr, diag::ext_charize_microsoft);
         Kind = tok::hashat;
+#endif
       } else {                                         // '%:' -> '#'
         // We parsed a # character.  If this occurs at the start of the line,
         // it's actually the start of a preprocessing directive.  Callback to
@@ -3570,11 +3578,13 @@ LexNextToken:
     if (Char == '#') {
       Kind = tok::hashhash;
       CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     } else if (Char == '@' && LangOpts.MicrosoftExt) {  // #@ -> Charize
       Kind = tok::hashat;
       if (!isLexingRawMode())
         Diag(BufferPtr, diag::ext_charize_microsoft);
       CurPtr = ConsumeChar(CurPtr, SizeTmp, Result);
+#endif
     } else {
       // We parsed a # character.  If this occurs at the start of the line,
       // it's actually the start of a preprocessing directive.  Callback to

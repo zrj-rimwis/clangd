@@ -557,6 +557,7 @@ emitNonLazySymbolPointer(MCStreamer &OutStreamer, MCSymbol *StubLabel,
 }
 
 MCSymbol *X86AsmPrinter::GetCPISymbol(unsigned CPID) const {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Subtarget->isTargetKnownWindowsMSVC()) {
     const MachineConstantPoolEntry &CPE =
         MF->getConstantPool()->getConstants()[CPID];
@@ -575,6 +576,7 @@ MCSymbol *X86AsmPrinter::GetCPISymbol(unsigned CPID) const {
       }
     }
   }
+#endif
 
   return AsmPrinter::GetCPISymbol(CPID);
 }
@@ -618,12 +620,14 @@ void X86AsmPrinter::EmitEndOfAsmFile(Module &M) {
   }
 #endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (TT.isKnownWindowsMSVCEnvironment() && MMI->usesVAFloatArgument()) {
     StringRef SymbolName =
         (TT.getArch() == Triple::x86_64) ? "_fltused" : "__fltused";
     MCSymbol *S = MMI->getContext().getOrCreateSymbol(SymbolName);
     OutStreamer->EmitSymbolAttribute(S, MCSA_Global);
   }
+#endif
 
   if (TT.isOSBinFormatCOFF()) {
     const TargetLoweringObjectFileCOFF &TLOFCOFF =

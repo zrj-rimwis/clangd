@@ -2531,7 +2531,9 @@ public:
 
   /// \brief Returns true if this is an inline-initialized static data member
   /// which is treated as a definition for MSVC compatibility.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isMSStaticDataMemberInlineDefinition(const VarDecl *VD) const;
+#endif
 
   enum class InlineVariableDefinitionKind {
     None,        ///< Not an inline variable.

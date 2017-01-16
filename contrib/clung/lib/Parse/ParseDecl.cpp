@@ -607,11 +607,15 @@ void Parser::ParseMicrosoftTypeAttributes(ParsedAttributes &attrs) {
     case tok::kw___thiscall:
     case tok::kw___cdecl:
     case tok::kw___vectorcall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___ptr64:
     case tok::kw___w64:
     case tok::kw___ptr32:
     case tok::kw___sptr:
     case tok::kw___uptr: {
+#else
+    {
+#endif
       IdentifierInfo *AttrName = Tok.getIdentifierInfo();
       SourceLocation AttrNameLoc = ConsumeToken();
       attrs.addNew(AttrName, AttrNameLoc, nullptr, AttrNameLoc, nullptr, 0,
@@ -624,6 +628,7 @@ void Parser::ParseMicrosoftTypeAttributes(ParsedAttributes &attrs) {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::DiagnoseAndSkipExtendedMicrosoftTypeAttributes() {
   SourceLocation StartLoc = Tok.getLocation();
   SourceLocation EndLoc = SkipExtendedMicrosoftTypeAttributes();
@@ -633,7 +638,9 @@ void Parser::DiagnoseAndSkipExtendedMicrosoftTypeAttributes() {
     Diag(StartLoc, diag::warn_microsoft_qualifiers_ignored) << Range;
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 SourceLocation Parser::SkipExtendedMicrosoftTypeAttributes() {
   SourceLocation EndLoc;
 
@@ -659,7 +666,9 @@ SourceLocation Parser::SkipExtendedMicrosoftTypeAttributes() {
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::ParseBorlandTypeAttributes(ParsedAttributes &attrs) {
   // Treat these like attributes
   while (Tok.is(tok::kw___pascal)) {
@@ -669,6 +678,7 @@ void Parser::ParseBorlandTypeAttributes(ParsedAttributes &attrs) {
                  AttributeList::AS_Keyword);
   }
 }
+#endif
 
 void Parser::ParseOpenCLKernelAttributes(ParsedAttributes &attrs) {
   // Treat these like attributes
@@ -1879,8 +1889,10 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
     MaybeParseGNUAttributes(D);
 
     // MSVC parses but ignores qualifiers after the comma as an extension.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (getLangOpts().MicrosoftExt)
       DiagnoseAndSkipExtendedMicrosoftTypeAttributes();
+#endif
 
     ParseDeclarator(D);
     if (!D.isInvalidType()) {
@@ -2323,9 +2335,11 @@ bool Parser::ParseImplicitInt(DeclSpec &DS, CXXScopeSpec *SS,
         TagName="union" ; FixitTagName = "union " ;TagKind=tok::kw_union ;break;
       case DeclSpec::TST_struct:
         TagName="struct"; FixitTagName = "struct ";TagKind=tok::kw_struct;break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       case DeclSpec::TST_interface:
         TagName="__interface"; FixitTagName = "__interface ";
         TagKind=tok::kw___interface;break;
+#endif
       case DeclSpec::TST_class:
         TagName="class" ; FixitTagName = "class " ;TagKind=tok::kw_class ;break;
     }
@@ -2966,7 +2980,9 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       goto DoneWithDeclSpec;
 
       // typedef-name
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___super:
+#endif
     case tok::kw_decltype:
     case tok::identifier: {
       // This identifier can only be a typedef name if we haven't already seen
@@ -3094,6 +3110,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       continue;
 
     // Microsoft single token adornments.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___forceinline: {
       isInvalid = DS.setFunctionSpecForceInline(Loc, PrevSpec, DiagID);
       IdentifierInfo *AttrName = Tok.getIdentifierInfo();
@@ -3102,17 +3119,22 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                 nullptr, 0, AttributeList::AS_Keyword);
       break;
     }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___unaligned:
       isInvalid = DS.SetTypeQual(DeclSpec::TQ_unaligned, Loc, PrevSpec, DiagID,
                                  getLangOpts());
       break;
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___sptr:
     case tok::kw___uptr:
     case tok::kw___ptr64:
     case tok::kw___ptr32:
     case tok::kw___w64:
+#endif
     case tok::kw___cdecl:
     case tok::kw___stdcall:
     case tok::kw___fastcall:
@@ -3122,9 +3144,11 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       continue;
 
     // Borland single token adornments.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___pascal:
       ParseBorlandTypeAttributes(DS.getAttributes());
       continue;
+#endif
 
     // OpenCL single token adornments.
     case tok::kw___kernel:
@@ -3278,9 +3302,11 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
         isInvalid = DS.SetTypeSpecWidth(DeclSpec::TSW_longlong, Loc, PrevSpec,
                                         DiagID, Policy);
       break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___int64:
         isInvalid = DS.SetTypeSpecWidth(DeclSpec::TSW_longlong, Loc, PrevSpec,
                                         DiagID, Policy);
+#endif
       break;
     case tok::kw_signed:
       isInvalid = DS.SetTypeSpecSign(DeclSpec::TSS_signed, Loc, PrevSpec,
@@ -3401,7 +3427,9 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
     // class-specifier:
     case tok::kw_class:
     case tok::kw_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___interface:
+#endif
     case tok::kw_union: {
       tok::TokenKind Kind = Tok.getKind();
       ConsumeToken();
@@ -3465,6 +3493,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       HandlePragmaPack();
       continue;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::annot_pragma_ms_pragma:
       HandlePragmaMSPragma();
       continue;
@@ -3476,6 +3505,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
     case tok::annot_pragma_ms_pointers_to_members:
       HandlePragmaMSPointersToMembers();
       continue;
+#endif
 
     case tok::kw___underlying_type:
       ParseUnderlyingTypeSpecifier(DS);
@@ -3857,7 +3887,11 @@ void Parser::ParseEnumSpecifier(SourceLocation StartLoc, DeclSpec &DS,
   bool AllowDeclaration = DSC != DSC_trailing;
 
   bool AllowFixedUnderlyingType = AllowDeclaration &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     (getLangOpts().CPlusPlus11 || getLangOpts().MicrosoftExt ||
+#else
+    (getLangOpts().CPlusPlus11 ||
+#endif
      getLangOpts().ObjC2);
 
   CXXScopeSpec &SS = DS.getTypeSpecScope();
@@ -4306,7 +4340,9 @@ bool Parser::isKnownToBeTypeSpecifier(const Token &Tok) const {
     // type-specifiers
   case tok::kw_short:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:
@@ -4334,7 +4370,9 @@ bool Parser::isKnownToBeTypeSpecifier(const Token &Tok) const {
     // struct-or-union-specifier (C99) or class-specifier (C++)
   case tok::kw_class:
   case tok::kw_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
   case tok::kw_union:
     // enum-specifier
   case tok::kw_enum:
@@ -4381,7 +4419,9 @@ bool Parser::isTypeSpecifierQualifier() {
     // type-specifiers
   case tok::kw_short:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:
@@ -4409,7 +4449,9 @@ bool Parser::isTypeSpecifierQualifier() {
     // struct-or-union-specifier (C99) or class-specifier (C++)
   case tok::kw_class:
   case tok::kw_struct:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
   case tok::kw_union:
     // enum-specifier
   case tok::kw_enum:
@@ -4435,11 +4477,13 @@ bool Parser::isTypeSpecifierQualifier() {
   case tok::kw___fastcall:
   case tok::kw___thiscall:
   case tok::kw___vectorcall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___w64:
   case tok::kw___ptr64:
   case tok::kw___ptr32:
   case tok::kw___pascal:
   case tok::kw___unaligned:
+#endif
 
   case tok::kw__Nonnull:
   case tok::kw__Nullable:
@@ -4535,7 +4579,9 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
     // type-specifiers
   case tok::kw_short:
   case tok::kw_long:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___int64:
+#endif
   case tok::kw___int128:
   case tok::kw_signed:
   case tok::kw_unsigned:
@@ -4563,7 +4609,9 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
   case tok::kw_class:
   case tok::kw_struct:
   case tok::kw_union:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___interface:
+#endif
     // enum-specifier
   case tok::kw_enum:
 
@@ -4619,6 +4667,7 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
   case tok::kw___fastcall:
   case tok::kw___thiscall:
   case tok::kw___vectorcall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case tok::kw___w64:
   case tok::kw___sptr:
   case tok::kw___uptr:
@@ -4627,6 +4676,7 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
   case tok::kw___forceinline:
   case tok::kw___pascal:
   case tok::kw___unaligned:
+#endif
 
   case tok::kw__Nonnull:
   case tok::kw__Nullable:
@@ -4836,10 +4886,13 @@ void Parser::ParseTypeQualifierListOpt(DeclSpec &DS, unsigned AttrReqs,
       ParseOpenCLQualifiers(DS.getAttributes());
       break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___unaligned:
       isInvalid = DS.SetTypeQual(DeclSpec::TQ_unaligned, Loc, PrevSpec, DiagID,
                                  getLangOpts());
       break;
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // and this is a problem from who?
     case tok::kw___uptr:
       // GNU libc headers in C mode use '__uptr' as an identifer which conflicts
       // with the MS modifier keyword.
@@ -4848,10 +4901,13 @@ void Parser::ParseTypeQualifierListOpt(DeclSpec &DS, unsigned AttrReqs,
         if (TryKeywordIdentFallback(false))
           continue;
       }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___sptr:
     case tok::kw___w64:
     case tok::kw___ptr64:
     case tok::kw___ptr32:
+#endif
     case tok::kw___cdecl:
     case tok::kw___stdcall:
     case tok::kw___fastcall:
@@ -4862,12 +4918,14 @@ void Parser::ParseTypeQualifierListOpt(DeclSpec &DS, unsigned AttrReqs,
         continue;
       }
       goto DoneWithTypeQuals;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case tok::kw___pascal:
       if (AttrReqs & AR_VendorAttributesParsed) {
         ParseBorlandTypeAttributes(DS.getAttributes());
         continue;
       }
       goto DoneWithTypeQuals;
+#endif
 
     // Nullability type specifiers.
     case tok::kw__Nonnull:
@@ -5478,8 +5536,10 @@ void Parser::ParseParenDeclarator(Declarator &D) {
   ParseMicrosoftTypeAttributes(attrs);
 
   // Eat any Borland extensions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if  (Tok.is(tok::kw___pascal))
     ParseBorlandTypeAttributes(attrs);
+#endif
 
   // If we haven't past the identifier yet (or where the identifier would be
   // stored, if this is an abstract declarator), then this is probably just

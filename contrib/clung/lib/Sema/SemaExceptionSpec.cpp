@@ -113,10 +113,12 @@ bool Sema::CheckSpecifiedExceptionType(QualType &T, SourceRange Range) {
   // In Microsoft mode, downgrade this to a warning.
   unsigned DiagID = diag::err_incomplete_in_exception_spec;
   bool ReturnValueOnError = true;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt) {
     DiagID = diag::ext_incomplete_in_exception_spec;
     ReturnValueOnError = false;
   }
+#endif
   if (!(PointeeT->isRecordType() &&
         PointeeT->getAs<RecordType>()->isBeingDefined()) &&
       RequireCompleteType(Range.getBegin(), PointeeT, DiagID, Kind, Range))
@@ -217,10 +219,12 @@ bool Sema::CheckEquivalentExceptionSpec(FunctionDecl *Old, FunctionDecl *New) {
 
   unsigned DiagID = diag::err_mismatched_exception_spec;
   bool ReturnValueOnError = true;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt) {
     DiagID = diag::ext_mismatched_exception_spec;
     ReturnValueOnError = false;
   }
+#endif
 
   // Check the types as written: they must match before any exception
   // specification adjustment is applied.
@@ -291,10 +295,15 @@ bool Sema::CheckEquivalentExceptionSpec(FunctionDecl *Old, FunctionDecl *New) {
         NewProto->getExtProtoInfo().withExceptionSpec(ESI)));
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt && ESI.Type != EST_ComputedNoexcept) {
     // Allow missing exception specifications in redeclarations as an extension.
     DiagID = diag::ext_ms_missing_exception_specification;
     ReturnValueOnError = false;
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else if (New->isReplaceableGlobalAllocationFunction() &&
              ESI.Type != EST_ComputedNoexcept) {
     // Allow missing exception specifications in redeclarations as an extension,
@@ -377,14 +386,18 @@ bool Sema::CheckEquivalentExceptionSpec(
     const FunctionProtoType *Old, SourceLocation OldLoc,
     const FunctionProtoType *New, SourceLocation NewLoc) {
   unsigned DiagID = diag::err_mismatched_exception_spec;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt)
     DiagID = diag::ext_mismatched_exception_spec;
+#endif
   bool Result = CheckEquivalentExceptionSpec(PDiag(DiagID),
       PDiag(diag::note_previous_declaration), Old, OldLoc, New, NewLoc);
 
   // In Microsoft mode, mismatching exception specifications just cause a warning.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt)
     return false;
+#endif
   return Result;
 }
 
@@ -858,8 +871,10 @@ bool Sema::CheckOverridingFunctionExceptionSpec(const CXXMethodDecl *New,
     return false;
   }
   unsigned DiagID = diag::err_override_exception_spec;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt)
     DiagID = diag::ext_override_exception_spec;
+#endif
   return CheckExceptionSpecSubset(PDiag(DiagID),
                                   PDiag(diag::note_overridden_virtual_function),
                                   Old->getType()->getAs<FunctionProtoType>(),
@@ -1172,7 +1187,9 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::CXXPseudoDestructorExprClass:
   case Expr::CXXScalarValueInitExprClass:
   case Expr::CXXThisExprClass:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
+#endif
   case Expr::CharacterLiteralClass:
   case Expr::ExpressionTraitExprClass:
   case Expr::FloatingLiteralClass:

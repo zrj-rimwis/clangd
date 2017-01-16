@@ -123,6 +123,7 @@ Preprocessor::Preprocessor(IntrusiveRefCntPtr<PreprocessorOptions> PPOpts,
   // Initialize builtin macros like __LINE__ and friends.
   RegisterBuiltinMacros();
   
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if(LangOpts.Borland) {
     Ident__exception_info        = getIdentifierInfo("_exception_info");
     Ident___exception_info       = getIdentifierInfo("__exception_info");
@@ -140,6 +141,7 @@ Preprocessor::Preprocessor(IntrusiveRefCntPtr<PreprocessorOptions> PPOpts,
     Ident_GetExceptionInfo = Ident_GetExceptionCode = nullptr;
     Ident_AbnormalTermination = nullptr;
   }
+#endif
 }
 
 Preprocessor::~Preprocessor() {
@@ -576,6 +578,7 @@ void Preprocessor::SetPoisonReason(IdentifierInfo *II, unsigned DiagID) {
   PoisonReasons[II] = DiagID;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Preprocessor::PoisonSEHIdentifiers(bool Poison) {
   assert(Ident__exception_code && Ident__exception_info);
   assert(Ident___exception_code && Ident___exception_info);
@@ -589,6 +592,7 @@ void Preprocessor::PoisonSEHIdentifiers(bool Poison) {
   Ident___abnormal_termination->setIsPoisoned(Poison);
   Ident_AbnormalTermination->setIsPoisoned(Poison);
 }
+#endif
 
 void Preprocessor::HandlePoisonedIdentifier(Token & Identifier) {
   assert(Identifier.getIdentifierInfo() &&
@@ -845,11 +849,13 @@ bool Preprocessor::FinishLexStringLiteral(Token &Result, std::string &String,
   if (Literal.hadError)
     return false;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Literal.Pascal) {
     Diag(StrToks[0].getLocation(), diag::err_expected_string_literal)
       << /*Source='in...'*/0 << DiagnosticTag;
     return false;
   }
+#endif
 
   String = Literal.GetString();
   return true;

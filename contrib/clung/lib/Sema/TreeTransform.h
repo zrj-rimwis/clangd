@@ -1286,6 +1286,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult RebuildMSAsmStmt(SourceLocation AsmLoc, SourceLocation LBraceLoc,
                               ArrayRef<Token> AsmToks,
                               StringRef AsmString,
@@ -1298,6 +1299,7 @@ public:
                                     NumOutputs, NumInputs,
                                     Constraints, Clobbers, Exprs, EndLoc);
   }
+#endif
 
   /// \brief Build a new co_return statement.
   ///
@@ -2504,6 +2506,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ExprResult RebuildCXXUuidofExpr(QualType TypeInfoType,
                                         SourceLocation TypeidLoc,
                                         TypeSourceInfo *Operand,
@@ -2511,11 +2514,13 @@ public:
     return getSema().BuildCXXUuidof(TypeInfoType, TypeidLoc, Operand,
                                     RParenLoc);
   }
+#endif
 
   /// \brief Build a new C++ __uuidof(expr) expression.
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ExprResult RebuildCXXUuidofExpr(QualType TypeInfoType,
                                         SourceLocation TypeidLoc,
                                         Expr *Operand,
@@ -2523,6 +2528,7 @@ public:
     return getSema().BuildCXXUuidof(TypeInfoType, TypeidLoc, Operand,
                                     RParenLoc);
   }
+#endif
 
   /// \brief Build a new C++ "this" expression.
   ///
@@ -6579,6 +6585,7 @@ TreeTransform<Derived>::TransformGCCAsmStmt(GCCAsmStmt *S) {
                                         Clobbers, S->getRParenLoc());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformMSAsmStmt(MSAsmStmt *S) {
@@ -6610,6 +6617,7 @@ TreeTransform<Derived>::TransformMSAsmStmt(MSAsmStmt *S) {
                                        S->getAllConstraints(), S->getClobbers(),
                                        TransformedExprs, S->getEndLoc());
 }
+#endif
 
 // C++ Coroutines TS
 
@@ -9296,6 +9304,7 @@ TreeTransform<Derived>::TransformCXXTypeidExpr(CXXTypeidExpr *E) {
                                            E->getLocEnd());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformCXXUuidofExpr(CXXUuidofExpr *E) {
@@ -9330,6 +9339,7 @@ TreeTransform<Derived>::TransformCXXUuidofExpr(CXXUuidofExpr *E) {
                                            SubExpr.get(),
                                            E->getLocEnd());
 }
+#endif
 
 template<typename Derived>
 ExprResult

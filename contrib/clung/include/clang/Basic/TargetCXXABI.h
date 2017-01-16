@@ -111,7 +111,9 @@ public:
     /// FIXME: should this be split into Win32 and Win64 variants?
     ///
     /// Only scattered and incomplete official documentation exists.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     Microsoft
+#endif
   };
 
 private:
@@ -133,6 +135,7 @@ public:
   Kind getKind() const { return TheKind; }
 
   /// \brief Does this ABI generally fall into the Itanium family of ABIs?
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool isItaniumFamily() const {
     switch (getKind()) {
     case GenericAArch64:
@@ -150,8 +153,10 @@ public:
     }
     llvm_unreachable("bad ABI kind");
   }
+#endif
 
   /// \brief Is this ABI an MSVC-compatible ABI?
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isMicrosoft() const {
     switch (getKind()) {
     case GenericAArch64:
@@ -169,6 +174,7 @@ public:
     }
     llvm_unreachable("bad ABI kind");
   }
+#endif
 
   /// \brief Are member functions differently aligned?
   ///
@@ -194,7 +200,9 @@ public:
     case iOS:
     case iOS64:
     case WatchOS:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Microsoft:
+#endif
       return true;
     }
     llvm_unreachable("bad ABI kind");
@@ -202,10 +210,12 @@ public:
 
   /// \brief Is the default C++ member function calling convention
   /// the same as the default calling convention?
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool isMemberFunctionCCDefault() const {
     // Right now, this is always false for Microsoft.
     return !isMicrosoft();
   }
+#endif
 
   /// Are arguments to a call destroyed left to right in the callee?
   /// This is a fundamental language change, since it implies that objects
@@ -214,27 +224,35 @@ public:
   /// of the full expression as usual.  Both the caller and the callee must
   /// have access to the destructor, while only the caller needs the
   /// destructor if this is false.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool areArgsDestroyedLeftToRightInCallee() const {
     return isMicrosoft();
   }
+#endif
 
   /// \brief Does this ABI have different entrypoints for complete-object
   /// and base-subobject constructors?
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool hasConstructorVariants() const {
     return isItaniumFamily();
   }
+#endif
 
   /// \brief Does this ABI allow virtual bases to be primary base classes?
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool hasPrimaryVBases() const {
     return isItaniumFamily();
   }
+#endif
 
   /// \brief Does this ABI use key functions?  If so, class data such as the
   /// vtable is emitted with strong linkage by the TU containing the key
   /// function.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool hasKeyFunctions() const {
     return isItaniumFamily();
   }
+#endif
 
   /// \brief Can an out-of-line inline function serve as a key function?
   ///
@@ -275,7 +293,9 @@ public:
     case GenericAArch64:
     case GenericItanium:
     case iOS:   // old iOS compilers did not follow this rule
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Microsoft:
+#endif
     case GenericMIPS:
       return true;
     }
@@ -334,8 +354,10 @@ public:
 
     // MSVC always allocates fields in the tail-padding of a base class
     // subobject, even if they're POD.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Microsoft:
       return AlwaysUseTailPadding;
+#endif
     }
     llvm_unreachable("bad ABI kind");
   }

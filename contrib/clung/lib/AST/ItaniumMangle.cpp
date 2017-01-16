@@ -2442,7 +2442,9 @@ StringRef CXXNameMangler::getCallingConvQualifierName(CallingConv CC) {
   case CC_X86FastCall:
   case CC_X86ThisCall:
   case CC_X86VectorCall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CC_X86Pascal:
+#endif
   case CC_X86_64Win64:
   case CC_X86_64SysV:
   case CC_AAPCS:
@@ -2963,9 +2965,11 @@ void CXXNameMangler::mangleType(const DependentNameType *T) {
       break;
     case ETK_Struct:
     case ETK_Class:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // what this is duing here
     case ETK_Interface:
       Out << "Ts";
       break;
+#endif
     case ETK_Union:
       Out << "Tu";
       break;
@@ -3273,6 +3277,7 @@ recurse:
     break;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass: {
     const CXXUuidofExpr *UE = cast<CXXUuidofExpr>(E);
     if (UE->isTypeOperand()) {
@@ -3286,6 +3291,7 @@ recurse:
     }
     break;
   }
+#endif
 
   // Even gcc-4.5 doesn't mangle this.
   case Expr::BinaryConditionalOperatorClass: {

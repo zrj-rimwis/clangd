@@ -275,7 +275,9 @@ public:
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isMemberFunctionPointerType)
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isClassType)
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isStructureType)
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isInterfaceType)
+#endif
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isStructureOrClassType)
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isUnionType)
   LLVM_CLANG_CANPROXY_SIMPLE_ACCESSOR(bool, isComplexIntegerType)

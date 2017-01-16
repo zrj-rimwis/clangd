@@ -1692,10 +1692,12 @@ ExprResult Sema::ActOnMemberAccessExpr(Scope *S, Expr *Base,
     return ExprError();
 
   // Warn about the explicit constructor calls Microsoft extension.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().MicrosoftExt &&
       Id.getKind() == UnqualifiedId::IK_ConstructorName)
     Diag(Id.getSourceRange().getBegin(),
          diag::ext_ms_explicit_constructor_call);
+#endif
 
   TemplateArgumentListInfo TemplateArgsBuffer;
 

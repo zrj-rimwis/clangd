@@ -1486,12 +1486,14 @@ void Preprocessor::RegisterBuiltinPragmas() {
   AddPragmaHandler("STDC", new PragmaSTDC_UnknownHandler());
 
   // MS extensions.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (LangOpts.MicrosoftExt) {
     AddPragmaHandler(new PragmaWarningHandler());
     AddPragmaHandler(new PragmaIncludeAliasHandler());
     AddPragmaHandler(new PragmaRegionHandler("region"));
     AddPragmaHandler(new PragmaRegionHandler("endregion"));
   }
+#endif
 
   // Pragmas added by plugins
   for (PragmaHandlerRegistry::iterator it = PragmaHandlerRegistry::begin(),

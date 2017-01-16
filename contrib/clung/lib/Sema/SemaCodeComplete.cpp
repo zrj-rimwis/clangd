@@ -3785,7 +3785,9 @@ void Sema::CodeCompleteTag(Scope *S, unsigned TagSpec) {
     
   case DeclSpec::TST_struct:
   case DeclSpec::TST_class:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case DeclSpec::TST_interface:
+#endif
     Filter = &ResultBuilder::IsClassOrStruct;
     ContextKind = CodeCompletionContext::CCC_ClassOrStructTag;
     break;

@@ -992,7 +992,9 @@ public:
         MostDerivedClassIsVirtual(MostDerivedClassIsVirtual),
         LayoutClass(LayoutClass), Context(MostDerivedClass->getASTContext()),
         Overriders(MostDerivedClass, MostDerivedClassOffset, LayoutClass) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // must not use
     assert(!Context.getTargetInfo().getCXXABI().isMicrosoft());
+#endif
 
     LayoutVTable();
 
@@ -2338,6 +2340,7 @@ VTableLayout *ItaniumVTableContext::createConstructionVTableLayout(
   return CreateVTableLayout(Builder);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // long block
 namespace {
 
 // Vtables in the Microsoft ABI are different from the Itanium ABI.
@@ -2592,7 +2595,9 @@ public:
 };
 
 } // end namespace
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // long block
 // Let's study one class hierarchy as an example:
 //   struct A {
 //     virtual void f();
@@ -3757,3 +3762,4 @@ MicrosoftVTableContext::getMethodVFTableLocation(GlobalDecl GD) {
   assert(I != MethodVFTableLocations.end() && "Did not find index!");
   return I->second;
 }
+#endif

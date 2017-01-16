@@ -1104,9 +1104,11 @@ public:
       return ConstantAddress(CGM.GetAddrOfRTTIDescriptor(T),
                              CGM.getPointerAlign());
     }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Expr::CXXUuidofExprClass: {
       return CGM.GetAddrOfUuidDescriptor(cast<CXXUuidofExpr>(E));
     }
+#endif
     case Expr::MaterializeTemporaryExprClass: {
       MaterializeTemporaryExpr *MTE = cast<MaterializeTemporaryExpr>(E);
       assert(MTE->getStorageDuration() == SD_Static);

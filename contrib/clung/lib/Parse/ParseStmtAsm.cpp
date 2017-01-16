@@ -377,6 +377,7 @@ static bool isGCCAsmStatement(const Token &TokAfterAsm) {
 ///         ms-asm-line
 ///         ms-asm-line '\n' ms-asm-instruction-block
 ///
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
   SourceManager &SrcMgr = PP.getSourceManager();
   SourceLocation EndLoc = AsmLoc;
@@ -646,6 +647,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
                                 NumOutputs, NumInputs, ConstraintRefs,
                                 ClobberRefs, Exprs, EndLoc);
 }
+#endif
 
 /// ParseAsmStatement - Parse a GNU extended asm statement.
 ///       asm-statement:
@@ -670,10 +672,12 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
   assert(Tok.is(tok::kw_asm) && "Not an asm stmt");
   SourceLocation AsmLoc = ConsumeToken();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (getLangOpts().AsmBlocks && !isGCCAsmStatement(Tok)) {
     msAsm = true;
     return ParseMicrosoftAsmStatement(AsmLoc);
   }
+#endif
 
   DeclSpec DS(AttrFactory);
   SourceLocation Loc = Tok.getLocation();

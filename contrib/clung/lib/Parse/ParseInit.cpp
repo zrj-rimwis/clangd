@@ -409,6 +409,7 @@ ExprResult Parser::ParseBraceInitializer() {
 
   while (1) {
     // Handle Microsoft __if_exists/if_not_exists if necessary.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // hmm while(1)
     if (getLangOpts().MicrosoftExt && (Tok.is(tok::kw___if_exists) ||
         Tok.is(tok::kw___if_not_exists))) {
       if (ParseMicrosoftIfExistsBraceInitializer(InitExprs, InitExprsOk)) {
@@ -418,6 +419,7 @@ ExprResult Parser::ParseBraceInitializer() {
       if (Tok.is(tok::r_brace)) break;
       continue;
     }
+#endif
 
     // Parse: designation[opt] initializer
 
@@ -476,6 +478,7 @@ ExprResult Parser::ParseBraceInitializer() {
 
 // Return true if a comma (or closing brace) is necessary after the
 // __if_exists/if_not_exists statement.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Parser::ParseMicrosoftIfExistsBraceInitializer(ExprVector &InitExprs,
                                                     bool &InitExprsOk) {
   bool trailingComma = false;
@@ -536,3 +539,4 @@ bool Parser::ParseMicrosoftIfExistsBraceInitializer(ExprVector &InitExprs,
 
   return !trailingComma;
 }
+#endif

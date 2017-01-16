@@ -1400,10 +1400,12 @@ TryStaticMemberPointerUpcast(Sema &Self, ExprResult &SrcExpr, QualType SrcType,
 
   // Lock down the inheritance model right now in MS ABI, whether or not the
   // pointee types are the same.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Self.Context.getTargetInfo().getCXXABI().isMicrosoft()) {
     (void)Self.isCompleteType(OpRange.getBegin(), SrcType);
     (void)Self.isCompleteType(OpRange.getBegin(), DestType);
   }
+#endif
 
   // T == T, modulo cv
   if (!Self.Context.hasSameUnqualifiedType(SrcMemPtr->getPointeeType(),
@@ -1787,6 +1789,7 @@ static void DiagnoseCallingConvCast(Sema &Self, const ExprResult &SrcExpr,
   SmallVector<TokenValue, 6> AttrTokens;
   SmallString<64> CCAttrText;
   llvm::raw_svector_ostream OS(CCAttrText);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // wth is fixit?
   if (Self.getLangOpts().MicrosoftExt) {
     // __stdcall or __vectorcall
     OS << "__" << DstCCName;
@@ -1794,6 +1797,10 @@ static void DiagnoseCallingConvCast(Sema &Self, const ExprResult &SrcExpr,
     AttrTokens.push_back(II->isKeyword(Self.getLangOpts())
                              ? TokenValue(II->getTokenID())
                              : TokenValue(II));
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     // __attribute__((stdcall)) or __attribute__((vectorcall))
     OS << "__attribute__((" << DstCCName << "))";
@@ -1955,12 +1962,14 @@ static TryCastResult TryReinterpretCast(Sema &Self, ExprResult &SrcExpr,
       return TC_Failed;
     }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (Self.Context.getTargetInfo().getCXXABI().isMicrosoft()) {
       // We need to determine the inheritance model that the class will use if
       // haven't yet.
       (void)Self.isCompleteType(OpRange.getBegin(), SrcType);
       (void)Self.isCompleteType(OpRange.getBegin(), DestType);
     }
+#endif
 
     // Don't allow casting between member pointers of different sizes.
     if (Self.Context.getTypeSize(DestMemPtr) !=
@@ -2055,11 +2064,17 @@ static TryCastResult TryReinterpretCast(Sema &Self, ExprResult &SrcExpr,
     // C++ 5.2.10p4: A pointer can be explicitly converted to any integral
     //   type large enough to hold it; except in Microsoft mode, where the
     //   integral type size doesn't matter (except we don't allow bool).
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
     bool MicrosoftException = Self.getLangOpts().MicrosoftExt &&
                               !DestType->isBooleanType();
+#endif
     if ((Self.Context.getTypeSize(SrcType) >
          Self.Context.getTypeSize(DestType)) &&
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !false
          !MicrosoftException) {
+#else
+         !false) {
+#endif
       msg = diag::err_bad_reinterpret_cast_small_int;
       return TC_Failed;
     }

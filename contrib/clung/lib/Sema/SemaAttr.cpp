@@ -30,7 +30,9 @@ Sema::PragmaStackSentinelRAII::PragmaStackSentinelRAII(Sema &S,
                                                        bool ShouldAct)
     : S(S), SlotLabel(SlotLabel), ShouldAct(ShouldAct) {
   if (ShouldAct) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     S.VtorDispStack.SentinelAction(PSK_Push, SlotLabel);
+#endif
     S.DataSegStack.SentinelAction(PSK_Push, SlotLabel);
     S.BSSSegStack.SentinelAction(PSK_Push, SlotLabel);
     S.ConstSegStack.SentinelAction(PSK_Push, SlotLabel);
@@ -40,7 +42,9 @@ Sema::PragmaStackSentinelRAII::PragmaStackSentinelRAII(Sema &S,
 
 Sema::PragmaStackSentinelRAII::~PragmaStackSentinelRAII() {
   if (ShouldAct) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     S.VtorDispStack.SentinelAction(PSK_Pop, SlotLabel);
+#endif
     S.DataSegStack.SentinelAction(PSK_Pop, SlotLabel);
     S.BSSSegStack.SentinelAction(PSK_Pop, SlotLabel);
     S.ConstSegStack.SentinelAction(PSK_Pop, SlotLabel);
@@ -63,6 +67,7 @@ void Sema::AddAlignmentAttributesForRecord(RecordDecl *RD) {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::AddMsStructLayoutForRecord(RecordDecl *RD) {
   if (MSStructPragmaOn)
     RD->addAttr(MSStructAttr::CreateImplicit(Context));
@@ -74,6 +79,7 @@ void Sema::AddMsStructLayoutForRecord(RecordDecl *RD) {
     RD->addAttr(
         MSVtorDispAttr::CreateImplicit(Context, VtorDispStack.CurrentValue));
 }
+#endif
 
 void Sema::ActOnPragmaOptionsAlign(PragmaOptionsAlignKind Kind,
                                    SourceLocation PragmaLoc) {
@@ -172,10 +178,13 @@ void Sema::ActOnPragmaPack(SourceLocation PragmaLoc, PragmaMsStackAction Action,
   PackStack.Act(PragmaLoc, Action, SlotLabel, AlignmentVal);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSStruct(PragmaMSStructKind Kind) { 
   MSStructPragmaOn = (Kind == PMSST_ON);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSComment(SourceLocation CommentLoc,
                                 PragmaMSCommentKind Kind, StringRef Arg) {
   auto *PCD = PragmaCommentDecl::Create(
@@ -183,6 +192,7 @@ void Sema::ActOnPragmaMSComment(SourceLocation CommentLoc,
   Context.getTranslationUnitDecl()->addDecl(PCD);
   Consumer.HandleTopLevelDecl(DeclGroupRef(PCD));
 }
+#endif
 
 void Sema::ActOnPragmaDetectMismatch(SourceLocation Loc, StringRef Name,
                                      StringRef Value) {
@@ -192,13 +202,16 @@ void Sema::ActOnPragmaDetectMismatch(SourceLocation Loc, StringRef Name,
   Consumer.HandleTopLevelDecl(DeclGroupRef(PDMD));
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSPointersToMembers(
     LangOptions::PragmaMSPointersToMembersKind RepresentationMethod,
     SourceLocation PragmaLoc) {
   MSPointerToMemberRepresentationMethod = RepresentationMethod;
   ImplicitMSInheritanceAttrLoc = PragmaLoc;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSVtorDisp(PragmaMsStackAction Action,
                                  SourceLocation PragmaLoc,
                                  MSVtorDispAttr::Mode Mode) {
@@ -207,6 +220,7 @@ void Sema::ActOnPragmaMSVtorDisp(PragmaMsStackAction Action,
                                                   << "stack empty";
   VtorDispStack.Act(PragmaLoc, Action, StringRef(), Mode);
 }
+#endif
 
 template<typename ValueType>
 void Sema::PragmaStack<ValueType>::Act(SourceLocation PragmaLocation,
@@ -292,6 +306,7 @@ bool Sema::UnifySection(StringRef SectionName,
 }
 
 /// \brief Called on well formed \#pragma bss_seg().
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSSeg(SourceLocation PragmaLocation,
                             PragmaMsStackAction Action,
                             llvm::StringRef StackSlotLabel,
@@ -311,13 +326,17 @@ void Sema::ActOnPragmaMSSeg(SourceLocation PragmaLocation,
     return;
   Stack->Act(PragmaLocation, Action, StackSlotLabel, SegmentName);
 }
+#endif
 
 /// \brief Called on well formed \#pragma bss_seg().
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSSection(SourceLocation PragmaLocation,
                                 int SectionFlags, StringLiteral *SegmentName) {
   UnifySection(SegmentName->getString(), SectionFlags, PragmaLocation);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSInitSeg(SourceLocation PragmaLocation,
                                 StringLiteral *SegmentName) {
   // There's no stack to maintain, so we just have a current section.  When we
@@ -326,6 +345,7 @@ void Sema::ActOnPragmaMSInitSeg(SourceLocation PragmaLocation,
   CurInitSeg = SegmentName->getString() == ".CRT$XCU" ? nullptr : SegmentName;
   CurInitSegLoc = PragmaLocation;
 }
+#endif
 
 void Sema::ActOnPragmaUnused(const Token &IdTok, Scope *curScope,
                              SourceLocation PragmaLoc) {

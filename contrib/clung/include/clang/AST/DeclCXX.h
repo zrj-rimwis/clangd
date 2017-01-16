@@ -1677,10 +1677,12 @@ public:
     getLambdaData().ContextDecl = ContextDecl;
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   /// \brief Returns the inheritance model used for this record.
   MSInheritanceAttr::Spelling getMSInheritanceModel() const;
   /// \brief Calculate what the inheritance model would be for this class.
   MSInheritanceAttr::Spelling calculateInheritanceModel() const;
+#endif
 
   /// In the Microsoft C++ ABI, use zero for the field offset of a null data
   /// member pointer if we can guarantee that zero is not a valid field offset,
@@ -1688,15 +1690,19 @@ public:
   /// vfptr at offset zero, so we can use zero for null.  If there are multiple
   /// fields, we can use zero even if it is a valid field offset because
   /// null-ness testing will check the other fields.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool nullFieldOffsetIsZero() const {
     return !MSInheritanceAttr::hasOnlyOneField(/*IsMemberFunction=*/false,
                                                getMSInheritanceModel()) ||
            (hasDefinition() && isPolymorphic());
   }
+#endif
 
   /// \brief Controls when vtordisps will be emitted if this record is used as a
   /// virtual base.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   MSVtorDispAttr::Mode getMSVtorDispMode() const;
+#endif
 
   /// \brief Determine whether this lambda expression was known to be dependent
   /// at the time it was created, even if its context does not appear to be

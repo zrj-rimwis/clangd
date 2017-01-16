@@ -360,12 +360,14 @@ void Sema::InstantiateAttrs(const MultiLevelTemplateArgumentList &TemplateArgs,
     }
 
     // Existing DLL attribute on the instantiation takes precedence.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (TmplAttr->getKind() == attr::DLLExport ||
         TmplAttr->getKind() == attr::DLLImport) {
       if (New->hasAttr<DLLExportAttr>() || New->hasAttr<DLLImportAttr>()) {
         continue;
       }
     }
+#endif
 
     if (auto ABIAttr = dyn_cast<ParameterABIAttr>(TmplAttr)) {
       AddParameterABIAttr(ABIAttr->getRange(), New, ABIAttr->getABI(),
@@ -3912,10 +3914,15 @@ void Sema::InstantiateVariableInitializer(
       bool TypeMayContainAuto = true;
       Expr *InitExpr = Init.get();
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (Var->hasAttr<DLLImportAttr>() &&
           (!InitExpr ||
            !InitExpr->isConstantInitializer(getASTContext(), false))) {
         // Do not dynamically initialize dllimport variables.
+#else
+      if (false) {
+        /* dummy */
+#endif
       } else if (InitExpr) {
         bool DirectInit = OldVar->isDirectInit();
         AddInitializerToDecl(Var, InitExpr, DirectInit, TypeMayContainAuto);

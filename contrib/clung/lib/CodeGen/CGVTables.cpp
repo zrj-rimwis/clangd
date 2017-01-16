@@ -449,7 +449,11 @@ void CodeGenVTables::emitThunk(GlobalDecl GD, const ThunkInfo &Thunk,
   }
 
   llvm::Function *ThunkFn = cast<llvm::Function>(Entry);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   bool ABIHasKeyFunctions = CGM.getTarget().getCXXABI().hasKeyFunctions();
+#else
+  const bool ABIHasKeyFunctions = true;
+#endif
   bool UseAvailableExternallyLinkage = ForVTable && ABIHasKeyFunctions;
 
   if (!ThunkFn->isDeclaration()) {
@@ -488,7 +492,11 @@ void CodeGenVTables::maybeEmitThunkForVTable(GlobalDecl GD,
   // the thunk. However, we can allow inlining of thunks if we emit them with
   // available_externally linkage together with vtables when optimizations are
   // enabled.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume true
   if (CGM.getTarget().getCXXABI().hasKeyFunctions() &&
+#else
+  if (true &&
+#endif
       !CGM.getCodeGenOpts().OptimizationLevel)
     return;
 
@@ -733,7 +741,11 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
   // We're at the end of the translation unit, so the current key
   // function is fully correct.
   const CXXMethodDecl *keyFunction = Context.getCurrentKeyFunction(RD);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (keyFunction && !RD->hasAttr<DLLImportAttr>()) {
+#else
+  if (keyFunction && !false) {
+#endif
     // If this class has a key function, use that to determine the
     // linkage of the vtable.
     const FunctionDecl *def = nullptr;
@@ -780,6 +792,7 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
       llvm::GlobalValue::LinkOnceODRLinkage;
   llvm::GlobalVariable::LinkageTypes NonDiscardableODRLinkage =
       llvm::GlobalValue::WeakODRLinkage;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (RD->hasAttr<DLLExportAttr>()) {
     // Cannot discard exported vtables.
     DiscardableODRLinkage = NonDiscardableODRLinkage;
@@ -788,6 +801,7 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
     DiscardableODRLinkage = llvm::GlobalVariable::AvailableExternallyLinkage;
     NonDiscardableODRLinkage = llvm::GlobalVariable::AvailableExternallyLinkage;
   }
+#endif
 
   switch (RD->getTemplateSpecializationKind()) {
     case TSK_Undeclared:
@@ -798,8 +812,10 @@ CodeGenModule::getVTableLinkage(const CXXRecordDecl *RD) {
     case TSK_ExplicitInstantiationDeclaration:
       // Explicit instantiations in MSVC do not provide vtables, so we must emit
       // our own.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (getTarget().getCXXABI().isMicrosoft())
         return DiscardableODRLinkage;
+#endif
       return shouldEmitAvailableExternallyVTable(*this, RD)
                  ? llvm::GlobalVariable::AvailableExternallyLinkage
                  : llvm::GlobalVariable::ExternalLinkage;
@@ -847,8 +863,10 @@ bool CodeGenVTables::isVTableExternal(const CXXRecordDecl *RD) {
 
   // We always synthesize vtables if they are needed in the MS ABI. MSVC doesn't
   // emit them even if there is an explicit template instantiation.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (CGM.getTarget().getCXXABI().isMicrosoft())
     return false;
+#endif
 
   // If we have an explicit instantiation declaration (and not a
   // definition), the vtable is defined elsewhere.
@@ -910,12 +928,18 @@ bool CodeGenModule::HasHiddenLTOVisibility(const CXXRecordDecl *RD) {
   if (!isExternallyVisible(LV.getLinkage()))
     return true;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (RD->hasAttr<LTOVisibilityPublicAttr>() || RD->hasAttr<UuidAttr>())
+#else
+  if (RD->hasAttr<LTOVisibilityPublicAttr>() || false)
+#endif
     return false;
 
   if (getTriple().isOSBinFormatCOFF()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (RD->hasAttr<DLLExportAttr>() || RD->hasAttr<DLLImportAttr>())
       return false;
+#endif
   } else {
     if (LV.getVisibility() != HiddenVisibility)
       return false;

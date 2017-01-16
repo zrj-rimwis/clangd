@@ -1849,7 +1849,9 @@ public:
   /// Emit a "reference" to a __builtin_ms_va_list; this is
   /// always the value of the expression, because a __builtin_ms_va_list is a
   /// pointer to a char.
+//#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // must be present for ms_abi!
   Address EmitMSVAListRef(const Expr *E);
+//#endif
 
   /// EmitAnyExprToTemp - Similary to EmitAnyExpr(), however, the result will
   /// always be accessible even if no aggregate location is provided.
@@ -2117,7 +2119,9 @@ public:
 
   llvm::Value *EmitCXXTypeidExpr(const CXXTypeidExpr *E);
   llvm::Value *EmitDynamicCast(Address V, const CXXDynamicCastExpr *DCE);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Address EmitCXXUuidofExpr(const CXXUuidofExpr *E);
+#endif
 
   /// \brief Situations in which we might emit a check for the suitability of a
   ///        pointer or glvalue.
@@ -2886,7 +2890,9 @@ public:
   LValue EmitCXXBindTemporaryLValue(const CXXBindTemporaryExpr *E);
   LValue EmitLambdaLValue(const LambdaExpr *E);
   LValue EmitCXXTypeidLValue(const CXXTypeidExpr *E);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   LValue EmitCXXUuidofLValue(const CXXUuidofExpr *E);
+#endif
 
   LValue EmitObjCMessageExprLValue(const ObjCMessageExpr *E);
   LValue EmitObjCIvarRefLValue(const ObjCIvarRefExpr *E);

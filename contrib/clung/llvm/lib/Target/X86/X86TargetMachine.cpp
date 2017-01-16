@@ -56,7 +56,11 @@ static std::unique_ptr<TargetLoweringObjectFile> createTLOF(const Triple &TT) {
     return make_unique<X86LinuxNaClTargetObjectFile>();
   if (TT.isOSBinFormatELF())
     return make_unique<X86ELFTargetObjectFile>();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (TT.isKnownWindowsMSVCEnvironment() || TT.isWindowsCoreCLREnvironment())
+#else
+  if (false || TT.isWindowsCoreCLREnvironment())
+#endif
     return make_unique<X86WindowsTargetObjectFile>();
   if (TT.isOSBinFormatCOFF())
     return make_unique<TargetLoweringObjectFileCOFF>();

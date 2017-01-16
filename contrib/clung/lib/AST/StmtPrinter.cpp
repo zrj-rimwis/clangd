@@ -438,6 +438,7 @@ void StmtPrinter::VisitGCCAsmStmt(GCCAsmStmt *Node) {
   if (Policy.IncludeNewlines) OS << "\n";
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtPrinter::VisitMSAsmStmt(MSAsmStmt *Node) {
   // FIXME: Implement MS style inline asm statement printer.
   Indent() << "__asm ";
@@ -447,6 +448,7 @@ void StmtPrinter::VisitMSAsmStmt(MSAsmStmt *Node) {
   if (Node->hasBraces())
     Indent() << "}\n";
 }
+#endif
 
 void StmtPrinter::VisitCapturedStmt(CapturedStmt *Node) {
   PrintStmt(Node->getCapturedDecl()->getBody());
@@ -1903,6 +1905,7 @@ void StmtPrinter::VisitCXXTypeidExpr(CXXTypeidExpr *Node) {
   OS << ")";
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtPrinter::VisitCXXUuidofExpr(CXXUuidofExpr *Node) {
   OS << "__uuidof(";
   if (Node->isTypeOperand()) {
@@ -1912,6 +1915,7 @@ void StmtPrinter::VisitCXXUuidofExpr(CXXUuidofExpr *Node) {
   }
   OS << ")";
 }
+#endif
 
 void StmtPrinter::VisitMSPropertyRefExpr(MSPropertyRefExpr *Node) {
   PrintExpr(Node->getBaseExpr());

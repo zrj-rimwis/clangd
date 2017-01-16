@@ -72,9 +72,11 @@ public:
     return *cast<ItaniumVTableContext>(VTContext);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   MicrosoftVTableContext &getMicrosoftVTableContext() {
     return *cast<MicrosoftVTableContext>(VTContext);
   }
+#endif
 
   /// getSubVTTIndex - Return the index of the sub-VTT for the base class of the
   /// given record decl.

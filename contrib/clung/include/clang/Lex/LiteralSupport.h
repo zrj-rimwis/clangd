@@ -215,13 +215,19 @@ public:
                       DiagnosticsEngine *diags = nullptr)
     : SM(sm), Features(features), Target(target), Diags(diags),
       MaxTokenLength(0), SizeBound(0), CharByteWidth(0), Kind(tok::unknown),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       ResultPtr(ResultBuf.data()), hadError(false), Pascal(false) {
+#else
+      ResultPtr(ResultBuf.data()), hadError(false) {
+#endif
     init(StringToks);
   }
     
 
   bool hadError;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool Pascal;
+#endif
 
   StringRef GetString() const {
     return StringRef(ResultBuf.data(), GetStringLength());
@@ -244,7 +250,9 @@ public:
   bool isUTF8() const { return Kind == tok::utf8_string_literal; }
   bool isUTF16() const { return Kind == tok::utf16_string_literal; }
   bool isUTF32() const { return Kind == tok::utf32_string_literal; }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool isPascal() const { return Pascal; }
+#endif
 
   StringRef getUDSuffix() const { return UDSuffixBuf; }
 

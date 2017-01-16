@@ -278,8 +278,10 @@ public:
                                                  const CXXRecordDecl *ClassDecl,
                                         const CXXRecordDecl *BaseClassDecl) = 0;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   virtual llvm::BasicBlock *EmitCtorCompleteObjectHandler(CodeGenFunction &CGF,
                                                           const CXXRecordDecl *RD);
+#endif
 
   /// Emit the code to initialize hidden members required
   /// to handle virtual inheritance, if needed by the ABI.
@@ -580,7 +582,9 @@ public:
 CGCXXABI *CreateItaniumCXXABI(CodeGenModule &CGM);
 
 /// Creates a Microsoft-family ABI.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 CGCXXABI *CreateMicrosoftCXXABI(CodeGenModule &CGM);
+#endif
 
 }
 }

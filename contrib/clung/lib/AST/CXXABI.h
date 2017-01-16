@@ -73,7 +73,9 @@ public:
 
 /// Creates an instance of a C++ ABI class.
 CXXABI *CreateItaniumCXXABI(ASTContext &Ctx);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 CXXABI *CreateMicrosoftCXXABI(ASTContext &Ctx);
+#endif
 }
 
 #endif

@@ -599,7 +599,9 @@ protected:
 
   unsigned IsMac68kAlign : 1;
   
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   unsigned IsMsStruct : 1;
+#endif
 
   /// UnfilledBitsInLastUnit - If the last field laid out was a bitfield,
   /// this contains the number of bits in the last unit that can be used for
@@ -660,7 +662,11 @@ protected:
       : Context(Context), EmptySubobjects(EmptySubobjects), Size(0),
         Alignment(CharUnits::One()), UnpackedAlignment(CharUnits::One()),
         UseExternalLayout(false), InferAlignment(false), Packed(false),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         IsUnion(false), IsMac68kAlign(false), IsMsStruct(false),
+#else
+        IsUnion(false), IsMac68kAlign(false),
+#endif
         UnfilledBitsInLastUnit(0), LastBitfieldTypeSize(0),
         MaxFieldAlignment(CharUnits::Zero()), DataSize(0),
         NonVirtualSize(CharUnits::Zero()),
@@ -1229,7 +1235,9 @@ ItaniumRecordLayoutBuilder::LayoutBase(const BaseSubobjectInfo *Base) {
 void ItaniumRecordLayoutBuilder::InitializeLayout(const Decl *D) {
   if (const RecordDecl *RD = dyn_cast<RecordDecl>(D)) {
     IsUnion = RD->isUnion();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     IsMsStruct = RD->isMsStruct(Context);
+#endif
   }
 
   Packed = D->hasAttr<PackedAttr>();  
@@ -1497,6 +1505,7 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
   // all types (e.g. Darwin PPC32, where alignof(long long) == 4).
 
   // First, some simple bookkeeping to perform for ms_struct structs.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (IsMsStruct) {
     // The field alignment for integer types is always the size.
     FieldAlign = TypeSize;
@@ -1513,6 +1522,7 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
       LastBitfieldTypeSize = 0;
     }
   }
+#endif
 
   // If the field is wider than its declared type, it follows
   // different rules in all cases.
@@ -1526,7 +1536,11 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
     IsUnion ? 0 : (getDataSizeInBits() - UnfilledBitsInLastUnit);
 
   // Handle targets that don't honor bitfield type alignment.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!IsMsStruct && !Context.getTargetInfo().useBitFieldTypeAlignment()) {
+#else
+  if (!false && !Context.getTargetInfo().useBitFieldTypeAlignment()) {
+#endif
     // Some such targets do honor it on zero-width bitfields.
     if (FieldSize == 0 &&
         Context.getTargetInfo().useZeroLengthBitfieldAlignment()) {
@@ -1546,7 +1560,11 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
   unsigned UnpackedFieldAlign = FieldAlign;
 
   // Ignore the field alignment if the field is packed unless it has zero-size.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!IsMsStruct && FieldPacked && FieldSize != 0)
+#else
+  if (!false && FieldPacked && FieldSize != 0)
+#endif
     FieldAlign = 1;
 
   // But, if there's an 'aligned' attribute on the field, honor that.
@@ -1569,9 +1587,11 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
 
   // But, ms_struct just ignores all of that in unions, even explicit
   // alignment attributes.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no
   if (IsMsStruct && IsUnion) {
     FieldAlign = UnpackedFieldAlign = 1;
   }
+#endif
 
   // For purposes of diagnostics, we're going to simultaneously
   // compute the field offsets that we would have used if we weren't
@@ -1582,6 +1602,7 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
   // Check if we need to add padding to fit the bitfield within an
   // allocation unit with the right size and alignment.  The rules are
   // somewhat different here for ms_struct structs.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (IsMsStruct) {
     // If it's not a zero-width bitfield, and we can fit the bitfield
     // into the active storage unit (and we haven't already decided to
@@ -1594,6 +1615,10 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
       UnfilledBitsInLastUnit = 0;
     }
 
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     // #pragma pack, with any value, suppresses the insertion of padding.
     bool AllowPadding = MaxFieldAlignment.isZero();
@@ -1638,7 +1663,11 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
 
   // Anonymous members don't affect the overall record alignment,
   // except on targets where they do.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!IsMsStruct &&
+#else
+  if (!false &&
+#endif
       !Context.getTargetInfo().useZeroLengthBitfieldAlignment() &&
       !D->getIdentifier())
     FieldAlign = UnpackedFieldAlign = 1;
@@ -1655,10 +1684,15 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
     // For ms_struct, allocate the entire storage unit --- unless this
     // is a zero-width bitfield, in which case just use a size of 1.
     uint64_t RoundedFieldSize;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (IsMsStruct) {
       RoundedFieldSize =
         (FieldSize ? TypeSize : Context.getTargetInfo().getCharWidth());
 
+#else
+    if (false) {
+      /* dummy */
+#endif
     // Otherwise, allocate just the number of bytes required to store
     // the bitfield.
     } else {
@@ -1668,6 +1702,7 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
 
   // For non-zero-width bitfields in ms_struct structs, allocate a new
   // storage unit if necessary.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // confusing
   } else if (IsMsStruct && FieldSize) {
     // We should have cleared UnfilledBitsInLastUnit in every case
     // where we changed storage units.
@@ -1678,6 +1713,7 @@ void ItaniumRecordLayoutBuilder::LayoutBitField(const FieldDecl *D) {
     UnfilledBitsInLastUnit -= FieldSize;
     LastBitfieldTypeSize = TypeSize;
 
+#endif
   // Otherwise, bump the data size up to include the bitfield,
   // including padding up to char alignment, and then remember how
   // bits we didn't use.
@@ -1740,6 +1776,7 @@ void ItaniumRecordLayoutBuilder::LayoutField(const FieldDecl *D,
     FieldSize = FieldInfo.first;
     FieldAlign = FieldInfo.second;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (IsMsStruct) {
       // If MS bitfield layout is required, figure out what type is being
       // laid out and align the field to the width of that type.
@@ -1753,6 +1790,7 @@ void ItaniumRecordLayoutBuilder::LayoutField(const FieldDecl *D,
           FieldAlign = TypeSize;
       }
     }
+#endif
   }
 
   // The align if the field is not packed. This is to check if the attribute
@@ -2058,8 +2096,10 @@ static const CXXMethodDecl *computeKeyFunction(ASTContext &Context,
     // If the key function is dllimport but the class isn't, then the class has
     // no key function. The DLL that exports the key function won't export the
     // vtable in this case.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume galse
     if (MD->hasAttr<DLLImportAttr>() && !RD->hasAttr<DLLImportAttr>())
       return nullptr;
+#endif
 
     // We found it.
     return MD;
@@ -2115,9 +2155,11 @@ static bool mustSkipTailPadding(TargetCXXABI ABI, const CXXRecordDecl *RD) {
   llvm_unreachable("bad tail-padding use kind");
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool isMsLayout(const ASTContext &Context) {
   return Context.getTargetInfo().getCXXABI().isMicrosoft();
 }
+#endif
 
 // This section contains an implementation of struct layout that is, up to the
 // included tests, compatible with cl.exe (2013).  The layout produced is
@@ -2210,6 +2252,7 @@ static bool isMsLayout(const ASTContext &Context) {
 //   the sort left them in, a behavior we could never hope to replicate.
 
 namespace {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct MicrosoftRecordLayoutBuilder {
   struct ElementInfo {
     CharUnits Size;
@@ -2326,8 +2369,10 @@ public:
   /// UseExternalLayout is true.
   ExternalLayout External;
 };
+#endif
 } // namespace
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 MicrosoftRecordLayoutBuilder::ElementInfo
 MicrosoftRecordLayoutBuilder::getAdjustedElementInfo(
     const ASTRecordLayout &Layout) {
@@ -2347,7 +2392,9 @@ MicrosoftRecordLayoutBuilder::getAdjustedElementInfo(
   Info.Size = Layout.getNonVirtualSize();
   return Info;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 MicrosoftRecordLayoutBuilder::ElementInfo
 MicrosoftRecordLayoutBuilder::getAdjustedElementInfo(
     const FieldDecl *FD) {
@@ -2387,7 +2434,9 @@ MicrosoftRecordLayoutBuilder::getAdjustedElementInfo(
   Info.Alignment = std::max(Info.Alignment, FieldRequiredAlignment);
   return Info;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::layout(const RecordDecl *RD) {
   // For C record layout, zero-sized records always have size 4.
   MinEmptyStructSize = CharUnits::fromQuantity(4);
@@ -2398,7 +2447,9 @@ void MicrosoftRecordLayoutBuilder::layout(const RecordDecl *RD) {
       RequiredAlignment, Context.toCharUnitsFromBits(RD->getMaxAlignment()));
   finalizeLayout(RD);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::cxxLayout(const CXXRecordDecl *RD) {
   // The C++ standard says that empty structs have size 1.
   MinEmptyStructSize = CharUnits::One();
@@ -2419,7 +2470,9 @@ void MicrosoftRecordLayoutBuilder::cxxLayout(const CXXRecordDecl *RD) {
   layoutVirtualBases(RD);
   finalizeLayout(RD);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::initializeLayout(const RecordDecl *RD) {
   IsUnion = RD->isUnion();
   Size = CharUnits::Zero();
@@ -2453,7 +2506,9 @@ void MicrosoftRecordLayoutBuilder::initializeLayout(const RecordDecl *RD) {
         RD, External.Size, External.Align, External.FieldOffsets,
         External.BaseOffsets, External.VirtualBaseOffsets);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void
 MicrosoftRecordLayoutBuilder::initializeCXXLayout(const CXXRecordDecl *RD) {
   EndsWithZeroSizedObject = false;
@@ -2472,7 +2527,9 @@ MicrosoftRecordLayoutBuilder::initializeCXXLayout(const CXXRecordDecl *RD) {
   if (!MaxFieldAlignment.isZero())
     PointerInfo.Alignment = std::min(PointerInfo.Alignment, MaxFieldAlignment);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void
 MicrosoftRecordLayoutBuilder::layoutNonVirtualBases(const CXXRecordDecl *RD) {
   // The MS-ABI lays out all bases that contain leading vfptrs before it lays
@@ -2545,7 +2602,9 @@ MicrosoftRecordLayoutBuilder::layoutNonVirtualBases(const CXXRecordDecl *RD) {
     VBPtrOffset = Bases[SharedVBPtrBase] + Layout.getVBPtrOffset();
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool recordUsesEBO(const RecordDecl *RD) {
   if (!isa<CXXRecordDecl>(RD))
     return false;
@@ -2560,7 +2619,9 @@ static bool recordUsesEBO(const RecordDecl *RD) {
   // additional isCompatibleWithMSVC check.
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::layoutNonVirtualBase(
     const CXXRecordDecl *RD,
     const CXXRecordDecl *BaseDecl,
@@ -2599,13 +2660,17 @@ void MicrosoftRecordLayoutBuilder::layoutNonVirtualBase(
   Size += BaseLayout.getNonVirtualSize();
   PreviousBaseLayout = &BaseLayout;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::layoutFields(const RecordDecl *RD) {
   LastFieldIsNonZeroWidthBitfield = false;
   for (const FieldDecl *Field : RD->fields())
     layoutField(Field);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::layoutField(const FieldDecl *FD) {
   if (FD->isBitField()) {
     layoutBitField(FD);
@@ -2630,7 +2695,9 @@ void MicrosoftRecordLayoutBuilder::layoutField(const FieldDecl *FD) {
     Size = FieldOffset + Info.Size;
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::layoutBitField(const FieldDecl *FD) {
   unsigned Width = FD->getBitWidthValue(Context);
   if (Width == 0) {
@@ -2666,7 +2733,9 @@ void MicrosoftRecordLayoutBuilder::layoutBitField(const FieldDecl *FD) {
     RemainingBitsInField = Context.toBits(Info.Size) - Width;
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void
 MicrosoftRecordLayoutBuilder::layoutZeroWidthBitField(const FieldDecl *FD) {
   // Zero-width bitfields are ignored unless they follow a non-zero-width
@@ -2691,7 +2760,9 @@ MicrosoftRecordLayoutBuilder::layoutZeroWidthBitField(const FieldDecl *FD) {
     Alignment = std::max(Alignment, Info.Alignment);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::injectVBPtr(const CXXRecordDecl *RD) {
   if (!HasVBPtr || SharedVBPtrBase)
     return;
@@ -2716,7 +2787,9 @@ void MicrosoftRecordLayoutBuilder::injectVBPtr(const CXXRecordDecl *RD) {
     if (Base.second >= InjectionSite)
       Base.second += Offset;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::injectVFPtr(const CXXRecordDecl *RD) {
   if (!HasOwnVFPtr)
     return;
@@ -2741,7 +2814,9 @@ void MicrosoftRecordLayoutBuilder::injectVFPtr(const CXXRecordDecl *RD) {
   for (BaseOffsetsMapTy::value_type &Base : Bases)
     Base.second += Offset;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::layoutVirtualBases(const CXXRecordDecl *RD) {
   if (!HasVBPtr)
     return;
@@ -2801,7 +2876,9 @@ void MicrosoftRecordLayoutBuilder::layoutVirtualBases(const CXXRecordDecl *RD) {
     PreviousBaseLayout = &BaseLayout;
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::finalizeLayout(const RecordDecl *RD) {
   // Respect required alignment.  Note that in 32-bit mode Required alignment
   // may be 0 and cause size not to be updated.
@@ -2833,9 +2910,11 @@ void MicrosoftRecordLayoutBuilder::finalizeLayout(const RecordDecl *RD) {
       Alignment = Context.toCharUnitsFromBits(External.Align);
   }
 }
+#endif
 
 // Recursively walks the non-virtual bases of a class and determines if any of
 // them are in the bases with overridden methods set.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool
 RequiresVtordisp(const llvm::SmallPtrSetImpl<const CXXRecordDecl *> &
                      BasesWithOverriddenMethods,
@@ -2851,7 +2930,9 @@ RequiresVtordisp(const llvm::SmallPtrSetImpl<const CXXRecordDecl *> &
       return true;
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void MicrosoftRecordLayoutBuilder::computeVtorDispSet(
     llvm::SmallPtrSetImpl<const CXXRecordDecl *> &HasVtordispSet,
     const CXXRecordDecl *RD) const {
@@ -2917,6 +2998,7 @@ void MicrosoftRecordLayoutBuilder::computeVtorDispSet(
       HasVtordispSet.insert(BaseDecl);
   }
 }
+#endif
 
 /// getASTRecordLayout - Get or compute information about the layout of the
 /// specified record (struct/union/class), which indicates its size and field
@@ -2944,6 +3026,7 @@ ASTContext::getASTRecordLayout(const RecordDecl *D) const {
 
   const ASTRecordLayout *NewEntry = nullptr;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (isMsLayout(*this)) {
     MicrosoftRecordLayoutBuilder Builder(*this);
     if (const auto *RD = dyn_cast<CXXRecordDecl>(D)) {
@@ -2962,6 +3045,10 @@ ASTContext::getASTRecordLayout(const RecordDecl *D) const {
           *this, Builder.Size, Builder.Alignment, Builder.RequiredAlignment,
           Builder.Size, Builder.FieldOffsets);
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     if (const auto *RD = dyn_cast<CXXRecordDecl>(D)) {
       EmptySubobjectMap EmptySubobjects(*this, RD);
@@ -3010,8 +3097,10 @@ ASTContext::getASTRecordLayout(const RecordDecl *D) const {
 }
 
 const CXXMethodDecl *ASTContext::getCurrentKeyFunction(const CXXRecordDecl *RD) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !true
   if (!getTargetInfo().getCXXABI().hasKeyFunctions())
     return nullptr;
+#endif
 
   assert(RD->getDefinition() && "Cannot get key function for forward decl!");
   RD = cast<CXXRecordDecl>(RD->getDefinition());
@@ -3178,7 +3267,11 @@ static void DumpRecordLayout(raw_ostream &OS, const RecordDecl *RD,
     bool HasOwnVBPtr = Layout.hasOwnVBPtr();
 
     // Vtable pointer.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (CXXRD->isDynamicClass() && !PrimaryBase && !isMsLayout(C)) {
+#else
+    if (CXXRD->isDynamicClass() && !PrimaryBase && !false) {
+#endif
       PrintOffset(OS, Offset, IndentLevel);
       OS << '(' << *RD << " vtable pointer)\n";
     } else if (HasOwnVFPtr) {
@@ -3275,7 +3368,11 @@ static void DumpRecordLayout(raw_ostream &OS, const RecordDecl *RD,
 
   PrintIndentNoOffset(OS, IndentLevel - 1);
   OS << "[sizeof=" << Layout.getSize().getQuantity();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (CXXRD && !isMsLayout(C))
+#else
+  if (CXXRD && !false)
+#endif
     OS << ", dsize=" << Layout.getDataSize().getQuantity();
   OS << ", align=" << Layout.getAlignment().getQuantity();
 
@@ -3310,7 +3407,9 @@ void ASTContext::DumpRecordLayout(const RecordDecl *RD,
   OS << "\nLayout: ";
   OS << "<ASTRecordLayout\n";
   OS << "  Size:" << toBits(Info.getSize()) << "\n";
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!isMsLayout(*this))
+#endif
     OS << "  DataSize:" << toBits(Info.getDataSize()) << "\n";
   OS << "  Alignment:" << toBits(Info.getAlignment()) << "\n";
   OS << "  FieldOffsets: [";

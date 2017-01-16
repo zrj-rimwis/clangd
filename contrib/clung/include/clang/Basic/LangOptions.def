@@ -83,9 +83,11 @@
 LANGOPT(C99               , 1, 0, "C99")
 LANGOPT(C11               , 1, 0, "C11")
 LANGOPT(MSVCCompat        , 1, 0, "Microsoft Visual C++ full compatibility mode")
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LANGOPT(MicrosoftExt      , 1, 0, "Microsoft C++ extensions")
 LANGOPT(AsmBlocks         , 1, 0, "Microsoft inline asm blocks")
 LANGOPT(Borland           , 1, 0, "Borland extensions")
+#endif
 LANGOPT(CPlusPlus         , 1, 0, "C++")
 LANGOPT(CPlusPlus11       , 1, 0, "C++11")
 LANGOPT(CPlusPlus14       , 1, 0, "C++14")
@@ -114,7 +116,9 @@ LANGOPT(Digraphs          , 1, 0, "digraphs")
 BENIGN_LANGOPT(HexFloats  , 1, C99, "C99 hexadecimal float constants")
 LANGOPT(CXXOperatorNames  , 1, 0, "C++ operator name keywords")
 LANGOPT(AppleKext         , 1, 0, "Apple kext support")
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 BENIGN_LANGOPT(PascalStrings, 1, 0, "Pascal string support")
+#endif
 LANGOPT(WritableStrings   , 1, 0, "writable string support")
 LANGOPT(ConstStrings      , 1, 0, "const-qualified string support")
 LANGOPT(LaxVectorConversions , 1, 1, "lax vector conversions")
@@ -128,7 +132,9 @@ LANGOPT(ExternCNoUnwind   , 1, 0, "Assume extern C functions don't unwind")
 LANGOPT(TraditionalCPP    , 1, 0, "traditional CPP emulation")
 LANGOPT(RTTI              , 1, 1, "run-time type information")
 LANGOPT(RTTIData          , 1, 1, "emit run-time type information data")
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LANGOPT(MSBitfields       , 1, 0, "Microsoft-compatible structure layout")
+#endif
 LANGOPT(Freestanding, 1, 0, "freestanding implementation")
 LANGOPT(NoBuiltin         , 1, 0, "disable builtin functions")
 LANGOPT(NoMathBuiltin     , 1, 0, "disable math builtin functions")
@@ -171,7 +177,9 @@ BENIGN_LANGOPT(ObjCGCBitmapPrint , 1, 0, "printing of GC's bitmap layout for __w
 BENIGN_LANGOPT(AccessControl     , 1, 1, "C++ access control")
 LANGOPT(CharIsSigned      , 1, 1, "signed char")
 LANGOPT(ShortWChar        , 1, 0, "unsigned short wchar_t")
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ENUM_LANGOPT(MSPointerToMemberRepresentationMethod, PragmaMSPointersToMembersKind, 2, PPTMK_BestCase, "member-pointer representation method")
+#endif
 ENUM_LANGOPT(DefaultCallingConv, DefaultCallingConvention, 3, DCC_None, "default calling convention")
 
 LANGOPT(ShortEnums        , 1, 0, "short enum types")

@@ -631,7 +631,11 @@ void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
       ".rdata", COFF::IMAGE_SCN_CNT_INITIALIZED_DATA | COFF::IMAGE_SCN_MEM_READ,
       SectionKind::getReadOnly());
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (T.isKnownWindowsMSVCEnvironment() || T.isWindowsItaniumEnvironment()) {
+#else
+  if (false || T.isWindowsItaniumEnvironment()) {
+#endif
     StaticCtorSection =
         Ctx->getCOFFSection(".CRT$XCU", COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
                                             COFF::IMAGE_SCN_MEM_READ,

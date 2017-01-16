@@ -63,7 +63,11 @@ namespace clang {
     TST_union,
     TST_struct,
     TST_class,        // C++ class type
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     TST_interface,    // C++ (Microsoft-specific) __interface type
+#else
+    TST_interface_disabled,
+#endif
     TST_typename,     // Typedef, C++ class-name or enum name, etc.
     TST_typeofType,
     TST_typeofExpr,
@@ -234,7 +238,11 @@ namespace clang {
     CC_X86FastCall, // __attribute__((fastcall))
     CC_X86ThisCall, // __attribute__((thiscall))
     CC_X86VectorCall, // __attribute__((vectorcall))
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     CC_X86Pascal,   // __attribute__((pascal))
+#else
+    CC_X86Pascal_disabled,
+#endif
     CC_X86_64Win64, // __attribute__((ms_abi))
     CC_X86_64SysV,  // __attribute__((sysv_abi))
     CC_AAPCS,       // __attribute__((pcs("aapcs")))
@@ -254,7 +262,9 @@ namespace clang {
     case CC_X86StdCall:
     case CC_X86FastCall:
     case CC_X86ThisCall:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case CC_X86Pascal:
+#endif
     case CC_X86VectorCall:
     case CC_SpirFunction:
     case CC_OpenCLKernel:
