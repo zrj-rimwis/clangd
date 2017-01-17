@@ -2317,6 +2317,7 @@ StaticAssertDecl *StaticAssertDecl::CreateDeserialized(ASTContext &C,
                                       nullptr, SourceLocation(), false);
 }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 MSPropertyDecl *MSPropertyDecl::Create(ASTContext &C, DeclContext *DC,
                                        SourceLocation L, DeclarationName N,
                                        QualType T, TypeSourceInfo *TInfo,
@@ -2332,6 +2333,7 @@ MSPropertyDecl *MSPropertyDecl::CreateDeserialized(ASTContext &C,
                                     DeclarationName(), QualType(), nullptr,
                                     SourceLocation(), nullptr, nullptr);
 }
+#endif
 
 static const char *getAccessName(AccessSpecifier AS) {
   switch (AS) {

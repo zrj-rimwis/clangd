@@ -8246,6 +8246,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   }
 
   // Apply an implicit SectionAttr if #pragma code_seg is active.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__ // XXX assume only for MSVC
   if (CodeSegStack.CurrentValue && D.isFunctionDefinition() &&
       !NewFD->hasAttr<SectionAttr>()) {
     NewFD->addAttr(
@@ -8258,6 +8259,7 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
                      NewFD))
       NewFD->dropAttr<SectionAttr>();
   }
+#endif
 
   // Handle attributes.
   ProcessDeclAttributes(S, NewFD, D);
@@ -10451,6 +10453,7 @@ void Sema::CheckCompleteVariableDeclaration(VarDecl *var) {
 
   // Apply section attributes and pragmas to global variables.
   bool GlobalStorage = var->hasGlobalStorage();
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__ // XXX assume only for MSVC
   if (GlobalStorage && var->isThisDeclarationADefinition() &&
       ActiveTemplateInstantiations.empty()) {
     PragmaStack<StringLiteral *> *Stack = nullptr;
@@ -10482,6 +10485,7 @@ void Sema::CheckCompleteVariableDeclaration(VarDecl *var) {
                                                CurInitSegLoc));
 #endif
   }
+#endif
 
   // All the following checks are C++ only.
   if (!getLangOpts().CPlusPlus) return;

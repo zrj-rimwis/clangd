@@ -278,7 +278,9 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::UnresolvedUsingValue:
   case Decl::IndirectField:
   case Decl::Field:
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   case Decl::MSProperty:
+#endif
   case Decl::ObjCIvar:
   case Decl::ObjCAtDefsField:
   case Decl::NonTypeTemplateParm:

@@ -380,11 +380,13 @@ public:
     // syntax.
     //
     // Push / pop a named sentinel slot.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     void SentinelAction(PragmaMsStackAction Action, StringRef Label) {
       assert((Action == PSK_Push || Action == PSK_Pop) &&
              "Can only push / pop #pragma stack sentinels!");
       Act(CurrentPragmaLocation, Action, Label, CurrentValue);
     }
+#endif
 
     // Constructors.
     explicit PragmaStack(const ValueType &Default)
@@ -414,13 +416,16 @@ public:
   static const unsigned kMac68kAlignmentSentinel = ~0U;
   PragmaStack<unsigned> PackStack;
   // Segment #pragmas.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   PragmaStack<StringLiteral *> DataSegStack;
   PragmaStack<StringLiteral *> BSSSegStack;
   PragmaStack<StringLiteral *> ConstSegStack;
   PragmaStack<StringLiteral *> CodeSegStack;
+#endif
 
   // RAII object to push / pop sentinel slots for all MS #pragma stacks.
   // Actions should be performed only if we enter / exit a C++ method body.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   class PragmaStackSentinelRAII {
   public:
     PragmaStackSentinelRAII(Sema &S, StringRef SlotLabel, bool ShouldAct);
@@ -431,6 +436,7 @@ public:
     StringRef SlotLabel;
     bool ShouldAct;
   };
+#endif
 
   /// A mapping that describes the nullability we've seen in each header file.
   FileNullabilityMap NullabilityMap;
@@ -2003,12 +2009,14 @@ public:
                          Declarator &D, Expr *BitfieldWidth,
                          InClassInitStyle InitStyle,
                          AccessSpecifier AS);
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   MSPropertyDecl *HandleMSProperty(Scope *S, RecordDecl *TagD,
                                    SourceLocation DeclStart,
                                    Declarator &D, Expr *BitfieldWidth,
                                    InClassInitStyle InitStyle,
                                    AccessSpecifier AS,
                                    AttributeList *MSPropertyAttr);
+#endif
 
   FieldDecl *CheckFieldDecl(DeclarationName Name, QualType T,
                             TypeSourceInfo *TInfo,

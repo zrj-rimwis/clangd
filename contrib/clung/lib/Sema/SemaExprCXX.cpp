@@ -6738,7 +6738,11 @@ static ExprResult attemptRecovery(Sema &SemaRef,
       else
         MightBeImplicitMember = isa<FieldDecl>(ND) ||
                                 isa<IndirectFieldDecl>(ND) ||
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
                                 isa<MSPropertyDecl>(ND);
+#else
+                                false;
+#endif
 
       if (MightBeImplicitMember)
         return SemaRef.BuildPossibleImplicitMemberExpr(

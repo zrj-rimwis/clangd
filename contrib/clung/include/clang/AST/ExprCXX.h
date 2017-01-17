@@ -28,7 +28,9 @@
 namespace clang {
 
 class CXXTemporary;
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 class MSPropertyDecl;
+#endif
 class TemplateArgumentListInfo;
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class UuidAttr;
@@ -664,6 +666,7 @@ public:
 /// This expression always has pseudo-object type, and therefore it is
 /// typically not encountered in a fully-typechecked expression except
 /// within the syntactic form of a PseudoObjectExpr.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MSPropertyRefExpr : public Expr {
   Expr *BaseExpr;
   MSPropertyDecl *TheDecl;
@@ -717,6 +720,7 @@ public:
 
   friend class ASTStmtReader;
 };
+#endif
 
 /// MS property subscript expression.
 /// MSVC supports 'property' attribute and allows to apply it to the
@@ -729,6 +733,7 @@ public:
 /// indices. In this case, i=p->x[a][b] will be turned into i=p->GetX(a, b), and
 /// p->x[a][b] = i will be turned into p->PutX(a, b, i).
 /// This is a syntactic pseudo-object expression.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MSPropertySubscriptExpr : public Expr {
   friend class ASTStmtReader;
   enum { BASE_EXPR, IDX_EXPR, NUM_SUBEXPRS = 2 };
@@ -780,6 +785,7 @@ public:
     return child_range(&SubExprs[0], &SubExprs[0] + NUM_SUBEXPRS);
   }
 };
+#endif
 
 /// A Microsoft C++ @c __uuidof expression, which gets
 /// the _GUID that corresponds to the supplied type or expression.

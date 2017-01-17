@@ -1685,6 +1685,7 @@ void ASTStmtReader::VisitTypoExpr(TypoExpr *E) {
 //===----------------------------------------------------------------------===//
 // Microsoft Expressions and Statements
 //===----------------------------------------------------------------------===//
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtReader::VisitMSPropertyRefExpr(MSPropertyRefExpr *E) {
   VisitExpr(E);
   E->IsArrow = (Record[Idx++] != 0);
@@ -1693,13 +1694,16 @@ void ASTStmtReader::VisitMSPropertyRefExpr(MSPropertyRefExpr *E) {
   E->MemberLoc = ReadSourceLocation(Record, Idx);
   E->TheDecl = ReadDeclAs<MSPropertyDecl>(Record, Idx);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtReader::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *E) {
   VisitExpr(E);
   E->setBase(Reader.ReadSubExpr());
   E->setIdx(Reader.ReadSubExpr());
   E->setRBracketLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtReader::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
@@ -3566,12 +3570,14 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       S = new (Context) CXXUuidofExpr(Empty, true);
       break;
 #endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case EXPR_CXX_PROPERTY_REF_EXPR:
       S = new (Context) MSPropertyRefExpr(Empty);
       break;
     case EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR:
       S = new (Context) MSPropertySubscriptExpr(Empty);
       break;
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case EXPR_CXX_UUIDOF_TYPE:
       S = new (Context) CXXUuidofExpr(Empty, false);

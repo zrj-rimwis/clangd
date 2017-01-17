@@ -3222,8 +3222,10 @@ recurse:
   case Expr::NoInitExprClass:
   case Expr::ParenListExprClass:
   case Expr::LambdaExprClass:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::MSPropertyRefExprClass:
   case Expr::MSPropertySubscriptExprClass:
+#endif
   case Expr::TypoExprClass:  // This should no longer exist in the AST by now.
   case Expr::OMPArraySectionExprClass:
   case Expr::CXXInheritedCtorInitExprClass:

@@ -2325,7 +2325,11 @@ Sema::ActOnIdExpression(Scope *S, CXXScopeSpec &SS,
     else
       MightBeImplicitMember = isa<FieldDecl>(R.getFoundDecl()) ||
                               isa<IndirectFieldDecl>(R.getFoundDecl()) ||
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
                               isa<MSPropertyDecl>(R.getFoundDecl());
+#else
+                              false;
+#endif
 
     if (MightBeImplicitMember)
       return BuildPossibleImplicitMemberExpr(SS, TemplateKWLoc,
@@ -3017,9 +3021,11 @@ ExprResult Sema::BuildDeclarationNameExpr(
       break;
     }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     case Decl::MSProperty:
       valueKind = VK_LValue;
       break;
+#endif
 
     case Decl::CXXMethod:
       // If we're referring to a method with an __unknown_anytype
@@ -4140,12 +4146,14 @@ static bool checkArithmeticOnObjCPointer(Sema &S,
   return true;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool isMSPropertySubscriptExpr(Sema &S, Expr *Base) {
   auto *BaseNoParens = Base->IgnoreParens();
   if (auto *MSProp = dyn_cast<MSPropertyRefExpr>(BaseNoParens))
     return MSProp->getPropertyDecl()->getType()->isArrayType();
   return isa<MSPropertySubscriptExpr>(BaseNoParens);
 }
+#endif
 
 ExprResult
 Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base, SourceLocation lbLoc,
@@ -4167,6 +4175,7 @@ Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base, SourceLocation lbLoc,
   // operand might be an overloadable type, in which case the overload
   // resolution for the operator overload should get the first crack
   // at the overload.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // something fishy here very
   bool IsMSPropertySubscript = false;
   if (base->getType()->isNonOverloadPlaceholderType()) {
     IsMSPropertySubscript = isMSPropertySubscriptExpr(*this, base);
@@ -4177,6 +4186,7 @@ Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base, SourceLocation lbLoc,
       base = result.get();
     }
   }
+#endif
   if (idx->getType()->isNonOverloadPlaceholderType()) {
     ExprResult result = CheckPlaceholderExpr(idx);
     if (result.isInvalid()) return ExprError();
@@ -4198,12 +4208,14 @@ Sema::ActOnArraySubscriptExpr(Scope *S, Expr *base, SourceLocation lbLoc,
   // The above statement indicates that x[] can be used with one or more array
   // indices. In this case, i=p->x[a][b] will be turned into i=p->GetX(a, b),
   // and p->x[a][b] = i will be turned into p->PutX(a, b, i);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (IsMSPropertySubscript) {
     // Build MS property subscript expression if base is MS property reference
     // or MS property subscript.
     return new (Context) MSPropertySubscriptExpr(
         base, idx, Context.PseudoObjectTy, VK_LValue, OK_Ordinary, rbLoc);
   }
+#endif
 
   // Use C++ overloaded-operator rules if either operand has record
   // type.  The spec says to do this if either type is *overloadable*,
@@ -10515,8 +10527,10 @@ QualType Sema::CheckAddressOfOperand(ExprResult &OrigOp, SourceLocation OpLoc) {
           !getLangOpts().CPlusPlus) {
         AddressOfError = AO_Register_Variable;
       }
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     } else if (isa<MSPropertyDecl>(dcl)) {
       AddressOfError = AO_Property_Expansion;
+#endif
     } else if (isa<FunctionTemplateDecl>(dcl)) {
       return Context.OverloadTy;
     } else if (isa<FieldDecl>(dcl) || isa<IndirectFieldDecl>(dcl)) {

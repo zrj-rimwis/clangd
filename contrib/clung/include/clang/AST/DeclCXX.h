@@ -3397,6 +3397,7 @@ public:
 /// A property declared using an incomplete array type may
 /// additionally be subscripted, adding extra parameters to the getter
 /// and putter methods.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 class MSPropertyDecl : public DeclaratorDecl {
   IdentifierInfo *GetterId, *SetterId;
 
@@ -3422,6 +3423,7 @@ public:
 
   friend class ASTDeclReader;
 };
+#endif
 
 /// Insertion operator for diagnostics.  This allows sending an AccessSpecifier
 /// into a diagnostic with <<.

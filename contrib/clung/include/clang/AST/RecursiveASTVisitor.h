@@ -1805,7 +1805,9 @@ bool RecursiveASTVisitor<Derived>::TraverseDeclaratorHelper(DeclaratorDecl *D) {
   return true;
 }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 DEF_TRAVERSE_DECL(MSPropertyDecl, { TRY_TO(TraverseDeclaratorHelper(D)); })
+#endif
 
 DEF_TRAVERSE_DECL(FieldDecl, {
   TRY_TO(TraverseDeclaratorHelper(D));
@@ -2218,11 +2220,13 @@ DEF_TRAVERSE_STMT(CXXTypeidExpr, {
     TRY_TO(TraverseTypeLoc(S->getTypeOperandSourceInfo()->getTypeLoc()));
 })
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 DEF_TRAVERSE_STMT(MSPropertyRefExpr, {
   TRY_TO(TraverseNestedNameSpecifierLoc(S->getQualifierLoc()));
 })
 
 DEF_TRAVERSE_STMT(MSPropertySubscriptExpr, {})
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 DEF_TRAVERSE_STMT(CXXUuidofExpr, {

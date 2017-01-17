@@ -7069,6 +7069,7 @@ TreeTransform<Derived>::TransformMSDependentExistsStmt(
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformMSPropertyRefExpr(MSPropertyRefExpr *E) {
@@ -7094,7 +7095,9 @@ TreeTransform<Derived>::TransformMSPropertyRefExpr(MSPropertyRefExpr *E) {
                         SemaRef.getASTContext().PseudoObjectTy, VK_LValue,
                         QualifierLoc, E->getMemberLoc());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 template <typename Derived>
 ExprResult TreeTransform<Derived>::TransformMSPropertySubscriptExpr(
     MSPropertySubscriptExpr *E) {
@@ -7113,6 +7116,7 @@ ExprResult TreeTransform<Derived>::TransformMSPropertySubscriptExpr(
   return getDerived().RebuildArraySubscriptExpr(
       BaseRes.get(), SourceLocation(), IdxRes.get(), E->getRBracketLoc());
 }
+#endif
 
 template <typename Derived>
 StmtResult TreeTransform<Derived>::TransformSEHTryStmt(SEHTryStmt *S) {

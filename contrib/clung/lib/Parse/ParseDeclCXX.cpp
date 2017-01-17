@@ -2809,10 +2809,12 @@ ExprResult Parser::ParseCXXMemberInitializer(Decl *D, bool IsFunction,
       return ExprError();
     }
   }
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__ // assume no-op
   if (const auto *PD = dyn_cast_or_null<MSPropertyDecl>(D)) {
     Diag(Tok, diag::err_ms_property_initializer) << PD;
     return ExprError();
   }
+#endif
   return ParseInitializer();
 }
 

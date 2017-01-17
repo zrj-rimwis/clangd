@@ -54,7 +54,9 @@ void CodeGenFunction::EmitDecl(const Decl &D) {
   case Decl::CXXDestructor:
   case Decl::CXXConversion:
   case Decl::Field:
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   case Decl::MSProperty:
+#endif
   case Decl::IndirectField:
   case Decl::ObjCIvar:
   case Decl::ObjCAtDefsField:

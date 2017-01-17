@@ -1277,15 +1277,19 @@ void StmtProfiler::VisitCXXUuidofExpr(const CXXUuidofExpr *S) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtProfiler::VisitMSPropertyRefExpr(const MSPropertyRefExpr *S) {
   VisitExpr(S);
   VisitDecl(S->getPropertyDecl());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtProfiler::VisitMSPropertySubscriptExpr(
     const MSPropertySubscriptExpr *S) {
   VisitExpr(S);
 }
+#endif
 
 void StmtProfiler::VisitCXXThisExpr(const CXXThisExpr *S) {
   VisitExpr(S);

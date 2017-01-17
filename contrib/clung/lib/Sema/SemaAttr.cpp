@@ -25,6 +25,7 @@ using namespace clang;
 // Pragma 'pack' and 'options align'
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 Sema::PragmaStackSentinelRAII::PragmaStackSentinelRAII(Sema &S,
                                                        StringRef SlotLabel,
                                                        bool ShouldAct)
@@ -39,7 +40,9 @@ Sema::PragmaStackSentinelRAII::PragmaStackSentinelRAII(Sema &S,
     S.CodeSegStack.SentinelAction(PSK_Push, SlotLabel);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 Sema::PragmaStackSentinelRAII::~PragmaStackSentinelRAII() {
   if (ShouldAct) {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -51,6 +54,7 @@ Sema::PragmaStackSentinelRAII::~PragmaStackSentinelRAII() {
     S.CodeSegStack.SentinelAction(PSK_Pop, SlotLabel);
   }
 }
+#endif
 
 void Sema::AddAlignmentAttributesForRecord(RecordDecl *RD) {
   // If there is no pack value, we don't need any attributes.

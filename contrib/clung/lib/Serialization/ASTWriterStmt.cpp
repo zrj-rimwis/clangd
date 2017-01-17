@@ -1716,6 +1716,7 @@ void ASTStmtWriter::VisitAsTypeExpr(AsTypeExpr *E) {
 //===----------------------------------------------------------------------===//
 // Microsoft Expressions and Statements.
 //===----------------------------------------------------------------------===//
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtWriter::VisitMSPropertyRefExpr(MSPropertyRefExpr *E) {
   VisitExpr(E);
   Record.push_back(E->isArrow());
@@ -1725,7 +1726,9 @@ void ASTStmtWriter::VisitMSPropertyRefExpr(MSPropertyRefExpr *E) {
   Record.AddDeclRef(E->getPropertyDecl());
   Code = serialization::EXPR_CXX_PROPERTY_REF_EXPR;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtWriter::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *E) {
   VisitExpr(E);
   Record.AddStmt(E->getBase());
@@ -1733,6 +1736,7 @@ void ASTStmtWriter::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *E) {
   Record.AddSourceLocation(E->getRBracketLoc());
   Code = serialization::EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR;
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtWriter::VisitCXXUuidofExpr(CXXUuidofExpr *E) {

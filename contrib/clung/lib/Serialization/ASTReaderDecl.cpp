@@ -309,7 +309,9 @@ namespace clang {
     void VisitCXXDestructorDecl(CXXDestructorDecl *D);
     void VisitCXXConversionDecl(CXXConversionDecl *D);
     void VisitFieldDecl(FieldDecl *FD);
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     void VisitMSPropertyDecl(MSPropertyDecl *FD);
+#endif
     void VisitIndirectFieldDecl(IndirectFieldDecl *FD);
     RedeclarableResult VisitVarDeclImpl(VarDecl *D);
     void VisitVarDecl(VarDecl *VD) { VisitVarDeclImpl(VD); }
@@ -1193,11 +1195,13 @@ void ASTDeclReader::VisitFieldDecl(FieldDecl *FD) {
   mergeMergeable(FD);
 }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 void ASTDeclReader::VisitMSPropertyDecl(MSPropertyDecl *PD) {
   VisitDeclaratorDecl(PD);
   PD->GetterId = Reader.GetIdentifierInfo(F, Record, Idx);
   PD->SetterId = Reader.GetIdentifierInfo(F, Record, Idx);
 }
+#endif
 
 void ASTDeclReader::VisitIndirectFieldDecl(IndirectFieldDecl *FD) {
   VisitValueDecl(FD);
@@ -3410,9 +3414,11 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
   case DECL_BLOCK:
     D = BlockDecl::CreateDeserialized(Context, ID);
     break;
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   case DECL_MS_PROPERTY:
     D = MSPropertyDecl::CreateDeserialized(Context, ID);
     break;
+#endif
   case DECL_CAPTURED:
     D = CapturedDecl::CreateDeserialized(Context, ID, Record[Idx++]);
     break;

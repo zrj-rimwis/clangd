@@ -9369,8 +9369,10 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
 #endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::MSPropertyRefExprClass:
   case Expr::MSPropertySubscriptExprClass:
+#endif
   case Expr::CXXNullPtrLiteralExprClass:
   case Expr::UserDefinedLiteralClass:
   case Expr::CXXThisExprClass:

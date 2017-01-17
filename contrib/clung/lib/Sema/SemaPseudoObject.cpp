@@ -46,11 +46,17 @@ namespace {
   // Basically just a very focused copy of TreeTransform.
   struct Rebuilder {
     Sema &S;
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     unsigned MSPropertySubscriptCount;
+#endif
     typedef llvm::function_ref<Expr *(Expr *, unsigned)> SpecificRebuilderRefTy;
     const SpecificRebuilderRefTy &SpecificCallback;
     Rebuilder(Sema &S, const SpecificRebuilderRefTy &SpecificCallback)
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
         : S(S), MSPropertySubscriptCount(0),
+#else
+        : S(S),
+#endif
           SpecificCallback(SpecificCallback) {}
 
     Expr *rebuildObjCPropertyRefExpr(ObjCPropertyRefExpr *refExpr) {
@@ -82,6 +88,7 @@ namespace {
           refExpr->getAtIndexMethodDecl(), refExpr->setAtIndexMethodDecl(),
           refExpr->getRBracket());
     }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     Expr *rebuildMSPropertyRefExpr(MSPropertyRefExpr *refExpr) {
       assert(refExpr->getBaseExpr());
 
@@ -91,6 +98,8 @@ namespace {
           refExpr->getValueKind(), refExpr->getQualifierLoc(),
           refExpr->getMemberLoc());
     }
+#endif
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     Expr *rebuildMSPropertySubscriptExpr(MSPropertySubscriptExpr *refExpr) {
       assert(refExpr->getBase());
       assert(refExpr->getIdx());
@@ -103,6 +112,7 @@ namespace {
           refExpr->getType(), refExpr->getValueKind(), refExpr->getObjectKind(),
           refExpr->getRBracketLoc());
     }
+#endif
 
     Expr *rebuild(Expr *e) {
       // Fast path: nothing to look through.
@@ -110,10 +120,12 @@ namespace {
         return rebuildObjCPropertyRefExpr(PRE);
       if (auto *SRE = dyn_cast<ObjCSubscriptRefExpr>(e))
         return rebuildObjCSubscriptRefExpr(SRE);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (auto *MSPRE = dyn_cast<MSPropertyRefExpr>(e))
         return rebuildMSPropertyRefExpr(MSPRE);
       if (auto *MSPSE = dyn_cast<MSPropertySubscriptExpr>(e))
         return rebuildMSPropertySubscriptExpr(MSPSE);
+#endif
 
       // Otherwise, we should look through and rebuild anything that
       // IgnoreParens would.
@@ -333,6 +345,7 @@ namespace {
    ExprResult buildSet(Expr *op, SourceLocation, bool) override;
  };
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
  class MSPropertyOpBuilder : public PseudoOpBuilder {
    MSPropertyRefExpr *RefExpr;
    OpaqueValueExpr *InstanceBase;
@@ -355,6 +368,7 @@ namespace {
    ExprResult buildSet(Expr *op, SourceLocation, bool) override;
    bool captureSetValueAsResult() const override { return false; }
  };
+#endif
 }
 
 /// Capture the given expression in an OpaqueValueExpr.
@@ -1433,6 +1447,7 @@ ExprResult ObjCSubscriptOpBuilder::buildSet(Expr *op, SourceLocation opcLoc,
 //  MSVC __declspec(property) references
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 MSPropertyRefExpr *
 MSPropertyOpBuilder::getBaseMSProperty(MSPropertySubscriptExpr *E) {
   CallArgs.insert(CallArgs.begin(), E->getIdx());
@@ -1443,7 +1458,9 @@ MSPropertyOpBuilder::getBaseMSProperty(MSPropertySubscriptExpr *E) {
   }
   return cast<MSPropertyRefExpr>(Base);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 Expr *MSPropertyOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
   InstanceBase = capture(RefExpr->getBaseExpr());
   std::for_each(CallArgs.begin(), CallArgs.end(),
@@ -1460,7 +1477,9 @@ Expr *MSPropertyOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
 
   return syntacticBase;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ExprResult MSPropertyOpBuilder::buildGet() {
   if (!RefExpr->getPropertyDecl()->hasGetter()) {
     S.Diag(RefExpr->getMemberLoc(), diag::err_no_accessor_for_property)
@@ -1488,7 +1507,9 @@ ExprResult MSPropertyOpBuilder::buildGet() {
                          RefExpr->getSourceRange().getBegin(), CallArgs,
                          RefExpr->getSourceRange().getEnd());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 ExprResult MSPropertyOpBuilder::buildSet(Expr *op, SourceLocation sl,
                                          bool captureSetValueAsResult) {
   if (!RefExpr->getPropertyDecl()->hasSetter()) {
@@ -1520,6 +1541,7 @@ ExprResult MSPropertyOpBuilder::buildSet(Expr *op, SourceLocation sl,
                          RefExpr->getSourceRange().getBegin(), ArgExprs,
                          op->getSourceRange().getEnd());
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 //  General Sema routines.
@@ -1536,6 +1558,7 @@ ExprResult Sema::checkPseudoObjectRValue(Expr *E) {
            = dyn_cast<ObjCSubscriptRefExpr>(opaqueRef)) {
     ObjCSubscriptOpBuilder builder(*this, refExpr);
     return builder.buildRValueOperation(E);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (MSPropertyRefExpr *refExpr
              = dyn_cast<MSPropertyRefExpr>(opaqueRef)) {
     MSPropertyOpBuilder builder(*this, refExpr);
@@ -1544,6 +1567,7 @@ ExprResult Sema::checkPseudoObjectRValue(Expr *E) {
                  dyn_cast<MSPropertySubscriptExpr>(opaqueRef)) {
     MSPropertyOpBuilder Builder(*this, RefExpr);
     return Builder.buildRValueOperation(E);
+#endif
   } else {
     llvm_unreachable("unknown pseudo-object kind!");
   }
@@ -1566,6 +1590,7 @@ ExprResult Sema::checkPseudoObjectIncDec(Scope *Sc, SourceLocation opcLoc,
   } else if (isa<ObjCSubscriptRefExpr>(opaqueRef)) {
     Diag(opcLoc, diag::err_illegal_container_subscripting_op);
     return ExprError();
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (MSPropertyRefExpr *refExpr
              = dyn_cast<MSPropertyRefExpr>(opaqueRef)) {
     MSPropertyOpBuilder builder(*this, refExpr);
@@ -1574,6 +1599,7 @@ ExprResult Sema::checkPseudoObjectIncDec(Scope *Sc, SourceLocation opcLoc,
              = dyn_cast<MSPropertySubscriptExpr>(opaqueRef)) {
     MSPropertyOpBuilder Builder(*this, RefExpr);
     return Builder.buildIncDecOperation(Sc, opcLoc, opcode, op);
+#endif
   } else {
     llvm_unreachable("unknown pseudo-object kind!");
   }
@@ -1603,6 +1629,7 @@ ExprResult Sema::checkPseudoObjectAssignment(Scope *S, SourceLocation opcLoc,
              = dyn_cast<ObjCSubscriptRefExpr>(opaqueRef)) {
     ObjCSubscriptOpBuilder builder(*this, refExpr);
     return builder.buildAssignmentOperation(S, opcLoc, opcode, LHS, RHS);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (MSPropertyRefExpr *refExpr
              = dyn_cast<MSPropertyRefExpr>(opaqueRef)) {
       MSPropertyOpBuilder builder(*this, refExpr);
@@ -1611,6 +1638,7 @@ ExprResult Sema::checkPseudoObjectAssignment(Scope *S, SourceLocation opcLoc,
              = dyn_cast<MSPropertySubscriptExpr>(opaqueRef)) {
       MSPropertyOpBuilder Builder(*this, RefExpr);
       return Builder.buildAssignmentOperation(S, opcLoc, opcode, LHS, RHS);
+#endif
   } else {
     llvm_unreachable("unknown pseudo-object kind!");
   }

@@ -107,7 +107,11 @@ static IMAKind ClassifyImplicitMemberAccess(Sema &SemaRef,
     D = D->getUnderlyingDecl();
 
     if (D->isCXXInstanceMember()) {
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
       isField |= isa<FieldDecl>(D) || isa<MSPropertyDecl>(D) ||
+#else
+      isField |= isa<FieldDecl>(D) || false ||
+#endif
                  isa<IndirectFieldDecl>(D);
 
       CXXRecordDecl *R = cast<CXXRecordDecl>(D->getDeclContext());
@@ -863,6 +867,7 @@ Sema::BuildAnonymousStructUnionMemberReference(const CXXScopeSpec &SS,
   return result;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static ExprResult
 BuildMSPropertyRefExpr(Sema &S, Expr *BaseExpr, bool IsArrow,
                        const CXXScopeSpec &SS,
@@ -875,6 +880,7 @@ BuildMSPropertyRefExpr(Sema &S, Expr *BaseExpr, bool IsArrow,
                                            SS.getWithLocInContext(S.Context),
                                            NameInfo.getLoc());
 }
+#endif
 
 /// \brief Build a MemberExpr AST node.
 static MemberExpr *BuildMemberExpr(
@@ -1128,9 +1134,11 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
     return BuildFieldReferenceExpr(*this, BaseExpr, IsArrow, OpLoc, SS, FD,
                                    FoundDecl, MemberNameInfo);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (MSPropertyDecl *PD = dyn_cast<MSPropertyDecl>(MemberDecl))
     return BuildMSPropertyRefExpr(*this, BaseExpr, IsArrow, SS, PD,
                                   MemberNameInfo);
+#endif
 
   if (IndirectFieldDecl *FD = dyn_cast<IndirectFieldDecl>(MemberDecl))
     // We may have found a field within an anonymous union or struct

@@ -94,7 +94,9 @@ namespace clang {
     void VisitCXXDestructorDecl(CXXDestructorDecl *D);
     void VisitCXXConversionDecl(CXXConversionDecl *D);
     void VisitFieldDecl(FieldDecl *D);
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     void VisitMSPropertyDecl(MSPropertyDecl *D);
+#endif
     void VisitIndirectFieldDecl(IndirectFieldDecl *D);
     void VisitVarDecl(VarDecl *D);
     void VisitImplicitParamDecl(ImplicitParamDecl *D);
@@ -875,12 +877,14 @@ void ASTDeclWriter::VisitFieldDecl(FieldDecl *D) {
   Code = serialization::DECL_FIELD;
 }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 void ASTDeclWriter::VisitMSPropertyDecl(MSPropertyDecl *D) {
   VisitDeclaratorDecl(D);
   Record.AddIdentifierRef(D->getGetterId());
   Record.AddIdentifierRef(D->getSetterId());
   Code = serialization::DECL_MS_PROPERTY;
 }
+#endif
 
 void ASTDeclWriter::VisitIndirectFieldDecl(IndirectFieldDecl *D) {
   VisitValueDecl(D);

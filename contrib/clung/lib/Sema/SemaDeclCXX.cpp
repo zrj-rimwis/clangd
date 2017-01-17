@@ -1995,12 +1995,14 @@ static bool InitializationHasSideEffects(const FieldDecl &FD) {
   return false;
 }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 static AttributeList *getMSPropertyAttr(AttributeList *list) {
   for (AttributeList *it = list; it != nullptr; it = it->getNext())
     if (it->isDeclspecPropertyAttribute())
       return it;
   return nullptr;
 }
+#endif
 
 /// ActOnCXXMemberDeclarator - This is invoked when a C++ class member
 /// declarator is parsed. 'AS' is the access specifier, 'BW' specifies the
@@ -2189,6 +2191,7 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
       SS.clear();
     }
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     AttributeList *MSPropertyAttr =
       getMSPropertyAttr(D.getDeclSpec().getAttributes().getList());
     if (MSPropertyAttr) {
@@ -2197,6 +2200,10 @@ Sema::ActOnCXXMemberDeclarator(Scope *S, AccessSpecifier AS, Declarator &D,
       if (!Member)
         return nullptr;
       isInstField = false;
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       Member = HandleField(S, cast<CXXRecordDecl>(CurContext), Loc, D,
                                 BitWidth, InitStyle, AS);
@@ -2704,7 +2711,11 @@ void Sema::ActOnFinishCXXInClassMemberInitializer(Decl *D,
   PopFunctionScopeInfo(nullptr, D);
 
   FieldDecl *FD = dyn_cast<FieldDecl>(D);
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   assert((isa<MSPropertyDecl>(D) || FD->getInClassInitStyle() != ICIS_NoInit) &&
+#else
+  assert((false || FD->getInClassInitStyle() != ICIS_NoInit) &&
+#endif
          "must set init style when field is created");
 
   if (!InitExpr) {
@@ -13992,6 +14003,7 @@ void Sema::actOnDelayedExceptionSpecification(Decl *MethodD,
 
 /// HandleMSProperty - Analyze a __delcspec(property) field of a C++ class.
 ///
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
 MSPropertyDecl *Sema::HandleMSProperty(Scope *S, RecordDecl *Record,
                                        SourceLocation DeclStart,
                                        Declarator &D, Expr *BitWidth,
@@ -14081,3 +14093,4 @@ MSPropertyDecl *Sema::HandleMSProperty(Scope *S, RecordDecl *Record,
 
   return NewPD;
 }
+#endif

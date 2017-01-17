@@ -1054,7 +1054,11 @@ namespace clang {
       /// \brief A FieldDecl record.
       DECL_FIELD,
       /// \brief A MSPropertyDecl record.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
       DECL_MS_PROPERTY,
+#else
+      DECL_MS_PROPERTY_disabled,
+#endif
       /// \brief A VarDecl record.
       DECL_VAR,
       /// \brief An ImplicitParamDecl record.
@@ -1455,8 +1459,13 @@ namespace clang {
       EXPR_ASTYPE,                 // AsTypeExpr
 
       // Microsoft
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       EXPR_CXX_PROPERTY_REF_EXPR, // MSPropertyRefExpr
       EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR, // MSPropertySubscriptExpr
+#else
+      EXPR_CXX_PROPERTY_REF_EXPR_disabled,
+      EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR_disabled,
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       EXPR_CXX_UUIDOF_EXPR,       // CXXUuidofExpr (of expr).
       EXPR_CXX_UUIDOF_TYPE,       // CXXUuidofExpr (of type).

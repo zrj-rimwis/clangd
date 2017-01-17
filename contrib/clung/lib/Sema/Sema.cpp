@@ -86,11 +86,15 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
         LangOpts.getMSPointerToMemberRepresentationMethod()),
     VtorDispStack(MSVtorDispAttr::Mode(LangOpts.VtorDispMode)),
 #endif
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__ // yeah, messy
     PackStack(0), DataSegStack(nullptr), BSSSegStack(nullptr),
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     ConstSegStack(nullptr), CodeSegStack(nullptr), CurInitSeg(nullptr),
 #else
     ConstSegStack(nullptr), CodeSegStack(nullptr),
+#endif
+#else
+    PackStack(0),
 #endif
     VisContext(nullptr),
     IsBuildingRecoveryCallExpr(false),

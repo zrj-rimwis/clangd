@@ -40,7 +40,6 @@ def Named : Decl<1>;
       def Field : DDecl<Declarator>;
         def ObjCIvar : DDecl<Field>;
         def ObjCAtDefsField : DDecl<Field>;
-      def MSProperty : DDecl<Declarator>;
       def Function : DDecl<Declarator>, DeclContext;
         def CXXMethod : DDecl<Function>;
           def CXXConstructor : DDecl<CXXMethod>;

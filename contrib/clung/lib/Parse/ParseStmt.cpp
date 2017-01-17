@@ -1970,10 +1970,12 @@ Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
                                       "parsing function body");
 
   // Save and reset current vtordisp stack if we have entered a C++ method body.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__ // confusing, maybe just for MSVC?
   bool IsCXXMethod =
       getLangOpts().CPlusPlus && Decl && isa<CXXMethodDecl>(Decl);
   Sema::PragmaStackSentinelRAII
     PragmaStackSentinel(Actions, "InternalPragmaState", IsCXXMethod);
+#endif
 
   // Do not enter a scope for the brace, as the arguments are in the same scope
   // (the function body) as the body itself.  Instead, just read the statement
@@ -2009,10 +2011,12 @@ Decl *Parser::ParseFunctionTryBlock(Decl *Decl, ParseScope &BodyScope) {
     Actions.ActOnDefaultCtorInitializers(Decl);
 
   // Save and reset current vtordisp stack if we have entered a C++ method body.
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   bool IsCXXMethod =
       getLangOpts().CPlusPlus && Decl && isa<CXXMethodDecl>(Decl);
   Sema::PragmaStackSentinelRAII
     PragmaStackSentinel(Actions, "InternalPragmaState", IsCXXMethod);
+#endif
 
   SourceLocation LBraceLoc = Tok.getLocation();
   StmtResult FnBody(ParseCXXTryBlockCommon(TryLoc, /*FnTry*/true));

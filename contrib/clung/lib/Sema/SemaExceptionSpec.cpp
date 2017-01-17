@@ -1208,9 +1208,11 @@ CanThrowResult Sema::canThrow(const Expr *E) {
     // These expressions can never throw.
     return CT_Cannot;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::MSPropertyRefExprClass:
   case Expr::MSPropertySubscriptExprClass:
     llvm_unreachable("Invalid class for expression");
+#endif
 
 #define STMT(CLASS, PARENT) case Expr::CLASS##Class:
 #define STMT_RANGE(Base, First, Last)

@@ -603,7 +603,9 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case ParmVar:
     case ObjCMethod:
     case ObjCProperty:
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
     case MSProperty:
+#endif
       return IDNS_Ordinary;
     case Label:
       return IDNS_Label;

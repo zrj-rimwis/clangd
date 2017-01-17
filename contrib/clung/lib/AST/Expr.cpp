@@ -2889,8 +2889,10 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
       break;
     return true;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case MSPropertyRefExprClass:
   case MSPropertySubscriptExprClass:
+#endif
   case CompoundAssignOperatorClass:
   case VAArgExprClass:
   case AtomicExprClass:

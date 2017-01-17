@@ -1919,6 +1919,7 @@ void StmtPrinter::VisitCXXUuidofExpr(CXXUuidofExpr *Node) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtPrinter::VisitMSPropertyRefExpr(MSPropertyRefExpr *Node) {
   PrintExpr(Node->getBaseExpr());
   if (Node->isArrow())
@@ -1930,13 +1931,16 @@ void StmtPrinter::VisitMSPropertyRefExpr(MSPropertyRefExpr *Node) {
     Qualifier->print(OS, Policy);
   OS << Node->getPropertyDecl()->getDeclName();
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtPrinter::VisitMSPropertySubscriptExpr(MSPropertySubscriptExpr *Node) {
   PrintExpr(Node->getBase());
   OS << "[";
   PrintExpr(Node->getIdx());
   OS << "]";
 }
+#endif
 
 void StmtPrinter::VisitUserDefinedLiteral(UserDefinedLiteral *Node) {
   switch (Node->getLiteralOperatorKind()) {

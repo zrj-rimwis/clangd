@@ -1627,7 +1627,11 @@ bool NamedDecl::isCXXInstanceMember() const {
   if (isa<UsingShadowDecl>(D))
     D = cast<UsingShadowDecl>(D)->getTargetDecl();
 
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
   if (isa<FieldDecl>(D) || isa<IndirectFieldDecl>(D) || isa<MSPropertyDecl>(D))
+#else
+  if (isa<FieldDecl>(D) || isa<IndirectFieldDecl>(D) || false)
+#endif
     return true;
   if (const auto *MD = dyn_cast_or_null<CXXMethodDecl>(D->getAsFunction()))
     return MD->isInstance();

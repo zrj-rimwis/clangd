@@ -135,8 +135,10 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     // FIXME: ObjC++0x might have different rules
   case Expr::ObjCIvarRefExprClass:
   case Expr::FunctionParmPackExprClass:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::MSPropertyRefExprClass:
   case Expr::MSPropertySubscriptExprClass:
+#endif
   case Expr::OMPArraySectionExprClass:
     return Cl::CL_LValue;
 
@@ -434,7 +436,11 @@ static Cl::Kinds ClassifyDecl(ASTContext &Ctx, const Decl *D) {
     islvalue = isa<VarDecl>(D) || isa<FieldDecl>(D) ||
                isa<IndirectFieldDecl>(D) ||
                (Ctx.getLangOpts().CPlusPlus &&
+#ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
                 (isa<FunctionDecl>(D) || isa<MSPropertyDecl>(D) ||
+#else
+                (isa<FunctionDecl>(D) || false ||
+#endif
                  isa<FunctionTemplateDecl>(D)));
 
   return islvalue ? Cl::CL_LValue : Cl::CL_PRValue;
