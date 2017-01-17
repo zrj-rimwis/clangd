@@ -430,8 +430,10 @@ namespace  {
     void VisitVarDecl(const VarDecl *D);
     void VisitFileScopeAsmDecl(const FileScopeAsmDecl *D);
     void VisitImportDecl(const ImportDecl *D);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     void VisitPragmaCommentDecl(const PragmaCommentDecl *D);
     void VisitPragmaDetectMismatchDecl(const PragmaDetectMismatchDecl *D);
+#endif
     void VisitCapturedDecl(const CapturedDecl *D);
 
     // OpenMP decls
@@ -1227,6 +1229,7 @@ void ASTDumper::VisitImportDecl(const ImportDecl *D) {
   OS << ' ' << D->getImportedModule()->getFullModuleName();
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTDumper::VisitPragmaCommentDecl(const PragmaCommentDecl *D) {
   OS << ' ';
   switch (D->getCommentKind()) {
@@ -1241,11 +1244,14 @@ void ASTDumper::VisitPragmaCommentDecl(const PragmaCommentDecl *D) {
   if (!Arg.empty())
     OS << " \"" << Arg << "\"";
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTDumper::VisitPragmaDetectMismatchDecl(
     const PragmaDetectMismatchDecl *D) {
   OS << " \"" << D->getName() << "\" \"" << D->getValue() << "\"";
 }
+#endif
 
 void ASTDumper::VisitCapturedDecl(const CapturedDecl *D) {
   dumpStmt(D->getBody());

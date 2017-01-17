@@ -1228,6 +1228,7 @@ void ASTStmtReader::VisitCXXForRangeStmt(CXXForRangeStmt *S) {
   S->setBody(Reader.ReadSubStmt());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTStmtReader::VisitMSDependentExistsStmt(MSDependentExistsStmt *S) {
   VisitStmt(S);
   S->KeywordLoc = ReadSourceLocation(Record, Idx);
@@ -1236,6 +1237,7 @@ void ASTStmtReader::VisitMSDependentExistsStmt(MSDependentExistsStmt *S) {
   ReadDeclarationNameInfo(S->NameInfo, Record, Idx);
   S->SubStmt = Reader.ReadSubStmt();
 }
+#endif
 
 void ASTStmtReader::VisitCXXOperatorCallExpr(CXXOperatorCallExpr *E) {
   VisitCallExpr(E);
@@ -3265,12 +3267,14 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       S = new (Context) CXXForRangeStmt(Empty);
       break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case STMT_MS_DEPENDENT_EXISTS:
       S = new (Context) MSDependentExistsStmt(SourceLocation(), true,
                                               NestedNameSpecifierLoc(),
                                               DeclarationNameInfo(),
                                               nullptr);
       break;
+#endif
 
     case STMT_OMP_PARALLEL_DIRECTIVE:
       S =

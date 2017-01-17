@@ -1927,6 +1927,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult RebuildMSDependentExistsStmt(SourceLocation KeywordLoc,
                                           bool IsIfExists,
                                           NestedNameSpecifierLoc QualifierLoc,
@@ -1935,6 +1936,7 @@ public:
     return getSema().BuildMSDependentExistsStmt(KeywordLoc, IsIfExists,
                                                 QualifierLoc, NameInfo, Nested);
   }
+#endif
 
   /// \brief Attach body to a C++0x range-based for statement.
   ///
@@ -6996,6 +6998,7 @@ TreeTransform<Derived>::TransformCXXForRangeStmt(CXXForRangeStmt *S) {
   return FinishCXXForRangeStmt(NewStmt.get(), Body.get());
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformMSDependentExistsStmt(
@@ -7064,6 +7067,7 @@ TreeTransform<Derived>::TransformMSDependentExistsStmt(
                                                    NameInfo,
                                                    SubStmt.get());
 }
+#endif
 
 template<typename Derived>
 ExprResult

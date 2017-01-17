@@ -1143,8 +1143,10 @@ void ASTWriter::WriteBlockInfoBlock() {
   RECORD(DECL_EMPTY);
   RECORD(DECL_OBJC_TYPE_PARAM);
   RECORD(DECL_OMP_CAPTUREDEXPR);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   RECORD(DECL_PRAGMA_COMMENT);
   RECORD(DECL_PRAGMA_DETECT_MISMATCH);
+#endif
   RECORD(DECL_OMP_DECLARE_REDUCTION);
   
   // Statements and Exprs can occur in the Decls and Types block.

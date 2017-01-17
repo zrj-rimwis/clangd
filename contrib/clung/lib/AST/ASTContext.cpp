@@ -8602,13 +8602,19 @@ bool ASTContext::DeclMustBeEmitted(const Decl *D) {
     // We never need to emit an uninstantiated function template.
     if (FD->getTemplatedKind() == FunctionDecl::TK_FunctionTemplate)
       return false;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (isa<PragmaCommentDecl>(D))
     return true;
+#else
+  }
+#endif
   else if (isa<OMPThreadPrivateDecl>(D) ||
            D->hasAttr<OMPDeclareTargetDeclAttr>())
     return true;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   else if (isa<PragmaDetectMismatchDecl>(D))
     return true;
+#endif
   else if (isa<OMPThreadPrivateDecl>(D))
     return !D->getDeclContext()->isDependentContext();
   else if (isa<OMPDeclareReductionDecl>(D))

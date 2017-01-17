@@ -2229,15 +2229,19 @@ private:
                                 SourceLocation *endLoc = nullptr);
   void MaybeParseMicrosoftDeclSpecs(ParsedAttributes &Attrs,
                                     SourceLocation *End = nullptr) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // do nothing
     const auto &LO = getLangOpts();
     if (LO.DeclSpecKeyword && Tok.is(tok::kw___declspec))
       ParseMicrosoftDeclSpecs(Attrs, End);
+#endif
   }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void ParseMicrosoftDeclSpecs(ParsedAttributes &Attrs,
                                SourceLocation *End = nullptr);
   bool ParseMicrosoftDeclSpecArgs(IdentifierInfo *AttrName,
                                   SourceLocation AttrNameLoc,
                                   ParsedAttributes &Attrs);
+#endif
   void ParseMicrosoftTypeAttributes(ParsedAttributes &attrs);
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void DiagnoseAndSkipExtendedMicrosoftTypeAttributes();

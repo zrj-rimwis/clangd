@@ -293,6 +293,7 @@ llvm::Function *CodeGenModule::CreateGlobalInitOrDestructFunction(
 /// Create a global pointer to a function that will initialize a global
 /// variable.  The user has requested that this pointer be emitted in a specific
 /// section.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // MS pragma init_seg
 void CodeGenModule::EmitPointerToInitFunc(const VarDecl *D,
                                           llvm::GlobalVariable *GV,
                                           llvm::Function *InitFunc,
@@ -307,6 +308,7 @@ void CodeGenModule::EmitPointerToInitFunc(const VarDecl *D,
   if (llvm::Comdat *C = GV->getComdat())
     PtrArray->setComdat(C);
 }
+#endif
 
 void
 CodeGenModule::EmitCXXGlobalVarDeclInitFunc(const VarDecl *D,
@@ -343,7 +345,9 @@ CodeGenModule::EmitCXXGlobalVarDeclInitFunc(const VarDecl *D,
                                          getTypes().arrangeNullaryFunction(),
                                          D->getLocation());
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // this is messy
   auto *ISA = D->getAttr<InitSegAttr>();
+#endif
   CodeGenFunction(*this).GenerateCXXGlobalVarDeclInitFunc(Fn, D, Addr,
                                                           PerformInit);
 
@@ -359,8 +363,10 @@ CodeGenModule::EmitCXXGlobalVarDeclInitFunc(const VarDecl *D,
     // entire TU.
     CXXThreadLocalInits.push_back(Fn);
     CXXThreadLocalInitVars.push_back(D);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (PerformInit && ISA) {
     EmitPointerToInitFunc(D, Addr, Fn, ISA);
+#endif
   } else if (auto *IPA = D->getAttr<InitPriorityAttr>()) {
     OrderGlobalInits Key(IPA->getPriority(), PrioritizedCXXGlobalInits.size());
     PrioritizedCXXGlobalInits.push_back(std::make_pair(Key, Fn));

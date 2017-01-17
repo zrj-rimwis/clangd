@@ -31,7 +31,9 @@
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/Module.h"
 #include "clang/Basic/OpenMPKinds.h"
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // only for PragmaMS extensions
 #include "clang/Basic/PragmaKinds.h"
+#endif
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TemplateKinds.h"
 #include "clang/Basic/TypeTraits.h"
@@ -333,7 +335,9 @@ public:
   SmallVector<Scope*, 2> CurrentSEHFinally;
 
   /// \brief Source location for newly created implicit MSInheritanceAttrs
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   SourceLocation ImplicitMSInheritanceAttrLoc;
+#endif
 
   enum PragmaMsStackAction {
     PSK_Reset     = 0x0,                // #pragma ()
@@ -432,8 +436,10 @@ public:
   FileNullabilityMap NullabilityMap;
 
   /// Last section used with #pragma init_seg.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StringLiteral *CurInitSeg;
   SourceLocation CurInitSegLoc;
+#endif
 
   /// VisContext - Manages the stack for \#pragma GCC visibility.
   void *VisContext; // Really a "PragmaVisStack*"
@@ -734,7 +740,9 @@ public:
   RecordDecl *CXXTypeInfoDecl;
 
   /// \brief The MSVC "_GUID" struct, which is defined in MSVC header files.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   RecordDecl *MSVCGuidDecl;
+#endif
 
   /// \brief Caches identifiers/selectors for NSFoundation APIs.
   std::unique_ptr<NSAPI> NSAPIObj;
@@ -4133,6 +4141,7 @@ public:
 
   bool CheckCaseExpression(Expr *E);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   /// \brief Describes the result of an "if-exists" condition check.
   enum IfExistsResult {
     /// \brief The symbol exists.
@@ -4148,7 +4157,9 @@ public:
     /// \brief An error occurred.
     IER_Error
   };
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   IfExistsResult
   CheckMicrosoftIfExistsSymbol(Scope *S, CXXScopeSpec &SS,
                                const DeclarationNameInfo &TargetNameInfo);
@@ -4157,7 +4168,9 @@ public:
   CheckMicrosoftIfExistsSymbol(Scope *S, SourceLocation KeywordLoc,
                                bool IsIfExists, CXXScopeSpec &SS,
                                UnqualifiedId &Name);
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult BuildMSDependentExistsStmt(SourceLocation KeywordLoc,
                                         bool IsIfExists,
                                         NestedNameSpecifierLoc QualifierLoc,
@@ -4167,6 +4180,7 @@ public:
                                         bool IsIfExists,
                                         CXXScopeSpec &SS, UnqualifiedId &Name,
                                         Stmt *Nested);
+#endif
 
   //===------------------------- "Block" Extension ------------------------===//
 

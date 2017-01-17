@@ -292,8 +292,10 @@ bool serialization::isRedeclarableDeclKind(unsigned Kind) {
   case Decl::ObjCCompatibleAlias:
   case Decl::LinkageSpec:
   case Decl::ObjCPropertyImpl:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Decl::PragmaComment:
   case Decl::PragmaDetectMismatch:
+#endif
   case Decl::FileScopeAsm:
   case Decl::AccessSpec:
   case Decl::Friend:

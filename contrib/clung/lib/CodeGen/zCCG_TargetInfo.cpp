@@ -2164,11 +2164,13 @@ public:
     Opt += qualifyWindowsLibrary(Lib);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void getDetectMismatchOption(llvm::StringRef Name,
                                llvm::StringRef Value,
                                llvm::SmallString<32> &Opt) const override {
     Opt = "/FAILIFMISMATCH:\"" + Name.str() + "=" + Value.str() + "\"";
   }
+#endif
 };
 
 static void addStackProbeSizeTargetAttribute(const Decl *D,
@@ -2221,11 +2223,13 @@ public:
     Opt += qualifyWindowsLibrary(Lib);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void getDetectMismatchOption(llvm::StringRef Name,
                                llvm::StringRef Value,
                                llvm::SmallString<32> &Opt) const override {
     Opt = "/FAILIFMISMATCH:\"" + Name.str() + "=" + Value.str() + "\"";
   }
+#endif
 };
 
 void WinX86_64TargetCodeGenInfo::setTargetAttributes(const Decl *D,
@@ -5127,10 +5131,12 @@ public:
     Opt = "/DEFAULTLIB:" + qualifyWindowsLibrary(Lib);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void getDetectMismatchOption(llvm::StringRef Name, llvm::StringRef Value,
                                llvm::SmallString<32> &Opt) const override {
     Opt = "/FAILIFMISMATCH:\"" + Name.str() + "=" + Value.str() + "\"";
   }
+#endif
 };
 
 void WindowsARMTargetCodeGenInfo::setTargetAttributes(

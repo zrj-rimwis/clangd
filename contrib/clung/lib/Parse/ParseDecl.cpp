@@ -383,6 +383,7 @@ void Parser::ParseGNUAttributeArgs(IdentifierInfo *AttrName,
                            ScopeLoc, Syntax);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 bool Parser::ParseMicrosoftDeclSpecArgs(IdentifierInfo *AttrName,
                                         SourceLocation AttrNameLoc,
                                         ParsedAttributes &Attrs) {
@@ -525,6 +526,7 @@ bool Parser::ParseMicrosoftDeclSpecArgs(IdentifierInfo *AttrName,
   }
   return true;
 }
+#endif
 
 /// [MS] decl-specifier:
 ///             __declspec ( extended-decl-modifier-seq )
@@ -532,6 +534,7 @@ bool Parser::ParseMicrosoftDeclSpecArgs(IdentifierInfo *AttrName,
 /// [MS] extended-decl-modifier-seq:
 ///             extended-decl-modifier[opt]
 ///             extended-decl-modifier extended-decl-modifier-seq
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Parser::ParseMicrosoftDeclSpecs(ParsedAttributes &Attrs,
                                      SourceLocation *End) {
   assert(getLangOpts().DeclSpecKeyword && "__declspec keyword is not enabled");
@@ -597,6 +600,7 @@ void Parser::ParseMicrosoftDeclSpecs(ParsedAttributes &Attrs,
       *End = T.getCloseLocation();
   }
 }
+#endif
 
 void Parser::ParseMicrosoftTypeAttributes(ParsedAttributes &attrs) {
   // Treat these like attributes
@@ -3105,9 +3109,11 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       continue;
 
     // Microsoft declspec support.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // implictly skip
     case tok::kw___declspec:
       ParseMicrosoftDeclSpecs(DS.getAttributes());
       continue;
+#endif
 
     // Microsoft single token adornments.
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__

@@ -1014,7 +1014,9 @@ public:
   void AppendLinkerOptions(StringRef Opts);
 
   /// \brief Appends a detect mismatch command to the linker options.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void AddDetectMismatch(StringRef Name, StringRef Value);
+#endif
 
   /// \brief Appends a dependent lib to the "Linker Options" metadata value.
   void AddDependentLib(StringRef Lib);
@@ -1204,8 +1206,10 @@ private:
                                     llvm::GlobalVariable *Addr,
                                     bool PerformInit);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // MS pragma init_seg
   void EmitPointerToInitFunc(const VarDecl *VD, llvm::GlobalVariable *Addr,
                              llvm::Function *InitFunc, InitSegAttr *ISA);
+#endif
 
   // FIXME: Hardcoding priority here is gross.
   void AddGlobalCtor(llvm::Function *Ctor, int Priority = 65535,

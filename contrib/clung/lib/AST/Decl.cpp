@@ -3939,8 +3939,11 @@ TranslationUnitDecl *TranslationUnitDecl::Create(ASTContext &C) {
   return new (C, (DeclContext *)nullptr) TranslationUnitDecl(C);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // undocumented
 void PragmaCommentDecl::anchor() { }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 PragmaCommentDecl *PragmaCommentDecl::Create(const ASTContext &C,
                                              TranslationUnitDecl *DC,
                                              SourceLocation CommentLoc,
@@ -3960,9 +3963,13 @@ PragmaCommentDecl *PragmaCommentDecl::CreateDeserialized(ASTContext &C,
   return new (C, ID, additionalSizeToAlloc<char>(ArgSize + 1))
       PragmaCommentDecl(nullptr, SourceLocation(), PCK_Unknown);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // undocumented
 void PragmaDetectMismatchDecl::anchor() { }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 PragmaDetectMismatchDecl *
 PragmaDetectMismatchDecl::Create(const ASTContext &C, TranslationUnitDecl *DC,
                                  SourceLocation Loc, StringRef Name,
@@ -3985,6 +3992,7 @@ PragmaDetectMismatchDecl::CreateDeserialized(ASTContext &C, unsigned ID,
   return new (C, ID, additionalSizeToAlloc<char>(NameValueSize + 1))
       PragmaDetectMismatchDecl(nullptr, SourceLocation(), 0);
 }
+#endif
 
 void ExternCContextDecl::anchor() { }
 

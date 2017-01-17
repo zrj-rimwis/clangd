@@ -1172,10 +1172,15 @@ namespace clang {
       DECL_OBJC_TYPE_PARAM,
       /// \brief An OMPCapturedExprDecl record.
       DECL_OMP_CAPTUREDEXPR,
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       /// \brief A PragmaCommentDecl record.
       DECL_PRAGMA_COMMENT,
       /// \brief A PragmaDetectMismatchDecl record.
       DECL_PRAGMA_DETECT_MISMATCH,
+#else
+      DECL_PRAGMA_COMMENT_disabled,
+      DECL_PRAGMA_DETECT_MISMATCH_disabled,
+#endif
       /// \brief An OMPDeclareReductionDecl record.
       DECL_OMP_DECLARE_REDUCTION,
     };
@@ -1507,7 +1512,11 @@ namespace clang {
       // ARC
       EXPR_OBJC_BRIDGED_CAST,     // ObjCBridgedCastExpr
       
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       STMT_MS_DEPENDENT_EXISTS,   // MSDependentExistsStmt
+#else
+      STMT_MS_DEPENDENT_EXISTS_disabled,
+#endif
       EXPR_LAMBDA                 // LambdaExpr
     };
 

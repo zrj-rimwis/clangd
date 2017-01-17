@@ -23,7 +23,9 @@
 #include "clang/Basic/Linkage.h"
 #include "clang/Basic/Module.h"
 #include "clang/Basic/OperatorKinds.h"
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // only for PragmMSComment
 #include "clang/Basic/PragmaKinds.h"
+#endif
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/Support/Compiler.h"
@@ -106,6 +108,7 @@ public:
 
 /// \brief Represents a `#pragma comment` line. Always a child of
 /// TranslationUnitDecl.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class PragmaCommentDecl final
     : public Decl,
       private llvm::TrailingObjects<PragmaCommentDecl, char> {
@@ -137,9 +140,11 @@ public:
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
   static bool classofKind(Kind K) { return K == PragmaComment; }
 };
+#endif
 
 /// \brief Represents a `#pragma detect_mismatch` line. Always a child of
 /// TranslationUnitDecl.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class PragmaDetectMismatchDecl final
     : public Decl,
       private llvm::TrailingObjects<PragmaDetectMismatchDecl, char> {
@@ -170,6 +175,7 @@ public:
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
   static bool classofKind(Kind K) { return K == PragmaDetectMismatch; }
 };
+#endif
 
 /// \brief Declaration context for names declared as extern "C" in C++. This
 /// is neither the semantic nor lexical context for such declarations, but is

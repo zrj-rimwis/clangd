@@ -199,12 +199,14 @@ void StmtProfiler::VisitCXXForRangeStmt(const CXXForRangeStmt *S) {
   VisitStmt(S);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void StmtProfiler::VisitMSDependentExistsStmt(const MSDependentExistsStmt *S) {
   VisitStmt(S);
   ID.AddBoolean(S->isIfExists());
   VisitNestedNameSpecifier(S->getQualifierLoc().getNestedNameSpecifier());
   VisitName(S->getNameInfo().getName());
 }
+#endif
 
 void StmtProfiler::VisitSEHTryStmt(const SEHTryStmt *S) {
   VisitStmt(S);

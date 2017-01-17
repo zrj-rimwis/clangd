@@ -164,15 +164,19 @@ public:
   }
 
   /// \brief Callback invoked when a \#pragma comment directive is read.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   virtual void PragmaComment(SourceLocation Loc, const IdentifierInfo *Kind,
                              StringRef Str) {
   }
+#endif
 
   /// \brief Callback invoked when a \#pragma detect_mismatch directive is
   /// read.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   virtual void PragmaDetectMismatch(SourceLocation Loc, StringRef Name,
                                     StringRef Value) {
   }
+#endif
 
   /// \brief Callback invoked when a \#pragma clang __debug directive is read.
   /// \param Loc The location of the debug directive.
@@ -379,17 +383,21 @@ public:
     Second->Ident(Loc, str);
   }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void PragmaComment(SourceLocation Loc, const IdentifierInfo *Kind,
                      StringRef Str) override {
     First->PragmaComment(Loc, Kind, Str);
     Second->PragmaComment(Loc, Kind, Str);
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   void PragmaDetectMismatch(SourceLocation Loc, StringRef Name,
                             StringRef Value) override {
     First->PragmaDetectMismatch(Loc, Name, Value);
     Second->PragmaDetectMismatch(Loc, Name, Value);
   }
+#endif
 
   void PragmaMessage(SourceLocation Loc, StringRef Namespace,
                      PragmaMessageKind Kind, StringRef Str) override {

@@ -233,8 +233,10 @@ void IdentifierTable::AddKeywords(const LangOptions &LangOpts) {
     AddKeyword("__unknown_anytype", tok::kw___unknown_anytype, KEYALL,
                LangOpts, *this);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // explictly disable, KEYALL
   if (LangOpts.DeclSpecKeyword)
     AddKeyword("__declspec", tok::kw___declspec, KEYALL, LangOpts, *this);
+#endif
 }
 
 /// \brief Checks if the specified token kind represents a keyword in the

@@ -5634,11 +5634,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 #endif
 
   // -fno-declspec is default, except for PS4.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // is PS4 using clang as MSVC replacement?
   if (Args.hasFlag(options::OPT_fdeclspec, options::OPT_fno_declspec,
                    getToolChain().getTriple().isPS4()))
     CmdArgs.push_back("-fdeclspec");
   else if (Args.hasArg(options::OPT_fno_declspec))
     CmdArgs.push_back("-fno-declspec"); // Explicitly disabling __declspec.
+#endif
 
   // -fthreadsafe-static is default, except for MSVC compatibility versions less
   // than 19.

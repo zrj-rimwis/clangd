@@ -10476,9 +10476,11 @@ void Sema::CheckCompleteVariableDeclaration(VarDecl *var) {
     // Apply the init_seg attribute if this has an initializer.  If the
     // initializer turns out to not be dynamic, we'll end up ignoring this
     // attribute.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // that is a bit ... just a tip
     if (CurInitSeg && var->getInit())
       var->addAttr(InitSegAttr::CreateImplicit(Context, CurInitSeg->getString(),
                                                CurInitSegLoc));
+#endif
   }
 
   // All the following checks are C++ only.

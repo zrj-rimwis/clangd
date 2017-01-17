@@ -208,7 +208,9 @@ namespace clang {
     Stmt *VisitCXXCatchStmt(CXXCatchStmt *S);
     Stmt *VisitCXXTryStmt(CXXTryStmt *S);
     Stmt *VisitCXXForRangeStmt(CXXForRangeStmt *S);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     // FIXME: MSDependentExistsStmt
+#endif
     Stmt *VisitObjCForCollectionStmt(ObjCForCollectionStmt *S);
     Stmt *VisitObjCAtCatchStmt(ObjCAtCatchStmt *S);
     Stmt *VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *S);

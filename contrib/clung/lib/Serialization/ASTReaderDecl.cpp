@@ -260,8 +260,10 @@ namespace clang {
     }
 
     void VisitDecl(Decl *D);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     void VisitPragmaCommentDecl(PragmaCommentDecl *D);
     void VisitPragmaDetectMismatchDecl(PragmaDetectMismatchDecl *D);
+#endif
     void VisitTranslationUnitDecl(TranslationUnitDecl *TU);
     void VisitNamedDecl(NamedDecl *ND);
     void VisitLabelDecl(LabelDecl *LD);
@@ -569,6 +571,7 @@ void ASTDeclReader::VisitDecl(Decl *D) {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTDeclReader::VisitPragmaCommentDecl(PragmaCommentDecl *D) {
   VisitDecl(D);
   D->setLocation(ReadSourceLocation(Record, Idx));
@@ -577,7 +580,9 @@ void ASTDeclReader::VisitPragmaCommentDecl(PragmaCommentDecl *D) {
   memcpy(D->getTrailingObjects<char>(), Arg.data(), Arg.size());
   D->getTrailingObjects<char>()[Arg.size()] = '\0';
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTDeclReader::VisitPragmaDetectMismatchDecl(PragmaDetectMismatchDecl *D) {
   VisitDecl(D);
   D->setLocation(ReadSourceLocation(Record, Idx));
@@ -591,6 +596,7 @@ void ASTDeclReader::VisitPragmaDetectMismatchDecl(PragmaDetectMismatchDecl *D) {
          Value.size());
   D->getTrailingObjects<char>()[D->ValueStart + Value.size()] = '\0';
 }
+#endif
 
 void ASTDeclReader::VisitTranslationUnitDecl(TranslationUnitDecl *TU) {
   llvm_unreachable("Translation units are not serialized");
@@ -2502,8 +2508,12 @@ static bool isConsumerInterestedIn(Decl *D, bool HasBody) {
       isa<ObjCProtocolDecl>(D) || 
       isa<ObjCImplDecl>(D) ||
       isa<ImportDecl>(D) ||
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       isa<PragmaCommentDecl>(D) ||
       isa<PragmaDetectMismatchDecl>(D))
+#else
+      false)
+#endif
     return true;
   if (isa<OMPThreadPrivateDecl>(D) || isa<OMPDeclareReductionDecl>(D))
     return !D->getDeclContext()->isFunctionOrMethod();
@@ -3426,12 +3436,14 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
   case DECL_OMP_CAPTUREDEXPR:
     D = OMPCapturedExprDecl::CreateDeserialized(Context, ID);
     break;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case DECL_PRAGMA_COMMENT:
     D = PragmaCommentDecl::CreateDeserialized(Context, ID, Record[Idx++]);
     break;
   case DECL_PRAGMA_DETECT_MISMATCH:
     D = PragmaDetectMismatchDecl::CreateDeserialized(Context, ID,
                                                      Record[Idx++]);
+#endif
     break;
   case DECL_EMPTY:
     D = EmptyDecl::CreateDeserialized(Context, ID);

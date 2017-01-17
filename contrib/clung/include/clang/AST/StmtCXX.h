@@ -237,6 +237,7 @@ public:
 /// compromise the template instantiation model. This behavior differs from
 /// Visual C++ (which never introduces a scope), but is a fairly reasonable
 /// approximation of the VC++ behavior.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 class MSDependentExistsStmt : public Stmt {
   SourceLocation KeywordLoc;
   bool IsIfExists;
@@ -292,6 +293,7 @@ public:
     return T->getStmtClass() == MSDependentExistsStmtClass;
   }
 };
+#endif
 
 /// \brief Represents the body of a coroutine. This wraps the normal function
 /// body and holds the additional semantic context required to set up and tear

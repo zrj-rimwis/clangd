@@ -55,8 +55,10 @@ namespace clang {
     void Visit(Decl *D);
 
     void VisitDecl(Decl *D);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     void VisitPragmaCommentDecl(PragmaCommentDecl *D);
     void VisitPragmaDetectMismatchDecl(PragmaDetectMismatchDecl *D);
+#endif
     void VisitTranslationUnitDecl(TranslationUnitDecl *D);
     void VisitNamedDecl(NamedDecl *D);
     void VisitLabelDecl(LabelDecl *LD);
@@ -318,6 +320,7 @@ void ASTDeclWriter::VisitDecl(Decl *D) {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTDeclWriter::VisitPragmaCommentDecl(PragmaCommentDecl *D) {
   StringRef Arg = D->getArg();
   Record.push_back(Arg.size());
@@ -327,7 +330,9 @@ void ASTDeclWriter::VisitPragmaCommentDecl(PragmaCommentDecl *D) {
   Record.AddString(Arg);
   Code = serialization::DECL_PRAGMA_COMMENT;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void ASTDeclWriter::VisitPragmaDetectMismatchDecl(
     PragmaDetectMismatchDecl *D) {
   StringRef Name = D->getName();
@@ -339,6 +344,7 @@ void ASTDeclWriter::VisitPragmaDetectMismatchDecl(
   Record.AddString(Value);
   Code = serialization::DECL_PRAGMA_DETECT_MISMATCH;
 }
+#endif
 
 void ASTDeclWriter::VisitTranslationUnitDecl(TranslationUnitDecl *D) {
   llvm_unreachable("Translation units aren't directly serialized");

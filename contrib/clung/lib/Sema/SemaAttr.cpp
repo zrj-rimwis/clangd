@@ -194,6 +194,7 @@ void Sema::ActOnPragmaMSComment(SourceLocation CommentLoc,
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaDetectMismatch(SourceLocation Loc, StringRef Name,
                                      StringRef Value) {
   auto *PDMD = PragmaDetectMismatchDecl::Create(
@@ -201,6 +202,7 @@ void Sema::ActOnPragmaDetectMismatch(SourceLocation Loc, StringRef Name,
   Context.getTranslationUnitDecl()->addDecl(PDMD);
   Consumer.HandleTopLevelDecl(DeclGroupRef(PDMD));
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void Sema::ActOnPragmaMSPointersToMembers(

@@ -430,6 +430,7 @@ TemplateDeclInstantiator::VisitTranslationUnitDecl(TranslationUnitDecl *D) {
   llvm_unreachable("Translation units cannot be instantiated");
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 Decl *
 TemplateDeclInstantiator::VisitPragmaCommentDecl(PragmaCommentDecl *D) {
   llvm_unreachable("pragma comment cannot be instantiated");
@@ -439,6 +440,7 @@ Decl *TemplateDeclInstantiator::VisitPragmaDetectMismatchDecl(
     PragmaDetectMismatchDecl *D) {
   llvm_unreachable("pragma comment cannot be instantiated");
 }
+#endif
 
 Decl *
 TemplateDeclInstantiator::VisitExternCContextDecl(ExternCContextDecl *D) {

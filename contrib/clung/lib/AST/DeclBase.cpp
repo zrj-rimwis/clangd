@@ -673,8 +673,10 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case FileScopeAsm:
     case StaticAssert:
     case ObjCPropertyImpl:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case PragmaComment:
     case PragmaDetectMismatch:
+#endif
     case Block:
     case Captured:
     case TranslationUnit:

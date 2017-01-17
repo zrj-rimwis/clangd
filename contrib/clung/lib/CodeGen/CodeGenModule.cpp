@@ -1172,12 +1172,14 @@ void CodeGenModule::AppendLinkerOptions(StringRef Opts) {
   LinkerOptionsMetadata.push_back(llvm::MDNode::get(getLLVMContext(), MDOpts));
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void CodeGenModule::AddDetectMismatch(StringRef Name, StringRef Value) {
   llvm::SmallString<32> Opt;
   getTargetCodeGenInfo().getDetectMismatchOption(Name, Value, Opt);
   auto *MDOpts = llvm::MDString::get(getLLVMContext(), Opt);
   LinkerOptionsMetadata.push_back(llvm::MDNode::get(getLLVMContext(), MDOpts));
 }
+#endif
 
 void CodeGenModule::AddDependentLib(StringRef Lib) {
   llvm::SmallString<24> Opt;
@@ -3963,6 +3965,7 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
     ObjCRuntime->RegisterAlias(cast<ObjCCompatibleAliasDecl>(D));
     break;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Decl::PragmaComment: {
     const auto *PCD = cast<PragmaCommentDecl>(D);
     switch (PCD->getCommentKind()) {
@@ -3981,12 +3984,15 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
     }
     break;
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Decl::PragmaDetectMismatch: {
     const auto *PDMD = cast<PragmaDetectMismatchDecl>(D);
     AddDetectMismatch(PDMD->getName(), PDMD->getValue());
     break;
   }
+#endif
 
   case Decl::LinkageSpec:
     EmitLinkageSpec(cast<LinkageSpecDecl>(D));

@@ -7112,6 +7112,7 @@ StmtResult Sema::ActOnFinishFullStmt(Stmt *FullStmt) {
   return MaybeCreateStmtWithCleanups(FullStmt);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 Sema::IfExistsResult 
 Sema::CheckMicrosoftIfExistsSymbol(Scope *S,
                                    CXXScopeSpec &SS,
@@ -7146,7 +7147,9 @@ Sema::CheckMicrosoftIfExistsSymbol(Scope *S,
 
   llvm_unreachable("Invalid LookupResult Kind!");
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 Sema::IfExistsResult 
 Sema::CheckMicrosoftIfExistsSymbol(Scope *S, SourceLocation KeywordLoc,
                                    bool IsIfExists, CXXScopeSpec &SS,
@@ -7167,3 +7170,4 @@ Sema::CheckMicrosoftIfExistsSymbol(Scope *S, SourceLocation KeywordLoc,
   
   return CheckMicrosoftIfExistsSymbol(S, SS, TargetNameInfo);
 }
+#endif

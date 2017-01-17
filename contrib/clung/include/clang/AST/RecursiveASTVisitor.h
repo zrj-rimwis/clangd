@@ -1398,9 +1398,11 @@ DEF_TRAVERSE_DECL(
      // D->getAnonymousNamespace().
     })
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 DEF_TRAVERSE_DECL(PragmaCommentDecl, {})
 
 DEF_TRAVERSE_DECL(PragmaDetectMismatchDecl, {})
+#endif
 
 DEF_TRAVERSE_DECL(ExternCContextDecl, {})
 
@@ -2052,10 +2054,12 @@ DEF_TRAVERSE_STMT(CXXForRangeStmt, {
     ShouldVisitChildren = false;
   }
 })
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 DEF_TRAVERSE_STMT(MSDependentExistsStmt, {
   TRY_TO(TraverseNestedNameSpecifierLoc(S->getQualifierLoc()));
   TRY_TO(TraverseDeclarationNameInfo(S->getNameInfo()));
 })
+#endif
 DEF_TRAVERSE_STMT(ReturnStmt, {})
 DEF_TRAVERSE_STMT(SwitchStmt, {})
 DEF_TRAVERSE_STMT(WhileStmt, {})

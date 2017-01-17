@@ -3810,6 +3810,7 @@ Sema::ActOnSEHLeaveStmt(SourceLocation Loc, Scope *CurScope) {
   return new (Context) SEHLeaveStmt(Loc);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Sema::BuildMSDependentExistsStmt(SourceLocation KeywordLoc,
                                             bool IsIfExists,
                                             NestedNameSpecifierLoc QualifierLoc,
@@ -3820,8 +3821,10 @@ StmtResult Sema::BuildMSDependentExistsStmt(SourceLocation KeywordLoc,
                                              QualifierLoc, NameInfo,
                                              cast<CompoundStmt>(Nested));
 }
+#endif
 
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Sema::ActOnMSDependentExistsStmt(SourceLocation KeywordLoc,
                                             bool IsIfExists,
                                             CXXScopeSpec &SS,
@@ -3832,6 +3835,7 @@ StmtResult Sema::ActOnMSDependentExistsStmt(SourceLocation KeywordLoc,
                                     GetNameFromUnqualifiedId(Name),
                                     Nested);
 }
+#endif
 
 RecordDecl*
 Sema::CreateCapturedStmtRecordDecl(CapturedDecl *&CD, SourceLocation Loc,

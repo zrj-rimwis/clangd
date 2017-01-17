@@ -214,9 +214,11 @@ public:
 
   /// Gets the linker options necessary to detect object file mismatches on
   /// this platform.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   virtual void getDetectMismatchOption(llvm::StringRef Name,
                                        llvm::StringRef Value,
                                        llvm::SmallString<32> &Opt) const {}
+#endif
 
   /// Get LLVM calling convention for OpenCL kernel.
   virtual unsigned getOpenCLKernelCallingConv() const;

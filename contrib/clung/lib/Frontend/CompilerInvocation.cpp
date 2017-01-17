@@ -1986,6 +1986,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   // CUDA extension, however it is required for supporting cuda_builtin_vars.h,
   // which uses __declspec(property). Once that has been rewritten in terms of
   // something more generic, remove the Opts.CUDA term here.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // sorry PS4, sorry cuda
   Opts.DeclSpecKeyword =
       Args.hasFlag(OPT_fdeclspec, OPT_fno_declspec,
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // rewrite
@@ -1997,6 +1998,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
                     || Opts.CUDA
 #endif
                    ));
+#endif
 
   // For now, we only support local submodule visibility in C++ (because we
   // heavily depend on the ODR for merging redefinitions).

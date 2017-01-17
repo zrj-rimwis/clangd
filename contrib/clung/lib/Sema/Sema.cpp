@@ -87,13 +87,21 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
     VtorDispStack(MSVtorDispAttr::Mode(LangOpts.VtorDispMode)),
 #endif
     PackStack(0), DataSegStack(nullptr), BSSSegStack(nullptr),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     ConstSegStack(nullptr), CodeSegStack(nullptr), CurInitSeg(nullptr),
+#else
+    ConstSegStack(nullptr), CodeSegStack(nullptr),
+#endif
     VisContext(nullptr),
     IsBuildingRecoveryCallExpr(false),
     Cleanup{}, LateTemplateParser(nullptr),
     LateTemplateParserCleanup(nullptr),
     OpaqueParser(nullptr), IdResolver(pp), StdInitializerList(nullptr),
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     CXXTypeInfoDecl(nullptr), MSVCGuidDecl(nullptr),
+#else
+    CXXTypeInfoDecl(nullptr),
+#endif
     NSNumberDecl(nullptr), NSValueDecl(nullptr),
     NSStringDecl(nullptr), StringWithUTF8StringMethod(nullptr),
     ValueWithBytesObjCTypeMethod(nullptr),

@@ -13,7 +13,9 @@
 
 #include "RAIIObjectsForParser.h"
 #include "clang/AST/ASTContext.h"
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // only for PragmaMS extensions
 #include "clang/Basic/PragmaKinds.h"
+#endif
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/ParseDiagnostic.h"
@@ -101,6 +103,7 @@ struct PragmaOpenMPHandler : public PragmaHandler {
 };
 
 /// PragmaCommentHandler - "\#pragma comment ...".
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct PragmaCommentHandler : public PragmaHandler {
   PragmaCommentHandler(Sema &Actions)
     : PragmaHandler("comment"), Actions(Actions) {}
@@ -109,7 +112,9 @@ struct PragmaCommentHandler : public PragmaHandler {
 private:
   Sema &Actions;
 };
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct PragmaDetectMismatchHandler : public PragmaHandler {
   PragmaDetectMismatchHandler(Sema &Actions)
     : PragmaHandler("detect_mismatch"), Actions(Actions) {}
@@ -118,6 +123,7 @@ struct PragmaDetectMismatchHandler : public PragmaHandler {
 private:
   Sema &Actions;
 };
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 struct PragmaMSPointersToMembers : public PragmaHandler {
@@ -1774,6 +1780,7 @@ void PragmaMSPragma::HandlePragma(Preprocessor &PP,
 /// the object file and passed along to the linker.  If the linker detects a
 /// mismatch in the object file's values for the given name, a LNK2038 error
 /// is emitted.  See MSDN for more details.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void PragmaDetectMismatchHandler::HandlePragma(Preprocessor &PP,
                                                PragmaIntroducerKind Introducer,
                                                Token &Tok) {
@@ -1820,6 +1827,7 @@ void PragmaDetectMismatchHandler::HandlePragma(Preprocessor &PP,
 
   Actions.ActOnPragmaDetectMismatch(DetectMismatchLoc, NameString, ValueString);
 }
+#endif
 
 /// \brief Handle the microsoft \#pragma comment extension.
 ///
