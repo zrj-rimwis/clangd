@@ -36,7 +36,9 @@ void FunctionScopeInfo::Clear() {
   ObjCWarnForNoInitDelegation = false;
   FirstReturnLoc = SourceLocation();
   FirstCXXTryLoc = SourceLocation();
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   FirstSEHTryLoc = SourceLocation();
+#endif
 
   SwitchStack.clear();
   Returns.clear();

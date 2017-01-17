@@ -179,10 +179,8 @@ def OpaqueValueExpr : DStmt<Expr>;
 def TypoExpr : DStmt<Expr>;
 
 // Microsoft Extensions.
-def SEHTryStmt : Stmt;
-def SEHExceptStmt : Stmt;
-def SEHFinallyStmt : Stmt;
-def SEHLeaveStmt : Stmt;
+
+// REMOVED
 
 // OpenCL Extensions.
 def AsTypeExpr : DStmt<Expr>;

@@ -199,11 +199,15 @@ namespace clang {
     Stmt *VisitContinueStmt(ContinueStmt *S);
     Stmt *VisitBreakStmt(BreakStmt *S);
     Stmt *VisitReturnStmt(ReturnStmt *S);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     // FIXME: MSAsmStmt
+#endif
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     // FIXME: SEHExceptStmt
     // FIXME: SEHFinallyStmt
     // FIXME: SEHTryStmt
     // FIXME: SEHLeaveStmt
+#endif
     // FIXME: CapturedStmt
     Stmt *VisitCXXCatchStmt(CXXCatchStmt *S);
     Stmt *VisitCXXTryStmt(CXXTryStmt *S);

@@ -2387,10 +2387,12 @@ DEF_TRAVERSE_STMT(UnresolvedMemberExpr, {
   }
 })
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 DEF_TRAVERSE_STMT(SEHTryStmt, {})
 DEF_TRAVERSE_STMT(SEHExceptStmt, {})
 DEF_TRAVERSE_STMT(SEHFinallyStmt, {})
 DEF_TRAVERSE_STMT(SEHLeaveStmt, {})
+#endif
 DEF_TRAVERSE_STMT(CapturedStmt, { TRY_TO(TraverseDecl(S->getCapturedDecl())); })
 
 DEF_TRAVERSE_STMT(CXXOperatorCallExpr, {})

@@ -208,6 +208,7 @@ void StmtProfiler::VisitMSDependentExistsStmt(const MSDependentExistsStmt *S) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void StmtProfiler::VisitSEHTryStmt(const SEHTryStmt *S) {
   VisitStmt(S);
 }
@@ -223,6 +224,7 @@ void StmtProfiler::VisitSEHExceptStmt(const SEHExceptStmt *S) {
 void StmtProfiler::VisitSEHLeaveStmt(const SEHLeaveStmt *S) {
   VisitStmt(S);
 }
+#endif
 
 void StmtProfiler::VisitCapturedStmt(const CapturedStmt *S) {
   VisitStmt(S);

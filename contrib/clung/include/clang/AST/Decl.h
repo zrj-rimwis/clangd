@@ -1607,7 +1607,9 @@ private:
   unsigned IsConstexpr : 1;
 
   /// \brief Indicates if the function uses __try.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   unsigned UsesSEHTry : 1;
+#endif
 
   /// \brief Indicates if the function was a definition but its body was
   /// skipped.
@@ -1697,7 +1699,11 @@ protected:
       HasWrittenPrototype(true), IsDeleted(false), IsTrivial(false),
       IsDefaulted(false), IsExplicitlyDefaulted(false),
       HasImplicitReturnZero(false), IsLateTemplateParsed(false),
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
       IsConstexpr(isConstexprSpecified), UsesSEHTry(false),
+#else
+      IsConstexpr(isConstexprSpecified),
+#endif
       HasSkippedBody(false), EndRangeLoc(NameInfo.getEndLoc()),
       TemplateOrSpecialization(),
       DNLoc(NameInfo.getInfo()) {}
@@ -1890,8 +1896,10 @@ public:
   void setConstexpr(bool IC) { IsConstexpr = IC; }
 
   /// \brief Indicates the function uses __try.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool usesSEHTry() const { return UsesSEHTry; }
   void setUsesSEHTry(bool UST) { UsesSEHTry = UST; }
+#endif
 
   /// \brief Whether this function has been deleted.
   ///

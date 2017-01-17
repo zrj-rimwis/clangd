@@ -489,6 +489,7 @@ StmtResult Parser::ParseSEHTryBlock() {
 /// seh-except-block:
 ///   '__except' '(' seh-filter-expression ')' compound-statement
 ///
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 StmtResult Parser::ParseSEHExceptBlock(SourceLocation ExceptLoc) {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PoisonIdentifierRAIIObject raii(Ident__exception_code, false),
@@ -541,12 +542,14 @@ StmtResult Parser::ParseSEHExceptBlock(SourceLocation ExceptLoc) {
 
   return Actions.ActOnSEHExceptBlock(ExceptLoc, FilterExpr.get(), Block.get());
 }
+#endif
 
 /// ParseSEHFinallyBlock - Handle __finally
 ///
 /// seh-finally-block:
 ///   '__finally' compound-statement
 ///
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 StmtResult Parser::ParseSEHFinallyBlock(SourceLocation FinallyLoc) {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   PoisonIdentifierRAIIObject raii(Ident__abnormal_termination, false),
@@ -568,6 +571,7 @@ StmtResult Parser::ParseSEHFinallyBlock(SourceLocation FinallyLoc) {
 
   return Actions.ActOnFinishSEHFinallyBlock(FinallyLoc, Block.get());
 }
+#endif
 
 /// Handle __leave
 ///
@@ -2111,6 +2115,7 @@ StmtResult Parser::ParseCXXTryBlockCommon(SourceLocation TryLoc, bool FnTry) {
 
   // Borland allows SEH-handlers with 'try'
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume was nullptr
   if ((Tok.is(tok::identifier) &&
        Tok.getIdentifierInfo() == getSEHExceptKeyword()) ||
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -2136,6 +2141,11 @@ StmtResult Parser::ParseCXXTryBlockCommon(SourceLocation TryLoc, bool FnTry) {
                                     TryBlock.get(),
                                     Handler.get());
   }
+#else
+  if (false) {
+    /* dummy */
+  }
+#endif
   else {
     StmtVector Handlers;
 

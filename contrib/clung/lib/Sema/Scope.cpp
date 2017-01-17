@@ -189,12 +189,14 @@ void Scope::dumpImpl(raw_ostream &OS) const {
     } else if (Flags & FnTryCatchScope) {
       OS << "FnTryCatchScope";
       Flags &= ~FnTryCatchScope;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume MSVC only
     } else if (Flags & SEHTryScope) {
       OS << "SEHTryScope";
       Flags &= ~SEHTryScope;
     } else if (Flags & SEHExceptScope) {
       OS << "SEHExceptScope";
       Flags &= ~SEHExceptScope;
+#endif
     } else if (Flags & OpenMPDirectiveScope) {
       OS << "OpenMPDirectiveScope";
       Flags &= ~OpenMPDirectiveScope;

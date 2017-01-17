@@ -1847,6 +1847,7 @@ public:
 };
 #endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 class SEHExceptStmt : public Stmt {
   SourceLocation  Loc;
   Stmt           *Children[2];
@@ -1890,7 +1891,9 @@ public:
   }
 
 };
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 class SEHFinallyStmt : public Stmt {
   SourceLocation  Loc;
   Stmt           *Block;
@@ -1924,7 +1927,9 @@ public:
   }
 
 };
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 class SEHTryStmt : public Stmt {
   bool            IsCXXTry;
   SourceLocation  TryLoc;
@@ -1972,9 +1977,11 @@ public:
     return T->getStmtClass() == SEHTryStmtClass;
   }
 };
+#endif
 
 /// Represents a __leave statement.
 ///
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 class SEHLeaveStmt : public Stmt {
   SourceLocation LeaveLoc;
 public:
@@ -1999,6 +2006,7 @@ public:
     return child_range(child_iterator(), child_iterator());
   }
 };
+#endif
 
 /// \brief This captures a statement into a function. For example, the following
 /// pragma annotated compound statement can be represented as a CapturedStmt,

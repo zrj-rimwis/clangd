@@ -1722,24 +1722,31 @@ void ASTStmtReader::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtReader::VisitSEHLeaveStmt(SEHLeaveStmt *S) {
   VisitStmt(S);
   S->setLeaveLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtReader::VisitSEHExceptStmt(SEHExceptStmt *S) {
   VisitStmt(S);
   S->Loc = ReadSourceLocation(Record, Idx);
   S->Children[SEHExceptStmt::FILTER_EXPR] = Reader.ReadSubStmt();
   S->Children[SEHExceptStmt::BLOCK] = Reader.ReadSubStmt();
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtReader::VisitSEHFinallyStmt(SEHFinallyStmt *S) {
   VisitStmt(S);
   S->Loc = ReadSourceLocation(Record, Idx);
   S->Block = Reader.ReadSubStmt();
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtReader::VisitSEHTryStmt(SEHTryStmt *S) {
   VisitStmt(S);
   S->IsCXXTry = Record[Idx++];
@@ -1747,6 +1754,7 @@ void ASTStmtReader::VisitSEHTryStmt(SEHTryStmt *S) {
   S->Children[SEHTryStmt::TRY] = Reader.ReadSubStmt();
   S->Children[SEHTryStmt::HANDLER] = Reader.ReadSubStmt();
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // CUDA Expressions and Statements
@@ -3246,6 +3254,7 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_AVAILABILITY_CHECK:
       S = new (Context) ObjCAvailabilityCheckExpr(Empty);
       break;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     case STMT_SEH_LEAVE:
       S = new (Context) SEHLeaveStmt(Empty);
       break;
@@ -3258,6 +3267,7 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case STMT_SEH_TRY:
       S = new (Context) SEHTryStmt(Empty);
       break;
+#endif
     case STMT_CXX_CATCH:
       S = new (Context) CXXCatchStmt(Empty);
       break;

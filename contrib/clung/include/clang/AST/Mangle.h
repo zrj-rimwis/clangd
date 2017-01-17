@@ -138,11 +138,13 @@ public:
   virtual void mangleDynamicAtExitDestructor(const VarDecl *D,
                                              raw_ostream &) = 0;
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   virtual void mangleSEHFilterExpression(const NamedDecl *EnclosingDecl,
                                          raw_ostream &Out) = 0;
 
   virtual void mangleSEHFinallyBlock(const NamedDecl *EnclosingDecl,
                                      raw_ostream &Out) = 0;
+#endif
 
   /// Generates a unique string for an externally visible type for use with TBAA
   /// or type uniquing.

@@ -60,6 +60,7 @@ public:
 };
 } // end anonymous namespace
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume only for MSVC
 IdentifierInfo *Parser::getSEHExceptKeyword() {
   // __except is accepted as a (contextual) keyword 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -69,6 +70,7 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
 
   return Ident__except;
 }
+#endif
 
 Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
   : PP(pp), Actions(actions), Diags(PP.getDiagnostics()),
@@ -474,7 +476,9 @@ void Parser::Initialize() {
 
   Ident_instancetype = nullptr;
   Ident_final = nullptr;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // not seh but MSVC only
   Ident_sealed = nullptr;
+#endif
   Ident_override = nullptr;
 
   Ident_super = &PP.getIdentifierTable().get("super");
@@ -496,7 +500,9 @@ void Parser::Initialize() {
   Ident_strict = nullptr;
   Ident_replacement = nullptr;
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   Ident__except = nullptr;
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Ident__exception_code = Ident__exception_info = nullptr;

@@ -77,8 +77,10 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
   switch (S->getStmtClass()) {
   case Stmt::NoStmtClass:
   case Stmt::CXXCatchStmtClass:
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   case Stmt::SEHExceptStmtClass:
   case Stmt::SEHFinallyStmtClass:
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Stmt::MSDependentExistsStmtClass:
 #endif
@@ -93,7 +95,9 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
   case Stmt::ContinueStmtClass:
   case Stmt::DefaultStmtClass:
   case Stmt::CaseStmtClass:
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   case Stmt::SEHLeaveStmtClass:
+#endif
     llvm_unreachable("should have emitted these statements as simple");
 
 #define STMT(Type, Base)
@@ -184,9 +188,11 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
   case Stmt::CXXForRangeStmtClass:
     EmitCXXForRangeStmt(cast<CXXForRangeStmt>(*S));
     break;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   case Stmt::SEHTryStmtClass:
     EmitSEHTryStmt(cast<SEHTryStmt>(*S));
     break;
+#endif
   case Stmt::OMPParallelDirectiveClass:
     EmitOMPParallelDirective(cast<OMPParallelDirective>(*S));
     break;
@@ -318,7 +324,9 @@ bool CodeGenFunction::EmitSimpleStmt(const Stmt *S) {
   case Stmt::ContinueStmtClass: EmitContinueStmt(cast<ContinueStmt>(*S)); break;
   case Stmt::DefaultStmtClass:  EmitDefaultStmt(cast<DefaultStmt>(*S));   break;
   case Stmt::CaseStmtClass:     EmitCaseStmt(cast<CaseStmt>(*S));         break;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   case Stmt::SEHLeaveStmtClass: EmitSEHLeaveStmt(cast<SEHLeaveStmt>(*S)); break;
+#endif
   }
 
   return true;
@@ -986,10 +994,12 @@ void CodeGenFunction::EmitReturnOfRValue(RValue RV, QualType Ty) {
 /// non-void.  Fun stuff :).
 void CodeGenFunction::EmitReturnStmt(const ReturnStmt &S) {
   // Returning from an outlined SEH helper is UB, and we already warn on it.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (IsOutlinedSEHHelper) {
     Builder.CreateUnreachable();
     Builder.ClearInsertionPoint();
   }
+#endif
 
   // Emit the result value, even if unused, to evalute the side effects.
   const Expr *RV = S.getRetValue();

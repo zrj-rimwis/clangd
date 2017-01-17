@@ -934,14 +934,20 @@ void CodeGenFunction::PopCleanupBlock(bool FallthroughIsBranchThrough) {
     SaveAndRestore<llvm::Instruction *> RestoreCurrentFuncletPad(
         CurrentFuncletPad);
     llvm::CleanupPadInst *CPI = nullptr;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume !false
     if (!EHPersonality::get(*this).usesFuncletPads()) {
+#else
+    if (!false) {
+#endif
       EHStack.pushTerminate();
       PushedTerminate = true;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
     } else {
       llvm::Value *ParentPad = CurrentFuncletPad;
       if (!ParentPad)
         ParentPad = llvm::ConstantTokenNone::get(CGM.getLLVMContext());
       CurrentFuncletPad = CPI = Builder.CreateCleanupPad(ParentPad);
+#endif
     }
 
     // We only actually emit the cleanup code if the cleanup is either

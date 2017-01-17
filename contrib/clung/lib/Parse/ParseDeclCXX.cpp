@@ -2048,8 +2048,10 @@ VirtSpecifiers::Specifier Parser::isCXX11VirtSpecifier(const Token &Tok) const {
   if (II == Ident_override)
     return VirtSpecifiers::VS_Override;
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // not seh but MSVC
   if (II == Ident_sealed)
     return VirtSpecifiers::VS_Sealed;
+#endif
 
   if (II == Ident_final)
     return VirtSpecifiers::VS_Final;

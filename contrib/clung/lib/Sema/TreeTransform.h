@@ -588,7 +588,9 @@ public:
                               SmallVectorImpl<QualType> &Exceptions,
                               bool &Changed);
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   StmtResult TransformSEHHandler(Stmt *Handler);
+#endif
 
   QualType
   TransformTemplateSpecializationType(TypeLocBuilder &TLB,
@@ -1946,6 +1948,7 @@ public:
     return getSema().FinishCXXForRangeStmt(ForRange, Body);
   }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   StmtResult RebuildSEHTryStmt(bool IsCXXTry, SourceLocation TryLoc,
                                Stmt *TryBlock, Stmt *Handler) {
     return getSema().ActOnSEHTryBlock(IsCXXTry, TryLoc, TryBlock, Handler);
@@ -1959,6 +1962,7 @@ public:
   StmtResult RebuildSEHFinallyStmt(SourceLocation Loc, Stmt *Block) {
     return SEHFinallyStmt::Create(getSema().getASTContext(), Loc, Block);
   }
+#endif
 
   /// \brief Build a new predefined expression.
   ///
@@ -7118,6 +7122,7 @@ ExprResult TreeTransform<Derived>::TransformMSPropertySubscriptExpr(
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 template <typename Derived>
 StmtResult TreeTransform<Derived>::TransformSEHTryStmt(SEHTryStmt *S) {
   StmtResult TryBlock = getDerived().TransformCompoundStmt(S->getTryBlock());
@@ -7135,7 +7140,9 @@ StmtResult TreeTransform<Derived>::TransformSEHTryStmt(SEHTryStmt *S) {
   return getDerived().RebuildSEHTryStmt(S->getIsCXXTry(), S->getTryLoc(),
                                         TryBlock.get(), Handler.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 template <typename Derived>
 StmtResult TreeTransform<Derived>::TransformSEHFinallyStmt(SEHFinallyStmt *S) {
   StmtResult Block = getDerived().TransformCompoundStmt(S->getBlock());
@@ -7144,7 +7151,9 @@ StmtResult TreeTransform<Derived>::TransformSEHFinallyStmt(SEHFinallyStmt *S) {
 
   return getDerived().RebuildSEHFinallyStmt(S->getFinallyLoc(), Block.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 template <typename Derived>
 StmtResult TreeTransform<Derived>::TransformSEHExceptStmt(SEHExceptStmt *S) {
   ExprResult FilterExpr = getDerived().TransformExpr(S->getFilterExpr());
@@ -7158,7 +7167,9 @@ StmtResult TreeTransform<Derived>::TransformSEHExceptStmt(SEHExceptStmt *S) {
   return getDerived().RebuildSEHExceptStmt(S->getExceptLoc(), FilterExpr.get(),
                                            Block.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 template <typename Derived>
 StmtResult TreeTransform<Derived>::TransformSEHHandler(Stmt *Handler) {
   if (isa<SEHFinallyStmt>(Handler))
@@ -7172,6 +7183,7 @@ StmtResult
 TreeTransform<Derived>::TransformSEHLeaveStmt(SEHLeaveStmt *S) {
   return S;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // OpenMP directive transformation

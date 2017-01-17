@@ -48,7 +48,9 @@ CodeGenFunction::CodeGenFunction(CodeGenModule &cgm, bool suppressNewContext)
       CapturedStmtInfo(nullptr),
       SanOpts(CGM.getLangOpts().Sanitize), IsSanitizerScope(false),
       CurFuncIsThunk(false), AutoreleaseResult(false), SawAsmBlock(false),
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
       IsOutlinedSEHHelper(false),
+#endif
       BlockInfo(nullptr), BlockPointer(nullptr),
       LambdaThisCaptureField(nullptr), NormalCleanupDest(nullptr),
       NextCleanupDestIndex(1), FirstBlockInfo(nullptr), EHResumeBlock(nullptr),
@@ -683,9 +685,11 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
 
   DidCallStackSave = false;
   CurCodeDecl = D;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (const auto *FD = dyn_cast_or_null<FunctionDecl>(D))
     if (FD->usesSEHTry())
       CurSEHParent = FD;
+#endif
   CurFuncDecl = (D ? D->getNonClosureContext() : nullptr);
   FnRetTy = RetTy;
   CurFn = Fn;

@@ -923,6 +923,7 @@ Expr* ReturnStmt::getRetValue() {
   return cast_or_null<Expr>(RetExpr);
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 SEHTryStmt::SEHTryStmt(bool IsCXXTry,
                        SourceLocation TryLoc,
                        Stmt *TryBlock,
@@ -934,7 +935,9 @@ SEHTryStmt::SEHTryStmt(bool IsCXXTry,
   Children[TRY]     = TryBlock;
   Children[HANDLER] = Handler;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 SEHTryStmt* SEHTryStmt::Create(const ASTContext &C, bool IsCXXTry,
                                SourceLocation TryLoc, Stmt *TryBlock,
                                Stmt *Handler) {
@@ -948,7 +951,9 @@ SEHExceptStmt* SEHTryStmt::getExceptHandler() const {
 SEHFinallyStmt* SEHTryStmt::getFinallyHandler() const {
   return dyn_cast<SEHFinallyStmt>(getHandler());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 SEHExceptStmt::SEHExceptStmt(SourceLocation Loc,
                              Expr *FilterExpr,
                              Stmt *Block)
@@ -958,12 +963,16 @@ SEHExceptStmt::SEHExceptStmt(SourceLocation Loc,
   Children[FILTER_EXPR] = FilterExpr;
   Children[BLOCK]       = Block;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 SEHExceptStmt* SEHExceptStmt::Create(const ASTContext &C, SourceLocation Loc,
                                      Expr *FilterExpr, Stmt *Block) {
   return new(C) SEHExceptStmt(Loc,FilterExpr,Block);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 SEHFinallyStmt::SEHFinallyStmt(SourceLocation Loc,
                                Stmt *Block)
   : Stmt(SEHFinallyStmtClass),
@@ -975,6 +984,7 @@ SEHFinallyStmt* SEHFinallyStmt::Create(const ASTContext &C, SourceLocation Loc,
                                        Stmt *Block) {
   return new(C)SEHFinallyStmt(Loc,Block);
 }
+#endif
 
 CapturedStmt::Capture::Capture(SourceLocation Loc, VariableCaptureKind Kind,
                                VarDecl *Var)

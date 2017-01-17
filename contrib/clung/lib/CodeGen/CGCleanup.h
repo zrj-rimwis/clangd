@@ -615,28 +615,38 @@ struct EHPersonality {
 
   static const EHPersonality GNU_C;
   static const EHPersonality GNU_C_SJLJ;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   static const EHPersonality GNU_C_SEH;
+#endif
   static const EHPersonality GNU_ObjC;
   static const EHPersonality GNUstep_ObjC;
   static const EHPersonality GNU_ObjCXX;
   static const EHPersonality NeXT_ObjC;
   static const EHPersonality GNU_CPlusPlus;
   static const EHPersonality GNU_CPlusPlus_SJLJ;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   static const EHPersonality GNU_CPlusPlus_SEH;
   static const EHPersonality MSVC_except_handler;
   static const EHPersonality MSVC_C_specific_handler;
   static const EHPersonality MSVC_CxxFrameHandler3;
+#endif
 
   /// Does this personality use landingpads or the family of pad instructions
   /// designed to form funclets?
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool usesFuncletPads() const { return isMSVCPersonality(); }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool isMSVCPersonality() const {
     return this == &MSVC_except_handler || this == &MSVC_C_specific_handler ||
            this == &MSVC_CxxFrameHandler3;
   }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool isMSVCXXPersonality() const { return this == &MSVC_CxxFrameHandler3; }
+#endif
 };
 }
 }

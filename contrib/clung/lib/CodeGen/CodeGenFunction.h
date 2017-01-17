@@ -280,11 +280,15 @@ public:
   /// potentially set the return value.
   bool SawAsmBlock;
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   const FunctionDecl *CurSEHParent = nullptr;
+#endif
 
   /// True if the current function is an outlined SEH helper. This can be a
   /// finally block or filter expression.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool IsOutlinedSEHHelper;
+#endif
 
   const CodeGen::CGBlockInfo *BlockInfo;
   llvm::Value *BlockPointer;
@@ -298,7 +302,9 @@ public:
 
   EHScopeStack EHStack;
   llvm::SmallVector<char, 256> LifetimeExtendedCleanupStack;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   llvm::SmallVector<const JumpDest *, 2> SEHTryEpilogueStack;
+#endif
 
   llvm::Instruction *CurrentFuncletPad = nullptr;
 
@@ -348,10 +354,14 @@ public:
   /// A stack of exception code slots. Entering an __except block pushes a slot
   /// on the stack and leaving pops one. The __exception_code() intrinsic loads
   /// a value from the top of the stack.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   SmallVector<Address, 1> SEHCodeSlotStack;
+#endif
 
   /// Value returned by __exception_info intrinsic.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   llvm::Value *SEHInfo = nullptr;
+#endif
 
   /// Emits a landing pad for the current EH stack.
   llvm::BasicBlock *EmitLandingPad();
@@ -392,7 +402,9 @@ public:
   };
 
   /// Returns true inside SEH __try blocks.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool isSEHTryScope() const { return !SEHTryEpilogueStack.empty(); }
+#endif
 
   /// Returns true while emitting a cleanuppad.
   bool isCleanupPadScope() const {
@@ -727,7 +739,9 @@ public:
 
   llvm::BasicBlock *getEHResumeBlock(bool isCleanup);
   llvm::BasicBlock *getEHDispatchBlock(EHScopeStack::stable_iterator scope);
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   llvm::BasicBlock *getMSVCDispatchBlock(EHScopeStack::stable_iterator scope);
+#endif
 
   /// An object to manage conditionally-evaluated expressions.
   class ConditionalEvaluation {
@@ -1321,7 +1335,9 @@ public:
     return getInvokeDestImpl();
   }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool currentFunctionUsesSEHTry() const { return CurSEHParent != nullptr; }
+#endif
 
   const TargetInfo &getTarget() const { return Target; }
   llvm::LLVMContext &getLLVMContext() { return CGM.getLLVMContext(); }
@@ -2386,11 +2402,14 @@ public:
   void ExitCXXTryStmt(const CXXTryStmt &S, bool IsFnTryBlock = false);
 
   void EmitCXXTryStmt(const CXXTryStmt &S);
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   void EmitSEHTryStmt(const SEHTryStmt &S);
   void EmitSEHLeaveStmt(const SEHLeaveStmt &S);
   void EnterSEHTryStmt(const SEHTryStmt &S);
   void ExitSEHTryStmt(const SEHTryStmt &S);
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   void startOutlinedSEHHelper(CodeGenFunction &ParentCGF, bool IsFilter,
                               const Stmt *OutlinedStmt);
 
@@ -2406,12 +2425,15 @@ public:
   llvm::Value *EmitSEHExceptionCode();
   llvm::Value *EmitSEHExceptionInfo();
   llvm::Value *EmitSEHAbnormalTermination();
+#endif
 
   /// Scan the outlined statement for captures from the parent function. For
   /// each capture, mark the capture as escaped and emit a call to
   /// llvm.localrecover. Insert the localrecover result into the LocalDeclMap.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // only called from SEH
   void EmitCapturedLocals(CodeGenFunction &ParentCGF, const Stmt *OutlinedStmt,
                           bool IsFilter);
+#endif
 
   /// Recovers the address of a local in a parent function. ParentVar is the
   /// address of the variable used in the immediate parent function. It can

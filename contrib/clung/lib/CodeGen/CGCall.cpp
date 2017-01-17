@@ -3935,14 +3935,21 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
                                                      AttributeList);
 
   bool CannotThrow;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (currentFunctionUsesSEHTry()) {
     // SEH cares about asynchronous exceptions, everything can "throw."
     CannotThrow = false;
+#else
+  if (false) {
+    /* dummy */
+#endif
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   } else if (isCleanupPadScope() &&
              EHPersonality::get(*this).isMSVCXXPersonality()) {
     // The MSVC++ personality will implicitly terminate the program if an
     // exception is thrown.  An unwind edge cannot be reached.
     CannotThrow = true;
+#endif
   } else {
     // Otherwise, nowunind callsites will never throw.
     CannotThrow = Attrs.hasAttribute(llvm::AttributeSet::FunctionIndex,
@@ -3972,10 +3979,12 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
                            llvm::Attribute::AlwaysInline);
 
   // Disable inlining inside SEH __try blocks.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (isSEHTryScope())
     Attrs =
         Attrs.addAttribute(getLLVMContext(), llvm::AttributeSet::FunctionIndex,
                            llvm::Attribute::NoInline);
+#endif
 
   CS.setAttributes(Attrs);
   CS.setCallingConv(static_cast<llvm::CallingConv::ID>(CallingConv));

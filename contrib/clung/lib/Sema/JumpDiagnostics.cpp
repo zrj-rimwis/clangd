@@ -379,6 +379,7 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
     return;
   }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   case Stmt::SEHTryStmtClass: {
     SEHTryStmt *TS = cast<SEHTryStmt>(S);
     {
@@ -410,6 +411,7 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
 
     return;
   }
+#endif
 
   case Stmt::DeclStmtClass: {
     // If this is a declstmt with a VLA definition, it defines a scope from here
@@ -846,6 +848,7 @@ void JumpScopeChecker::CheckJump(Stmt *From, Stmt *To, SourceLocation DiagLoc,
   if (FromScope == ToScope) return;
 
   // Warn on gotos out of __finally blocks.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume only for MSVC
   if (isa<GotoStmt>(From) || isa<IndirectGotoStmt>(From)) {
     // If FromScope > ToScope, FromScope is more nested and the jump goes to a
     // less nested scope.  Check if it crosses a __finally along the way.
@@ -856,6 +859,7 @@ void JumpScopeChecker::CheckJump(Stmt *From, Stmt *To, SourceLocation DiagLoc,
       }
     }
   }
+#endif
 
   unsigned CommonScope = GetDeepestCommonScope(FromScope, ToScope);
 

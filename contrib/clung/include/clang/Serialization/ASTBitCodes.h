@@ -1473,10 +1473,17 @@ namespace clang {
       EXPR_CXX_UUIDOF_EXPR_disabled,
       EXPR_CXX_UUIDOF_TYPE_disabled,
 #endif
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
       STMT_SEH_LEAVE,             // SEHLeaveStmt
       STMT_SEH_EXCEPT,            // SEHExceptStmt
       STMT_SEH_FINALLY,           // SEHFinallyStmt
       STMT_SEH_TRY,               // SEHTryStmt
+#else
+      STMT_SEH_LEAVE_disabled,
+      STMT_SEH_EXCEPT_disabled,
+      STMT_SEH_FINALLY_disabled,
+      STMT_SEH_TRY_disabled,
+#endif
 
       // OpenMP directives
       STMT_OMP_PARALLEL_DIRECTIVE,

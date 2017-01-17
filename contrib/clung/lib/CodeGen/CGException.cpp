@@ -90,41 +90,51 @@ static llvm::Constant *getCatchallRethrowFn(CodeGenModule &CGM,
 const EHPersonality EHPersonality::GNU_C = { "__gcc_personality_v0", nullptr };
 const EHPersonality
 EHPersonality::GNU_C_SJLJ = { "__gcc_personality_sj0", nullptr };
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 const EHPersonality
 EHPersonality::GNU_C_SEH = { "__gcc_personality_seh0", nullptr };
+#endif
 const EHPersonality
 EHPersonality::NeXT_ObjC = { "__objc_personality_v0", nullptr };
 const EHPersonality
 EHPersonality::GNU_CPlusPlus = { "__gxx_personality_v0", nullptr };
 const EHPersonality
 EHPersonality::GNU_CPlusPlus_SJLJ = { "__gxx_personality_sj0", nullptr };
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 const EHPersonality
 EHPersonality::GNU_CPlusPlus_SEH = { "__gxx_personality_seh0", nullptr };
+#endif
 const EHPersonality
 EHPersonality::GNU_ObjC = {"__gnu_objc_personality_v0", "objc_exception_throw"};
 const EHPersonality
 EHPersonality::GNU_ObjCXX = { "__gnustep_objcxx_personality_v0", nullptr };
 const EHPersonality
 EHPersonality::GNUstep_ObjC = { "__gnustep_objc_personality_v0", nullptr };
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 const EHPersonality
 EHPersonality::MSVC_except_handler = { "_except_handler3", nullptr };
 const EHPersonality
 EHPersonality::MSVC_C_specific_handler = { "__C_specific_handler", nullptr };
 const EHPersonality
 EHPersonality::MSVC_CxxFrameHandler3 = { "__CxxFrameHandler3", nullptr };
+#endif
 
 /// On Win64, use libgcc's SEH personality function. We fall back to dwarf on
 /// other platforms, unless the user asked for SjLj exceptions.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
 static bool useLibGCCSEHPersonality(const llvm::Triple &T) {
   return T.isOSWindows() && T.getArch() == llvm::Triple::x86_64;
 }
+#endif
 
 static const EHPersonality &getCPersonality(const llvm::Triple &T,
                                             const LangOptions &L) {
   if (L.SjLjExceptions)
     return EHPersonality::GNU_C_SJLJ;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   else if (useLibGCCSEHPersonality(T))
     return EHPersonality::GNU_C_SEH;
+#endif
   return EHPersonality::GNU_C;
 }
 
@@ -152,8 +162,10 @@ static const EHPersonality &getCXXPersonality(const llvm::Triple &T,
                                               const LangOptions &L) {
   if (L.SjLjExceptions)
     return EHPersonality::GNU_CPlusPlus_SJLJ;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   else if (useLibGCCSEHPersonality(T))
     return EHPersonality::GNU_CPlusPlus_SEH;
+#endif
   return EHPersonality::GNU_CPlusPlus;
 }
 
@@ -186,11 +198,13 @@ static const EHPersonality &getObjCXXPersonality(const llvm::Triple &T,
   llvm_unreachable("bad runtime kind");
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 static const EHPersonality &getSEHPersonalityMSVC(const llvm::Triple &T) {
   if (T.getArch() == llvm::Triple::x86)
     return EHPersonality::MSVC_except_handler;
   return EHPersonality::MSVC_C_specific_handler;
 }
+#endif
 
 const EHPersonality &EHPersonality::get(CodeGenModule &CGM,
                                         const FunctionDecl *FD) {
@@ -198,18 +212,22 @@ const EHPersonality &EHPersonality::get(CodeGenModule &CGM,
   const LangOptions &L = CGM.getLangOpts();
 
   // Functions using SEH get an SEH personality.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (FD && FD->usesSEHTry())
     return getSEHPersonalityMSVC(T);
+#endif
 
   // Try to pick a personality function that is compatible with MSVC if we're
   // not compiling Obj-C. Obj-C users better have an Obj-C runtime that supports
   // the GCC-style personality function.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // not seh directly but similar
   if (T.isWindowsMSVCEnvironment() && !L.ObjC1) {
     if (L.SjLjExceptions)
       return EHPersonality::GNU_CPlusPlus_SJLJ;
     else
       return EHPersonality::MSVC_CxxFrameHandler3;
   }
+#endif
 
   if (L.CPlusPlus && L.ObjC1)
     return getObjCXXPersonality(T, L);
@@ -584,8 +602,10 @@ void CodeGenFunction::EnterCXXTryStmt(const CXXTryStmt &S, bool IsFnTryBlock) {
 
 llvm::BasicBlock *
 CodeGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si) {
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (EHPersonality::get(*this).usesFuncletPads())
     return getMSVCDispatchBlock(si);
+#endif
 
   // The dispatch block for the end of the scope chain is a block that
   // just resumes unwinding.
@@ -632,6 +652,7 @@ CodeGenFunction::getEHDispatchBlock(EHScopeStack::stable_iterator si) {
   return dispatchBlock;
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 llvm::BasicBlock *
 CodeGenFunction::getMSVCDispatchBlock(EHScopeStack::stable_iterator SI) {
   // Returning nullptr indicates that the previous dispatch block should unwind
@@ -674,6 +695,7 @@ CodeGenFunction::getMSVCDispatchBlock(EHScopeStack::stable_iterator SI) {
   EHS.setCachedEHDispatchBlock(DispatchBlock);
   return DispatchBlock;
 }
+#endif
 
 /// Check whether this is a non-EH scope, i.e. a scope which doesn't
 /// affect exception handling.  Currently, the only non-EH scopes are
@@ -708,7 +730,9 @@ llvm::BasicBlock *CodeGenFunction::getInvokeDestImpl() {
     if (!false && !false)
 #endif
       return nullptr;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume !false
     if (!currentFunctionUsesSEHTry())
+#endif
       return nullptr;
   }
 
@@ -722,9 +746,14 @@ llvm::BasicBlock *CodeGenFunction::getInvokeDestImpl() {
   if (!CurFn->hasPersonalityFn())
     CurFn->setPersonalityFn(getOpaquePersonalityFn(CGM, Personality));
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (Personality.usesFuncletPads()) {
     // We don't need separate landing pads in the funclet model.
     LP = getEHDispatchBlock(EHStack.getInnermostEHScope());
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     // Build the landing pad for this scope.
     LP = EmitLandingPad();
@@ -887,6 +916,7 @@ llvm::BasicBlock *CodeGenFunction::EmitLandingPad() {
   return lpad;
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 static void emitCatchPadBlock(CodeGenFunction &CGF, EHCatchScope &CatchScope) {
   llvm::BasicBlock *DispatchBlock = CatchScope.getCachedEHDispatchBlock();
   assert(DispatchBlock);
@@ -926,13 +956,16 @@ static void emitCatchPadBlock(CodeGenFunction &CGF, EHCatchScope &CatchScope) {
   }
   CGF.Builder.restoreIP(SavedIP);
 }
+#endif
 
 /// Emit the structure of the dispatch block for the given catch scope.
 /// It is an invariant that the dispatch block already exists.
 static void emitCatchDispatchBlock(CodeGenFunction &CGF,
                                    EHCatchScope &catchScope) {
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (EHPersonality::get(CGF).usesFuncletPads())
     return emitCatchPadBlock(CGF, catchScope);
+#endif
 
   llvm::BasicBlock *dispatchBlock = catchScope.getCachedEHDispatchBlock();
   assert(dispatchBlock);
@@ -1344,11 +1377,16 @@ llvm::BasicBlock *CodeGenFunction::getTerminateHandler() {
   llvm::Value *Exn = nullptr;
   SaveAndRestore<llvm::Instruction *> RestoreCurrentFuncletPad(
       CurrentFuncletPad);
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   if (EHPersonality::get(*this).usesFuncletPads()) {
     llvm::Value *ParentPad = CurrentFuncletPad;
     if (!ParentPad)
       ParentPad = llvm::ConstantTokenNone::get(CGM.getLLVMContext());
     CurrentFuncletPad = Builder.CreateCleanupPad(ParentPad);
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     if (getLangOpts().CPlusPlus)
       Exn = getExceptionFromSlot();
@@ -1401,6 +1439,7 @@ llvm::BasicBlock *CodeGenFunction::getEHResumeBlock(bool isCleanup) {
   return EHResumeBlock;
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void CodeGenFunction::EmitSEHTryStmt(const SEHTryStmt &S) {
   EnterSEHTryStmt(S);
   {
@@ -1417,8 +1456,10 @@ void CodeGenFunction::EmitSEHTryStmt(const SEHTryStmt &S) {
   }
   ExitSEHTryStmt(S);
 }
+#endif
 
 namespace {
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 struct PerformSEHFinally final : EHScopeStack::Cleanup {
   llvm::Function *OutlinedFinally;
   PerformSEHFinally(llvm::Function *OutlinedFinally)
@@ -1446,6 +1487,7 @@ struct PerformSEHFinally final : EHScopeStack::Cleanup {
     CGF.EmitCall(FnInfo, OutlinedFinally, ReturnValueSlot(), Args);
   }
 };
+#endif
 } // end anonymous namespace
 
 namespace {
@@ -1549,6 +1591,7 @@ Address CodeGenFunction::recoverAddrOfEscapedLocal(CodeGenFunction &ParentCGF,
   return Address(ChildVar, ParentVar.getAlignment());
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // only called from SEH
 void CodeGenFunction::EmitCapturedLocals(CodeGenFunction &ParentCGF,
                                          const Stmt *OutlinedStmt,
                                          bool IsFilter) {
@@ -1626,10 +1669,12 @@ void CodeGenFunction::EmitCapturedLocals(CodeGenFunction &ParentCGF,
   if (IsFilter)
     EmitSEHExceptionCodeSave(ParentCGF, ParentFP, EntryFP);
 }
+#endif
 
 /// Arrange a function prototype that can be called by Windows exception
 /// handling personalities. On Win64, the prototype looks like:
 /// RetTy func(void *EHPtrs, void *ParentFP);
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void CodeGenFunction::startOutlinedSEHHelper(CodeGenFunction &ParentCGF,
                                              bool IsFilter,
                                              const Stmt *OutlinedStmt) {
@@ -1697,10 +1742,12 @@ void CodeGenFunction::startOutlinedSEHHelper(CodeGenFunction &ParentCGF,
   CGM.SetLLVMFunctionAttributes(nullptr, FnInfo, CurFn);
   EmitCapturedLocals(ParentCGF, OutlinedStmt, IsFilter);
 }
+#endif
 
 /// Create a stub filter function that will ultimately hold the code of the
 /// filter expression. The EH preparation passes in LLVM will outline the code
 /// from the main function body into this stub.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 llvm::Function *
 CodeGenFunction::GenerateSEHFilterFunction(CodeGenFunction &ParentCGF,
                                            const SEHExceptStmt &Except) {
@@ -1717,7 +1764,9 @@ CodeGenFunction::GenerateSEHFilterFunction(CodeGenFunction &ParentCGF,
 
   return CurFn;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 llvm::Function *
 CodeGenFunction::GenerateSEHFinallyFunction(CodeGenFunction &ParentCGF,
                                             const SEHFinallyStmt &Finally) {
@@ -1731,7 +1780,9 @@ CodeGenFunction::GenerateSEHFinallyFunction(CodeGenFunction &ParentCGF,
 
   return CurFn;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void CodeGenFunction::EmitSEHExceptionCodeSave(CodeGenFunction &ParentCGF,
                                                llvm::Value *ParentFP,
                                                llvm::Value *EntryFP) {
@@ -1770,7 +1821,9 @@ void CodeGenFunction::EmitSEHExceptionCodeSave(CodeGenFunction &ParentCGF,
   assert(!SEHCodeSlotStack.empty() && "emitting EH code outside of __except");
   Builder.CreateStore(Code, SEHCodeSlotStack.back());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 llvm::Value *CodeGenFunction::EmitSEHExceptionInfo() {
   // Sema should diagnose calling this builtin outside of a filter context, but
   // don't crash if we screw up.
@@ -1779,19 +1832,25 @@ llvm::Value *CodeGenFunction::EmitSEHExceptionInfo() {
   assert(SEHInfo->getType() == Int8PtrTy);
   return SEHInfo;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 llvm::Value *CodeGenFunction::EmitSEHExceptionCode() {
   assert(!SEHCodeSlotStack.empty() && "emitting EH code outside of __except");
   return Builder.CreateLoad(SEHCodeSlotStack.back());
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 llvm::Value *CodeGenFunction::EmitSEHAbnormalTermination() {
   // Abnormal termination is just the first parameter to the outlined finally
   // helper.
   auto AI = CurFn->arg_begin();
   return Builder.CreateZExt(&*AI, Int32Ty);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void CodeGenFunction::EnterSEHTryStmt(const SEHTryStmt &S) {
   CodeGenFunction HelperCGF(CGM, /*suppressNewContext=*/true);
   if (const SEHFinallyStmt *Finally = S.getFinallyHandler()) {
@@ -1830,7 +1889,9 @@ void CodeGenFunction::EnterSEHTryStmt(const SEHTryStmt &S) {
       llvm::ConstantExpr::getBitCast(FilterFunc, Int8PtrTy);
   CatchScope->setHandler(0, OpaqueFunc, createBasicBlock("__except.ret"));
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void CodeGenFunction::ExitSEHTryStmt(const SEHTryStmt &S) {
   // Just pop the cleanup if it's a __finally block.
   if (S.getFinallyHandler()) {
@@ -1896,7 +1957,9 @@ void CodeGenFunction::ExitSEHTryStmt(const SEHTryStmt &S) {
 
   EmitBlock(ContBB);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void CodeGenFunction::EmitSEHLeaveStmt(const SEHLeaveStmt &S) {
   // If this code is reachable then emit a stop point (if generating
   // debug info). We have to do this ourselves because we are on the
@@ -1914,3 +1977,4 @@ void CodeGenFunction::EmitSEHLeaveStmt(const SEHLeaveStmt &S) {
 
   EmitBranchThroughCleanup(*SEHTryEpilogueStack.back());
 }
+#endif

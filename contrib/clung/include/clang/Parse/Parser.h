@@ -44,7 +44,9 @@ namespace clang {
   class ParsingFieldDeclarator;
   class ColonProtectionRAIIObject;
   class InMessageExpressionRAIIObject;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   class PoisonSEHIdentifiersRAIIObject;
+#endif
   class VersionTuple;
   class OMPClause;
   class ObjCTypeParamList;
@@ -57,7 +59,9 @@ namespace clang {
 class Parser : public CodeCompletionHandler {
   friend class ColonProtectionRAIIObject;
   friend class InMessageExpressionRAIIObject;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   friend class PoisonSEHIdentifiersRAIIObject;
+#endif
   friend class ObjCDeclContextSwitch;
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
@@ -105,8 +109,10 @@ class Parser : public CodeCompletionHandler {
 #endif
 
   /// Contextual keywords for Microsoft extensions.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   IdentifierInfo *Ident__except;
   mutable IdentifierInfo *Ident_sealed;
+#endif
 
   /// Ident_super - IdentifierInfo for "super", to support fast
   /// comparison.
@@ -239,7 +245,9 @@ class Parser : public CodeCompletionHandler {
   /// \brief Identifiers which have been declared within a tentative parse.
   SmallVector<IdentifierInfo *, 8> TentativelyDeclaredIdentifiers;
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume only for MSVC
   IdentifierInfo *getSEHExceptKeyword();
+#endif
 
   /// True if we are within an Objective-C container while parsing C-like decls.
   ///
@@ -1781,6 +1789,7 @@ private:
   //===--------------------------------------------------------------------===//
   // MS: SEH Statements and Blocks
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult ParseSEHTryBlock();
 #endif
@@ -1788,6 +1797,7 @@ private:
   StmtResult ParseSEHFinallyBlock(SourceLocation Loc);
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   StmtResult ParseSEHLeaveStatement();
+#endif
 #endif
 
   //===--------------------------------------------------------------------===//

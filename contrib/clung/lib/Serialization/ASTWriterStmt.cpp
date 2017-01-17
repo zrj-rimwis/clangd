@@ -1753,6 +1753,7 @@ void ASTStmtWriter::VisitCXXUuidofExpr(CXXUuidofExpr *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtWriter::VisitSEHExceptStmt(SEHExceptStmt *S) {
   VisitStmt(S);
   Record.AddSourceLocation(S->getExceptLoc());
@@ -1760,14 +1761,18 @@ void ASTStmtWriter::VisitSEHExceptStmt(SEHExceptStmt *S) {
   Record.AddStmt(S->getBlock());
   Code = serialization::STMT_SEH_EXCEPT;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtWriter::VisitSEHFinallyStmt(SEHFinallyStmt *S) {
   VisitStmt(S);
   Record.AddSourceLocation(S->getFinallyLoc());
   Record.AddStmt(S->getBlock());
   Code = serialization::STMT_SEH_FINALLY;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtWriter::VisitSEHTryStmt(SEHTryStmt *S) {
   VisitStmt(S);
   Record.push_back(S->getIsCXXTry());
@@ -1776,12 +1781,15 @@ void ASTStmtWriter::VisitSEHTryStmt(SEHTryStmt *S) {
   Record.AddStmt(S->getHandler());
   Code = serialization::STMT_SEH_TRY;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ASTStmtWriter::VisitSEHLeaveStmt(SEHLeaveStmt *S) {
   VisitStmt(S);
   Record.AddSourceLocation(S->getLeaveLoc());
   Code = serialization::STMT_SEH_LEAVE;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // OpenMP Clauses.

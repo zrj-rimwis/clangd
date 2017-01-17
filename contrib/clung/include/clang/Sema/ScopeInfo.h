@@ -138,7 +138,9 @@ public:
   SourceLocation FirstCXXTryLoc;
 
   /// First SEH '__try' statement in the current function.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   SourceLocation FirstSEHTryLoc;
+#endif
 
   /// \brief Used to determine if errors occurred in this function or block.
   DiagnosticErrorTrap ErrorTrap;
@@ -362,10 +364,12 @@ public:
     FirstCXXTryLoc = TryLoc;
   }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   void setHasSEHTry(SourceLocation TryLoc) {
     setHasBranchProtectedScope();
     FirstSEHTryLoc = TryLoc;
   }
+#endif
 
   bool NeedsScopeChecking() const {
     return !HasDroppedStmt &&

@@ -239,6 +239,7 @@ static bool SemaBuiltinCallWithStaticChain(Sema &S, CallExpr *BuiltinCall) {
   return false;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // already was under MSEXT
 static bool SemaBuiltinSEHScopeCheck(Sema &SemaRef, CallExpr *TheCall,
                                      Scope::ScopeFlags NeededScopeFlags,
                                      unsigned DiagID) {
@@ -260,6 +261,7 @@ static bool SemaBuiltinSEHScopeCheck(Sema &SemaRef, CallExpr *TheCall,
 
   return false;
 }
+#endif
 
 static inline bool isBlockPointer(Expr *Arg) {
   return Arg->getType()->isBlockPointerType();

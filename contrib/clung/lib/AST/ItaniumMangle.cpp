@@ -166,10 +166,12 @@ public:
   void mangleDynamicInitializer(const VarDecl *D, raw_ostream &Out) override;
   void mangleDynamicAtExitDestructor(const VarDecl *D,
                                      raw_ostream &Out) override;
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   void mangleSEHFilterExpression(const NamedDecl *EnclosingDecl,
                                  raw_ostream &Out) override;
   void mangleSEHFinallyBlock(const NamedDecl *EnclosingDecl,
                              raw_ostream &Out) override;
+#endif
   void mangleItaniumThreadLocalInit(const VarDecl *D, raw_ostream &) override;
   void mangleItaniumThreadLocalWrapper(const VarDecl *D,
                                        raw_ostream &) override;
@@ -4590,6 +4592,7 @@ void ItaniumMangleContextImpl::mangleDynamicAtExitDestructor(const VarDecl *D,
     Mangler.getStream() << D->getName();
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ItaniumMangleContextImpl::mangleSEHFilterExpression(
     const NamedDecl *EnclosingDecl, raw_ostream &Out) {
   CXXNameMangler Mangler(*this, Out);
@@ -4599,7 +4602,9 @@ void ItaniumMangleContextImpl::mangleSEHFilterExpression(
   else
     Mangler.getStream() << EnclosingDecl->getName();
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void ItaniumMangleContextImpl::mangleSEHFinallyBlock(
     const NamedDecl *EnclosingDecl, raw_ostream &Out) {
   CXXNameMangler Mangler(*this, Out);
@@ -4609,6 +4614,7 @@ void ItaniumMangleContextImpl::mangleSEHFinallyBlock(
   else
     Mangler.getStream() << EnclosingDecl->getName();
 }
+#endif
 
 void ItaniumMangleContextImpl::mangleItaniumThreadLocalInit(const VarDecl *D,
                                                             raw_ostream &Out) {

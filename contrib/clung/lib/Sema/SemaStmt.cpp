@@ -2650,10 +2650,12 @@ Sema::ActOnIndirectGotoStmt(SourceLocation GotoLoc, SourceLocation StarLoc,
 
 static void CheckJumpOutOfSEHFinally(Sema &S, SourceLocation Loc,
                                      const Scope &DestScope) {
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume only for MSVC
   if (!S.CurrentSEHFinally.empty() &&
       DestScope.Contains(*S.CurrentSEHFinally.back())) {
     S.Diag(Loc, diag::warn_jump_out_of_seh_finally);
   }
+#endif
 }
 
 StmtResult
@@ -3650,6 +3652,7 @@ StmtResult Sema::ActOnCXXTryBlock(SourceLocation TryLoc, Stmt *TryBlock,
   sema::FunctionScopeInfo *FSI = getCurFunction();
 
   // C++ try is incompatible with SEH __try.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume only for MSVC
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (!getLangOpts().Borland && FSI->FirstSEHTryLoc.isValid()) {
 #else
@@ -3658,6 +3661,7 @@ StmtResult Sema::ActOnCXXTryBlock(SourceLocation TryLoc, Stmt *TryBlock,
     Diag(TryLoc, diag::err_mixing_cxx_try_seh_try);
     Diag(FSI->FirstSEHTryLoc, diag::note_conflicting_try_here) << "'__try'";
   }
+#endif
 
   const unsigned NumHandlers = Handlers.size();
   assert(!Handlers.empty() &&
@@ -3730,6 +3734,7 @@ StmtResult Sema::ActOnCXXTryBlock(SourceLocation TryLoc, Stmt *TryBlock,
   return CXXTryStmt::Create(Context, TryLoc, TryBlock, Handlers);
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 StmtResult Sema::ActOnSEHTryBlock(bool IsCXXTry, SourceLocation TryLoc,
                                   Stmt *TryBlock, Stmt *Handler) {
   assert(TryBlock && Handler);
@@ -3768,7 +3773,9 @@ StmtResult Sema::ActOnSEHTryBlock(bool IsCXXTry, SourceLocation TryLoc,
 
   return SEHTryStmt::Create(Context, IsCXXTry, TryLoc, TryBlock, Handler);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 StmtResult
 Sema::ActOnSEHExceptBlock(SourceLocation Loc,
                           Expr *FilterExpr,
@@ -3783,7 +3790,9 @@ Sema::ActOnSEHExceptBlock(SourceLocation Loc,
 
   return SEHExceptStmt::Create(Context,Loc,FilterExpr,Block);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void Sema::ActOnStartSEHFinallyBlock() {
   CurrentSEHFinally.push_back(CurScope);
 }
@@ -3791,13 +3800,17 @@ void Sema::ActOnStartSEHFinallyBlock() {
 void Sema::ActOnAbortSEHFinallyBlock() {
   CurrentSEHFinally.pop_back();
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 StmtResult Sema::ActOnFinishSEHFinallyBlock(SourceLocation Loc, Stmt *Block) {
   assert(Block);
   CurrentSEHFinally.pop_back();
   return SEHFinallyStmt::Create(Context, Loc, Block);
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 StmtResult
 Sema::ActOnSEHLeaveStmt(SourceLocation Loc, Scope *CurScope) {
   Scope *SEHTryParent = CurScope;
@@ -3809,6 +3822,7 @@ Sema::ActOnSEHLeaveStmt(SourceLocation Loc, Scope *CurScope) {
 
   return new (Context) SEHLeaveStmt(Loc);
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 StmtResult Sema::BuildMSDependentExistsStmt(SourceLocation KeywordLoc,

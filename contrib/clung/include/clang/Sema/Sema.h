@@ -332,7 +332,9 @@ public:
 #endif
 
   /// Stack of active SEH __finally scopes.  Can be empty.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   SmallVector<Scope*, 2> CurrentSEHFinally;
+#endif
 
   /// \brief Source location for newly created implicit MSInheritanceAttrs
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -3587,6 +3589,7 @@ public:
   StmtResult ActOnCXXTryBlock(SourceLocation TryLoc, Stmt *TryBlock,
                               ArrayRef<Stmt *> Handlers);
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
   StmtResult ActOnSEHTryBlock(bool IsCXXTry, // try (true) or __try (false) ?
                               SourceLocation TryLoc, Stmt *TryBlock,
                               Stmt *Handler);
@@ -3597,6 +3600,7 @@ public:
   void ActOnAbortSEHFinallyBlock();
   StmtResult ActOnFinishSEHFinallyBlock(SourceLocation Loc, Stmt *Block);
   StmtResult ActOnSEHLeaveStmt(SourceLocation Loc, Scope *CurScope);
+#endif
 
   void DiagnoseReturnInConstructorExceptionHandler(CXXTryStmt *TryBlock);
 

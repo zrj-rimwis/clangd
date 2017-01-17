@@ -70,8 +70,10 @@ namespace  {
     void PrintRawIfStmt(IfStmt *If);
     void PrintRawCXXCatchStmt(CXXCatchStmt *Catch);
     void PrintCallArgs(CallExpr *E);
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     void PrintRawSEHExceptHandler(SEHExceptStmt *S);
     void PrintRawSEHFinallyStmt(SEHFinallyStmt *S);
+#endif
     void PrintOMPExecutableDirective(OMPExecutableDirective *S);
 
     void PrintExpr(Expr *E) {
@@ -546,6 +548,7 @@ void StmtPrinter::VisitCXXTryStmt(CXXTryStmt *Node) {
   OS << "\n";
 }
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void StmtPrinter::VisitSEHTryStmt(SEHTryStmt *Node) {
   Indent() << (Node->getIsCXXTry() ? "try " : "__try ");
   PrintRawCompoundStmt(Node->getTryBlock());
@@ -559,13 +562,17 @@ void StmtPrinter::VisitSEHTryStmt(SEHTryStmt *Node) {
   }
   OS << "\n";
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void StmtPrinter::PrintRawSEHFinallyStmt(SEHFinallyStmt *Node) {
   OS << "__finally ";
   PrintRawCompoundStmt(Node->getBlock());
   OS << "\n";
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void StmtPrinter::PrintRawSEHExceptHandler(SEHExceptStmt *Node) {
   OS << "__except (";
   VisitExpr(Node->getFilterExpr());
@@ -573,7 +580,9 @@ void StmtPrinter::PrintRawSEHExceptHandler(SEHExceptStmt *Node) {
   PrintRawCompoundStmt(Node->getBlock());
   OS << "\n";
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 void StmtPrinter::VisitSEHExceptStmt(SEHExceptStmt *Node) {
   Indent();
   PrintRawSEHExceptHandler(Node);
@@ -590,6 +599,7 @@ void StmtPrinter::VisitSEHLeaveStmt(SEHLeaveStmt *Node) {
   Indent() << "__leave;";
   if (Policy.IncludeNewlines) OS << "\n";
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 //  OpenMP clauses printing methods

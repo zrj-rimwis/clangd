@@ -117,13 +117,25 @@ public:
     EnumScope = 0x40000,
 
     /// This scope corresponds to an SEH try.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     SEHTryScope = 0x80000,
+#else
+    SEHTryScope_disabled = 0x80000,
+#endif
 
     /// This scope corresponds to an SEH except.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     SEHExceptScope = 0x100000,
+#else
+    SEHExceptScope_disabled = 0x100000,
+#endif
 
     /// We are currently in the filter expression of an SEH except block.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     SEHFilterScope = 0x200000,
+#else
+    SEHFilterScope_disabled = 0x200000,
+#endif
   };
 private:
   /// The parent scope for this scope.  This is null for the translation-unit
@@ -424,10 +436,14 @@ public:
   bool isTryScope() const { return getFlags() & Scope::TryScope; }
 
   /// \brief Determine whether this scope is a SEH '__try' block.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool isSEHTryScope() const { return getFlags() & Scope::SEHTryScope; }
+#endif
 
   /// \brief Determine whether this scope is a SEH '__except' block.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool isSEHExceptScope() const { return getFlags() & Scope::SEHExceptScope; }
+#endif
 
   /// \brief Returns if rhs has a higher scope depth than this.
   ///

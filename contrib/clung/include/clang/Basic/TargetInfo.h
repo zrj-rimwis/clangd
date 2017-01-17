@@ -887,11 +887,13 @@ public:
   }
 
   /// \brief Whether the target supports SEH __try.
+#ifdef CLANG_ENABLE_MSSEH // __DragonFly__ // assume false
   bool isSEHTrySupported() const {
     return getTriple().isOSWindows() &&
            (getTriple().getArch() == llvm::Triple::x86 ||
             getTriple().getArch() == llvm::Triple::x86_64);
   }
+#endif
 
   /// \brief Return true if {|} are normal characters in the asm string.
   ///
