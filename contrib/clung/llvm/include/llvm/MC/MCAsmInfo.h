@@ -28,6 +28,7 @@ class MCStreamer;
 class MCSymbol;
 class MCContext;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 namespace WinEH {
 enum class EncodingType {
   Invalid, /// Invalid
@@ -40,13 +41,18 @@ enum class EncodingType {
   MIPS = Alpha,
 };
 }
+#endif
 
 enum class ExceptionHandling {
   None,     /// No exception support
   DwarfCFI, /// DWARF-like instruction based exceptions
   SjLj,     /// setjmp/longjmp based exceptions
   ARM,      /// ARM EHABI
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   WinEH,    /// Windows Exception Handling
+#else
+  WinEH_disabled,
+#endif
 };
 
 namespace LCOMM {
@@ -331,7 +337,9 @@ protected:
   ExceptionHandling ExceptionsType;
 
   /// Windows exception handling data (.pdata) encoding.  Defaults to Invalid.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   WinEH::EncodingType WinEHEncodingType;
+#endif
 
   /// True if Dwarf2 output generally uses relocations for references to other
   /// .debug_* sections.
@@ -536,7 +544,9 @@ public:
     return ExceptionsType != ExceptionHandling::None;
   }
   ExceptionHandling getExceptionHandlingType() const { return ExceptionsType; }
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   WinEH::EncodingType getWinEHEncodingType() const { return WinEHEncodingType; }
+#endif
 
   void setExceptionsType(ExceptionHandling EH) {
     ExceptionsType = EH;

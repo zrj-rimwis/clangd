@@ -22,7 +22,9 @@
 #include "llvm/MC/MCLinkerOptimizationHint.h"
 #endif
 #include "llvm/MC/MCSymbol.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/MC/MCWinEH.h"
+#endif
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/SMLoc.h"
 #include <string>
@@ -173,9 +175,11 @@ class MCStreamer {
 
   MCSymbol *EmitCFICommon();
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   std::vector<WinEH::FrameInfo *> WinFrameInfos;
   WinEH::FrameInfo *CurrentWinFrameInfo;
   void EnsureValidWinFrameInfo();
+#endif
 
   /// \brief Tracks an index to represent the order a symbol was emitted in.
   /// Zero means we did not emit that symbol.
@@ -189,7 +193,9 @@ class MCStreamer {
   /// or .xdata). This ID ensures that we have a one-to-one mapping from
   /// code section to unwind info section, which MSVC's incremental linker
   /// requires.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   unsigned NextWinCFIID = 0;
+#endif
 
 protected:
   MCStreamer(MCContext &Ctx);
@@ -197,9 +203,11 @@ protected:
   virtual void EmitCFIStartProcImpl(MCDwarfFrameInfo &Frame);
   virtual void EmitCFIEndProcImpl(MCDwarfFrameInfo &CurFrame);
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   WinEH::FrameInfo *getCurrentWinFrameInfo() {
     return CurrentWinFrameInfo;
   }
+#endif
 
   virtual void EmitWindowsUnwindTables();
 
@@ -232,10 +240,12 @@ public:
 
   bool hasUnfinishedDwarfFrameInfo();
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   unsigned getNumWinFrameInfos() { return WinFrameInfos.size(); }
   ArrayRef<WinEH::FrameInfo *> getWinFrameInfos() const {
     return WinFrameInfos;
   }
+#endif
 
   void generateCompactUnwindEncodings(MCAsmBackend *MAB);
 
@@ -751,6 +761,7 @@ public:
   virtual void EmitCFIRegister(int64_t Register1, int64_t Register2);
   virtual void EmitCFIWindowSave();
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   virtual void EmitWinCFIStartProc(const MCSymbol *Symbol);
   virtual void EmitWinCFIEndProc();
   virtual void EmitWinCFIStartChained();
@@ -762,17 +773,22 @@ public:
   virtual void EmitWinCFISaveXMM(unsigned Register, unsigned Offset);
   virtual void EmitWinCFIPushFrame(bool Code);
   virtual void EmitWinCFIEndProlog();
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   virtual void EmitWinEHHandler(const MCSymbol *Sym, bool Unwind, bool Except);
   virtual void EmitWinEHHandlerData();
+#endif
 
   /// Get the .pdata section used for the given section. Typically the given
   /// section is either the main .text section or some other COMDAT .text
   /// section, but it may be any section containing code.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   MCSection *getAssociatedPDataSection(const MCSection *TextSec);
 
   /// Get the .xdata section used for the given section.
   MCSection *getAssociatedXDataSection(const MCSection *TextSec);
+#endif
 
   virtual void EmitSyntaxDirective();
 

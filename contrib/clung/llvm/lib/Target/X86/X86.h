@@ -72,7 +72,9 @@ FunctionPass *createX86CallFrameOptimization();
 /// Return an IR pass that inserts EH registration stack objects and explicit
 /// EH state updates. This pass must run after EH preparation, which does
 /// Windows-specific but architecture-neutral preparation.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 FunctionPass *createX86WinEHStatePass();
+#endif
 
 /// Return a Machine IR pass that expands X86-specific pseudo
 /// instructions into a sequence of actual instructions. This pass

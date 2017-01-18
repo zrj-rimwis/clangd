@@ -619,7 +619,11 @@ namespace ISD {
 
     /// CLEANUPRET - Represents a return from a cleanup block funclet.  Used for
     /// MSVC compatible exception handling. Takes only a chain operand.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     CLEANUPRET,
+#else
+    CLEANUPRET_disabled,
+#endif
 
     /// STACKSAVE - STACKSAVE has one operand, an input chain.  It produces a
     /// value, the same type as the pointer type for the system, and an output

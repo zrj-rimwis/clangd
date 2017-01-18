@@ -29,7 +29,9 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
 #include "llvm/CodeGen/StackProtector.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/CodeGen/WinEHFuncInfo.h"
+#endif
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/LLVMContext.h"

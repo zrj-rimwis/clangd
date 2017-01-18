@@ -335,7 +335,9 @@ void initializeVerifierLegacyPassPass(PassRegistry&);
 void initializeVirtRegMapPass(PassRegistry&);
 void initializeVirtRegRewriterPass(PassRegistry&);
 void initializeWholeProgramDevirtPass(PassRegistry &);
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void initializeWinEHPreparePass(PassRegistry&);
+#endif
 void initializeWriteBitcodePassPass(PassRegistry &);
 void initializeXRayInstrumentationPass(PassRegistry &);
 }

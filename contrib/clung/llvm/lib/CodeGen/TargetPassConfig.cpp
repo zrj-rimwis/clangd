@@ -490,6 +490,7 @@ void TargetPassConfig::addPassesToHandleExceptions() {
   case ExceptionHandling::ARM:
     addPass(createDwarfEHPass(TM));
     break;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case ExceptionHandling::WinEH:
     // We support using both GCC-style and MSVC-style exceptions on Windows, so
     // add both preparation passes. Each pass will only actually run if it
@@ -497,6 +498,7 @@ void TargetPassConfig::addPassesToHandleExceptions() {
     addPass(createWinEHPass(TM));
     addPass(createDwarfEHPass(TM));
     break;
+#endif
   case ExceptionHandling::None:
     addPass(createLowerInvokePass());
 

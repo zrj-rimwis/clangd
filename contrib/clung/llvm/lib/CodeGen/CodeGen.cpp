@@ -86,7 +86,9 @@ void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeUnreachableMachineBlockElimPass(Registry);
   initializeVirtRegMapPass(Registry);
   initializeVirtRegRewriterPass(Registry);
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   initializeWinEHPreparePass(Registry);
+#endif
 }
 
 void LLVMInitializeCodeGen(LLVMPassRegistryRef R) {

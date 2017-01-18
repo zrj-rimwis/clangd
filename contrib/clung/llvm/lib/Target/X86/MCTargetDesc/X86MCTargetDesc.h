@@ -79,14 +79,18 @@ MCAsmBackend *createX86_64AsmBackend(const Target &T, const MCRegisterInfo &MRI,
 /// PE/COFF format object files.
 ///
 /// Takes ownership of \p AB and \p CE.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // throw it on WinEH cause bad layering
 MCStreamer *createX86WinCOFFStreamer(MCContext &C, MCAsmBackend &AB,
                                      raw_pwrite_stream &OS, MCCodeEmitter *CE,
                                      bool RelaxAll, bool IncrementalLinkerCompatible);
+#endif
 
 /// Construct an X86 Mach-O object writer.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // forgot to add earlier
 MCObjectWriter *createX86MachObjectWriter(raw_pwrite_stream &OS, bool Is64Bit,
                                           uint32_t CPUType,
                                           uint32_t CPUSubtype);
+#endif
 
 /// Construct an X86 ELF object writer.
 MCObjectWriter *createX86ELFObjectWriter(raw_pwrite_stream &OS, bool IsELF64,

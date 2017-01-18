@@ -179,12 +179,14 @@ static MCAsmInfo *createX86MCAsmInfo(const MCRegisterInfo &MRI,
   } else if (TheTriple.isOSBinFormatELF()) {
     // Force the use of an ELF container.
     MAI = new X86ELFMCAsmInfo(TheTriple);
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // something is off with GNUCOFF
   } else if (TheTriple.isWindowsMSVCEnvironment() ||
              TheTriple.isWindowsCoreCLREnvironment()) {
     MAI = new X86MCAsmInfoMicrosoft(TheTriple);
   } else if (TheTriple.isOSCygMing() ||
              TheTriple.isWindowsItaniumEnvironment()) {
     MAI = new X86MCAsmInfoGNUCOFF(TheTriple);
+#endif
   } else {
     // The default is ELF.
     MAI = new X86ELFMCAsmInfo(TheTriple);
@@ -269,7 +271,9 @@ extern "C" void LLVMInitializeX86TargetMC() {
     TargetRegistry::RegisterMCCodeEmitter(*T, createX86MCCodeEmitter);
 
     // Register the object streamer.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX why this one is here????
     TargetRegistry::RegisterCOFFStreamer(*T, createX86WinCOFFStreamer);
+#endif
 
     // Register the MCInstPrinter.
     TargetRegistry::RegisterMCInstPrinter(*T, createX86MCInstPrinter);

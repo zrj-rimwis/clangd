@@ -17,7 +17,9 @@
 #endif
 #include "DwarfDebug.h"
 #include "DwarfException.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "WinException.h"
+#endif
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/ConstantFolding.h"
 #include "llvm/CodeGen/Analysis.h"
@@ -283,6 +285,7 @@ bool AsmPrinter::doInitialization(Module &M) {
   case ExceptionHandling::ARM:
     ES = new ARMException(this);
     break;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case ExceptionHandling::WinEH:
     switch (MAI->getWinEHEncodingType()) {
     default: llvm_unreachable("unsupported unwinding information encoding");
@@ -294,6 +297,7 @@ bool AsmPrinter::doInitialization(Module &M) {
       break;
     }
     break;
+#endif
   }
   if (ES)
     Handlers.push_back(HandlerInfo(ES, EHTimerName, DWARFGroupName));

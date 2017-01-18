@@ -29,9 +29,11 @@ static cl::opt<bool> EnableMachineCombinerPass("x86-machine-combiner",
                                cl::desc("Enable the machine combiner pass"),
                                cl::init(true), cl::Hidden);
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 namespace llvm {
 void initializeWinEHStatePassPass(PassRegistry &);
 }
+#endif
 
 extern "C" void LLVMInitializeX86Target() {
   // Register the target.
@@ -39,7 +41,9 @@ extern "C" void LLVMInitializeX86Target() {
   RegisterTargetMachine<X86TargetMachine> Y(TheX86_64Target);
 
   PassRegistry &PR = *PassRegistry::getPassRegistry();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // something fishy, why it special?
   initializeWinEHStatePassPass(PR);
+#endif
   initializeFixupBWInstPassPass(PR);
 }
 
@@ -315,9 +319,11 @@ bool X86PassConfig::addILPOpts() {
 
 bool X86PassConfig::addPreISel() {
   // Only add this pass for 32-bit x86 Windows.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX silly, maybe remove all
   const Triple &TT = TM->getTargetTriple();
   if (TT.isOSWindows() && TT.getArch() == Triple::x86)
     addPass(createX86WinEHStatePass());
+#endif
   return true;
 }
 

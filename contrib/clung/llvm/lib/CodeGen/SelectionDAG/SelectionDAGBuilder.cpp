@@ -38,7 +38,9 @@
 #include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/SelectionDAGTargetInfo.h"
 #include "llvm/CodeGen/StackMaps.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/CodeGen/WinEHFuncInfo.h"
+#endif
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
@@ -1389,9 +1391,13 @@ void SelectionDAGBuilder::visitCleanupRet(const CleanupReturnInst &I) {
   FuncInfo.MBB->normalizeSuccProbs();
 
   // Create the terminator node.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   SDValue Ret =
       DAG.getNode(ISD::CLEANUPRET, getCurSDLoc(), MVT::Other, getControlRoot());
   DAG.setRoot(Ret);
+#else
+  report_fatal_error("zrj: should not visitCleanupRet");
+#endif
 }
 
 void SelectionDAGBuilder::visitCatchSwitch(const CatchSwitchInst &CSI) {

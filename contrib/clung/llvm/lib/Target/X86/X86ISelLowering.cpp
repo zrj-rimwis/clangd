@@ -34,7 +34,9 @@
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/CodeGen/WinEHFuncInfo.h"
+#endif
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Constants.h"

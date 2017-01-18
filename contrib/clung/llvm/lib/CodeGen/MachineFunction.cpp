@@ -28,7 +28,9 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/PseudoSourceValue.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/CodeGen/WinEHFuncInfo.h"
+#endif
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Function.h"

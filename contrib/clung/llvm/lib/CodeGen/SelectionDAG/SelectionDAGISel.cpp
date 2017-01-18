@@ -34,7 +34,9 @@
 #include "llvm/CodeGen/SchedulerRegistry.h"
 #include "llvm/CodeGen/SelectionDAGISel.h"
 #include "llvm/CodeGen/StackProtector.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/CodeGen/WinEHFuncInfo.h"
+#endif
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Function.h"

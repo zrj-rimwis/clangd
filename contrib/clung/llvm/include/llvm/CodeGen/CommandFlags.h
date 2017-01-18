@@ -102,8 +102,10 @@ ExceptionModel("exception-model",
                                      "SjLj exception handling"),
                           clEnumValN(ExceptionHandling::ARM, "arm",
                                      "ARM EHABI exceptions"),
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
                           clEnumValN(ExceptionHandling::WinEH, "wineh",
                                      "Windows exception model"),
+#endif
                           clEnumValEnd));
 
 cl::opt<TargetMachine::CodeGenFileType>

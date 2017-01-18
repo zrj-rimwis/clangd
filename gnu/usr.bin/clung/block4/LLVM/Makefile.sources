@@ -86,8 +86,7 @@ SRCS+=	ARMException.cpp \
 	DwarfFile.cpp \
 	DwarfStringPool.cpp \
 	DwarfUnit.cpp \
-	EHStreamer.cpp \
-	WinException.cpp
+	EHStreamer.cpp
 
 #LIB=	LLVMBitReader
 LLVM_SRCDIRS+= lib/Bitcode/Reader
@@ -230,7 +229,6 @@ SRCS+=	AggressiveAntiDepBreaker.cpp \
 	TwoAddressInstructionPass.cpp \
 	UnreachableBlockElim.cpp \
 	VirtRegMap.cpp \
-	WinEHPrepare.cpp \
 	XRayInstrumentation.cpp
 
 #LIB=	LLVMCore
@@ -332,7 +330,6 @@ LLVM_SRCDIRS+= lib/MC
 SRCS+=	ELFObjectWriter.cpp \
 	MCAsmBackend.cpp \
 	MCAsmInfo.cpp \
-	MCAsmInfoCOFF.cpp \
 	MCAsmInfoELF.cpp \
 	MCAsmStreamer.cpp \
 	MCAssembler.cpp \
@@ -361,12 +358,9 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCSymbolELF.cpp \
 	MCTargetOptions.cpp \
 	MCValue.cpp \
-	MCWin64EH.cpp \
-	MCWinEH.cpp \
 	StringTableBuilder.cpp \
 	SubtargetFeature.cpp \
-	WinCOFFObjectWriter.cpp \
-	WinCOFFStreamer.cpp \
+	WinCOFFObjectWriter.cpp
 
 #LIB=	LLVMMCDisassembler
 LLVM_SRCDIRS+= lib/MC/MCDisassembler
@@ -699,8 +693,7 @@ SRCS+=	X86AsmPrinter.cpp \
 	X86TargetObjectFile.cpp \
 	X86TargetTransformInfo.cpp \
 	X86VZeroUpper.cpp \
-	X86WinAllocaExpander.cpp \
-	X86WinEHState.cpp
+	X86WinAllocaExpander.cpp
 
 #LIB=	LLVMX86Desc
 LLVM_SRCDIRS+= lib/Target/X86/MCTargetDesc
@@ -709,8 +702,7 @@ SRCS+=	X86AsmBackend.cpp \
 	X86MCAsmInfo.cpp \
 	X86MCCodeEmitter.cpp \
 	X86MCTargetDesc.cpp \
-	X86WinCOFFObjectWriter.cpp \
-	X86WinCOFFStreamer.cpp
+	X86WinCOFFObjectWriter.cpp
 
 #LIB=	LLVMX86Info
 LLVM_SRCDIRS+= lib/Target/X86/TargetInfo

@@ -285,7 +285,9 @@ namespace llvm {
 
   /// createWinEHPass - Prepares personality functions used by MSVC on Windows,
   /// in addition to the Itanium LSDA based personalities.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   FunctionPass *createWinEHPass(const TargetMachine *TM);
+#endif
 
   /// createSjLjEHPreparePass - This pass adapts exception handling code to use
   /// the GCC-style builtin setjmp/longjmp (sjlj) to handling EH control flow.

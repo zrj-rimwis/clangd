@@ -21,7 +21,9 @@
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSymbol.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/MC/MCWin64EH.h"
+#endif
 #include "llvm/Support/COFF.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/LEB128.h"
@@ -43,21 +45,29 @@ void MCTargetStreamer::finish() {}
 void MCTargetStreamer::emitAssignment(MCSymbol *Symbol, const MCExpr *Value) {}
 
 MCStreamer::MCStreamer(MCContext &Ctx)
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     : Context(Ctx), CurrentWinFrameInfo(nullptr) {
+#else
+    : Context(Ctx) {
+#endif
   SectionStack.push_back(std::pair<MCSectionSubPair, MCSectionSubPair>());
 }
 
 MCStreamer::~MCStreamer() {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   for (unsigned i = 0; i < getNumWinFrameInfos(); ++i)
     delete WinFrameInfos[i];
+#endif
 }
 
 void MCStreamer::reset() {
   DwarfFrameInfos.clear();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   for (unsigned i = 0; i < getNumWinFrameInfos(); ++i)
     delete WinFrameInfos[i];
   WinFrameInfos.clear();
   CurrentWinFrameInfo = nullptr;
+#endif
   SymbolOrdering.clear();
   SectionStack.clear();
   SectionStack.push_back(std::pair<MCSectionSubPair, MCSectionSubPair>());
@@ -442,21 +452,20 @@ void MCStreamer::EmitCFIWindowSave() {
   CurFrame->Instructions.push_back(Instruction);
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EnsureValidWinFrameInfo() {
   const MCAsmInfo *MAI = Context.getAsmInfo();
-#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false XXX cut point
   if (!MAI->usesWindowsCFI())
-#endif
     report_fatal_error(".seh_* directives are not supported on this target");
   if (!CurrentWinFrameInfo || CurrentWinFrameInfo->End)
     report_fatal_error("No open Win64 EH frame function!");
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIStartProc(const MCSymbol *Symbol) {
   const MCAsmInfo *MAI = Context.getAsmInfo();
-#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false XXX cut point
   if (!MAI->usesWindowsCFI())
-#endif
     report_fatal_error(".seh_* directives are not supported on this target");
   if (CurrentWinFrameInfo && !CurrentWinFrameInfo->End)
     report_fatal_error("Starting a function before ending the previous one!");
@@ -468,7 +477,9 @@ void MCStreamer::EmitWinCFIStartProc(const MCSymbol *Symbol) {
   CurrentWinFrameInfo = WinFrameInfos.back();
   CurrentWinFrameInfo->TextSection = getCurrentSectionOnly();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIEndProc() {
   EnsureValidWinFrameInfo();
   if (CurrentWinFrameInfo->ChainedParent)
@@ -478,7 +489,9 @@ void MCStreamer::EmitWinCFIEndProc() {
   EmitLabel(Label);
   CurrentWinFrameInfo->End = Label;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIStartChained() {
   EnsureValidWinFrameInfo();
 
@@ -490,7 +503,9 @@ void MCStreamer::EmitWinCFIStartChained() {
   CurrentWinFrameInfo = WinFrameInfos.back();
   CurrentWinFrameInfo->TextSection = getCurrentSectionOnly();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIEndChained() {
   EnsureValidWinFrameInfo();
   if (!CurrentWinFrameInfo->ChainedParent)
@@ -503,7 +518,9 @@ void MCStreamer::EmitWinCFIEndChained() {
   CurrentWinFrameInfo =
       const_cast<WinEH::FrameInfo *>(CurrentWinFrameInfo->ChainedParent);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinEHHandler(const MCSymbol *Sym, bool Unwind,
                                   bool Except) {
   EnsureValidWinFrameInfo();
@@ -517,12 +534,15 @@ void MCStreamer::EmitWinEHHandler(const MCSymbol *Sym, bool Unwind,
   if (Except)
     CurrentWinFrameInfo->HandlesExceptions = true;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinEHHandlerData() {
   EnsureValidWinFrameInfo();
   if (CurrentWinFrameInfo->ChainedParent)
     report_fatal_error("Chained unwind areas can't have handlers!");
 }
+#endif
 
 static MCSection *getWinCFISection(MCContext &Context, unsigned *NextWinCFIID,
                                    MCSection *MainCFISec,
@@ -544,6 +564,7 @@ static MCSection *getWinCFISection(MCContext &Context, unsigned *NextWinCFIID,
                                            KeySym, UniqueID);
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 MCSection *MCStreamer::getAssociatedPDataSection(const MCSection *TextSec) {
   return getWinCFISection(getContext(), &NextWinCFIID,
                           getContext().getObjectFileInfo()->getPDataSection(),
@@ -555,9 +576,11 @@ MCSection *MCStreamer::getAssociatedXDataSection(const MCSection *TextSec) {
                           getContext().getObjectFileInfo()->getXDataSection(),
                           TextSec);
 }
+#endif
 
 void MCStreamer::EmitSyntaxDirective() {}
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIPushReg(unsigned Register) {
   EnsureValidWinFrameInfo();
 
@@ -567,7 +590,9 @@ void MCStreamer::EmitWinCFIPushReg(unsigned Register) {
   WinEH::Instruction Inst = Win64EH::Instruction::PushNonVol(Label, Register);
   CurrentWinFrameInfo->Instructions.push_back(Inst);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFISetFrame(unsigned Register, unsigned Offset) {
   EnsureValidWinFrameInfo();
   if (CurrentWinFrameInfo->LastFrameInst >= 0)
@@ -585,7 +610,9 @@ void MCStreamer::EmitWinCFISetFrame(unsigned Register, unsigned Offset) {
   CurrentWinFrameInfo->LastFrameInst = CurrentWinFrameInfo->Instructions.size();
   CurrentWinFrameInfo->Instructions.push_back(Inst);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIAllocStack(unsigned Size) {
   EnsureValidWinFrameInfo();
   if (Size == 0)
@@ -599,7 +626,9 @@ void MCStreamer::EmitWinCFIAllocStack(unsigned Size) {
   WinEH::Instruction Inst = Win64EH::Instruction::Alloc(Label, Size);
   CurrentWinFrameInfo->Instructions.push_back(Inst);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFISaveReg(unsigned Register, unsigned Offset) {
   EnsureValidWinFrameInfo();
   if (Offset & 7)
@@ -612,7 +641,9 @@ void MCStreamer::EmitWinCFISaveReg(unsigned Register, unsigned Offset) {
       Win64EH::Instruction::SaveNonVol(Label, Register, Offset);
   CurrentWinFrameInfo->Instructions.push_back(Inst);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFISaveXMM(unsigned Register, unsigned Offset) {
   EnsureValidWinFrameInfo();
   if (Offset & 0x0F)
@@ -625,7 +656,9 @@ void MCStreamer::EmitWinCFISaveXMM(unsigned Register, unsigned Offset) {
       Win64EH::Instruction::SaveXMM(Label, Register, Offset);
   CurrentWinFrameInfo->Instructions.push_back(Inst);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIPushFrame(bool Code) {
   EnsureValidWinFrameInfo();
   if (CurrentWinFrameInfo->Instructions.size() > 0)
@@ -637,7 +670,9 @@ void MCStreamer::EmitWinCFIPushFrame(bool Code) {
   WinEH::Instruction Inst = Win64EH::Instruction::PushMachFrame(Label, Code);
   CurrentWinFrameInfo->Instructions.push_back(Inst);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCStreamer::EmitWinCFIEndProlog() {
   EnsureValidWinFrameInfo();
 
@@ -646,6 +681,7 @@ void MCStreamer::EmitWinCFIEndProlog() {
 
   CurrentWinFrameInfo->PrologEnd = Label;
 }
+#endif
 
 void MCStreamer::EmitCOFFSafeSEH(MCSymbol const *Symbol) {
 }

@@ -259,6 +259,7 @@ public:
   void EmitCFIRegister(int64_t Register1, int64_t Register2) override;
   void EmitCFIWindowSave() override;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void EmitWinCFIStartProc(const MCSymbol *Symbol) override;
   void EmitWinCFIEndProc() override;
   void EmitWinCFIStartChained() override;
@@ -270,9 +271,12 @@ public:
   void EmitWinCFISaveXMM(unsigned Register, unsigned Offset) override;
   void EmitWinCFIPushFrame(bool Code) override;
   void EmitWinCFIEndProlog() override;
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void EmitWinEHHandler(const MCSymbol *Sym, bool Unwind, bool Except) override;
   void EmitWinEHHandlerData() override;
+#endif
 
   void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo &STI) override;
 
@@ -1362,6 +1366,7 @@ void MCAsmStreamer::EmitCFIWindowSave() {
   EmitEOL();
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCAsmStreamer::EmitWinCFIStartProc(const MCSymbol *Symbol) {
   MCStreamer::EmitWinCFIStartProc(Symbol);
 
@@ -1390,7 +1395,9 @@ void MCAsmStreamer::EmitWinCFIEndChained() {
   OS << "\t.seh_endchained";
   EmitEOL();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCAsmStreamer::EmitWinEHHandler(const MCSymbol *Sym, bool Unwind,
                                       bool Except) {
   MCStreamer::EmitWinEHHandler(Sym, Unwind, Except);
@@ -1403,7 +1410,9 @@ void MCAsmStreamer::EmitWinEHHandler(const MCSymbol *Sym, bool Unwind,
     OS << ", @except";
   EmitEOL();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCAsmStreamer::EmitWinEHHandlerData() {
   MCStreamer::EmitWinEHHandlerData();
 
@@ -1419,7 +1428,9 @@ void MCAsmStreamer::EmitWinEHHandlerData() {
   OS << "\t.seh_handlerdata";
   EmitEOL();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void MCAsmStreamer::EmitWinCFIPushReg(unsigned Register) {
   MCStreamer::EmitWinCFIPushReg(Register);
 
@@ -1470,6 +1481,7 @@ void MCAsmStreamer::EmitWinCFIEndProlog() {
   OS << "\t.seh_endprologue";
   EmitEOL();
 }
+#endif
 
 void MCAsmStreamer::AddEncodingComment(const MCInst &Inst,
                                        const MCSubtargetInfo &STI) {

@@ -128,6 +128,7 @@ X86_64MCAsmInfoDarwin::getExprForPersonalitySymbol(const MCSymbol *Sym,
 }
 #endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void X86MCAsmInfoMicrosoft::anchor() { }
 
 X86MCAsmInfoMicrosoft::X86MCAsmInfoMicrosoft(const Triple &Triple) {
@@ -153,7 +154,9 @@ X86MCAsmInfoMicrosoft::X86MCAsmInfoMicrosoft(const Triple &Triple) {
 
   UseIntegratedAssembler = true;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // no DvarfCFI on x86_64???
 void X86MCAsmInfoGNUCOFF::anchor() { }
 
 X86MCAsmInfoGNUCOFF::X86MCAsmInfoGNUCOFF(const Triple &Triple) {
@@ -174,3 +177,4 @@ X86MCAsmInfoGNUCOFF::X86MCAsmInfoGNUCOFF(const Triple &Triple) {
 
   UseIntegratedAssembler = true;
 }
+#endif

@@ -25,7 +25,9 @@
 #include "llvm/Support/MutexGuard.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/Threading.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/Support/WindowsError.h"
+#endif
 #include "llvm/Support/raw_ostream.h"
 #include <cassert>
 #include <cstdlib>

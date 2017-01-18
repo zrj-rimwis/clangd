@@ -61,6 +61,7 @@ class COFFAsmParser : public MCAsmParserExtension {
     addDirectiveHandler<&COFFAsmParser::ParseDirectiveLinkOnce>(".linkonce");
 
     // Win64 EH directives.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     addDirectiveHandler<&COFFAsmParser::ParseSEHDirectiveStartProc>(
                                                                    ".seh_proc");
     addDirectiveHandler<&COFFAsmParser::ParseSEHDirectiveEndProc>(
@@ -87,6 +88,7 @@ class COFFAsmParser : public MCAsmParserExtension {
                                                               ".seh_pushframe");
     addDirectiveHandler<&COFFAsmParser::ParseSEHDirectiveEndProlog>(
                                                             ".seh_endprologue");
+#endif
     addDirectiveHandler<&COFFAsmParser::ParseDirectiveSymbolAttribute>(".weak");
   }
 
@@ -123,6 +125,7 @@ class COFFAsmParser : public MCAsmParserExtension {
   bool ParseDirectiveLinkOnce(StringRef, SMLoc);
 
   // Win64 EH directives.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   bool ParseSEHDirectiveStartProc(StringRef, SMLoc);
   bool ParseSEHDirectiveEndProc(StringRef, SMLoc);
   bool ParseSEHDirectiveStartChained(StringRef, SMLoc);
@@ -136,6 +139,7 @@ class COFFAsmParser : public MCAsmParserExtension {
   bool ParseSEHDirectiveSaveXMM(StringRef, SMLoc);
   bool ParseSEHDirectivePushFrame(StringRef, SMLoc);
   bool ParseSEHDirectiveEndProlog(StringRef, SMLoc);
+#endif
 
   bool ParseAtUnwindOrAtExcept(bool &unwind, bool &except);
   bool ParseSEHRegisterNumber(unsigned &RegNo);
@@ -532,6 +536,7 @@ bool COFFAsmParser::ParseDirectiveLinkOnce(StringRef, SMLoc Loc) {
   return false;
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 bool COFFAsmParser::ParseSEHDirectiveStartProc(StringRef, SMLoc) {
   StringRef SymbolID;
   if (getParser().parseIdentifier(SymbolID))
@@ -675,9 +680,11 @@ bool COFFAsmParser::ParseSEHDirectiveSaveReg(StringRef, SMLoc L) {
   getStreamer().EmitWinCFISaveReg(Reg, Off);
   return false;
 }
+#endif
 
 // FIXME: This method is inherently x86-specific. It should really be in the
 // x86 backend.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // xixi
 bool COFFAsmParser::ParseSEHDirectiveSaveXMM(StringRef, SMLoc L) {
   unsigned Reg = 0;
   int64_t Off;
@@ -729,6 +736,7 @@ bool COFFAsmParser::ParseSEHDirectiveEndProlog(StringRef, SMLoc) {
   getStreamer().EmitWinCFIEndProlog();
   return false;
 }
+#endif
 
 bool COFFAsmParser::ParseAtUnwindOrAtExcept(bool &unwind, bool &except) {
   StringRef identifier;

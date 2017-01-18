@@ -15,7 +15,9 @@
 #define LLVM_LIB_TARGET_X86_MCTARGETDESC_X86MCASMINFO_H
 
 #include "llvm/MC/MCAsmInfo.h"
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/MC/MCAsmInfoCOFF.h"
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCAsmInfoDarwin.h"
 #endif
@@ -47,19 +49,23 @@ public:
   explicit X86ELFMCAsmInfo(const Triple &Triple);
 };
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // darwin header ok, where this one comes into the play?
 class X86MCAsmInfoMicrosoft : public MCAsmInfoMicrosoft {
   void anchor() override;
 
 public:
   explicit X86MCAsmInfoMicrosoft(const Triple &Triple);
 };
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX very strange implementation
 class X86MCAsmInfoGNUCOFF : public MCAsmInfoGNUCOFF {
   void anchor() override;
 
 public:
   explicit X86MCAsmInfoGNUCOFF(const Triple &Triple);
 };
+#endif
 } // namespace llvm
 
 #endif
