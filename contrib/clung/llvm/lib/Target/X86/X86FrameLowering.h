@@ -108,7 +108,9 @@ public:
   eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator MI) const override;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   unsigned getWinEHParentFrameOffset(const MachineFunction &MF) const override;
+#endif
 
   void processFunctionBeforeFrameFinalized(MachineFunction &MF,
                                            RegScavenger *RS) const override;
@@ -170,10 +172,12 @@ public:
 
   /// Sets up EBP and optionally ESI based on the incoming EBP value.  Only
   /// needed for 32-bit. Used in funclet prologues and at catchret destinations.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   MachineBasicBlock::iterator
   restoreWin32EHStackPointers(MachineBasicBlock &MBB,
                               MachineBasicBlock::iterator MBBI,
                               const DebugLoc &DL, bool RestoreSP = false) const;
+#endif
 
 private:
   uint64_t calculateMaxStackAlign(const MachineFunction &MF) const;
@@ -212,9 +216,11 @@ private:
                                            const DebugLoc &DL, int64_t Offset,
                                            bool InEpilogue) const;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   unsigned getPSPSlotOffsetFromSP(const MachineFunction &MF) const;
 
   unsigned getWinEHFuncletFrameSize(const MachineFunction &MF) const;
+#endif
 };
 
 } // End llvm namespace

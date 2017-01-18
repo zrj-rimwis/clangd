@@ -59,9 +59,11 @@ public:
   virtual void endFragment() {}
 
   /// \brief Emit target-specific EH funclet machinery.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   virtual void beginFunclet(const MachineBasicBlock &MBB,
                             MCSymbol *Sym = nullptr) {}
   virtual void endFunclet() {}
+#endif
 
   /// \brief Process beginning of an instruction.
   virtual void beginInstruction(const MachineInstr *MI) = 0;

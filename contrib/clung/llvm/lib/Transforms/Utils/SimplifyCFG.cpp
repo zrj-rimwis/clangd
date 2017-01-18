@@ -3752,8 +3752,10 @@ bool SimplifyCFGOpt::SimplifyUnreachable(UnreachableInst *UI) {
         // in some languages can be arbitrary code, so be conservative by
         // default.
         // For CoreCLR, it just involves a type test, so can be removed.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // !false
         if (classifyEHPersonality(BB->getParent()->getPersonalityFn()) !=
             EHPersonality::CoreCLR)
+#endif
           break;
       } else if (!isa<FenceInst>(BBI) && !isa<VAArgInst>(BBI) &&
                  !isa<LandingPadInst>(BBI)) {

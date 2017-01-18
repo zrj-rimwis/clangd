@@ -194,7 +194,11 @@ static bool SimplifyFunction(Function *F, CallGraph &CG) {
   bool MadeChange = false;
   for (Function::iterator BB = F->begin(), E = F->end(); BB != E; ++BB) {
     if (InvokeInst *II = dyn_cast<InvokeInst>(BB->getTerminator()))
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume true
       if (II->doesNotThrow() && canSimplifyInvokeNoUnwind(F)) {
+#else
+      if (II->doesNotThrow() && true) {
+#endif
         BasicBlock *UnwindBlock = II->getUnwindDest();
         removeUnwindEdge(&*BB);
 

@@ -1179,11 +1179,13 @@ namespace llvm {
     MachineBasicBlock *EmitLoweredAtomicFP(MachineInstr &I,
                                            MachineBasicBlock *BB) const;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     MachineBasicBlock *EmitLoweredCatchRet(MachineInstr &MI,
                                            MachineBasicBlock *BB) const;
 
     MachineBasicBlock *EmitLoweredCatchPad(MachineInstr &MI,
                                            MachineBasicBlock *BB) const;
+#endif
 
     MachineBasicBlock *EmitLoweredSegAlloca(MachineInstr &MI,
                                             MachineBasicBlock *BB) const;

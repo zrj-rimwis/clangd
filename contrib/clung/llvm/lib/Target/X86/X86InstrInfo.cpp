@@ -117,7 +117,9 @@ X86InstrInfo::X86InstrInfo(X86Subtarget &STI)
                                                : X86::ADJCALLSTACKDOWN32),
                       (STI.isTarget64BitLP64() ? X86::ADJCALLSTACKUP64
                                                : X86::ADJCALLSTACKUP32),
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // wow the poer of c++
                       X86::CATCHRET,
+#endif
                       (STI.is64Bit() ? X86::RETQ : X86::RETL)),
       Subtarget(STI), RI(STI.getTargetTriple()) {
 
@@ -5592,9 +5594,15 @@ bool X86InstrInfo::ExpandMOVImmSExti8(MachineInstrBuilder &MIB) const {
   // Build CFI if necessary.
   MachineFunction &MF = *MBB.getParent();
   const X86FrameLowering *TFL = Subtarget.getFrameLowering();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__  // assume false
   bool IsWin64Prologue = MF.getTarget().getMCAsmInfo()->usesWindowsCFI();
+#endif
   bool NeedsDwarfCFI =
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
       !IsWin64Prologue &&
+#else
+      !false &&
+#endif
       (MF.getMMI().hasDebugInfo() || MF.getFunction()->needsUnwindTableEntry());
   bool EmitCFI = !TFL->hasFP(MF) && NeedsDwarfCFI;
   if (EmitCFI) {

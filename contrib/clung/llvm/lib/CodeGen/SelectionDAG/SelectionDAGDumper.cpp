@@ -285,8 +285,10 @@ std::string SDNode::getOperationName(const SelectionDAG *G) const {
   case ISD::CALLSEQ_END:                return "callseq_end";
 
     // EH instructions
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case ISD::CATCHRET:                   return "catchret";
   case ISD::CLEANUPRET:                 return "cleanupret";
+#endif
 
     // Other operators
   case ISD::LOAD:                       return "load";

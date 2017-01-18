@@ -482,13 +482,16 @@ ReSimplify:
     break;
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case X86::CLEANUPRET: {
     // Replace CATCHRET with the appropriate RET.
     OutMI = MCInst();
     OutMI.setOpcode(getRetOpcode(AsmPrinter.getSubtarget()));
     break;
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case X86::CATCHRET: {
     // Replace CATCHRET with the appropriate RET.
     const X86Subtarget &Subtarget = AsmPrinter.getSubtarget();
@@ -498,6 +501,7 @@ ReSimplify:
     OutMI.addOperand(MCOperand::createReg(ReturnReg));
     break;
   }
+#endif
 
   // TAILJMPd, TAILJMPd64 - Lower to the correct jump instructions.
   case X86::TAILJMPr:
@@ -1239,17 +1243,21 @@ void X86AsmPrinter::EmitInstruction(const MachineInstr *MI) {
                             X86ATTInstPrinter::getRegisterName(Reg));
     break;
   }
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case X86::CLEANUPRET: {
     // Lower these as normal, but add some comments.
     OutStreamer->AddComment("CLEANUPRET");
     break;
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case X86::CATCHRET: {
     // Lower these as normal, but add some comments.
     OutStreamer->AddComment("CATCHRET");
     break;
   }
+#endif
 
   case X86::TAILJMPr:
   case X86::TAILJMPm:
@@ -1376,6 +1384,7 @@ void X86AsmPrinter::EmitInstruction(const MachineInstr *MI) {
                             .addReg(X86::RAX));
     return;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX kill all EmitWinCFI*()
   case X86::SEH_PushReg:
     OutStreamer->EmitWinCFIPushReg(RI->getSEHRegNum(MI->getOperand(0).getImm()));
     return;
@@ -1406,7 +1415,9 @@ void X86AsmPrinter::EmitInstruction(const MachineInstr *MI) {
   case X86::SEH_EndPrologue:
     OutStreamer->EmitWinCFIEndProlog();
     return;
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case X86::SEH_Epilogue: {
     MachineBasicBlock::const_iterator MBBI(MI);
     // Check if preceded by a call and emit nop if so.
@@ -1423,6 +1434,7 @@ void X86AsmPrinter::EmitInstruction(const MachineInstr *MI) {
     }
     return;
   }
+#endif
 
   // Lower PSHUFB and VPERMILP normally but add a comment if we can find
   // a constant shuffle mask. We won't be able to do this at the MC layer

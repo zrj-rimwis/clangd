@@ -67,6 +67,7 @@ public:
   }
 
 private:
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void insertPHIStores(PHINode *OriginalPHI, AllocaInst *SpillSlot);
   void
   insertPHIStore(BasicBlock *PredBlock, Value *PredVal, AllocaInst *SpillSlot,
@@ -82,11 +83,14 @@ private:
   void removeImplausibleInstructions(Function &F);
   void cleanupPreparedFunclets(Function &F);
   void verifyPreparedFunclets(Function &F);
+#endif
 
   // All fields are reset by runOnFunction.
   EHPersonality Personality = EHPersonality::Unknown;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   DenseMap<BasicBlock *, ColorVector> BlockColors;
+#endif
   MapVector<BasicBlock *, std::vector<BasicBlock *>> FuncletBlocks;
 };
 
@@ -101,6 +105,7 @@ FunctionPass *llvm::createWinEHPass(const TargetMachine *TM) {
 }
 
 bool WinEHPrepare::runOnFunction(Function &Fn) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (!Fn.hasPersonalityFn())
     return false;
 
@@ -112,12 +117,16 @@ bool WinEHPrepare::runOnFunction(Function &Fn) {
     return false;
 
   return prepareExplicitEH(Fn);
+#else
+  return false;
+#endif
 }
 
 bool WinEHPrepare::doFinalization(Module &M) { return false; }
 
 void WinEHPrepare::getAnalysisUsage(AnalysisUsage &AU) const {}
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int addUnwindMapEntry(WinEHFuncInfo &FuncInfo, int ToState,
                              const BasicBlock *BB) {
   CxxUnwindMapEntry UME;
@@ -126,7 +135,9 @@ static int addUnwindMapEntry(WinEHFuncInfo &FuncInfo, int ToState,
   FuncInfo.CxxUnwindMap.push_back(UME);
   return FuncInfo.getLastStateNumber();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static void addTryBlockMapEntry(WinEHFuncInfo &FuncInfo, int TryLow,
                                 int TryHigh, int CatchHigh,
                                 ArrayRef<const CatchPadInst *> Handlers) {
@@ -153,14 +164,18 @@ static void addTryBlockMapEntry(WinEHFuncInfo &FuncInfo, int TryLow,
   }
   FuncInfo.TryBlockMap.push_back(TBME);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static BasicBlock *getCleanupRetUnwindDest(const CleanupPadInst *CleanupPad) {
   for (const User *U : CleanupPad->users())
     if (const auto *CRI = dyn_cast<CleanupReturnInst>(U))
       return CRI->getUnwindDest();
   return nullptr;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static void calculateStateNumbersForInvokes(const Function *Fn,
                                             WinEHFuncInfo &FuncInfo) {
   auto *F = const_cast<Function *>(Fn);
@@ -204,9 +219,11 @@ static void calculateStateNumbersForInvokes(const Function *Fn,
     }
   }
 }
+#endif
 
 // Given BB which ends in an unwind edge, return the EHPad that this BB belongs
 // to. If the unwind edge came from an invoke, return null.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static const BasicBlock *getEHPadFromPredecessor(const BasicBlock *BB,
                                                  Value *ParentPad) {
   const TerminatorInst *TI = BB->getTerminator();
@@ -223,7 +240,9 @@ static const BasicBlock *getEHPadFromPredecessor(const BasicBlock *BB,
     return nullptr;
   return CleanupPad->getParent();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static void calculateCXXStateNumbers(WinEHFuncInfo &FuncInfo,
                                      const Instruction *FirstNonPHI,
                                      int ParentState) {
@@ -302,7 +321,9 @@ static void calculateCXXStateNumbers(WinEHFuncInfo &FuncInfo,
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int addSEHExcept(WinEHFuncInfo &FuncInfo, int ParentState,
                         const Function *Filter, const BasicBlock *Handler) {
   SEHUnwindMapEntry Entry;
@@ -313,7 +334,9 @@ static int addSEHExcept(WinEHFuncInfo &FuncInfo, int ParentState,
   FuncInfo.SEHUnwindMap.push_back(Entry);
   return FuncInfo.SEHUnwindMap.size() - 1;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int addSEHFinally(WinEHFuncInfo &FuncInfo, int ParentState,
                          const BasicBlock *Handler) {
   SEHUnwindMapEntry Entry;
@@ -324,7 +347,9 @@ static int addSEHFinally(WinEHFuncInfo &FuncInfo, int ParentState,
   FuncInfo.SEHUnwindMap.push_back(Entry);
   return FuncInfo.SEHUnwindMap.size() - 1;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static void calculateSEHStateNumbers(WinEHFuncInfo &FuncInfo,
                                      const Instruction *FirstNonPHI,
                                      int ParentState) {
@@ -402,7 +427,9 @@ static void calculateSEHStateNumbers(WinEHFuncInfo &FuncInfo,
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static bool isTopLevelPadForMSVC(const Instruction *EHPad) {
   if (auto *CatchSwitch = dyn_cast<CatchSwitchInst>(EHPad))
     return isa<ConstantTokenNone>(CatchSwitch->getParentPad()) &&
@@ -414,7 +441,9 @@ static bool isTopLevelPadForMSVC(const Instruction *EHPad) {
     return false;
   llvm_unreachable("unexpected EHPad!");
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void llvm::calculateSEHStateNumbers(const Function *Fn,
                                     WinEHFuncInfo &FuncInfo) {
   // Don't compute state numbers twice.
@@ -432,7 +461,9 @@ void llvm::calculateSEHStateNumbers(const Function *Fn,
 
   calculateStateNumbersForInvokes(Fn, FuncInfo);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void llvm::calculateWinCXXEHStateNumbers(const Function *Fn,
                                          WinEHFuncInfo &FuncInfo) {
   // Return if it's already been done.
@@ -450,7 +481,9 @@ void llvm::calculateWinCXXEHStateNumbers(const Function *Fn,
 
   calculateStateNumbersForInvokes(Fn, FuncInfo);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int addClrEHHandler(WinEHFuncInfo &FuncInfo, int HandlerParentState,
                            int TryParentState, ClrHandlerType HandlerType,
                            uint32_t TypeToken, const BasicBlock *Handler) {
@@ -463,7 +496,9 @@ static int addClrEHHandler(WinEHFuncInfo &FuncInfo, int HandlerParentState,
   FuncInfo.ClrEHUnwindMap.push_back(Entry);
   return FuncInfo.ClrEHUnwindMap.size() - 1;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void llvm::calculateClrEHStateNumbers(const Function *Fn,
                                       WinEHFuncInfo &FuncInfo) {
   // Return if it's already been done.
@@ -665,7 +700,9 @@ void llvm::calculateClrEHStateNumbers(const Function *Fn,
   // Step three: transfer information from pads to invokes.
   calculateStateNumbersForInvokes(Fn, FuncInfo);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::colorFunclets(Function &F) {
   BlockColors = colorEHFunclets(F);
 
@@ -676,7 +713,9 @@ void WinEHPrepare::colorFunclets(Function &F) {
       FuncletBlocks[Color].push_back(&BB);
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::demotePHIsOnFunclets(Function &F) {
   // Strip PHI nodes off of EH pads.
   SmallVector<PHINode *, 16> PHINodes;
@@ -705,7 +744,9 @@ void WinEHPrepare::demotePHIsOnFunclets(Function &F) {
     PN->eraseFromParent();
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::cloneCommonBlocks(Function &F) {
   // We need to clone all blocks which belong to multiple funclets.  Values are
   // remapped throughout the funclet to propogate both the new instructions
@@ -924,7 +965,9 @@ void WinEHPrepare::cloneCommonBlocks(Function &F) {
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::removeImplausibleInstructions(Function &F) {
   // Remove implausible terminators and replace them with UnreachableInst.
   for (auto &Funclet : FuncletBlocks) {
@@ -998,7 +1041,9 @@ void WinEHPrepare::removeImplausibleInstructions(Function &F) {
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::cleanupPreparedFunclets(Function &F) {
   // Clean-up some of the mess we made by removing useles PHI nodes, trivial
   // branches, etc.
@@ -1013,7 +1058,9 @@ void WinEHPrepare::cleanupPreparedFunclets(Function &F) {
   // control flow.
   removeUnreachableBlocks(F);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::verifyPreparedFunclets(Function &F) {
   for (BasicBlock &BB : F) {
     size_t NumColors = BlockColors[&BB].size();
@@ -1026,7 +1073,9 @@ void WinEHPrepare::verifyPreparedFunclets(Function &F) {
            "EH Pad still has a PHI!");
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed bellow
 bool WinEHPrepare::prepareExplicitEH(Function &F) {
   // Remove unreachable blocks.  It is not valuable to assign them a color and
   // their existence can trick us into thinking values are alive when they are
@@ -1059,9 +1108,11 @@ bool WinEHPrepare::prepareExplicitEH(Function &F) {
 
   return true;
 }
+#endif
 
 // TODO: Share loads when one use dominates another, or when a catchpad exit
 // dominates uses (needs dominators).
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 AllocaInst *WinEHPrepare::insertPHILoads(PHINode *PN, Function &F) {
   BasicBlock *PHIBlock = PN->getParent();
   AllocaInst *SpillSlot = nullptr;
@@ -1095,11 +1146,13 @@ AllocaInst *WinEHPrepare::insertPHILoads(PHINode *PN, Function &F) {
   }
   return SpillSlot;
 }
+#endif
 
 // TODO: improve store placement.  Inserting at def is probably good, but need
 // to be careful not to introduce interfering stores (needs liveness analysis).
 // TODO: identify related phi nodes that can share spill slots, and share them
 // (also needs liveness).
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::insertPHIStores(PHINode *OriginalPHI,
                                    AllocaInst *SpillSlot) {
   // Use a worklist of (Block, Value) pairs -- the given Value needs to be
@@ -1136,7 +1189,9 @@ void WinEHPrepare::insertPHIStores(PHINode *OriginalPHI,
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::insertPHIStore(
     BasicBlock *PredBlock, Value *PredVal, AllocaInst *SpillSlot,
     SmallVectorImpl<std::pair<BasicBlock *, Value *>> &Worklist) {
@@ -1151,7 +1206,9 @@ void WinEHPrepare::insertPHIStore(
   // Otherwise, insert the store at the end of the basic block.
   new StoreInst(PredVal, SpillSlot, PredBlock->getTerminator());
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHPrepare::replaceUseWithLoad(Value *V, Use &U, AllocaInst *&SpillSlot,
                                       DenseMap<BasicBlock *, Value *> &Loads,
                                       Function &F) {
@@ -1223,6 +1280,7 @@ void WinEHPrepare::replaceUseWithLoad(Value *V, Use &U, AllocaInst *&SpillSlot,
     U.set(Load);
   }
 }
+#endif
 
 void WinEHFuncInfo::addIPToStateRange(const InvokeInst *II,
                                       MCSymbol *InvokeBegin,

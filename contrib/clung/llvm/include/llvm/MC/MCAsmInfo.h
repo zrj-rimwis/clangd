@@ -546,14 +546,20 @@ public:
   /// frame information to unwind.
   bool usesCFIForEH() const {
     return (ExceptionsType == ExceptionHandling::DwarfCFI ||
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
             ExceptionsType == ExceptionHandling::ARM || usesWindowsCFI());
+#else
+            ExceptionsType == ExceptionHandling::ARM || false);
+#endif
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool usesWindowsCFI() const {
     return ExceptionsType == ExceptionHandling::WinEH &&
            (WinEHEncodingType != WinEH::EncodingType::Invalid &&
             WinEHEncodingType != WinEH::EncodingType::X86);
   }
+#endif
 
   bool doesDwarfUseRelocationsAcrossSections() const {
     return DwarfUsesRelocationsAcrossSections;

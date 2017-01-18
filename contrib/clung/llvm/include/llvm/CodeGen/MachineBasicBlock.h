@@ -117,7 +117,9 @@ private:
   bool AddressTaken = false;
 
   /// Indicate that this basic block is the entry block of an EH funclet.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   bool IsEHFuncletEntry = false;
+#endif
 
   /// Indicate that this basic block is the entry block of a cleanup funclet.
   bool IsCleanupFuncletEntry = false;
@@ -345,10 +347,12 @@ public:
   bool hasEHPadSuccessor() const;
 
   /// Returns true if this is the entry block of an EH funclet.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool isEHFuncletEntry() const { return IsEHFuncletEntry; }
 
   /// Indicates if this is the entry block of an EH funclet.
   void setIsEHFuncletEntry(bool V = true) { IsEHFuncletEntry = V; }
+#endif
 
   /// Returns true if this is the entry block of a cleanup funclet.
   bool isCleanupFuncletEntry() const { return IsCleanupFuncletEntry; }

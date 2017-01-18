@@ -638,6 +638,7 @@ bool llvm::canBeOmittedFromSymbolTable(const GlobalValue *GV) {
   return GV->hasAtLeastLocalUnnamedAddr();
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static void collectFuncletMembers(
     DenseMap<const MachineBasicBlock *, int> &FuncletMembership, int Funclet,
     const MachineBasicBlock *MBB) {
@@ -666,18 +667,22 @@ static void collectFuncletMembers(
       Worklist.push_back(Succ);
   }
 }
+#endif
 
 DenseMap<const MachineBasicBlock *, int>
 llvm::getFuncletMembership(const MachineFunction &MF) {
   DenseMap<const MachineBasicBlock *, int> FuncletMembership;
 
   // We don't have anything to do if there aren't any EH pads.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false, yay early return
   if (!MF.getMMI().hasEHFunclets())
     return FuncletMembership;
 
   int EntryBBNumber = MF.front().getNumber();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool IsSEH = isAsynchronousEHPersonality(
       classifyEHPersonality(MF.getFunction()->getPersonalityFn()));
+#endif
 
   const TargetInstrInfo *TII = MF.getSubtarget().getInstrInfo();
   SmallVector<const MachineBasicBlock *, 16> FuncletBlocks;
@@ -687,8 +692,10 @@ llvm::getFuncletMembership(const MachineFunction &MF) {
   for (const MachineBasicBlock &MBB : MF) {
     if (MBB.isEHFuncletEntry()) {
       FuncletBlocks.push_back(&MBB);
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     } else if (IsSEH && MBB.isEHPad()) {
       SEHCatchPads.push_back(&MBB);
+#endif
     } else if (MBB.pred_empty()) {
       UnreachableBlocks.push_back(&MBB);
     }
@@ -704,7 +711,11 @@ llvm::getFuncletMembership(const MachineFunction &MF) {
     const MachineBasicBlock *Successor = MBBI->getOperand(0).getMBB();
     const MachineBasicBlock *SuccessorColor = MBBI->getOperand(1).getMBB();
     CatchRetSuccessors.push_back(
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
         {Successor, IsSEH ? EntryBBNumber : SuccessorColor->getNumber()});
+#else
+        {Successor, SuccessorColor->getNumber()});
+#endif
   }
 
   // We don't have anything to do if there aren't any EH pads.
@@ -728,4 +739,7 @@ llvm::getFuncletMembership(const MachineFunction &MF) {
     collectFuncletMembers(FuncletMembership, CatchRetPair.second,
                           CatchRetPair.first);
   return FuncletMembership;
+#else
+  return FuncletMembership;
+#endif
 }

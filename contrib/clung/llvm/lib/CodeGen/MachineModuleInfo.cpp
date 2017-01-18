@@ -209,7 +209,9 @@ bool MachineModuleInfo::doInitialization(Module &M) {
   CurCallSite = 0;
   CallsEHReturn = false;
   CallsUnwindInit = false;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   HasEHFunclets = false;
+#endif
   DbgInfoAvailable = UsesVAFloatArgument = UsesMorestackAddr = false;
   PersonalityTypeCache = EHPersonality::Unknown;
   AddrLabelSymbols = nullptr;
@@ -248,7 +250,9 @@ void MachineModuleInfo::EndFunction() {
   FilterEnds.clear();
   CallsEHReturn = false;
   CallsUnwindInit = false;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   HasEHFunclets = false;
+#endif
   VariableDbgInfos.clear();
 }
 

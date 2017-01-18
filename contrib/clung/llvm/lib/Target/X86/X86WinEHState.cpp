@@ -62,46 +62,61 @@ public:
   }
 
 private:
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void emitExceptionRegistrationRecord(Function *F);
 
   void linkExceptionRegistration(IRBuilder<> &Builder, Function *Handler);
   void unlinkExceptionRegistration(IRBuilder<> &Builder);
   void addStateStores(Function &F, WinEHFuncInfo &FuncInfo);
   void insertStateNumberStore(Instruction *IP, int State);
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   Value *emitEHLSDA(IRBuilder<> &Builder, Function *F);
 
   Function *generateLSDAInEAXThunk(Function *ParentFunc);
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   bool isStateStoreNeeded(EHPersonality Personality, CallSite CS);
   void rewriteSetJmpCallSite(IRBuilder<> &Builder, Function &F, CallSite CS,
                              Value *State);
+#endif
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   int getBaseStateForBB(DenseMap<BasicBlock *, ColorVector> &BlockColors,
                         WinEHFuncInfo &FuncInfo, BasicBlock *BB);
   int getStateForCallSite(DenseMap<BasicBlock *, ColorVector> &BlockColors,
                           WinEHFuncInfo &FuncInfo, CallSite CS);
+#endif
 
   // Module-level type getters.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   Type *getEHLinkRegistrationType();
   Type *getSEHRegistrationType();
   Type *getCXXEHRegistrationType();
+#endif
 
   // Per-module data.
   Module *TheModule = nullptr;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   StructType *EHLinkRegistrationTy = nullptr;
   StructType *CXXEHRegistrationTy = nullptr;
   StructType *SEHRegistrationTy = nullptr;
   Constant *SetJmp3 = nullptr;
   Constant *CxxLongjmpUnwind = nullptr;
+#endif
 
   // Per-function state
   EHPersonality Personality = EHPersonality::Unknown;
   Function *PersonalityFn = nullptr;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   bool UseStackGuard = false;
   int ParentBaseState;
   Constant *SehLongjmpUnwind = nullptr;
   Constant *Cookie = nullptr;
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   /// The stack allocation containing all EH data, including the link in the
   /// fs:00 chain and the current state.
   AllocaInst *RegNode = nullptr;
@@ -114,6 +129,7 @@ private:
 
   /// The linked list node subobject inside of RegNode.
   Value *Link = nullptr;
+#endif
 };
 }
 
@@ -132,6 +148,7 @@ bool WinEHStatePass::doInitialization(Module &M) {
 bool WinEHStatePass::doFinalization(Module &M) {
   assert(TheModule == &M);
   TheModule = nullptr;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   EHLinkRegistrationTy = nullptr;
   CXXEHRegistrationTy = nullptr;
   SEHRegistrationTy = nullptr;
@@ -139,6 +156,7 @@ bool WinEHStatePass::doFinalization(Module &M) {
   CxxLongjmpUnwind = nullptr;
   SehLongjmpUnwind = nullptr;
   Cookie = nullptr;
+#endif
   return false;
 }
 
@@ -156,10 +174,13 @@ bool WinEHStatePass::runOnFunction(Function &F) {
       dyn_cast<Function>(F.getPersonalityFn()->stripPointerCasts());
   if (!PersonalityFn)
     return false;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false thus return early, silly
   Personality = classifyEHPersonality(PersonalityFn);
   if (!isFuncletEHPersonality(Personality))
+#endif
     return false;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   // Skip this function if there are no EH pads and we aren't using IR-level
   // outlining.
   bool HasPads = false;
@@ -202,6 +223,7 @@ bool WinEHStatePass::runOnFunction(Function &F) {
   EHGuardNode = nullptr;
 
   return true;
+#endif
 }
 
 /// Get the common EH registration subobject:
@@ -211,6 +233,7 @@ bool WinEHStatePass::runOnFunction(Function &F) {
 ///     EHRegistrationNode *Next;
 ///     PEXCEPTION_ROUTINE Handler;
 ///   };
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 Type *WinEHStatePass::getEHLinkRegistrationType() {
   if (EHLinkRegistrationTy)
     return EHLinkRegistrationTy;
@@ -223,6 +246,7 @@ Type *WinEHStatePass::getEHLinkRegistrationType() {
   EHLinkRegistrationTy->setBody(FieldTys, false);
   return EHLinkRegistrationTy;
 }
+#endif
 
 /// The __CxxFrameHandler3 registration node:
 ///   struct CXXExceptionRegistration {
@@ -230,6 +254,7 @@ Type *WinEHStatePass::getEHLinkRegistrationType() {
 ///     EHRegistrationNode SubRecord;
 ///     int32_t TryLevel;
 ///   };
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 Type *WinEHStatePass::getCXXEHRegistrationType() {
   if (CXXEHRegistrationTy)
     return CXXEHRegistrationTy;
@@ -243,6 +268,7 @@ Type *WinEHStatePass::getCXXEHRegistrationType() {
       StructType::create(FieldTys, "CXXExceptionRegistration");
   return CXXEHRegistrationTy;
 }
+#endif
 
 /// The _except_handler3/4 registration node:
 ///   struct EH4ExceptionRegistration {
@@ -252,6 +278,7 @@ Type *WinEHStatePass::getCXXEHRegistrationType() {
 ///     int32_t EncodedScopeTable;
 ///     int32_t TryLevel;
 ///   };
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 Type *WinEHStatePass::getSEHRegistrationType() {
   if (SEHRegistrationTy)
     return SEHRegistrationTy;
@@ -266,11 +293,13 @@ Type *WinEHStatePass::getSEHRegistrationType() {
   SEHRegistrationTy = StructType::create(FieldTys, "SEHExceptionRegistration");
   return SEHRegistrationTy;
 }
+#endif
 
 // Emit an exception registration record. These are stack allocations with the
 // common subobject of two pointers: the previous registration record (the old
 // fs:00) and the personality function for the current frame. The data before
 // and after that is personality function specific.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHStatePass::emitExceptionRegistrationRecord(Function *F) {
   assert(Personality == EHPersonality::MSVC_CXX ||
          Personality == EHPersonality::MSVC_X86SEH);
@@ -370,12 +399,15 @@ void WinEHStatePass::emitExceptionRegistrationRecord(Function *F) {
     unlinkExceptionRegistration(Builder);
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 Value *WinEHStatePass::emitEHLSDA(IRBuilder<> &Builder, Function *F) {
   Value *FI8 = Builder.CreateBitCast(F, Type::getInt8PtrTy(F->getContext()));
   return Builder.CreateCall(
       Intrinsic::getDeclaration(TheModule, Intrinsic::x86_seh_lsda), FI8);
 }
+#endif
 
 /// Generate a thunk that puts the LSDA of ParentFunc in EAX and then calls
 /// PersonalityFn, forwarding the parameters passed to PEXCEPTION_ROUTINE:
@@ -384,6 +416,7 @@ Value *WinEHStatePass::emitEHLSDA(IRBuilder<> &Builder, Function *F) {
 /// We essentially want this code:
 ///   movl $lsda, %eax
 ///   jmpl ___CxxFrameHandler3
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 Function *WinEHStatePass::generateLSDAInEAXThunk(Function *ParentFunc) {
   LLVMContext &Context = ParentFunc->getContext();
   Type *Int32Ty = Type::getInt32Ty(Context);
@@ -416,7 +449,9 @@ Function *WinEHStatePass::generateLSDAInEAXThunk(Function *ParentFunc) {
   Builder.CreateRet(Call);
   return Trampoline;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHStatePass::linkExceptionRegistration(IRBuilder<> &Builder,
                                                Function *Handler) {
   // Emit the .safeseh directive for this function.
@@ -434,7 +469,9 @@ void WinEHStatePass::linkExceptionRegistration(IRBuilder<> &Builder,
   // [fs:00] = Link
   Builder.CreateStore(Link, FSZero);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHStatePass::unlinkExceptionRegistration(IRBuilder<> &Builder) {
   // Clone Link into the current BB for better address mode folding.
   if (auto *GEP = dyn_cast<GetElementPtrInst>(Link)) {
@@ -450,11 +487,13 @@ void WinEHStatePass::unlinkExceptionRegistration(IRBuilder<> &Builder) {
       Constant::getNullValue(LinkTy->getPointerTo()->getPointerTo(257));
   Builder.CreateStore(Next, FSZero);
 }
+#endif
 
 // Calls to setjmp(p) are lowered to _setjmp3(p, 0) by the frontend.
 // The idea behind _setjmp3 is that it takes an optional number of personality
 // specific parameters to indicate how to restore the personality-specific frame
 // state when longjmp is initiated.  Typically, the current TryLevel is saved.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHStatePass::rewriteSetJmpCallSite(IRBuilder<> &Builder, Function &F,
                                            CallSite CS, Value *State) {
   // Don't rewrite calls with a weird number of arguments.
@@ -506,8 +545,10 @@ void WinEHStatePass::rewriteSetJmpCallSite(IRBuilder<> &Builder, Function &F,
   Inst->replaceAllUsesWith(NewInst);
   Inst->eraseFromParent();
 }
+#endif
 
 // Figure out what state we should assign calls in this block.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 int WinEHStatePass::getBaseStateForBB(
     DenseMap<BasicBlock *, ColorVector> &BlockColors, WinEHFuncInfo &FuncInfo,
     BasicBlock *BB) {
@@ -525,8 +566,10 @@ int WinEHStatePass::getBaseStateForBB(
 
   return BaseState;
 }
+#endif
 
 // Calculate the state a call-site is in.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 int WinEHStatePass::getStateForCallSite(
     DenseMap<BasicBlock *, ColorVector> &BlockColors, WinEHFuncInfo &FuncInfo,
     CallSite CS) {
@@ -539,6 +582,7 @@ int WinEHStatePass::getStateForCallSite(
   // an unwind. Ensure they are in the -1 state.
   return getBaseStateForBB(BlockColors, FuncInfo, CS.getParent());
 }
+#endif
 
 // Calculate the intersection of all the FinalStates for a BasicBlock's
 // predecessors.
@@ -617,6 +661,7 @@ static int getSuccState(DenseMap<BasicBlock *, int> &InitialStates, Function &F,
   return CommonState;
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 bool WinEHStatePass::isStateStoreNeeded(EHPersonality Personality,
                                         CallSite CS) {
   if (!CS)
@@ -629,7 +674,9 @@ bool WinEHStatePass::isStateStoreNeeded(EHPersonality Personality,
   // If the function throws, it needs a state store.
   return !CS.doesNotThrow();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHStatePass::addStateStores(Function &F, WinEHFuncInfo &FuncInfo) {
   // Mark the registration node. The backend needs to know which alloca it is so
   // that it can recover the original frame pointer.
@@ -787,10 +834,13 @@ void WinEHStatePass::addStateStores(Function &F, WinEHFuncInfo &FuncInfo) {
     rewriteSetJmpCallSite(Builder, F, CS, State);
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinEHStatePass::insertStateNumberStore(Instruction *IP, int State) {
   IRBuilder<> Builder(IP);
   Value *StateField =
       Builder.CreateStructGEP(nullptr, RegNode, StateFieldIndex);
   Builder.CreateStore(Builder.getInt32(State), StateField);
 }
+#endif

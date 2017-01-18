@@ -31,15 +31,18 @@ EHPersonality llvm::classifyEHPersonality(const Value *Pers) {
     .Case("__gcc_personality_v0",  EHPersonality::GNU_C)
     .Case("__gcc_personality_sj0", EHPersonality::GNU_C_SjLj)
     .Case("__objc_personality_v0", EHPersonality::GNU_ObjC)
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     .Case("_except_handler3",      EHPersonality::MSVC_X86SEH)
     .Case("_except_handler4",      EHPersonality::MSVC_X86SEH)
     .Case("__C_specific_handler",  EHPersonality::MSVC_Win64SEH)
     .Case("__CxxFrameHandler3",    EHPersonality::MSVC_CXX)
     .Case("ProcessCLRException",   EHPersonality::CoreCLR)
+#endif
     .Case("rust_eh_personality",   EHPersonality::Rust)
     .Default(EHPersonality::Unknown);
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // short circuited in header
 bool llvm::canSimplifyInvokeNoUnwind(const Function *F) {
   EHPersonality Personality = classifyEHPersonality(F->getPersonalityFn());
   // We can't simplify any invokes to nounwind functions if the personality
@@ -47,7 +50,9 @@ bool llvm::canSimplifyInvokeNoUnwind(const Function *F) {
   // implies that the function does not throw synchronous exceptions.
   return !isAsynchronousEHPersonality(Personality);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // whole source is candidate for removal
 DenseMap<BasicBlock *, ColorVector> llvm::colorEHFunclets(Function &F) {
   SmallVector<std::pair<BasicBlock *, BasicBlock *>, 16> Worklist;
   BasicBlock *EntryBlock = &F.getEntryBlock();
@@ -107,3 +112,4 @@ DenseMap<BasicBlock *, ColorVector> llvm::colorEHFunclets(Function &F) {
   }
   return BlockColors;
 }
+#endif

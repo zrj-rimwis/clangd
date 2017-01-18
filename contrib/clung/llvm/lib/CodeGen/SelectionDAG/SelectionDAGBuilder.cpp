@@ -1239,15 +1239,23 @@ SDValue SelectionDAGBuilder::getValueImpl(const Value *V) {
 }
 
 void SelectionDAGBuilder::visitCatchPad(const CatchPadInst &I) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume both false
   auto Pers = classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
   bool IsMSVCCXX = Pers == EHPersonality::MSVC_CXX;
   bool IsCoreCLR = Pers == EHPersonality::CoreCLR;
+#endif
   MachineBasicBlock *CatchPadMBB = FuncInfo.MBB;
   // In MSVC C++ and CoreCLR, catchblocks are funclets and need prologues.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   if (IsMSVCCXX || IsCoreCLR)
     CatchPadMBB->setIsEHFuncletEntry();
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   DAG.setRoot(DAG.getNode(ISD::CATCHPAD, getCurSDLoc(), MVT::Other, getControlRoot()));
+#else
+  report_fatal_error("zrj: should not visitCatchPad");
+#endif
 }
 
 void SelectionDAGBuilder::visitCatchRet(const CatchReturnInst &I) {
@@ -1256,6 +1264,7 @@ void SelectionDAGBuilder::visitCatchRet(const CatchReturnInst &I) {
   FuncInfo.MBB->addSuccessor(TargetMBB);
 
   auto Pers = classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool IsSEH = isAsynchronousEHPersonality(Pers);
   if (IsSEH) {
     // If this is not a fall-through branch or optimizations are switched off,
@@ -1266,6 +1275,7 @@ void SelectionDAGBuilder::visitCatchRet(const CatchReturnInst &I) {
                               getControlRoot(), DAG.getBasicBlock(TargetMBB)));
     return;
   }
+#endif
 
   // Figure out the funclet membership for the catchret's successor.
   // This will be used by the FuncletLayout pass to determine how to order the
@@ -1282,17 +1292,25 @@ void SelectionDAGBuilder::visitCatchRet(const CatchReturnInst &I) {
   assert(SuccessorColorMBB && "No MBB for SuccessorColor!");
 
   // Create the terminator node.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   SDValue Ret = DAG.getNode(ISD::CATCHRET, getCurSDLoc(), MVT::Other,
                             getControlRoot(), DAG.getBasicBlock(TargetMBB),
                             DAG.getBasicBlock(SuccessorColorMBB));
   DAG.setRoot(Ret);
+#else
+  report_fatal_error("zrj: should not visitCatchRet");
+#endif
 }
 
 void SelectionDAGBuilder::visitCleanupPad(const CleanupPadInst &CPI) {
   // Don't emit any special code for the cleanuppad instruction. It just marks
   // the start of a funclet.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX messy, ensure we do not end here
   FuncInfo.MBB->setIsEHFuncletEntry();
   FuncInfo.MBB->setIsCleanupFuncletEntry();
+#else
+  report_fatal_error("zrj: should not visitCleanupPad");
+#endif
 }
 
 /// When an invoke or a cleanupret unwinds to the next EH pad, there are
@@ -1310,8 +1328,10 @@ static void findUnwindDestinations(
         &UnwindDests) {
   EHPersonality Personality =
     classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume both false
   bool IsMSVCCXX = Personality == EHPersonality::MSVC_CXX;
   bool IsCoreCLR = Personality == EHPersonality::CoreCLR;
+#endif
 
   while (EHPadBB) {
     const Instruction *Pad = EHPadBB->getFirstNonPHI();
@@ -1323,16 +1343,22 @@ static void findUnwindDestinations(
     } else if (isa<CleanupPadInst>(Pad)) {
       // Stop on cleanup pads. Cleanups are always funclet entries for all known
       // personalities.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX messy. ensure we do not end here
       UnwindDests.emplace_back(FuncInfo.MBBMap[EHPadBB], Prob);
       UnwindDests.back().first->setIsEHFuncletEntry();
+#else
+      report_fatal_error("zrj: should not CleanupPadInst in findUnwindDestinations");
+#endif
       break;
     } else if (auto *CatchSwitch = dyn_cast<CatchSwitchInst>(Pad)) {
       // Add the catchpad handlers to the possible destinations.
       for (const BasicBlock *CatchPadBB : CatchSwitch->handlers()) {
         UnwindDests.emplace_back(FuncInfo.MBBMap[CatchPadBB], Prob);
         // For MSVC++ and the CLR, catchblocks are funclets and need prologues.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
         if (IsMSVCCXX || IsCoreCLR)
           UnwindDests.back().first->setIsEHFuncletEntry();
+#endif
       }
       NewEHPadBB = CatchSwitch->getUnwindDest();
     } else {
@@ -5749,11 +5775,15 @@ SelectionDAGBuilder::lowerInvokable(TargetLowering::CallLoweringInfo &CLI,
     DAG.setRoot(DAG.getEHLabel(getCurSDLoc(), getRoot(), EndLabel));
 
     // Inform MachineModuleInfo of range.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     if (MMI.hasEHFunclets()) {
       assert(CLI.CS);
       WinEHFuncInfo *EHInfo = DAG.getMachineFunction().getWinEHFuncInfo();
       EHInfo->addIPToStateRange(cast<InvokeInst>(CLI.CS->getInstruction()),
                                 BeginLabel, EndLabel);
+#else
+    if (false) {
+#endif
     } else {
       MMI.addInvoke(FuncInfo.MBBMap[EHPadBB], BeginLabel, EndLabel);
     }

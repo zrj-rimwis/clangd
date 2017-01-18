@@ -193,9 +193,11 @@ bool DwarfEHPrepare::InsertUnwindResumeCalls(Function &Fn) {
     return false;
 
   // Check the personality, don't do anything if it's funclet-based.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   EHPersonality Pers = classifyEHPersonality(Fn.getPersonalityFn());
   if (isFuncletEHPersonality(Pers))
     return false;
+#endif
 
   LLVMContext &Ctx = Fn.getContext();
 

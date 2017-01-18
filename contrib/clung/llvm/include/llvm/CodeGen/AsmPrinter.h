@@ -228,7 +228,9 @@ public:
   enum CFIMoveType { CFI_M_None, CFI_M_EH, CFI_M_Debug };
   CFIMoveType needsCFIMoves();
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool needsSEHMoves();
+#endif
 
   /// Print to the current output stream assembly representations of the
   /// constants in the constant pool MCP. This is used to print out constants

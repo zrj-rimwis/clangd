@@ -315,8 +315,10 @@ void PEI::calculateSaveRestoreBlocks(MachineFunction &Fn) {
   // Save refs to entry and return blocks.
   SaveBlocks.push_back(&Fn.front());
   for (MachineBasicBlock &MBB : Fn) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     if (MBB.isEHFuncletEntry())
       SaveBlocks.push_back(&MBB);
+#endif
     if (MBB.isReturnBlock())
       RestoreBlocks.push_back(&MBB);
   }
@@ -817,8 +819,10 @@ void PEI::calculateFrameObjectOffsets(MachineFunction &Fn) {
 
   // Retrieve the Exception Handler registration node.
   int EHRegNodeFrameIndex = INT_MAX;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume nullptr
   if (const WinEHFuncInfo *FuncInfo = Fn.getWinEHFuncInfo())
     EHRegNodeFrameIndex = FuncInfo->EHRegNodeFrameIndex;
+#endif
 
   // Make sure that the stack protector comes before the local variables on the
   // stack.

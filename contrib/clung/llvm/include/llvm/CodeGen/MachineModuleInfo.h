@@ -160,7 +160,9 @@ class MachineModuleInfo : public ImmutablePass {
 
   bool CallsEHReturn;
   bool CallsUnwindInit;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool HasEHFunclets;
+#endif
 
   // TODO: Ideally, what we'd like is to have a switch that allows emitting 
   // synchronous (precise at call-sites only) CFA into .eh_frame. However,
@@ -248,8 +250,10 @@ public:
   bool callsUnwindInit() const { return CallsUnwindInit; }
   void setCallsUnwindInit(bool b) { CallsUnwindInit = b; }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool hasEHFunclets() const { return HasEHFunclets; }
   void setHasEHFunclets(bool V) { HasEHFunclets = V; }
+#endif
 
   bool usesVAFloatArgument() const {
     return UsesVAFloatArgument;

@@ -191,6 +191,7 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     MBB.erase(MBBI);
     return true;
   }
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX recheck
   case X86::EH_RESTORE: {
     // Restore ESP and EBP, and optionally ESI if required.
     bool IsSEH = isAsynchronousEHPersonality(classifyEHPersonality(
@@ -199,6 +200,7 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     MBBI->eraseFromParent();
     return true;
   }
+#endif
   case X86::LCMPXCHG8B_SAVE_EBX:
   case X86::LCMPXCHG16B_SAVE_RBX: {
     // Perform the following transformation.

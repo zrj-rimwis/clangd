@@ -429,11 +429,13 @@ void llvm::computeLoopSafetyInfo(LoopSafetyInfo *SafetyInfo, Loop *CurLoop) {
 
   // Compute funclet colors if we might sink/hoist in a function with a funclet
   // personality routine.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   Function *Fn = CurLoop->getHeader()->getParent();
   if (Fn->hasPersonalityFn())
     if (Constant *PersonalityFn = Fn->getPersonalityFn())
       if (isFuncletEHPersonality(classifyEHPersonality(PersonalityFn)))
         SafetyInfo->BlockColors = colorEHFunclets(*Fn);
+#endif
 }
 
 /// canSinkOrHoistInst - Return true if the hoister and sinker can handle this
@@ -540,7 +542,9 @@ static bool isTriviallyReplacablePHI(const PHINode &PN, const Instruction &I) {
 ///
 static bool isNotUsedInLoop(const Instruction &I, const Loop *CurLoop,
                             const LoopSafetyInfo *SafetyInfo) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   const auto &BlockColors = SafetyInfo->BlockColors;
+#endif
   for (const User *U : I.users()) {
     const Instruction *UI = cast<Instruction>(U);
     if (const PHINode *PN = dyn_cast<PHINode>(UI)) {
@@ -551,10 +555,12 @@ static bool isNotUsedInLoop(const Instruction &I, const Loop *CurLoop,
 
       // We need to sink a callsite to a unique funclet.  Avoid sinking if the
       // phi use is too muddled.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume empty
       if (isa<CallInst>(I))
         if (!BlockColors.empty() &&
             BlockColors.find(const_cast<BasicBlock *>(BB))->second.size() != 1)
           return false;
+#endif
 
       // A PHI node where all of the incoming values are this instruction are
       // special -- they can just be RAUW'ed with the instruction and thus
@@ -589,7 +595,9 @@ CloneInstructionInExitBlock(Instruction &I, BasicBlock &ExitBlock, PHINode &PN,
                             const LoopSafetyInfo *SafetyInfo) {
   Instruction *New;
   if (auto *CI = dyn_cast<CallInst>(&I)) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     const auto &BlockColors = SafetyInfo->BlockColors;
+#endif
 
     // Sinking call-sites need to be handled differently from other
     // instructions.  The cloned call-site needs a funclet bundle operand
@@ -604,6 +612,7 @@ CloneInstructionInExitBlock(Instruction &I, BasicBlock &ExitBlock, PHINode &PN,
       OpBundles.emplace_back(Bundle);
     }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume empty
     if (!BlockColors.empty()) {
       const ColorVector &CV = BlockColors.find(&ExitBlock)->second;
       assert(CV.size() == 1 && "non-unique color for exit block!");
@@ -612,6 +621,7 @@ CloneInstructionInExitBlock(Instruction &I, BasicBlock &ExitBlock, PHINode &PN,
       if (EHPad->isEHPad())
         OpBundles.emplace_back("funclet", EHPad);
     }
+#endif
 
     New = CallInst::Create(CI, OpBundles);
   } else {

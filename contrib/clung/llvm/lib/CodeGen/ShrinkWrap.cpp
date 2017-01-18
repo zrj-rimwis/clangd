@@ -447,10 +447,12 @@ bool ShrinkWrap::runOnMachineFunction(MachineFunction &MF) {
     DEBUG(dbgs() << "Look into: " << MBB.getNumber() << ' ' << MBB.getName()
                  << '\n');
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     if (MBB.isEHFuncletEntry()) {
       DEBUG(dbgs() << "EH Funclets are not supported yet.\n");
       return false;
     }
+#endif
 
     for (const MachineInstr &MI : MBB) {
       if (!useOrDefCSROrFI(MI, RS.get()))
@@ -536,7 +538,11 @@ bool ShrinkWrap::isShrinkWrapEnabled(const MachineFunction &MF) {
     return TFI->enableShrinkWrapping(MF) &&
       // Windows with CFI has some limitations that make it impossible
       // to use shrink-wrapping.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false
       !MF.getTarget().getMCAsmInfo()->usesWindowsCFI() &&
+#else
+      !false &&
+#endif
       // Sanitizers look at the value of the stack at the location
       // of the crash. Since a crash can happen anywhere, the
       // frame must be lowered before anything else happen for the

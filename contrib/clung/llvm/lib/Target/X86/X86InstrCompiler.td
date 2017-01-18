@@ -161,29 +161,6 @@ def EH_RETURN64   : I<0xC3, RawFrm, (outs), (ins GR64:$addr),
 
 }
 
-let isTerminator = 1, hasSideEffects = 1, isBarrier = 1, hasCtrlDep = 1,
-    isCodeGenOnly = 1, isReturn = 1 in {
-  def CLEANUPRET : I<0, Pseudo, (outs), (ins), "# CLEANUPRET", [(cleanupret)]>;
-
-  // CATCHRET needs a custom inserter for SEH.
-  let usesCustomInserter = 1 in
-    def CATCHRET : I<0, Pseudo, (outs), (ins brtarget32:$dst, brtarget32:$from),
-                     "# CATCHRET",
-                     [(catchret bb:$dst, bb:$from)]>;
-}
-
-let hasSideEffects = 1, hasCtrlDep = 1, isCodeGenOnly = 1,
-    usesCustomInserter = 1 in
-def CATCHPAD : I<0, Pseudo, (outs), (ins), "# CATCHPAD", [(catchpad)]>;
-
-// This instruction is responsible for re-establishing stack pointers after an
-// exception has been caught and we are rejoining normal control flow in the
-// parent function or funclet. It generally sets ESP and EBP, and optionally
-// ESI. It is only needed for 32-bit WinEH, as the runtime restores CSRs for us
-// elsewhere.
-let hasSideEffects = 1, hasCtrlDep = 1, isCodeGenOnly = 1 in
-def EH_RESTORE : I<0, Pseudo, (outs), (ins), "# EH_RESTORE", []>;
-
 let hasSideEffects = 1, isBarrier = 1, isCodeGenOnly = 1,
     usesCustomInserter = 1 in {
   def EH_SjLj_SetJmp32  : I<0, Pseudo, (outs GR32:$dst), (ins i32mem:$buf),
@@ -215,24 +192,8 @@ let isBranch = 1, isTerminator = 1, isCodeGenOnly = 1 in {
 //===----------------------------------------------------------------------===//
 // Pseudo instructions used by unwind info.
 //
-let isPseudo = 1 in {
-  def SEH_PushReg : I<0, Pseudo, (outs), (ins i32imm:$reg),
-                            "#SEH_PushReg $reg", []>;
-  def SEH_SaveReg : I<0, Pseudo, (outs), (ins i32imm:$reg, i32imm:$dst),
-                            "#SEH_SaveReg $reg, $dst", []>;
-  def SEH_SaveXMM : I<0, Pseudo, (outs), (ins i32imm:$reg, i32imm:$dst),
-                            "#SEH_SaveXMM $reg, $dst", []>;
-  def SEH_StackAlloc : I<0, Pseudo, (outs), (ins i32imm:$size),
-                            "#SEH_StackAlloc $size", []>;
-  def SEH_SetFrame : I<0, Pseudo, (outs), (ins i32imm:$reg, i32imm:$offset),
-                            "#SEH_SetFrame $reg, $offset", []>;
-  def SEH_PushFrame : I<0, Pseudo, (outs), (ins i1imm:$mode),
-                            "#SEH_PushFrame $mode", []>;
-  def SEH_EndPrologue : I<0, Pseudo, (outs), (ins),
-                            "#SEH_EndPrologue", []>;
-  def SEH_Epilogue : I<0, Pseudo, (outs), (ins),
-                            "#SEH_Epilogue", []>;
-}
+
+// REMOVED
 
 //===----------------------------------------------------------------------===//
 // Pseudo instructions used by segmented stacks.

@@ -19,21 +19,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
 
 //===----------------------------------------------------------------------===//
 // SEH intrinsics for Windows
-let TargetPrefix = "x86" in {
-  def int_x86_seh_lsda : Intrinsic<[llvm_ptr_ty], [llvm_ptr_ty], [IntrNoMem]>;
 
-  // Marks the EH registration node created in LLVM IR prior to code generation.
-  def int_x86_seh_ehregnode : Intrinsic<[], [llvm_ptr_ty], []>;
-
-  // Marks the EH guard slot node created in LLVM IR prior to code generation.
-  def int_x86_seh_ehguard : Intrinsic<[], [llvm_ptr_ty], []>;
-
-  // Given a pointer to the end of an EH registration object, returns the true
-  // parent frame address that can be used with llvm.localrecover.
-  def int_x86_seh_recoverfp : Intrinsic<[llvm_ptr_ty],
-                                        [llvm_ptr_ty, llvm_ptr_ty],
-                                        [IntrNoMem]>;
-}
+// REMOVED
 
 //===----------------------------------------------------------------------===//
 // FLAGS.

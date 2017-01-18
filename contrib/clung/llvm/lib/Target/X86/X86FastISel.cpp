@@ -2502,8 +2502,10 @@ bool X86FastISel::fastLowerIntrinsicCall(const IntrinsicInst *II) {
   }
   case Intrinsic::frameaddress: {
     MachineFunction *MF = FuncInfo.MF;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     if (MF->getTarget().getMCAsmInfo()->usesWindowsCFI())
       return false;
+#endif
 
     Type *RetTy = II->getCalledFunction()->getReturnType();
 

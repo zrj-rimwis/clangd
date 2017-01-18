@@ -104,9 +104,11 @@ bool StackProtector::runOnFunction(Function &Fn) {
   // TODO(etienneb): Functions with funclets are not correctly supported now.
   // Do nothing if this is funclet-based personality.
   if (Fn.hasPersonalityFn()) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     EHPersonality Personality = classifyEHPersonality(Fn.getPersonalityFn());
     if (isFuncletEHPersonality(Personality))
       return false;
+#endif
   }
 
   ++NumFunProtected;

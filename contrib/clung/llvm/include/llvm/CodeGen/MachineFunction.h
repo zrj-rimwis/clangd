@@ -46,7 +46,9 @@ class TargetMachine;
 class TargetSubtargetInfo;
 class TargetRegisterClass;
 struct MachinePointerInfo;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 struct WinEHFuncInfo;
+#endif
 
 template <>
 struct ilist_traits<MachineBasicBlock>
@@ -183,7 +185,9 @@ class MachineFunction {
 
   // Keeps track of Windows exception handling related data. This will be null
   // for functions that aren't using a funclet-based EH personality.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   WinEHFuncInfo *WinEHInfo = nullptr;
+#endif
 
   // Function-level unique numbering for MachineBasicBlocks.  When a
   // MachineBasicBlock is inserted into a MachineFunction is it automatically
@@ -306,8 +310,10 @@ public:
   /// getWinEHFuncInfo - Return information about how the current function uses
   /// Windows exception handling. Returns null for functions that don't use
   /// funclets for exception handling.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume nullptr for both
   const WinEHFuncInfo *getWinEHFuncInfo() const { return WinEHInfo; }
   WinEHFuncInfo *getWinEHFuncInfo() { return WinEHInfo; }
+#endif
 
   /// getAlignment - Return the alignment (log2, not bytes) of the function.
   ///

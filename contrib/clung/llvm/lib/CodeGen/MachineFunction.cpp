@@ -136,10 +136,12 @@ MachineFunction::MachineFunction(const Function *F, const TargetMachine &TM,
   FunctionNumber = FunctionNum;
   JumpTableInfo = nullptr;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (isFuncletEHPersonality(classifyEHPersonality(
           F->hasPersonalityFn() ? F->getPersonalityFn() : nullptr))) {
     WinEHInfo = new (Allocator) WinEHFuncInfo();
   }
+#endif
 
   assert(TM.isCompatibleDataLayout(getDataLayout()) &&
          "Can't create a MachineFunction using a Module with a "
@@ -179,10 +181,12 @@ MachineFunction::~MachineFunction() {
     Allocator.Deallocate(JumpTableInfo);
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume nullptr
   if (WinEHInfo) {
     WinEHInfo->~WinEHFuncInfo();
     Allocator.Deallocate(WinEHInfo);
   }
+#endif
 }
 
 const DataLayout &MachineFunction::getDataLayout() const {

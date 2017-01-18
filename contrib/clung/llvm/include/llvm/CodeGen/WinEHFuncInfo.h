@@ -118,6 +118,7 @@ struct WinEHFuncInfo {
 /// Analyze the IR in ParentFn and it's handlers to build WinEHFuncInfo, which
 /// describes the state numbers and tables used by __CxxFrameHandler3. This
 /// analysis assumes that WinEHPrepare has already been run.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void calculateWinCXXEHStateNumbers(const Function *ParentFn,
                                    WinEHFuncInfo &FuncInfo);
 
@@ -125,5 +126,6 @@ void calculateSEHStateNumbers(const Function *ParentFn,
                               WinEHFuncInfo &FuncInfo);
 
 void calculateClrEHStateNumbers(const Function *Fn, WinEHFuncInfo &FuncInfo);
+#endif
 }
 #endif // LLVM_CODEGEN_WINEHFUNCINFO_H

@@ -27,10 +27,17 @@ enum class EHPersonality {
   GNU_CXX,
   GNU_CXX_SjLj,
   GNU_ObjC,
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   MSVC_X86SEH,
   MSVC_Win64SEH,
   MSVC_CXX,
   CoreCLR,
+#else
+  MSVC_X86SEH_disabled,
+  MSVC_Win64SEH_disabled,
+  MSVC_CXX_disabled,
+  CoreCLR_disabled,
+#endif
   Rust
 };
 
@@ -41,6 +48,7 @@ EHPersonality classifyEHPersonality(const Value *Pers);
 
 /// \brief Returns true if this personality function catches asynchronous
 /// exceptions.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
 inline bool isAsynchronousEHPersonality(EHPersonality Pers) {
   // The two SEH personality functions can catch asynch exceptions. We assume
   // unknown personalities don't catch asynch exceptions.
@@ -53,9 +61,11 @@ inline bool isAsynchronousEHPersonality(EHPersonality Pers) {
   }
   llvm_unreachable("invalid enum");
 }
+#endif
 
 /// \brief Returns true if this is a personality function that invokes
 /// handler funclets (which must return to it).
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
 inline bool isFuncletEHPersonality(EHPersonality Pers) {
   switch (Pers) {
   case EHPersonality::MSVC_CXX:
@@ -68,6 +78,7 @@ inline bool isFuncletEHPersonality(EHPersonality Pers) {
   }
   llvm_unreachable("invalid enum");
 }
+#endif
 
 /// \brief Return true if this personality may be safely removed if there
 /// are no invoke instructions remaining in the current function.
@@ -82,15 +93,21 @@ inline bool isNoOpWithoutInvoke(EHPersonality Pers) {
   llvm_unreachable("invalid enum");
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // short circuit to true
 bool canSimplifyInvokeNoUnwind(const Function *F);
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 typedef TinyPtrVector<BasicBlock *> ColorVector;
+#endif
 
 /// \brief If an EH funclet personality is in use (see isFuncletEHPersonality),
 /// this will recompute which blocks are in which funclet. It is possible that
 /// some blocks are in multiple funclets. Consider this analysis to be
 /// expensive.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // and thus it must go away
 DenseMap<BasicBlock *, ColorVector> colorEHFunclets(Function &F);
+#endif
 
 } // end namespace llvm
 

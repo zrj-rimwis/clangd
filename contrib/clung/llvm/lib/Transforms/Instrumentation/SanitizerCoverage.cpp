@@ -358,9 +358,11 @@ bool SanitizerCoverageModule::runOnFunction(Function &F) {
   // Don't instrument functions using SEH for now. Splitting basic blocks like
   // we do for coverage breaks WinEHPrepare.
   // FIXME: Remove this when SEH no longer uses landingpad pattern matching.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (F.hasPersonalityFn() &&
       isAsynchronousEHPersonality(classifyEHPersonality(F.getPersonalityFn())))
     return false;
+#endif
   if (Options.CoverageType >= SanitizerCoverageOptions::SCK_Edge)
     SplitAllCriticalEdges(F);
   SmallVector<Instruction *, 8> IndirCalls;

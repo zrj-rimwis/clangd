@@ -1430,6 +1430,7 @@ bool llvm::InlineFunction(CallSite CS, InlineFunctionInfo &IFI,
   // properly nest the callee.
   Instruction *CallSiteEHPad = nullptr;
   if (CallerPersonality) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     EHPersonality Personality = classifyEHPersonality(CallerPersonality);
     if (isFuncletEHPersonality(Personality)) {
       Optional<OperandBundleUse> ParentFunclet =
@@ -1461,6 +1462,7 @@ bool llvm::InlineFunction(CallSite CS, InlineFunctionInfo &IFI,
         }
       }
     }
+#endif
   }
 
   // Determine if we are dealing with a call in an EHPad which does not unwind

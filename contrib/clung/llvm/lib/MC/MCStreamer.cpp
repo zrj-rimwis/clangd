@@ -444,7 +444,9 @@ void MCStreamer::EmitCFIWindowSave() {
 
 void MCStreamer::EnsureValidWinFrameInfo() {
   const MCAsmInfo *MAI = Context.getAsmInfo();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false XXX cut point
   if (!MAI->usesWindowsCFI())
+#endif
     report_fatal_error(".seh_* directives are not supported on this target");
   if (!CurrentWinFrameInfo || CurrentWinFrameInfo->End)
     report_fatal_error("No open Win64 EH frame function!");
@@ -452,7 +454,9 @@ void MCStreamer::EnsureValidWinFrameInfo() {
 
 void MCStreamer::EmitWinCFIStartProc(const MCSymbol *Symbol) {
   const MCAsmInfo *MAI = Context.getAsmInfo();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false XXX cut point
   if (!MAI->usesWindowsCFI())
+#endif
     report_fatal_error(".seh_* directives are not supported on this target");
   if (CurrentWinFrameInfo && !CurrentWinFrameInfo->End)
     report_fatal_error("Starting a function before ending the previous one!");

@@ -22,7 +22,9 @@ class GlobalValue;
 class MachineFunction;
 class MCExpr;
 class Value;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 struct WinEHFuncInfo;
+#endif
 
 class LLVM_LIBRARY_VISIBILITY WinException : public EHStreamer {
   /// Per-function flag to indicate if personality info should be emitted.
@@ -38,25 +40,34 @@ class LLVM_LIBRARY_VISIBILITY WinException : public EHStreamer {
   bool useImageRel32 = false;
 
   /// Pointer to the current funclet entry BB.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   const MachineBasicBlock *CurrentFuncletEntry = nullptr;
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void emitCSpecificHandlerTable(const MachineFunction *MF);
 
   void emitSEHActionsForRange(const WinEHFuncInfo &FuncInfo,
                               const MCSymbol *BeginLabel,
                               const MCSymbol *EndLabel, int State);
+#endif
 
   /// Emit the EH table data for 32-bit and 64-bit functions using
   /// the __CxxFrameHandler3 personality.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void emitCXXFrameHandler3Table(const MachineFunction *MF);
+#endif
 
   /// Emit the EH table data for _except_handler3 and _except_handler4
   /// personality functions. These are only used on 32-bit and do not use CFI
   /// tables.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void emitExceptHandlerTable(const MachineFunction *MF);
 
   void emitCLRExceptionTable(const MachineFunction *MF);
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void computeIP2StateTable(
       const MachineFunction *MF, const WinEHFuncInfo &FuncInfo,
       SmallVectorImpl<std::pair<const MCExpr *, int>> &IPToStateTable);
@@ -65,19 +76,24 @@ class LLVM_LIBRARY_VISIBILITY WinException : public EHStreamer {
   /// outlined funclets.
   void emitEHRegistrationOffsetLabel(const WinEHFuncInfo &FuncInfo,
                                      StringRef FLinkageName);
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   const MCExpr *create32bitRef(const MCSymbol *Value);
   const MCExpr *create32bitRef(const GlobalValue *GV);
   const MCExpr *getLabelPlusOne(const MCSymbol *Label);
   const MCExpr *getOffset(const MCSymbol *OffsetOf, const MCSymbol *OffsetFrom);
   const MCExpr *getOffsetPlusOne(const MCSymbol *OffsetOf,
                                  const MCSymbol *OffsetFrom);
+#endif
 
   /// Gets the offset that we should use in a table for a stack object with the
   /// given index. For targets using CFI (Win64, etc), this is relative to the
   /// established SP at the end of the prologue. For targets without CFI (Win32
   /// only), it is relative to the frame pointer.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   int getFrameIndexOffset(int FrameIndex, const WinEHFuncInfo &FuncInfo);
+#endif
 
 public:
   //===--------------------------------------------------------------------===//
@@ -97,8 +113,10 @@ public:
   void endFunction(const MachineFunction *) override;
 
   /// \brief Emit target-specific EH funclet machinery.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   void beginFunclet(const MachineBasicBlock &MBB, MCSymbol *Sym) override;
   void endFunclet() override;
+#endif
 };
 }
 

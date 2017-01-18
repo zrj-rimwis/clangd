@@ -43,7 +43,9 @@ struct LoopSafetyInfo {
                        // may throw.
   bool HeaderMayThrow; // Same as previous, but specific to loop header
   // Used to update funclet bundle operands.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   DenseMap<BasicBlock *, ColorVector> BlockColors;
+#endif
   LoopSafetyInfo() : MayThrow(false), HeaderMayThrow(false) {}
 };
 

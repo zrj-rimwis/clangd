@@ -55,10 +55,16 @@ class TargetInstrInfo : public MCInstrInfo {
   void operator=(const TargetInstrInfo &) = delete;
 public:
   TargetInstrInfo(unsigned CFSetupOpcode = ~0u, unsigned CFDestroyOpcode = ~0u,
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // wow the power of c++
                   unsigned CatchRetOpcode = ~0u, unsigned ReturnOpcode = ~0u)
+#else
+                  unsigned ReturnOpcode = ~0u)
+#endif
       : CallFrameSetupOpcode(CFSetupOpcode),
         CallFrameDestroyOpcode(CFDestroyOpcode),
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
         CatchRetOpcode(CatchRetOpcode),
+#endif
         ReturnOpcode(ReturnOpcode) {}
 
   virtual ~TargetInstrInfo();
@@ -151,7 +157,9 @@ public:
   unsigned getCallFrameSetupOpcode() const { return CallFrameSetupOpcode; }
   unsigned getCallFrameDestroyOpcode() const { return CallFrameDestroyOpcode; }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   unsigned getCatchReturnOpcode() const { return CatchRetOpcode; }
+#endif
   unsigned getReturnOpcode() const { return ReturnOpcode; }
 
   /// Returns the actual stack pointer adjustment made by an instruction
@@ -1441,7 +1449,9 @@ public:
 
 private:
   unsigned CallFrameSetupOpcode, CallFrameDestroyOpcode;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   unsigned CatchRetOpcode;
+#endif
   unsigned ReturnOpcode;
 };
 

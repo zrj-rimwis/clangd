@@ -616,7 +616,11 @@ MachineVerifier::visitMachineBasicBlockBefore(const MachineBasicBlock *MBB) {
       !(AsmInfo &&
         AsmInfo->getExceptionHandlingType() == ExceptionHandling::SjLj &&
         BB && isa<SwitchInst>(BB->getTerminator())) &&
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false
       !isFuncletEHPersonality(classifyEHPersonality(Fn->getPersonalityFn())))
+#else
+      !false)
+#endif
     report("MBB has more than one landing pad successor", MBB);
 
   // Call AnalyzeBranch. If it succeeds, there several more conditions to check.

@@ -428,7 +428,11 @@ void InstrInfoEmitter::run(raw_ostream &OS) {
   OS << "namespace llvm {\n";
   OS << "struct " << ClassName << " : public TargetInstrInfo {\n"
      << "  explicit " << ClassName
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
      << "(int CFSetupOpcode = -1, int CFDestroyOpcode = -1, int CatchRetOpcode = -1, int ReturnOpcode = -1);\n"
+#else
+     << "(int CFSetupOpcode = -1, int CFDestroyOpcode = -1, int ReturnOpcode = -1);\n"
+#endif
      << "  ~" << ClassName << "() override {}\n"
      << "};\n";
   OS << "} // end llvm namespace\n";
@@ -443,8 +447,13 @@ void InstrInfoEmitter::run(raw_ostream &OS) {
   OS << "extern const unsigned " << TargetName << "InstrNameIndices[];\n";
   OS << "extern const char " << TargetName << "InstrNameData[];\n";
   OS << ClassName << "::" << ClassName
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // wow the c++
      << "(int CFSetupOpcode, int CFDestroyOpcode, int CatchRetOpcode, int ReturnOpcode)\n"
      << "  : TargetInstrInfo(CFSetupOpcode, CFDestroyOpcode, CatchRetOpcode, ReturnOpcode) {\n"
+#else
+     << "(int CFSetupOpcode, int CFDestroyOpcode, int ReturnOpcode)\n"
+     << "  : TargetInstrInfo(CFSetupOpcode, CFDestroyOpcode, ReturnOpcode) {\n"
+#endif
      << "  InitMCInstrInfo(" << TargetName << "Insts, " << TargetName
      << "InstrNameIndices, " << TargetName << "InstrNameData, "
      << NumberedInstructions.size() << ");\n}\n";

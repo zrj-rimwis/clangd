@@ -602,12 +602,20 @@ namespace ISD {
     EH_LABEL,
 
     /// CATCHPAD - Represents a catchpad instruction.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     CATCHPAD,
+#else
+    CATCHPAD_disabled,
+#endif
 
     /// CATCHRET - Represents a return from a catch block funclet. Used for
     /// MSVC compatible exception handling. Takes a chain operand and a
     /// destination basic block operand.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     CATCHRET,
+#else
+    CATCHRET_disabled,
+#endif
 
     /// CLEANUPRET - Represents a return from a cleanup block funclet.  Used for
     /// MSVC compatible exception handling. Takes only a chain operand.

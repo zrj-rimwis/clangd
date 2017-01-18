@@ -1277,7 +1277,11 @@ MachineBasicBlock::computeRegisterLiveness(const TargetRegisterInfo *TRI,
 const uint32_t *
 MachineBasicBlock::getBeginClobberMask(const TargetRegisterInfo *TRI) const {
   // EH funclet entry does not preserve any registers.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   return isEHFuncletEntry() ? TRI->getNoPreservedMask() : nullptr;
+#else
+  return nullptr;
+#endif
 }
 
 const uint32_t *

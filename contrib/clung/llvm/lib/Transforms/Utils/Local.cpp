@@ -1452,7 +1452,11 @@ static bool markAliveBlocks(Function &F,
       if (isa<ConstantPointerNull>(Callee) || isa<UndefValue>(Callee)) {
         changeToUnreachable(II, true);
         Changed = true;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume true
       } else if (II->doesNotThrow() && canSimplifyInvokeNoUnwind(&F)) {
+#else
+      } else if (II->doesNotThrow() && true) {
+#endif
         if (II->use_empty() && II->onlyReadsMemory()) {
           // jump to the normal destination branch.
           BranchInst::Create(II->getNormalDest(), II);

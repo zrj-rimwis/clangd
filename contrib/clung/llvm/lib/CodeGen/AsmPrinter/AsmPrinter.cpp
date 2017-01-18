@@ -816,9 +816,11 @@ AsmPrinter::CFIMoveType AsmPrinter::needsCFIMoves() {
   return CFI_M_None;
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
 bool AsmPrinter::needsSEHMoves() {
   return MAI->usesWindowsCFI() && MF->getFunction()->needsUnwindTableEntry();
 }
+#endif
 
 void AsmPrinter::emitCFIInstruction(const MachineInstr &MI) {
   ExceptionHandling ExceptionHandlingType = MAI->getExceptionHandlingType();
@@ -955,7 +957,11 @@ void AsmPrinter::EmitFunctionBody() {
   EmitFunctionBodyEnd();
 
   if (!MMI->getLandingPads().empty() || MMI->hasDebugInfo() ||
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
       MMI->hasEHFunclets() || MAI->hasDotTypeDotSizeDirective()) {
+#else
+      false || MAI->hasDotTypeDotSizeDirective()) {
+#endif
     // Create a symbol for the end of function.
     CurrentFnEnd = createTempSymbol("func_end");
     OutStreamer->EmitLabel(CurrentFnEnd);
@@ -1280,7 +1286,11 @@ void AsmPrinter::SetupMachineFunction(MachineFunction &MF) {
   CurExceptionSym = nullptr;
   bool NeedsLocalForSize = MAI->needsLocalForSize();
   if (!MMI->getLandingPads().empty() || MMI->hasDebugInfo() ||
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
       MMI->hasEHFunclets() || NeedsLocalForSize) {
+#else
+      false || NeedsLocalForSize) {
+#endif
     CurrentFnBegin = createTempSymbol("func_begin");
     if (NeedsLocalForSize)
       CurrentFnSymForSize = CurrentFnBegin;
@@ -2478,12 +2488,14 @@ static void emitBasicBlockLoopComments(const MachineBasicBlock &MBB,
 /// it if appropriate.
 void AsmPrinter::EmitBasicBlockStart(const MachineBasicBlock &MBB) const {
   // End the previous funclet and start a new one.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (MBB.isEHFuncletEntry()) {
     for (const HandlerInfo &HI : Handlers) {
       HI.Handler->endFunclet();
       HI.Handler->beginFunclet(MBB);
     }
   }
+#endif
 
   // Emit an alignment directive for this block, if needed.
   if (unsigned Align = MBB.getAlignment())
@@ -2519,7 +2531,11 @@ void AsmPrinter::EmitBasicBlockStart(const MachineBasicBlock &MBB) const {
 
   // Print the main label for the block.
   if (MBB.pred_empty() ||
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false
       (isBlockOnlyReachableByFallthrough(&MBB) && !MBB.isEHFuncletEntry())) {
+#else
+      (isBlockOnlyReachableByFallthrough(&MBB) && !false)) {
+#endif
     if (isVerbose()) {
       // NOTE: Want this comment at start of line, don't emit with AddComment.
       OutStreamer->emitRawComment(" BB#" + Twine(MBB.getNumber()) + ":", false);

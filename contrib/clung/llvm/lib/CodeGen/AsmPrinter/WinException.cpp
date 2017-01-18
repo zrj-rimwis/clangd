@@ -64,11 +64,17 @@ void WinException::beginFunction(const MachineFunction *MF) {
 
   // If any landing pads survive, we need an EH table.
   bool hasLandingPads = !MMI->getLandingPads().empty();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   bool hasEHFunclets = MMI->hasEHFunclets();
+#endif
 
   const Function *F = MF->getFunction();
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   shouldEmitMoves = Asm->needsSEHMoves();
+#else
+  shouldEmitMoves = false;
+#endif
 
   const TargetLoweringObjectFile &TLOF = Asm->getObjFileLowering();
   unsigned PerEncoding = TLOF.getPersonalityEncoding();
@@ -81,7 +87,11 @@ void WinException::beginFunction(const MachineFunction *MF) {
     F->needsUnwindTableEntry();
 
   shouldEmitPersonality =
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
       forceEmitPersonality || ((hasLandingPads || hasEHFunclets) &&
+#else
+      forceEmitPersonality || ((hasLandingPads || false) &&
+#endif
                                PerEncoding != dwarf::DW_EH_PE_omit && Per);
 
   unsigned LSDAEncoding = TLOF.getLSDAEncoding();
@@ -90,6 +100,7 @@ void WinException::beginFunction(const MachineFunction *MF) {
 
   // If we're not using CFI, we don't want the CFI or the personality, but we
   // might want EH tables if we had EH pads.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // this is silly how hard to properly mark
   if (!Asm->MAI->usesWindowsCFI()) {
     shouldEmitLSDA = hasEHFunclets;
     shouldEmitPersonality = false;
@@ -97,6 +108,11 @@ void WinException::beginFunction(const MachineFunction *MF) {
   }
 
   beginFunclet(MF->front(), Asm->CurrentFnSym);
+#else
+    shouldEmitLSDA = false;
+    shouldEmitPersonality = false;
+    return;
+#endif
 }
 
 /// endFunction - Gather and emit post-function exception information.
@@ -113,14 +129,22 @@ void WinException::endFunction(const MachineFunction *MF) {
   // Get rid of any dead landing pads if we're not using funclets. In funclet
   // schemes, the landing pad is not actually reachable. It only exists so
   // that we can emit the right table data.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ //assume !false
   if (!isFuncletEHPersonality(Per))
+#else
+  if (!false)
+#endif
     MMI->TidyLandingPads();
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // does nothing, !CurrentFuncletEntry
   endFunclet();
+#endif
 
   // endFunclet will emit the necessary .xdata tables for x64 SEH.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   if (Per == EHPersonality::MSVC_Win64SEH && MMI->hasEHFunclets())
     return;
+#endif
 
   if (shouldEmitPersonality || shouldEmitLSDA) {
     Asm->OutStreamer->PushSection();
@@ -132,6 +156,7 @@ void WinException::endFunction(const MachineFunction *MF) {
 
     // Emit the tables appropriate to the personality function in use. If we
     // don't recognize the personality, assume it uses an Itanium-style LSDA.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     if (Per == EHPersonality::MSVC_Win64SEH)
       emitCSpecificHandlerTable(MF);
     else if (Per == EHPersonality::MSVC_X86SEH)
@@ -141,6 +166,7 @@ void WinException::endFunction(const MachineFunction *MF) {
     else if (Per == EHPersonality::CoreCLR)
       emitCLRExceptionTable(MF);
     else
+#endif
       emitExceptionTable();
 
     Asm->OutStreamer->PopSection();
@@ -148,6 +174,7 @@ void WinException::endFunction(const MachineFunction *MF) {
 }
 
 /// Retreive the MCSymbol for a GlobalValue or MachineBasicBlock.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static MCSymbol *getMCSymbolForMBB(AsmPrinter *Asm,
                                    const MachineBasicBlock *MBB) {
   if (!MBB)
@@ -166,7 +193,9 @@ static MCSymbol *getMCSymbolForMBB(AsmPrinter *Asm,
                                Twine(MBB->getNumber()) + "@?0?" +
                                FuncLinkageName + "@4HA");
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::beginFunclet(const MachineBasicBlock &MBB,
                                 MCSymbol *Sym) {
   CurrentFuncletEntry = &MBB;
@@ -217,7 +246,9 @@ void WinException::beginFunclet(const MachineBasicBlock &MBB,
       Asm->OutStreamer->EmitWinEHHandler(PersHandlerSym, true, true);
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume does nothing, !CurrentFuncletEntry
 void WinException::endFunclet() {
   // No funclet to process?  Great, we have nothing to do.
   if (!CurrentFuncletEntry)
@@ -262,7 +293,9 @@ void WinException::endFunclet() {
   // Let's make sure we don't try to end the same funclet twice.
   CurrentFuncletEntry = nullptr;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 const MCExpr *WinException::create32bitRef(const MCSymbol *Value) {
   if (!Value)
     return MCConstantExpr::create(0, Asm->OutContext);
@@ -283,7 +316,9 @@ const MCExpr *WinException::getLabelPlusOne(const MCSymbol *Label) {
                                  MCConstantExpr::create(1, Asm->OutContext),
                                  Asm->OutContext);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 const MCExpr *WinException::getOffset(const MCSymbol *OffsetOf,
                                       const MCSymbol *OffsetFrom) {
   return MCBinaryExpr::createSub(
@@ -297,7 +332,9 @@ const MCExpr *WinException::getOffsetPlusOne(const MCSymbol *OffsetOf,
                                  MCConstantExpr::create(1, Asm->OutContext),
                                  Asm->OutContext);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 int WinException::getFrameIndexOffset(int FrameIndex,
                                       const WinEHFuncInfo &FuncInfo) {
   const TargetFrameLowering &TFI = *Asm->MF->getSubtarget().getFrameLowering();
@@ -320,6 +357,7 @@ int WinException::getFrameIndexOffset(int FrameIndex,
   Offset += FuncInfo.EHRegNodeEndOffset;
   return Offset;
 }
+#endif
 
 namespace {
 
@@ -511,6 +549,7 @@ InvokeStateChangeIterator &InvokeStateChangeIterator::scan() {
 ///       imagerel32 LabelLPad;        // Zero means __finally.
 ///     } Entries[NumEntries];
 ///   };
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::emitCSpecificHandlerTable(const MachineFunction *MF) {
   auto &OS = *Asm->OutStreamer;
   MCContext &Ctx = Asm->OutContext;
@@ -574,7 +613,9 @@ void WinException::emitCSpecificHandlerTable(const MachineFunction *MF) {
 
   OS.EmitLabel(TableEnd);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::emitSEHActionsForRange(const WinEHFuncInfo &FuncInfo,
                                           const MCSymbol *BeginLabel,
                                           const MCSymbol *EndLabel, int State) {
@@ -618,7 +659,9 @@ void WinException::emitSEHActionsForRange(const WinEHFuncInfo &FuncInfo,
     State = UME.ToState;
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::emitCXXFrameHandler3Table(const MachineFunction *MF) {
   const Function *F = MF->getFunction();
   auto &OS = *Asm->OutStreamer;
@@ -844,7 +887,9 @@ void WinException::emitCXXFrameHandler3Table(const MachineFunction *MF) {
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::computeIP2StateTable(
     const MachineFunction *MF, const WinEHFuncInfo &FuncInfo,
     SmallVectorImpl<std::pair<const MCExpr *, int>> &IPToStateTable) {
@@ -898,7 +943,9 @@ void WinException::computeIP2StateTable(
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::emitEHRegistrationOffsetLabel(const WinEHFuncInfo &FuncInfo,
                                                  StringRef FLinkageName) {
   // Outlined helpers called by the EH runtime need to know the offset of the EH
@@ -915,10 +962,12 @@ void WinException::emitEHRegistrationOffsetLabel(const WinEHFuncInfo &FuncInfo,
   const MCExpr *MCOffset = MCConstantExpr::create(Offset, Ctx);
   Asm->OutStreamer->EmitAssignment(ParentFrameOffset, MCOffset);
 }
+#endif
 
 /// Emit the language-specific data that _except_handler3 and 4 expect. This is
 /// functionally equivalent to the __C_specific_handler table, except it is
 /// indexed by state number instead of IP.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::emitExceptHandlerTable(const MachineFunction *MF) {
   MCStreamer &OS = *Asm->OutStreamer;
   const Function *F = MF->getFunction();
@@ -1011,7 +1060,9 @@ void WinException::emitExceptHandlerTable(const MachineFunction *MF) {
     OS.EmitValue(create32bitRef(ExceptOrFinally), 4);
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int getTryRank(const WinEHFuncInfo &FuncInfo, int State) {
   int Rank = 0;
   while (State != -1) {
@@ -1020,7 +1071,9 @@ static int getTryRank(const WinEHFuncInfo &FuncInfo, int State) {
   }
   return Rank;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int getTryAncestor(const WinEHFuncInfo &FuncInfo, int Left, int Right) {
   int LeftRank = getTryRank(FuncInfo, Left);
   int RightRank = getTryRank(FuncInfo, Right);
@@ -1042,7 +1095,9 @@ static int getTryAncestor(const WinEHFuncInfo &FuncInfo, int Left, int Right) {
 
   return Left;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 void WinException::emitCLRExceptionTable(const MachineFunction *MF) {
   // CLR EH "states" are really just IDs that identify handlers/funclets;
   // states, handlers, and funclets all have 1:1 mappings between them, and a
@@ -1271,3 +1326,4 @@ void WinException::emitCLRExceptionTable(const MachineFunction *MF) {
     OS.EmitIntValue(Entry.TypeToken, 4);
   }
 }
+#endif

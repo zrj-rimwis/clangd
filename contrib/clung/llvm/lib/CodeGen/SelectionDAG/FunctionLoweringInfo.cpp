@@ -101,6 +101,7 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
   DenseMap<const AllocaInst *, int *> CatchObjects;
   EHPersonality Personality = classifyEHPersonality(
       Fn->hasPersonalityFn() ? Fn->getPersonalityFn() : nullptr);
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (isFuncletEHPersonality(Personality)) {
     // Calculate state numbers if we haven't already.
     WinEHFuncInfo &EHInfo = *MF->getWinEHFuncInfo();
@@ -121,6 +122,7 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
       }
     }
   }
+#endif
 
   // Initialize the mapping of values to registers.  This is only set up for
   // instruction values that are used outside of the block that defines
@@ -259,8 +261,12 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
       // FIXME: SEH catchpads do not create funclets, so we could avoid setting
       // this in such cases in order to improve frame layout.
       if (!isa<LandingPadInst>(I)) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // XXX this is messy, ensure we do not land here
         MMI.setHasEHFunclets(true);
         MF->getFrameInfo()->setHasOpaqueSPAdjustment(true);
+#else
+        report_fatal_error("zrj: should not be calling setHasEHFunclets");
+#endif
       }
       if (isa<CatchSwitchInst>(I)) {
         assert(&*BB->begin() == I &&
@@ -318,6 +324,7 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
       LPads.push_back(LPI);
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false and return
   if (!isFuncletEHPersonality(Personality))
     return;
 
@@ -341,6 +348,9 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
     const BasicBlock *BB = CME.Handler.get<const BasicBlock *>();
     CME.Handler = MBBMap[BB];
   }
+#else
+  return;
+#endif
 }
 
 /// clear - Clear out all the function-specific state. This returns this

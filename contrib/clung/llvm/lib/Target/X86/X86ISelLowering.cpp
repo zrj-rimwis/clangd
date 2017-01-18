@@ -2885,6 +2885,7 @@ SDValue X86TargetLowering::LowerFormalArguments(
 
   FuncInfo->setArgumentStackSize(StackSize);
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume nullptr
   if (WinEHFuncInfo *EHInfo = MF.getWinEHFuncInfo()) {
     EHPersonality Personality = classifyEHPersonality(Fn->getPersonalityFn());
     if (Personality == EHPersonality::CoreCLR) {
@@ -2901,6 +2902,7 @@ SDValue X86TargetLowering::LowerFormalArguments(
       EHInfo->PSPSymFrameIdx = PSPSymFI;
     }
   }
+#endif
 
   return Chain;
 }
@@ -3383,8 +3385,10 @@ X86TargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
         CallerFn->hasPersonalityFn()
             ? classifyEHPersonality(CallerFn->getPersonalityFn())
             : EHPersonality::Unknown;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     if (isFuncletEHPersonality(Pers))
       Mask = RegInfo->getNoPreservedMask();
+#endif
   }
 
   Ops.push_back(DAG.getRegisterMask(Mask));
@@ -17344,6 +17348,7 @@ static SDValue getScalarMaskingNode(SDValue Op, SDValue Mask,
   return DAG.getNode(X86ISD::SELECT, dl, VT, IMask, Op, PreservedSrc);
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static int getSEHRegistrationNodeSize(const Function *Fn) {
   if (!Fn->hasPersonalityFn())
     report_fatal_error(
@@ -17358,6 +17363,7 @@ static int getSEHRegistrationNodeSize(const Function *Fn) {
   report_fatal_error(
       "can only recover FP for 32-bit MSVC EH personality functions");
 }
+#endif
 
 /// When the MSVC runtime transfers control to us, either to an outlined
 /// function or when returning to a parent frame after catching an exception, we
@@ -17367,6 +17373,7 @@ static int getSEHRegistrationNodeSize(const Function *Fn) {
 ///   ParentFP = RegNodeBase - ParentFrameOffset
 /// Subtracting RegNodeSize takes us to the offset of the registration node, and
 /// subtracting the offset (negative on x86) takes us back to the parent FP.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static SDValue recoverFramePointer(SelectionDAG &DAG, const Function *Fn,
                                    SDValue EntryEBP) {
   MachineFunction &MF = DAG.getMachineFunction();
@@ -17404,6 +17411,7 @@ static SDValue recoverFramePointer(SelectionDAG &DAG, const Function *Fn,
                                     DAG.getConstant(RegNodeSize, dl, PtrVT));
   return DAG.getNode(ISD::SUB, dl, PtrVT, RegNodeBase, ParentFrameOffset);
 }
+#endif
 
 static SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, const X86Subtarget &Subtarget,
                                        SelectionDAG &DAG) {
@@ -18180,6 +18188,7 @@ static SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, const X86Subtarget &Subtarget
     return DAG.getNode(X86ISD::Wrapper, dl, VT, DAG.getMCSymbol(S, PtrVT));
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case Intrinsic::x86_seh_lsda: {
     // Compute the symbol for the LSDA. We know it'll get emitted later.
     MachineFunction &MF = DAG.getMachineFunction();
@@ -18193,7 +18202,9 @@ static SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, const X86Subtarget &Subtarget
     SDValue Result = DAG.getMCSymbol(LSDASym, VT);
     return DAG.getNode(X86ISD::Wrapper, dl, VT, Result);
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case Intrinsic::x86_seh_recoverfp: {
     SDValue FnOp = Op.getOperand(1);
     SDValue IncomingFPOp = Op.getOperand(2);
@@ -18204,6 +18215,7 @@ static SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, const X86Subtarget &Subtarget
           "llvm.x86.seh.recoverfp must take a function as the first argument");
     return recoverFramePointer(DAG, Fn, IncomingFPOp);
   }
+#endif
 
   case Intrinsic::localaddress: {
     // Returns one of the stack, base, or frame pointer registers, depending on
@@ -18389,6 +18401,7 @@ static SDValue LowerREADCYCLECOUNTER(SDValue Op, const X86Subtarget &Subtarget,
   return DAG.getMergeValues(Results, DL);
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static SDValue MarkEHRegistrationNode(SDValue Op, SelectionDAG &DAG) {
   MachineFunction &MF = DAG.getMachineFunction();
   SDValue Chain = Op.getOperand(0);
@@ -18406,7 +18419,9 @@ static SDValue MarkEHRegistrationNode(SDValue Op, SelectionDAG &DAG) {
   // Return the chain operand without making any DAG nodes.
   return Chain;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 static SDValue MarkEHGuard(SDValue Op, SelectionDAG &DAG) {
   MachineFunction &MF = DAG.getMachineFunction();
   SDValue Chain = Op.getOperand(0);
@@ -18424,6 +18439,7 @@ static SDValue MarkEHGuard(SDValue Op, SelectionDAG &DAG) {
   // Return the chain operand without making any DAG nodes.
   return Chain;
 }
+#endif
 
 static SDValue LowerINTRINSIC_W_CHAIN(SDValue Op, const X86Subtarget &Subtarget,
                                       SelectionDAG &DAG) {
@@ -18431,10 +18447,12 @@ static SDValue LowerINTRINSIC_W_CHAIN(SDValue Op, const X86Subtarget &Subtarget,
 
   const IntrinsicData* IntrData = getIntrinsicWithChain(IntNo);
   if (!IntrData) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
     if (IntNo == llvm::Intrinsic::x86_seh_ehregnode)
       return MarkEHRegistrationNode(Op, DAG);
     if (IntNo == llvm::Intrinsic::x86_seh_ehguard)
       return MarkEHGuard(Op, DAG);
+#endif
     if (IntNo == llvm::Intrinsic::x86_flags_read_u32 ||
         IntNo == llvm::Intrinsic::x86_flags_read_u64 ||
         IntNo == llvm::Intrinsic::x86_flags_write_u32 ||
@@ -18651,6 +18669,7 @@ SDValue X86TargetLowering::LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const {
 
   MFI->setFrameAddressIsTaken(true);
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (MF.getTarget().getMCAsmInfo()->usesWindowsCFI()) {
     // Depth > 0 makes no sense on targets which use Windows unwind codes.  It
     // is not possible to crawl up the stack without looking at the unwind codes
@@ -18665,6 +18684,7 @@ SDValue X86TargetLowering::LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const {
     }
     return DAG.getFrameIndex(FrameAddrIndex, VT);
   }
+#endif
 
   unsigned FrameReg =
       RegInfo->getPtrSizedFrameRegister(DAG.getMachineFunction());
@@ -18723,8 +18743,10 @@ SDValue X86TargetLowering::LowerFRAME_TO_ARGS_OFFSET(SDValue Op,
 
 unsigned X86TargetLowering::getExceptionPointerRegister(
     const Constant *PersonalityFn) const {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (classifyEHPersonality(PersonalityFn) == EHPersonality::CoreCLR)
     return Subtarget.isTarget64BitLP64() ? X86::RDX : X86::EDX;
+#endif
 
   return Subtarget.isTarget64BitLP64() ? X86::RAX : X86::EAX;
 }
@@ -18732,7 +18754,9 @@ unsigned X86TargetLowering::getExceptionPointerRegister(
 unsigned X86TargetLowering::getExceptionSelectorRegister(
     const Constant *PersonalityFn) const {
   // Funclet personalities don't use selectors (the runtime does the selection).
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume !false thus no assert
   assert(!isFuncletEHPersonality(classifyEHPersonality(PersonalityFn)));
+#endif
   return Subtarget.isTarget64BitLP64() ? X86::RDX : X86::EDX;
 }
 
@@ -23636,6 +23660,7 @@ X86TargetLowering::EmitLoweredSegAlloca(MachineInstr &MI,
   return continueMBB;
 }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 MachineBasicBlock *
 X86TargetLowering::EmitLoweredCatchRet(MachineInstr &MI,
                                        MachineBasicBlock *BB) const {
@@ -23667,7 +23692,9 @@ X86TargetLowering::EmitLoweredCatchRet(MachineInstr &MI,
   BuildMI(*RestoreMBB, RestoreMBBI, DL, TII.get(X86::JMP_4)).addMBB(TargetMBB);
   return BB;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
 MachineBasicBlock *
 X86TargetLowering::EmitLoweredCatchPad(MachineInstr &MI,
                                        MachineBasicBlock *BB) const {
@@ -23683,6 +23710,7 @@ X86TargetLowering::EmitLoweredCatchPad(MachineInstr &MI,
   MI.eraseFromParent();
   return BB;
 }
+#endif
 
 MachineBasicBlock *
 X86TargetLowering::EmitLoweredTLSAddr(MachineInstr &MI,
@@ -24399,10 +24427,12 @@ X86TargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
   case X86::TLS_base_addr32:
   case X86::TLS_base_addr64:
     return EmitLoweredTLSAddr(MI, BB);
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case X86::CATCHRET:
     return EmitLoweredCatchRet(MI, BB);
   case X86::CATCHPAD:
     return EmitLoweredCatchPad(MI, BB);
+#endif
   case X86::SEG_ALLOCA_32:
   case X86::SEG_ALLOCA_64:
     return EmitLoweredSegAlloca(MI, BB);

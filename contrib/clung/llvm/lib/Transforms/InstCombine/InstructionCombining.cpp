@@ -2440,10 +2440,12 @@ static bool isCatchAll(EHPersonality Personality, Constant *TypeInfo) {
   case EHPersonality::GNU_CXX:
   case EHPersonality::GNU_CXX_SjLj:
   case EHPersonality::GNU_ObjC:
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   case EHPersonality::MSVC_X86SEH:
   case EHPersonality::MSVC_Win64SEH:
   case EHPersonality::MSVC_CXX:
   case EHPersonality::CoreCLR:
+#endif
     return TypeInfo->isNullValue();
   }
   llvm_unreachable("invalid enum");

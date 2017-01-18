@@ -278,9 +278,11 @@ public:
                                              RegScavenger *RS = nullptr) const {
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   virtual unsigned getWinEHParentFrameOffset(const MachineFunction &MF) const {
     report_fatal_error("WinEH not implemented for this target");
   }
+#endif
 
   /// This method is called during prolog/epilog code insertion to eliminate
   /// call frame setup and destroy pseudo instructions (but only if the Target
