@@ -28,7 +28,11 @@ enum ClangFlags {
   NoArgumentUnused = (1 << 6),
   Unsupported = (1 << 7),
   CoreOption = (1 << 8),
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // XXX something fishy how it is used
   CLOption = (1 << 9),
+#else
+  CLOption_disabled = (1 << 9),
+#endif
   CC1Option = (1 << 10),
   CC1AsOption = (1 << 11),
   NoDriverOption = (1 << 12)

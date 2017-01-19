@@ -74,7 +74,11 @@ class Driver {
     GCCMode,
     GXXMode,
     CPPMode,
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     CLMode
+#else
+    CLMode_disabled
+#endif
   } Mode;
 
   enum SaveTempsMode {
@@ -161,7 +165,9 @@ public:
   bool CCCIsCPP() const { return Mode == CPPMode; }
 
   /// Whether the driver should follow cl.exe like behavior.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
   bool IsCLMode() const { return Mode == CLMode; }
+#endif
 
   /// Only print tool bindings, don't build any jobs.
   unsigned CCCPrintBindings : 1;
@@ -429,7 +435,9 @@ public:
   std::string GetTemporaryPath(StringRef Prefix, const char *Suffix) const;
 
   /// Return the pathname of the pch file in clang-cl mode.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   std::string GetClPchPath(Compilation &C, StringRef BaseName) const;
+#endif
 
   /// ShouldUseClangCompiler - Should the clang compiler be used to
   /// handle this action.

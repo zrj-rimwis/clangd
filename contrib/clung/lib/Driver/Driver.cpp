@@ -106,7 +106,9 @@ void Driver::ParseDriverMode(ArrayRef<const char *> Args) {
                            .Case("gcc", GCCMode)
                            .Case("g++", GXXMode)
                            .Case("cpp", CPPMode)
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // no just no
                            .Case("cl", CLMode)
+#endif
                            .Default(~0U);
 
     if (M != ~0U)
@@ -148,8 +150,12 @@ InputArgList Driver::ParseArgStrings(ArrayRef<const char *> ArgStrings) {
   }
 
   for (const Arg *A : Args.filtered(options::OPT_UNKNOWN))
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     Diags.Report(IsCLMode() ? diag::warn_drv_unknown_argument_clang_cl :
                               diag::err_drv_unknown_argument)
+#else
+    Diags.Report(diag::err_drv_unknown_argument)
+#endif
       << A->getAsString(Args);
 
   return Args;
@@ -165,9 +171,15 @@ phases::ID Driver::getFinalPhase(const DerivedArgList &DAL,
 
   // -{E,EP,P,M,MM} only run the preprocessor.
   if (CCCIsCPP() || (PhaseArg = DAL.getLastArg(options::OPT_E)) ||
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
       (PhaseArg = DAL.getLastArg(options::OPT__SLASH_EP)) ||
+#endif
       (PhaseArg = DAL.getLastArg(options::OPT_M, options::OPT_MM)) ||
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
       (PhaseArg = DAL.getLastArg(options::OPT__SLASH_P))) {
+#else
+      (false)) {
+#endif
     FinalPhase = phases::Preprocess;
 
     // -{fsyntax-only,-analyze,emit-ast} only run up to the compiler.
@@ -504,6 +516,7 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
       Args.hasFlag(options::OPT_ccc_pch_is_pch, options::OPT_ccc_pch_is_pth);
   // FIXME: DefaultTargetTriple is used by the target-prefixed calls to as/ld
   // and getToolChain is const.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // why these here and not in toolchains?
   if (IsCLMode()) {
     // clang-cl targets MSVC-style Win32.
     llvm::Triple T(DefaultTargetTriple);
@@ -512,6 +525,7 @@ Compilation *Driver::BuildCompilation(ArrayRef<const char *> ArgList) {
     T.setEnvironment(llvm::Triple::MSVC);
     DefaultTargetTriple = T.str();
   }
+#endif
   if (const Arg *A = Args.getLastArg(options::OPT_target))
     DefaultTargetTriple = A->getValue();
   if (const Arg *A = Args.getLastArg(options::OPT_ccc_install_dir))
@@ -1227,6 +1241,7 @@ static bool DiagnoseInputExistence(const Driver &D, const DerivedArgList &Args,
   if (llvm::sys::fs::exists(Twine(Path)))
     return true;
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (D.IsCLMode()) {
     if (!llvm::sys::path::is_absolute(Twine(Path)) &&
         llvm::sys::Process::FindInEnvPath("LIB", Value))
@@ -1239,6 +1254,7 @@ static bool DiagnoseInputExistence(const Driver &D, const DerivedArgList &Args,
       return true;
     }
   }
+#endif
 
   D.Diag(clang::diag::err_drv_no_such_file) << Path;
   return false;
@@ -1254,6 +1270,7 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
   Arg *InputTypeArg = nullptr;
 
   // The last /TC or /TP option sets the input type to C or C++ globally.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Arg *TCTP = Args.getLastArgNoClaim(options::OPT__SLASH_TC,
                                          options::OPT__SLASH_TP)) {
     InputTypeArg = TCTP;
@@ -1278,6 +1295,7 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
     // No driver mode exposes -x and /TC or /TP; we don't support mixing them.
     assert(!Args.hasArg(options::OPT_x) && "-x and /TC or /TP is not allowed");
   }
+#endif
 
   for (Arg *A : Args) {
     if (A->getOption().getKind() == Option::InputClass) {
@@ -1298,8 +1316,12 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
           // Otherwise emit an error but still use a valid type to avoid
           // spurious errors (e.g., no inputs).
           if (!Args.hasArgNoClaim(options::OPT_E) && !CCCIsCPP())
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
             Diag(IsCLMode() ? clang::diag::err_drv_unknown_stdin_type_clang_cl
                             : clang::diag::err_drv_unknown_stdin_type);
+#else
+            Diag(clang::diag::err_drv_unknown_stdin_type);
+#endif
           Ty = types::TY_C;
         } else {
           // Otherwise lookup by extension.
@@ -1357,6 +1379,7 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
       if (DiagnoseInputExistence(*this, Args, Value, Ty))
         Inputs.push_back(std::make_pair(Ty, A));
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     } else if (A->getOption().matches(options::OPT__SLASH_Tc)) {
       StringRef Value = A->getValue();
       if (DiagnoseInputExistence(*this, Args, Value, types::TY_C)) {
@@ -1364,6 +1387,8 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
         Inputs.push_back(std::make_pair(types::TY_C, InputArg));
       }
       A->claim();
+#endif
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     } else if (A->getOption().matches(options::OPT__SLASH_Tp)) {
       StringRef Value = A->getValue();
       if (DiagnoseInputExistence(*this, Args, Value, types::TY_CXX)) {
@@ -1371,6 +1396,7 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
         Inputs.push_back(std::make_pair(types::TY_CXX, InputArg));
       }
       A->claim();
+#endif
     } else if (A->getOption().hasFlag(options::LinkerInput)) {
       // Just treat as object type, we could make a special type for this if
       // necessary.
@@ -1549,6 +1575,7 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
     Diag(clang::diag::err_drv_use_of_Z_option) << A->getAsString(Args);
 
   // Diagnose misuse of /Fo.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Arg *A = Args.getLastArg(options::OPT__SLASH_Fo)) {
     StringRef V = A->getValue();
     if (Inputs.size() > 1 && !V.empty() &&
@@ -1559,8 +1586,10 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
       Args.eraseArg(options::OPT__SLASH_Fo);
     }
   }
+#endif
 
   // Diagnose misuse of /Fa.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Arg *A = Args.getLastArg(options::OPT__SLASH_Fa)) {
     StringRef V = A->getValue();
     if (Inputs.size() > 1 && !V.empty() &&
@@ -1571,8 +1600,10 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
       Args.eraseArg(options::OPT__SLASH_Fa);
     }
   }
+#endif
 
   // Diagnose misuse of /o.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Arg *A = Args.getLastArg(options::OPT__SLASH_o)) {
     if (A->getValue()[0] == '\0') {
       // It has to have a value.
@@ -1580,11 +1611,13 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
       Args.eraseArg(options::OPT__SLASH_o);
     }
   }
+#endif
 
   // Diagnose unsupported forms of /Yc /Yu. Ignore /Yc/Yu for now if:
   // * no filename after it
   // * both /Yc and /Yu passed but with different filenames
   // * corresponding file not also passed as /FI
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Arg *YcArg = Args.getLastArg(options::OPT__SLASH_Yc);
   Arg *YuArg = Args.getLastArg(options::OPT__SLASH_Yu);
   if (YcArg && YcArg->getValue()[0] == '\0') {
@@ -1632,6 +1665,7 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
     Args.eraseArg(options::OPT__SLASH_Yu);
     YcArg = YuArg = nullptr;
   }
+#endif
 
   // Track the host offload kinds used on this compilation.
   unsigned CompilationActiveOffloadHostKinds = 0u;
@@ -1679,6 +1713,7 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
       continue;
     }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     if (YcArg) {
       // Add a separate precompile phase for the compile phase.
       if (FinalPhase >= phases::Compile) {
@@ -1697,6 +1732,7 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
         // the main compilation won't run.
       }
     }
+#endif
 
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     phases::ID CudaInjectionPhase =
@@ -1777,11 +1813,15 @@ void Driver::BuildActions(Compilation &C, DerivedArgList &Args,
   // compilation.
   if (FinalPhase == phases::Link && PL.size() == 1) {
     Args.ClaimAllArgs(options::OPT_CompileOnly_Group);
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     Args.ClaimAllArgs(options::OPT_cl_compile_Group);
+#endif
   }
 
   // Claim ignored clang-cl options.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Args.ClaimAllArgs(options::OPT_cl_ignored_Group);
+#endif
 
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   // Claim --cuda-host-only and --cuda-compile-host-device, which may be passed
@@ -1926,7 +1966,9 @@ void Driver::BuildJobs(Compilation &C) const {
 
   // Claim --driver-mode, --rsp-quoting, it was handled earlier.
   (void)C.getArgs().hasArg(options::OPT_driver_mode);
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   (void)C.getArgs().hasArg(options::OPT_rsp_quoting);
+#endif
 
   for (Arg *A : C.getArgs()) {
     // FIXME: It would be nice to be able to send the argument to the
@@ -1955,7 +1997,11 @@ void Driver::BuildJobs(Compilation &C) const {
 
       // In clang-cl, don't mention unknown arguments here since they have
       // already been warned about.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // confusing
       if (!IsCLMode() || !A->getOption().matches(options::OPT_UNKNOWN))
+#else
+      if (!false || !A->getOption().matches(options::OPT_UNKNOWN))
+#endif
         Diag(clang::diag::warn_drv_unused_argument)
             << A->getAsString(C.getArgs());
     }
@@ -2008,8 +2054,12 @@ static const Tool *selectToolForJob(Compilation &C, bool SaveTemps,
 
   if (TC->useIntegratedAs() && !SaveTemps &&
       !C.getArgs().hasArg(options::OPT_via_file_asm) &&
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false
       !C.getArgs().hasArg(options::OPT__SLASH_FA) &&
       !C.getArgs().hasArg(options::OPT__SLASH_Fa) && BackendJA &&
+#else
+      !false && BackendJA &&
+#endif
       isa<BackendJobAction>(BackendJA)) {
     // A BackendJob is always preceded by a CompileJob, and without -save-temps
     // or -fembed-bitcode, they will always get combined together, so instead of
@@ -2302,6 +2352,7 @@ const char *Driver::getDefaultImageName() const {
 /// full filename, filename without extension, or a directory. If ArgValue
 /// does not provide a filename, then use BaseName, and use the extension
 /// suitable for FileType.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 static const char *MakeCLOutputFilename(const ArgList &Args, StringRef ArgValue,
                                         StringRef BaseName,
                                         types::ID FileType) {
@@ -2330,6 +2381,7 @@ static const char *MakeCLOutputFilename(const ArgList &Args, StringRef ArgValue,
 
   return Args.MakeArgString(Filename.c_str());
 }
+#endif
 
 const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
                                        const char *BaseInput,
@@ -2344,6 +2396,7 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
   }
 
   // For /P, preprocess to file named after BaseInput.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (C.getArgs().hasArg(options::OPT__SLASH_P)) {
     assert(AtTopLevel && isa<PreprocessJobAction>(JA));
     StringRef BaseName = llvm::sys::path::filename(BaseInput);
@@ -2354,6 +2407,7 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
         MakeCLOutputFilename(C.getArgs(), NameArg, BaseName, types::TY_PP_C),
         &JA);
   }
+#endif
 
   // Default to writing to stdout?
   if (AtTopLevel && !CCGenDiagnostics &&
@@ -2361,6 +2415,7 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
     return "-";
 
   // Is this the assembly listing for /FA?
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (JA.getType() == types::TY_PP_Asm &&
       (C.getArgs().hasArg(options::OPT__SLASH_FA) ||
        C.getArgs().hasArg(options::OPT__SLASH_Fa))) {
@@ -2371,15 +2426,24 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
         MakeCLOutputFilename(C.getArgs(), FaValue, BaseName, JA.getType()),
         &JA);
   }
+#endif
 
   // Output to a temporary file?
   if ((!AtTopLevel && !isSaveTempsEnabled() &&
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // XXX bug
        !C.getArgs().hasArg(options::OPT__SLASH_Fo)) ||
+#else
+       !false) ||
+#endif
       CCGenDiagnostics) {
     StringRef Name = llvm::sys::path::filename(BaseInput);
     std::pair<StringRef, StringRef> Split = Name.split('.');
     std::string TmpName = GetTemporaryPath(
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
         Split.first, types::getTypeTempSuffix(JA.getType(), IsCLMode()));
+#else
+        Split.first, types::getTypeTempSuffix(JA.getType(), false));
+#endif
     return C.addTempFile(C.getArgs().MakeArgString(TmpName.c_str()));
   }
 
@@ -2395,6 +2459,7 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
   // Determine what the derived output name should be.
   const char *NamedOutput;
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (JA.getType() == types::TY_Object &&
       C.getArgs().hasArg(options::OPT__SLASH_Fo, options::OPT__SLASH_o)) {
     // The /Fo or /o flag decides the object filename.
@@ -2414,11 +2479,20 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
             ->getValue();
     NamedOutput =
         MakeCLOutputFilename(C.getArgs(), Val, BaseName, types::TY_Image);
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else if (JA.getType() == types::TY_Image) {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     if (IsCLMode()) {
       // clang-cl uses BaseName for the executable name.
       NamedOutput =
           MakeCLOutputFilename(C.getArgs(), "", BaseName, types::TY_Image);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (MultipleArchs && BoundArch) {
       SmallString<128> Output(getDefaultImageName());
       Output += JA.getOffloadingFileNamePrefix(NormalizedTriple);
@@ -2428,10 +2502,16 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
     } else {
       NamedOutput = getDefaultImageName();
     }
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   } else if (JA.getType() == types::TY_PCH && IsCLMode()) {
     NamedOutput = C.getArgs().MakeArgString(GetClPchPath(C, BaseName).c_str());
+#endif
   } else {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     const char *Suffix = types::getTypeTempSuffix(JA.getType(), IsCLMode());
+#else
+    const char *Suffix = types::getTypeTempSuffix(JA.getType(), false);
+#endif
     assert(Suffix && "All types used for output should have a suffix.");
 
     std::string::size_type End = std::string::npos;
@@ -2478,13 +2558,21 @@ const char *Driver::GetNamedOutputPath(Compilation &C, const JobAction &JA,
       StringRef Name = llvm::sys::path::filename(BaseInput);
       std::pair<StringRef, StringRef> Split = Name.split('.');
       std::string TmpName = GetTemporaryPath(
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
           Split.first, types::getTypeTempSuffix(JA.getType(), IsCLMode()));
+#else
+          Split.first, types::getTypeTempSuffix(JA.getType(), false));
+#endif
       return C.addTempFile(C.getArgs().MakeArgString(TmpName.c_str()));
     }
   }
 
   // As an annoying special case, PCH generation doesn't strip the pathname.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false, smth fishy
   if (JA.getType() == types::TY_PCH && !IsCLMode()) {
+#else
+  if (JA.getType() == types::TY_PCH && !false) {
+#endif
     llvm::sys::path::remove_filename(BasePath);
     if (BasePath.empty())
       BasePath = NamedOutput;
@@ -2596,6 +2684,7 @@ std::string Driver::GetTemporaryPath(StringRef Prefix,
   return Path.str();
 }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 std::string Driver::GetClPchPath(Compilation &C, StringRef BaseName) const {
   SmallString<128> Output;
   if (Arg *FpArg = C.getArgs().getLastArg(options::OPT__SLASH_Fp)) {
@@ -2614,6 +2703,7 @@ std::string Driver::GetClPchPath(Compilation &C, StringRef BaseName) const {
   }
   return Output.str();
 }
+#endif
 
 const ToolChain &Driver::getToolChain(const ArgList &Args,
                                       const llvm::Triple &Target) const {
@@ -2826,12 +2916,21 @@ std::pair<unsigned, unsigned> Driver::getIncludeExcludeOptionFlagMasks() const {
   unsigned IncludedFlagsBitmask = 0;
   unsigned ExcludedFlagsBitmask = options::NoDriverOption;
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Mode == CLMode) {
     // Include CL and Core options.
     IncludedFlagsBitmask |= options::CLOption;
     IncludedFlagsBitmask |= options::CoreOption;
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // should not be needed but just in case
     ExcludedFlagsBitmask |= options::CLOption;
+#else
+    ExcludedFlagsBitmask |= options::CLOption_disabled;
+#endif
   }
 
   return std::make_pair(IncludedFlagsBitmask, ExcludedFlagsBitmask);

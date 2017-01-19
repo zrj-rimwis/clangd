@@ -742,6 +742,7 @@ void cl::TokenizeGNUCommandLine(StringRef Src, StringSaver &Saver,
     NewArgv.push_back(nullptr);
 }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 /// Backslashes are interpreted in a rather complicated way in the Windows-style
 /// command line, because backslashes are used both to separate path and to
 /// escape double quote. This method consumes runs of backslashes as well as the
@@ -759,6 +760,8 @@ void cl::TokenizeGNUCommandLine(StringRef Src, StringSaver &Saver,
 ///    consumed in this case.
 ///
 ///  * Otherwise, backslashes are interpreted literally.
+#endif
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 static size_t parseBackslash(StringRef Src, size_t I, SmallString<128> &Token) {
   size_t E = Src.size();
   int BackslashCount = 0;
@@ -779,7 +782,9 @@ static size_t parseBackslash(StringRef Src, size_t I, SmallString<128> &Token) {
   Token.append(BackslashCount, '\\');
   return I - 1;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 void cl::TokenizeWindowsCommandLine(StringRef Src, StringSaver &Saver,
                                     SmallVectorImpl<const char *> &NewArgv,
                                     bool MarkEOLs) {
@@ -857,6 +862,7 @@ void cl::TokenizeWindowsCommandLine(StringRef Src, StringSaver &Saver,
   if (MarkEOLs)
     NewArgv.push_back(nullptr);
 }
+#endif
 
 // It is called byte order marker but the UTF-8 BOM is actually not affected
 // by the host system's endianness.

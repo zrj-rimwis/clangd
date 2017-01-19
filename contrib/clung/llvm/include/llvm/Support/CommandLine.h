@@ -1766,9 +1766,11 @@ void TokenizeGNUCommandLine(StringRef Source, StringSaver &Saver,
 /// \param [in] MarkEOLs true if tokenizing a response file and you want end of
 /// lines and end of the response file to be marked with a nullptr string.
 /// \param [out] NewArgv All parsed strings are appended to NewArgv.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 void TokenizeWindowsCommandLine(StringRef Source, StringSaver &Saver,
                                 SmallVectorImpl<const char *> &NewArgv,
                                 bool MarkEOLs = false);
+#endif
 
 /// \brief String tokenization function type.  Should be compatible with either
 /// Windows or Unix command line tokenizers.

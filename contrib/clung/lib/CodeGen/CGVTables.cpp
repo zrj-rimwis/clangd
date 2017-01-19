@@ -945,6 +945,7 @@ bool CodeGenModule::HasHiddenLTOVisibility(const CXXRecordDecl *RD) {
       return false;
   }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // huh?
   if (getCodeGenOpts().LTOVisibilityPublicStd) {
     const DeclContext *DC = RD;
     while (1) {
@@ -959,6 +960,7 @@ bool CodeGenModule::HasHiddenLTOVisibility(const CXXRecordDecl *RD) {
       }
     }
   }
+#endif
 
   return true;
 }

@@ -112,11 +112,19 @@ static const char *getSparcAsmModeForCPU(StringRef Name,
 /// arguments that is shared with gcc.
 static void CheckPreprocessingOptions(const Driver &D, const ArgList &Args) {
   if (Arg *A = Args.getLastArg(options::OPT_C, options::OPT_CC)) {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     if (!Args.hasArg(options::OPT_E) && !Args.hasArg(options::OPT__SLASH_P) &&
         !Args.hasArg(options::OPT__SLASH_EP) && !D.CCCIsCPP()) {
+#else
+    if (!Args.hasArg(options::OPT_E) && !false && !false && !D.CCCIsCPP()) {
+#endif
       D.Diag(diag::err_drv_argument_only_allowed_with)
           << A->getBaseArg().getAsString(Args)
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
           << (D.IsCLMode() ? "/E, /P or /EP" : "-E");
+#else
+          << "-E";
+#endif
     }
   }
 }
@@ -435,18 +443,22 @@ void Clang::AddPreprocessingOptions(Compilation &C, const JobAction &JA,
   int YcIndex = -1, YuIndex = -1;
   {
     int AI = -1;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // uch, assume these are nullptr
     const Arg *YcArg = Args.getLastArg(options::OPT__SLASH_Yc);
     const Arg *YuArg = Args.getLastArg(options::OPT__SLASH_Yu);
+#endif
     for (const Arg *A : Args.filtered(options::OPT_clang_i_Group)) {
       // Walk the whole i_Group and skip non "-include" flags so that the index
       // here matches the index in the next loop below.
       ++AI;
       if (!A->getOption().matches(options::OPT_include))
         continue;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
       if (YcArg && strcmp(A->getValue(), YcArg->getValue()) == 0)
         YcIndex = AI;
       if (YuArg && strcmp(A->getValue(), YuArg->getValue()) == 0)
         YuIndex = AI;
+#endif
     }
   }
   if (isa<PrecompileJobAction>(JA) && YcIndex != -1) {
@@ -462,6 +474,7 @@ void Clang::AddPreprocessingOptions(Compilation &C, const JobAction &JA,
   for (const Arg *A : Args.filtered(options::OPT_clang_i_Group)) {
     ++AI;
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
     if (getToolChain().getDriver().IsCLMode() &&
         A->getOption().matches(options::OPT_include)) {
       // In clang-cl mode, /Ycfoo.h means that all code up to a foo.h
@@ -498,6 +511,10 @@ void Clang::AddPreprocessingOptions(Compilation &C, const JobAction &JA,
           }
         }
       }
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (A->getOption().matches(options::OPT_include)) {
       // Handling of gcc-style gch precompiled headers.
       bool IsFirstImplicitInclude = !RenderedImplicitInclude;
@@ -1879,6 +1896,7 @@ static const char *getX86TargetCPU(const ArgList &Args,
       return Args.MakeArgString(CPU);
   }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (const Arg *A = Args.getLastArg(options::OPT__SLASH_arch)) {
     // Mapping built by referring to X86TargetInfo::getDefaultFeatures().
     StringRef Arch = A->getValue();
@@ -1900,6 +1918,7 @@ static const char *getX86TargetCPU(const ArgList &Args,
     if (CPU)
       return CPU;
   }
+#endif
 
   // Select the default CPU if none was given (or detection failed).
 
@@ -2271,6 +2290,7 @@ static void getX86TargetFeatures(const Driver &D, const llvm::Triple &Triple,
   }
 
   // Set features according to the -arch flag on MSVC.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Arg *A = Args.getLastArg(options::OPT__SLASH_arch)) {
     StringRef Arch = A->getValue();
     bool ArchUsed = false;
@@ -2293,6 +2313,7 @@ static void getX86TargetFeatures(const Driver &D, const llvm::Triple &Triple,
     if (!ArchUsed)
       D.Diag(clang::diag::warn_drv_unused_argument) << A->getAsString(Args);
   }
+#endif
 
   // Now add any that the user explicitly requested on the command line,
   // which may override the defaults.
@@ -4261,9 +4282,15 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       OFastEnabled ? options::OPT_Ofast : options::OPT_fstrict_aliasing;
   // We turn strict aliasing off by default if we're in CL mode, since MSVC
   // doesn't do any TBAA.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false
   bool TBAAOnByDefault = !getToolChain().getDriver().IsCLMode();
+#endif
   if (!Args.hasFlag(options::OPT_fstrict_aliasing, StrictAliasingAliasOption,
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
                     options::OPT_fno_strict_aliasing, TBAAOnByDefault))
+#else
+                    options::OPT_fno_strict_aliasing, !false))
+#endif
     CmdArgs.push_back("-relaxed-aliasing");
   if (!Args.hasFlag(options::OPT_fstruct_path_tbaa,
                     options::OPT_fno_struct_path_tbaa))
@@ -4591,8 +4618,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // Add clang-cl arguments.
   types::ID InputType = Input.getType();
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (getToolChain().getDriver().IsCLMode())
     AddClangCLArgs(Args, InputType, CmdArgs, &DebugInfoKind, &EmitCodeView);
+#endif
 
   // Pass the linker version in use.
   if (Arg *A = Args.getLastArg(options::OPT_mlinker_version_EQ)) {
@@ -5606,6 +5635,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   bool IsMSVC2015Compatible = MSVT.getMajor() >= 19;
   if (ImplyVCPPCXXVer) {
     StringRef LanguageStandard;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     if (const Arg *StdArg = Args.getLastArg(options::OPT__SLASH_std)) {
       LanguageStandard = llvm::StringSwitch<StringRef>(StdArg->getValue())
                              .Case("c++14", "-std=c++14")
@@ -5615,6 +5645,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
         D.Diag(clang::diag::warn_drv_unused_argument)
             << StdArg->getAsString(Args);
     }
+#endif
 
     if (LanguageStandard.empty()) {
       if (IsMSVC2015Compatible)
@@ -5780,7 +5811,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-fapplication-extension");
 
   // Handle GCC-style exception args.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false
   if (!C.getDriver().IsCLMode())
+#endif
     addExceptionArgs(Args, InputType, getToolChain(), KernelOrKext, objcRuntime,
                      CmdArgs);
 
@@ -6183,6 +6216,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // Finally add the compile command to the compilation.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
   if (Args.hasArg(options::OPT__SLASH_fallback) &&
       Output.getType() == types::TY_Object &&
       (InputType == types::TY_C || InputType == types::TY_CXX)) {
@@ -6196,6 +6230,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     // fails, so that the main compilation's fallback to cl.exe runs.
     C.addCommand(llvm::make_unique<ForceSuccessCommand>(JA, *this, Exec,
                                                         CmdArgs, Inputs));
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
   }
@@ -6351,17 +6389,21 @@ ObjCRuntime Clang::AddObjCRuntimeArgs(const ArgList &args,
       runtime = ObjCRuntime(ObjCRuntime::GCC, VersionTuple());
   }
 
+// zrj: XXX aha the culprit is here, later thou now CL.EXE
   cmdArgs.push_back(
       args.MakeArgString("-fobjc-runtime=" + runtime.getAsString()));
   return runtime;
 }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 static bool maybeConsumeDash(const std::string &EH, size_t &I) {
   bool HaveDash = (I + 1 < EH.size() && EH[I + 1] == '-');
   I += HaveDash;
   return !HaveDash;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 namespace {
 struct EHFlags {
   bool Synch = false;
@@ -6369,6 +6411,7 @@ struct EHFlags {
   bool NoUnwindC = false;
 };
 } // end anonymous namespace
+#endif
 
 /// /EH controls whether to run destructor cleanups when exceptions are
 /// thrown.  There are three modifiers:
@@ -6377,6 +6420,7 @@ struct EHFlags {
 ///      The 'a' modifier is unimplemented and fundamentally hard in LLVM IR.
 /// - c: Assume that extern "C" functions are implicitly nounwind.
 /// The default is /EHs-c-, meaning cleanups are disabled.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // uch
 static EHFlags parseClangCLEHFlags(const Driver &D, const ArgList &Args) {
   EHFlags EH;
 
@@ -6416,7 +6460,9 @@ static EHFlags parseClangCLEHFlags(const Driver &D, const ArgList &Args) {
 
   return EH;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 void Clang::AddClangCLArgs(const ArgList &Args, types::ID InputType,
                            ArgStringList &CmdArgs,
                            codegenoptions::DebugInfoKind *DebugInfoKind,
@@ -6587,6 +6633,7 @@ void Clang::AddClangCLArgs(const ArgList &Args, types::ID InputType,
       CmdArgs.push_back("msvc");
   }
 }
+#endif
 
 visualstudio::Compiler *Clang::getCLFallback() const {
   if (!CLFallback)
@@ -10178,7 +10225,11 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
         Args.MakeArgString(std::string("-out:") + Output.getFilename()));
 
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles) &&
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false
       !C.getDriver().IsCLMode())
+#else
+      !false)
+#endif
     CmdArgs.push_back("-defaultlib:libcmt");
 
   if (!llvm::sys::Process::GetEnv("LIB")) {
@@ -10221,18 +10272,30 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                            WindowsSdkLibPath.c_str()));
   }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false
   if (!C.getDriver().IsCLMode() && Args.hasArg(options::OPT_L))
+#else
+  if (!false && Args.hasArg(options::OPT_L))
+#endif
     for (const auto &LibPath : Args.getAllArgValues(options::OPT_L))
       CmdArgs.push_back(Args.MakeArgString("-libpath:" + LibPath));
 
   CmdArgs.push_back("-nologo");
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Args.hasArg(options::OPT_g_Group, options::OPT__SLASH_Z7,
                   options::OPT__SLASH_Zd))
+#else
+  if (Args.hasArg(options::OPT_g_Group))
+#endif
     CmdArgs.push_back("-debug");
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // why to make it so confusing?
   bool DLL = Args.hasArg(options::OPT__SLASH_LD, options::OPT__SLASH_LDd,
                          options::OPT_shared);
+#else
+  bool DLL = Args.hasArg(options::OPT_shared);
+#endif
   if (DLL) {
     CmdArgs.push_back(Args.MakeArgString("-dll"));
 
@@ -10244,12 +10307,17 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   if (TC.getSanitizerArgs().needsAsanRt()) {
     CmdArgs.push_back(Args.MakeArgString("-debug"));
     CmdArgs.push_back(Args.MakeArgString("-incremental:no"));
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     if (Args.hasArg(options::OPT__SLASH_MD, options::OPT__SLASH_MDd)) {
       for (const auto &Lib : {"asan_dynamic", "asan_dynamic_runtime_thunk"})
         CmdArgs.push_back(TC.getCompilerRTArgString(Args, Lib));
       // Make sure the dynamic runtime thunk is not optimized out at link time
       // to ensure proper SEH handling.
       CmdArgs.push_back(Args.MakeArgString("-include:___asan_seh_interceptor"));
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (DLL) {
       CmdArgs.push_back(TC.getCompilerRTArgString(Args, "asan_dll_thunk"));
     } else {
@@ -10258,7 +10326,9 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     }
   }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Args.AddAllArgValues(CmdArgs, options::OPT__SLASH_link);
+#endif
 
   if (Args.hasFlag(options::OPT_fopenmp, options::OPT_fopenmp_EQ,
                    options::OPT_fno_openmp, false)) {
@@ -10392,6 +10462,7 @@ std::unique_ptr<Command> visualstudio::Compiler::GetCommand(
   // Flags for which clang-cl has an alias.
   // FIXME: How can we ensure this stays in sync with relevant clang-cl options?
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Args.hasFlag(options::OPT__SLASH_GR_, options::OPT__SLASH_GR,
                    /*default=*/false))
     CmdArgs.push_back("/GR-");
@@ -10399,6 +10470,7 @@ std::unique_ptr<Command> visualstudio::Compiler::GetCommand(
   if (Args.hasFlag(options::OPT__SLASH_GS_, options::OPT__SLASH_GS,
                    /*default=*/false))
     CmdArgs.push_back("/GS-");
+#endif
 
   if (Arg *A = Args.getLastArg(options::OPT_ffunction_sections,
                                options::OPT_fno_function_sections))
@@ -10411,8 +10483,12 @@ std::unique_ptr<Command> visualstudio::Compiler::GetCommand(
         A->getOption().getID() == options::OPT_fdata_sections ? "/Gw" : "/Gw-");
   if (Args.hasArg(options::OPT_fsyntax_only))
     CmdArgs.push_back("/Zs");
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Args.hasArg(options::OPT_g_Flag, options::OPT_gline_tables_only,
                   options::OPT__SLASH_Z7))
+#else
+  if (Args.hasArg(options::OPT_g_Flag, options::OPT_gline_tables_only))
+#endif
     CmdArgs.push_back("/Z7");
 
   std::vector<std::string> Includes =
@@ -10421,17 +10497,21 @@ std::unique_ptr<Command> visualstudio::Compiler::GetCommand(
     CmdArgs.push_back(Args.MakeArgString(std::string("/FI") + Include));
 
   // Flags that can simply be passed through.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Args.AddAllArgs(CmdArgs, options::OPT__SLASH_LD);
   Args.AddAllArgs(CmdArgs, options::OPT__SLASH_LDd);
   Args.AddAllArgs(CmdArgs, options::OPT__SLASH_GX);
   Args.AddAllArgs(CmdArgs, options::OPT__SLASH_GX_);
   Args.AddAllArgs(CmdArgs, options::OPT__SLASH_EH);
   Args.AddAllArgs(CmdArgs, options::OPT__SLASH_Zl);
+#endif
 
   // The order of these flags is relevant, so pick the last one.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Arg *A = Args.getLastArg(options::OPT__SLASH_MD, options::OPT__SLASH_MDd,
                                options::OPT__SLASH_MT, options::OPT__SLASH_MTd))
     A->render(Args, CmdArgs);
+#endif
 
   // Pass through all unknown arguments so that the fallback command can see
   // them too.

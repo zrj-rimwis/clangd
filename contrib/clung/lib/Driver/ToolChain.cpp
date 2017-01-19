@@ -110,10 +110,14 @@ const DriverSuffix *FindDriverSuffix(StringRef ProgName) {
       {"clang-cpp", "--driver-mode=cpp"},
       {"clang-g++", "--driver-mode=g++"},
       {"clang-gcc", nullptr},
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
       {"clang-cl", "--driver-mode=cl"},
+#endif
       {"cc", nullptr},
       {"cpp", "--driver-mode=cpp"},
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // leave my xcl allone!!1
       {"cl", "--driver-mode=cl"},
+#endif
       {"++", "--driver-mode=g++"},
   };
 

@@ -474,6 +474,7 @@ bool MSVCToolChain::getVisualStudioBinariesFolder(const char *clangProgramPath,
   return true;
 }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // thats ugly
 VersionTuple MSVCToolChain::getMSVCVersionFromExe() const {
   VersionTuple Version;
 #ifdef USE_WIN32
@@ -512,6 +513,7 @@ VersionTuple MSVCToolChain::getMSVCVersionFromExe() const {
 #endif
   return Version;
 }
+#endif
 
 // Get Visual Studio installation directory.
 bool MSVCToolChain::getVisualStudioInstallDir(std::string &path) const {
@@ -589,8 +591,10 @@ void MSVCToolChain::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
   }
 
   // Add %INCLUDE%-like directories from the -imsvc flag.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // just a temp before next cut
   for (const auto &Path : DriverArgs.getAllArgValues(options::OPT__SLASH_imsvc))
     addSystemInclude(DriverArgs, CC1Args, Path);
+#endif
 
   if (DriverArgs.hasArg(options::OPT_nostdlibinc))
     return;
@@ -699,6 +703,7 @@ SanitizerMask MSVCToolChain::getSupportedSanitizers() const {
   return Res;
 }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 static void TranslateOptArg(Arg *A, llvm::opt::DerivedArgList &DAL,
                             bool SupportsForcingFramePointer,
                             const char *ExpandChar, const OptTable &Opts) {
@@ -791,6 +796,7 @@ static void TranslateOptArg(Arg *A, llvm::opt::DerivedArgList &DAL,
     }
   }
 }
+#endif
 
 static void TranslateDArg(Arg *A, llvm::opt::DerivedArgList &DAL,
                           const OptTable &Opts) {
@@ -828,7 +834,9 @@ MSVCToolChain::TranslateArgs(const llvm::opt::DerivedArgList &Args,
   // First step is to search for the character we'd like to expand.
   const char *ExpandChar = nullptr;
   for (Arg *A : Args) {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     if (!A->getOption().matches(options::OPT__SLASH_O))
+#endif
       continue;
     StringRef OptStr = A->getValue();
     for (size_t I = 0, E = OptStr.size(); I != E; ++I) {
@@ -844,10 +852,15 @@ MSVCToolChain::TranslateArgs(const llvm::opt::DerivedArgList &Args,
   }
 
   for (Arg *A : Args) {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // just a temp
     if (A->getOption().matches(options::OPT__SLASH_O)) {
       // The -O flag actually takes an amalgam of other options.  For example,
       // '/Ogyb2' is equivalent to '/Og' '/Oy' '/Ob2'.
       TranslateOptArg(A, *DAL, SupportsForcingFramePointer, ExpandChar, Opts);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (A->getOption().matches(options::OPT_D)) {
       // Translate -Dfoo#bar into -Dfoo=bar.
       TranslateDArg(A, *DAL, Opts);

@@ -201,7 +201,9 @@ CODEGENOPT(WholeProgramVTables, 1, 0) ///< Whether to apply whole-program
 
 /// Whether to use public LTO visibility for entities in std and stdext
 /// namespaces. This is enabled by clang-cl's /MT and /MTd flags.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 CODEGENOPT(LTOVisibilityPublicStd, 1, 0)
+#endif
 
 /// The user specified number of registers to be used for integral arguments,
 /// or 0 if unspecified.

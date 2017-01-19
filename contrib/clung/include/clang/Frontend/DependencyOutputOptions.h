@@ -28,7 +28,9 @@ public:
                                      /// dependency, which can avoid some 'make'
                                      /// problems.
   unsigned AddMissingHeaderDeps : 1; ///< Add missing headers to dependency list
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   unsigned PrintShowIncludes : 1; ///< Print cl.exe style /showIncludes info.
+#endif
   unsigned IncludeModuleFiles : 1; ///< Include module file dependencies.
 
   /// The format for the dependency file.
@@ -65,7 +67,9 @@ public:
     ShowHeaderIncludes = 0;
     UsePhonyTargets = 0;
     AddMissingHeaderDeps = 0;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
     PrintShowIncludes = 0;
+#endif
     IncludeModuleFiles = 0;
     OutputFormat = DependencyOutputFormat::Make;
   }

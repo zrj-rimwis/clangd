@@ -164,11 +164,19 @@ void AttachDependencyGraphGen(Preprocessor &PP, StringRef OutputFile,
 /// information to, instead of writing to stderr.
 /// \param ShowDepth - Whether to indent to show the nesting of the includes.
 /// \param MSStyle - Whether to print in cl.exe /showIncludes style.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // do not // assume it is not there
 void AttachHeaderIncludeGen(Preprocessor &PP,
                             const DependencyOutputOptions &DepOpts,
                             bool ShowAllHeaders = false,
                             StringRef OutputPath = "",
                             bool ShowDepth = true, bool MSStyle = false);
+#else
+void AttachHeaderIncludeGen(Preprocessor &PP,
+                            const DependencyOutputOptions &DepOpts,
+                            bool ShowAllHeaders = false,
+                            StringRef OutputPath = "",
+                            bool ShowDepth = true, bool MSStyle = false);
+#endif
 
 /// Cache tokens for use with PCH. Note that this requires a seekable stream.
 void CacheTokens(Preprocessor &PP, raw_pwrite_stream *OS);

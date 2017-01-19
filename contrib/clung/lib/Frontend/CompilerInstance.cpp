@@ -376,11 +376,13 @@ void CompilerInstance::createPreprocessor(TranslationUnitKind TUKind) {
                            /*ShowDepth=*/false);
   }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // maybe worth to keep around?
   if (DepOpts.PrintShowIncludes) {
     AttachHeaderIncludeGen(*PP, DepOpts,
                            /*ShowAllHeaders=*/true, /*OutputPath=*/"",
                            /*ShowDepth=*/true, /*MSStyle=*/true);
   }
+#endif
 }
 
 std::string CompilerInstance::getSpecificModuleCachePath() {

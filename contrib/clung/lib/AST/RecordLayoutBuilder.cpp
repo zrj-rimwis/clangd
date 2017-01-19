@@ -2161,6 +2161,7 @@ static bool isMsLayout(const ASTContext &Context) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // big block
 // This section contains an implementation of struct layout that is, up to the
 // included tests, compatible with cl.exe (2013).  The layout produced is
 // significantly different than those produced by the Itanium ABI.  Here we note
@@ -2998,6 +2999,7 @@ void MicrosoftRecordLayoutBuilder::computeVtorDispSet(
       HasVtordispSet.insert(BaseDecl);
   }
 }
+#endif
 #endif
 
 /// getASTRecordLayout - Get or compute information about the layout of the

@@ -94,10 +94,12 @@ private:
                                  llvm::opt::ArgStringList &cmdArgs,
                                  RewriteKind rewrite) const;
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   void AddClangCLArgs(const llvm::opt::ArgList &Args, types::ID InputType,
                       llvm::opt::ArgStringList &CmdArgs,
                       codegenoptions::DebugInfoKind *DebugInfoKind,
                       bool *EmitCodeView) const;
+#endif
 
   visualstudio::Compiler *getCLFallback() const;
 

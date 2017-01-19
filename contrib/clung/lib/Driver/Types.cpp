@@ -45,12 +45,14 @@ types::ID types::getPreprocessedType(ID Id) {
 }
 
 const char *types::getTypeTempSuffix(ID Id, bool CLMode) {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // ehem
   if (Id == TY_Object && CLMode)
     return "obj";
   if (Id == TY_Image && CLMode)
     return "exe";
   if (Id == TY_PP_Asm && CLMode)
     return "asm";
+#endif
   return getInfo(Id).TempSuffix;
 }
 

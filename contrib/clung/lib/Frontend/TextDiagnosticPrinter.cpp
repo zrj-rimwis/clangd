@@ -137,7 +137,11 @@ void TextDiagnosticPrinter::HandleDiagnostic(DiagnosticsEngine::Level Level,
   // other infrastructure necessary when emitting more rich diagnostics.
   if (!Info.getLocation().isValid()) {
     TextDiagnostic::printDiagnosticLevel(OS, Level, DiagOpts->ShowColors,
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
                                          DiagOpts->CLFallbackMode);
+#else
+                                         false);
+#endif
     TextDiagnostic::printDiagnosticMessage(OS, Level, DiagMessageStream.str(),
                                            OS.tell() - StartOfLocationInfo,
                                            DiagOpts->MessageLength,

@@ -284,9 +284,6 @@ def fprofile_instrument_path_EQ : Joined<["-"], "fprofile-instrument-path=">,
 def fprofile_instrument_use_path_EQ :
     Joined<["-"], "fprofile-instrument-use-path=">,
     HelpText<"Specify the profile path in PGO use compilation">;
-def flto_visibility_public_std:
-    Flag<["-"], "flto-visibility-public-std">,
-    HelpText<"Use public LTO visibility for classes in std and stdext namespaces">;
 
 //===----------------------------------------------------------------------===//
 // Dependency Output Options
@@ -298,8 +295,6 @@ def module_file_deps : Flag<["-"], "module-file-deps">,
   HelpText<"Include module files in dependency output">;
 def header_include_file : Separate<["-"], "header-include-file">,
   HelpText<"Filename (or -) to write header include output to">;
-def show_includes : Flag<["--"], "show-includes">,
-  HelpText<"Print cl.exe style /showIncludes to stdout">;
 
 //===----------------------------------------------------------------------===//
 // Diagnostic Options

@@ -689,7 +689,11 @@ TextDiagnostic::emitDiagnosticMessage(SourceLocation Loc,
     OS.resetColor();
   
   printDiagnosticLevel(OS, Level, DiagOpts->ShowColors,
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
                        DiagOpts->CLFallbackMode);
+#else
+                       false);
+#endif
   printDiagnosticMessage(OS,
                          /*IsSupplemental*/ Level == DiagnosticsEngine::Note,
                          Message, OS.tell() - StartOfLocationInfo,
@@ -728,8 +732,10 @@ TextDiagnostic::printDiagnosticLevel(raw_ostream &OS,
   // makes it more clear whether a message is coming from clang or cl.exe,
   // and it prevents MSBuild from concluding that the build failed just because
   // there is an "error:" in the output.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // nope
   if (CLFallbackMode)
     OS << "(clang)";
+#endif
 
   OS << ": ";
 
@@ -799,19 +805,26 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
   OS << PLoc.getFilename();
   switch (DiagOpts->getFormat()) {
   case DiagnosticOptions::Clang: OS << ':'  << LineNo; break;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   case DiagnosticOptions::MSVC:  OS << '('  << LineNo; break;
+#endif
   case DiagnosticOptions::Vi:    OS << " +" << LineNo; break;
   }
 
   if (DiagOpts->ShowColumn)
     // Compute the column number.
     if (unsigned ColNo = PLoc.getColumn()) {
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
       if (DiagOpts->getFormat() == DiagnosticOptions::MSVC) {
         OS << ',';
         // Visual Studio 2010 or earlier expects column number to be off by one
         if (LangOpts.MSCompatibilityVersion &&
             !LangOpts.isCompatibleWithMSVC(LangOptions::MSVC2012))
           ColNo--;
+#else
+      if (false) {
+        /* dummy */
+#endif
       } else
         OS << ':';
       OS << ColNo;
@@ -819,6 +832,7 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
   switch (DiagOpts->getFormat()) {
   case DiagnosticOptions::Clang:
   case DiagnosticOptions::Vi:    OS << ':';    break;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   case DiagnosticOptions::MSVC:
     // MSVC2013 and before print 'file(4) : error'. MSVC2015 gets rid of the
     // space and prints 'file(4): error'.
@@ -828,6 +842,7 @@ void TextDiagnostic::emitDiagnosticLoc(SourceLocation Loc, PresumedLoc PLoc,
       OS << ' ';
     OS << ": ";
     break;
+#endif
   }
 
   if (DiagOpts->ShowSourceRanges && !Ranges.empty()) {

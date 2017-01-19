@@ -60,7 +60,11 @@ raw_ostream& operator<<(raw_ostream& Out, DiagnosticLevelMask M);
 /// \brief Options for controlling the compiler diagnostics engine.
 class DiagnosticOptions : public RefCountedBase<DiagnosticOptions>{
 public:
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // uch
   enum TextDiagnosticFormat { Clang, MSVC, Vi };
+#else
+  enum TextDiagnosticFormat { Clang, MSVC_disabled, Vi };
+#endif
 
   // Default values.
   enum { DefaultTabStop = 8, MaxTabStop = 100,

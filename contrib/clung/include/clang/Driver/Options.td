@@ -37,10 +37,6 @@ def Unsupported : OptionFlag;
 // clang and clang-cl modes.
 def CoreOption : OptionFlag;
 
-// CLOption - This is a cl.exe compatibility option. Options with this flag
-// are made available when the driver is running in CL compatibility mode.
-def CLOption : OptionFlag;
-
 // CC1Option - This option should be accepted by clang -cc1.
 def CC1Option : OptionFlag;
 
@@ -152,10 +148,7 @@ class InternalDriverOpt : Group<internal_driver_Group>,
   Flags<[DriverOption, HelpHidden]>;
 def driver_mode : Joined<["--"], "driver-mode=">, Group<internal_driver_Group>,
   Flags<[CoreOption, DriverOption, HelpHidden]>,
-  HelpText<"Set the driver mode to either 'gcc', 'g++', 'cpp', or 'cl'">;
-def rsp_quoting : Joined<["--"], "rsp-quoting=">, Group<internal_driver_Group>,
-  Flags<[CoreOption, DriverOption, HelpHidden]>,
-  HelpText<"Set the rsp quoting to either 'posix', or 'windows'">;
+  HelpText<"Set the driver mode to either 'gcc', 'g++', 'cpp'">;
 def ccc_gcc_name : Separate<["-"], "ccc-gcc-name">, InternalDriverOpt,
   HelpText<"Name for native GCC compiler">,
   MetaVarName<"<gcc-path>">;
@@ -2234,5 +2227,3 @@ defm whole_file : BooleanFFlag<"whole-file">, Group<gfortran_Group>;
 
 
 include "CC1Options.td"
-
-include "CLCompatOptions.td"

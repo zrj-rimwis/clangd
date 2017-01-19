@@ -221,6 +221,7 @@ static void insertTargetAndModeArgs(StringRef Target, StringRef Mode,
   }
 }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 static void getCLEnvVarOptions(std::string &EnvValue, llvm::StringSaver &Saver,
                                SmallVectorImpl<const char *> &Opts) {
   llvm::cl::TokenizeWindowsCommandLine(EnvValue, Saver, Opts);
@@ -229,6 +230,7 @@ static void getCLEnvVarOptions(std::string &EnvValue, llvm::StringSaver &Saver,
     if (char *NumberSignPtr = const_cast<char *>(::strchr(Opt, '#')))
       *NumberSignPtr = '=';
 }
+#endif
 
 static void SetBackdoorDriverOutputsFromEnvVars(Driver &TheDriver) {
   // Handle CC_PRINT_OPTIONS and CC_PRINT_OPTIONS_FILE.
@@ -252,8 +254,10 @@ static void FixupDiagPrefixExeName(TextDiagnosticPrinter *DiagClient,
   // If the clang binary happens to be named cl.exe for compatibility reasons,
   // use clang-cl.exe as the prefix to avoid confusion between clang and MSVC.
   StringRef ExeBasename(llvm::sys::path::filename(Path));
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (ExeBasename.equals_lower("cl.exe"))
     ExeBasename = "clang-cl.exe";
+#endif
   DiagClient->setPrefix(ExeBasename);
 }
 
@@ -339,6 +343,7 @@ int main(int argc_, const char **argv_) {
   // have to manually search for a --driver-mode=cl argument the hard way.
   // Finally, our -cc1 tools don't care which tokenization mode we use because
   // response files written by clang will tokenize the same way in either mode.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // constify to false
   bool ClangCLMode = false;
   if (TargetAndMode.second == "--driver-mode=cl" ||
       std::find_if(argv.begin(), argv.end(), [](const char *F) {
@@ -346,6 +351,8 @@ int main(int argc_, const char **argv_) {
       }) != argv.end()) {
     ClangCLMode = true;
   }
+#endif
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume POSIX hee haw
   enum { Default, POSIX, Windows } RSPQuoting = Default;
   for (const char *F : argv) {
     if (strcmp(F, "--rsp-quoting=posix") == 0)
@@ -353,21 +360,30 @@ int main(int argc_, const char **argv_) {
     else if (strcmp(F, "--rsp-quoting=windows") == 0)
       RSPQuoting = Windows;
   }
+#endif
 
   // Determines whether we want nullptr markers in argv to indicate response
   // files end-of-lines. We only use this for the /LINK driver argument with
   // clang-cl.exe on Windows.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
   bool MarkEOLs = ClangCLMode;
+#endif
 
   llvm::cl::TokenizerCallback Tokenizer;
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false || false
   if (RSPQuoting == Windows || (RSPQuoting == Default && ClangCLMode))
     Tokenizer = &llvm::cl::TokenizeWindowsCommandLine;
   else
+#endif
     Tokenizer = &llvm::cl::TokenizeGNUCommandLine;
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
   if (MarkEOLs && argv.size() > 1 && StringRef(argv[1]).startswith("-cc1"))
     MarkEOLs = false;
   llvm::cl::ExpandResponseFiles(Saver, Tokenizer, argv, MarkEOLs);
+#else
+  llvm::cl::ExpandResponseFiles(Saver, Tokenizer, argv, false);
+#endif
 
   // Handle -cc1 integrated tools, even if -cc1 was expanded from a response
   // file.
@@ -375,10 +391,12 @@ int main(int argc_, const char **argv_) {
                                [](const char *A) { return A != nullptr; });
   if (FirstArg != argv.end() && StringRef(*FirstArg).startswith("-cc1")) {
     // If -cc1 came from a response file, remove the EOL sentinels.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume false
     if (MarkEOLs) {
       auto newEnd = std::remove(argv.begin(), argv.end(), nullptr);
       argv.resize(newEnd - argv.begin());
     }
+#endif
     return ExecuteCC1Tool(argv, argv[1] + 4);
   }
 
@@ -395,6 +413,7 @@ int main(int argc_, const char **argv_) {
 
   // Handle CL and _CL_ which permits additional command line options to be
   // prepended or appended.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   if (Tokenizer == &llvm::cl::TokenizeWindowsCommandLine) {
     // Arguments in "CL" are prepended.
     llvm::Optional<std::string> OptCL = llvm::sys::Process::GetEnv("CL");
@@ -415,6 +434,7 @@ int main(int argc_, const char **argv_) {
       argv.append(AppendedOpts.begin(), AppendedOpts.end());
     }
   }
+#endif
 
   std::set<std::string> SavedStrings;
   // Handle CCC_OVERRIDE_OPTIONS, used for editing a command line behind the

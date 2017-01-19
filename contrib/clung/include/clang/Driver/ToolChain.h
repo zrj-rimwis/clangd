@@ -432,7 +432,9 @@ public:
 
   /// \brief On Windows, returns the version of cl.exe.  On other platforms,
   /// returns an empty VersionTuple.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   virtual VersionTuple getMSVCVersionFromExe() const { return VersionTuple(); }
+#endif
 };
 
 } // end namespace driver

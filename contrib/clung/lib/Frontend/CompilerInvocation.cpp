@@ -493,7 +493,9 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
   Opts.DebugColumnInfo = Args.hasArg(OPT_dwarf_column_info);
   Opts.EmitCodeView = Args.hasArg(OPT_gcodeview);
   Opts.WholeProgramVTables = Args.hasArg(OPT_fwhole_program_vtables);
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Opts.LTOVisibilityPublicStd = Args.hasArg(OPT_flto_visibility_public_std);
+#endif
   Opts.SplitDwarfFile = Args.getLastArgValue(OPT_split_dwarf_file);
   Opts.DebugTypeExtRefs = Args.hasArg(OPT_dwarf_ext_refs);
   Opts.DebugExplicitImport = Triple.isPS4CPU();
@@ -866,7 +868,9 @@ static void ParseDependencyOutputArgs(DependencyOutputOptions &Opts,
   Opts.ShowHeaderIncludes = Args.hasArg(OPT_H);
   Opts.HeaderIncludeOutputFile = Args.getLastArgValue(OPT_header_include_file);
   Opts.AddMissingHeaderDeps = Args.hasArg(OPT_MG);
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Opts.PrintShowIncludes = Args.hasArg(OPT_show_includes);
+#endif
   Opts.DOTOutputFile = Args.getLastArgValue(OPT_dependency_dot);
   Opts.ModuleDependencyOutputDir =
       Args.getLastArgValue(OPT_module_dependency_dir);
@@ -989,11 +993,16 @@ bool clang::ParseDiagnosticArgs(DiagnosticOptions &Opts, ArgList &Args,
     Args.getLastArgValue(OPT_fdiagnostics_format, "clang");
   if (Format == "clang")
     Opts.setFormat(DiagnosticOptions::Clang);
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // hrrr the
   else if (Format == "msvc")
     Opts.setFormat(DiagnosticOptions::MSVC);
   else if (Format == "msvc-fallback") {
     Opts.setFormat(DiagnosticOptions::MSVC);
     Opts.CLFallbackMode = true;
+#else
+  else if (false) {
+    /* dummy */
+#endif
   } else if (Format == "vi")
     Opts.setFormat(DiagnosticOptions::Vi);
   else {

@@ -75,7 +75,9 @@ ENUM_DIAGOPT(VerifyIgnoreUnexpected, DiagnosticLevelMask, 4,
                                         /// -verify.
 DIAGOPT(ElideType, 1, 0)         /// Elide identical types in template diffing
 DIAGOPT(ShowTemplateTree, 1, 0)  /// Print a template tree when diffing
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__
 DIAGOPT(CLFallbackMode, 1, 0)    /// Format for clang-cl fallback mode
+#endif
 
 VALUE_DIAGOPT(ErrorLimit, 32, 0)           /// Limit # errors emitted.
 /// Limit depth of macro expansion backtrace.

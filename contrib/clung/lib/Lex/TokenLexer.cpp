@@ -728,6 +728,7 @@ bool TokenLexer::isParsingPreprocessorDirective() const {
 /// macro, other active macros, and anything left on the current physical
 /// source line of the expanded buffer.  Handle this by returning the
 /// first token on the next line.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 void TokenLexer::HandleMicrosoftCommentPaste(Token &Tok, SourceLocation OpLoc) {
   PP.Diag(OpLoc, diag::ext_comment_paste_microsoft);
 
@@ -741,6 +742,7 @@ void TokenLexer::HandleMicrosoftCommentPaste(Token &Tok, SourceLocation OpLoc) {
 
   PP.HandleMicrosoftCommentPaste(Tok);
 }
+#endif
 
 /// \brief If \arg loc is a file ID and points inside the current macro
 /// definition, returns the appropriate source location pointing at the

@@ -34,7 +34,11 @@ namespace types {
 
   /// getTypeTempSuffix - Return the suffix to use when creating a
   /// temp file of this type, or null if unspecified.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // ignore arg
   const char *getTypeTempSuffix(ID Id, bool CLMode = false);
+#else
+  const char *getTypeTempSuffix(ID Id, bool CLMode = false);
+#endif
 
   /// onlyAssembleType - Should this type only be assembled.
   bool onlyAssembleType(ID Id);

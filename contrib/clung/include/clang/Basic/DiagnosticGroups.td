@@ -684,9 +684,6 @@ def Consumed       : DiagGroup<"consumed">;
 // DefaultIgnore in addition to putting it here.
 def All : DiagGroup<"all", [Most, Parentheses, Switch, SwitchBool]>;
 
-// Warnings that should be in clang-cl /w4.
-def : DiagGroup<"CL4", [All, Extra]>;
-
 // Warnings enabled by -pedantic.  This is magically filled in by TableGen.
 def Pedantic : DiagGroup<"pedantic">;
 
@@ -803,8 +800,6 @@ def Microsoft : DiagGroup<"microsoft",
      MicrosoftConstInit, MicrosoftVoidPseudoDtor, MicrosoftAnonTag,
      MicrosoftCommentPaste, MicrosoftEndOfFile,
      MicrosoftInconsistentDllImport]>;
-
-def ClangClPch : DiagGroup<"clang-cl-pch">;
 
 def ObjCNonUnifiedException : DiagGroup<"objc-nonunified-exceptions">;
 

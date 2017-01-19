@@ -542,6 +542,7 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
         }
     }
 
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // bye bye
     if (Arg *WindowsDebugRTArg =
             Args.getLastArg(options::OPT__SLASH_MTd, options::OPT__SLASH_MT,
                             options::OPT__SLASH_MDd, options::OPT__SLASH_MD,
@@ -556,6 +557,7 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
         D.Diag(clang::diag::note_drv_address_sanitizer_debug_runtime);
       }
     }
+#endif
   }
 
   AsanUseAfterScope =
