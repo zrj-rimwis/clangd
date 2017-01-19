@@ -161,7 +161,6 @@ SRCS+=	Action.cpp \
 	Driver.cpp \
 	DriverOptions.cpp \
 	Job.cpp \
-	MSVCToolChain.cpp \
 	MinGWToolChain.cpp \
 	Multilib.cpp \
 	Phases.cpp \

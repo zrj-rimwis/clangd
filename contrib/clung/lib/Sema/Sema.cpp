@@ -214,6 +214,7 @@ void Sema::Initialize() {
     PushOnScopeChains(Context.getCFConstantStringDecl(), TUScope);
 
   // Initialize Microsoft "predefined C++ types".
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // don't even want to know what are those
   if (getLangOpts().MSVCCompat) {
     if (getLangOpts().CPlusPlus &&
         IdResolver.begin(&Context.Idents.get("type_info")) == IdResolver.end())
@@ -222,6 +223,7 @@ void Sema::Initialize() {
 
     addImplicitTypedef("size_t", Context.getSizeType());
   }
+#endif
 
   // Initialize predefined OpenCL types and supported optional core features.
   if (getLangOpts().OpenCL) {

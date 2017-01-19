@@ -5014,11 +5014,13 @@ static void handleLayoutVersion(Sema &S, Decl *D, const AttributeList &Attr) {
     return;
 
   // TODO: Investigate what happens with the next major version of MSVC.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false and ignore
   if (Version != LangOptions::MSVC2015) {
     S.Diag(Attr.getLoc(), diag::err_attribute_argument_out_of_bounds)
         << Attr.getName() << Version << VersionExpr->getSourceRange();
     return;
   }
+#endif
 
   D->addAttr(::new (S.Context)
                  LayoutVersionAttr(Attr.getRange(), S.Context, Version,

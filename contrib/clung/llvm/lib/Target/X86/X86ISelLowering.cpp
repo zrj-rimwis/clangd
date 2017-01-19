@@ -1990,6 +1990,7 @@ Value *X86TargetLowering::getIRStackGuard(IRBuilder<> &IRB) const {
 
 void X86TargetLowering::insertSSPDeclarations(Module &M) const {
   // MSVC CRT provides functionalities for stack protection.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (Subtarget.getTargetTriple().isOSMSVCRT()) {
     // MSVC CRT has a global variable holding security cookie.
     M.getOrInsertGlobal("__security_cookie",
@@ -2004,6 +2005,7 @@ void X86TargetLowering::insertSSPDeclarations(Module &M) const {
     SecurityCheckCookie->addAttribute(1, Attribute::AttrKind::InReg);
     return;
   }
+#endif
   // glibc has a special slot for the stack guard.
   if (Subtarget.isTargetGlibc())
     return;
@@ -2012,15 +2014,19 @@ void X86TargetLowering::insertSSPDeclarations(Module &M) const {
 
 Value *X86TargetLowering::getSDagStackGuard(const Module &M) const {
   // MSVC CRT has a global variable holding security cookie.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (Subtarget.getTargetTriple().isOSMSVCRT())
     return M.getGlobalVariable("__security_cookie");
+#endif
   return TargetLowering::getSDagStackGuard(M);
 }
 
 Value *X86TargetLowering::getSSPStackGuardCheck(const Module &M) const {
   // MSVC CRT has a function to validate security cookie.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (Subtarget.getTargetTriple().isOSMSVCRT())
     return M.getFunction("__security_check_cookie");
+#endif
   return TargetLowering::getSSPStackGuardCheck(M);
 }
 
@@ -2871,7 +2877,11 @@ SDValue X86TargetLowering::LowerFormalArguments(
     FuncInfo->setBytesToPopOnReturn(0); // Callee pops nothing.
     // If this is an sret function, the return should pop the hidden pointer.
     if (!Is64Bit && !canGuaranteeTCO(CallConv) &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
         !Subtarget.getTargetTriple().isOSMSVCRT() &&
+#else
+        !false &&
+#endif
         argsAreStructReturn(Ins, Subtarget.isTargetMCU()) == StackStructReturn)
       FuncInfo->setBytesToPopOnReturn(4);
   }
@@ -3418,7 +3428,11 @@ X86TargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
                        DAG.getTarget().Options.GuaranteedTailCallOpt))
     NumBytesForCalleeToPop = NumBytes;    // Callee pops everything
   else if (!Is64Bit && !canGuaranteeTCO(CallConv) &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
            !Subtarget.getTargetTriple().isOSMSVCRT() &&
+#else
+           !false &&
+#endif
            SR == StackStructReturn)
     // If this is a call to a struct-return function, the callee
     // pops the hidden struct pointer, so we have to push it back.

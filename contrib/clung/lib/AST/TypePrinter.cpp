@@ -971,7 +971,11 @@ void TypePrinter::printTag(TagDecl *D, raw_ostream &OS) {
   } else {
     // Make an unambiguous representation for anonymous types, e.g.
     //   (anonymous enum at /usr/include/string.h:120:9)
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     OS << (Policy.MSVCFormatting ? '`' : '(');
+#else
+    OS << '(';
+#endif
 
     if (isa<CXXRecordDecl>(D) && cast<CXXRecordDecl>(D)->isLambda()) {
       OS << "lambda";
@@ -996,7 +1000,11 @@ void TypePrinter::printTag(TagDecl *D, raw_ostream &OS) {
       }
     }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     OS << (Policy.MSVCFormatting ? '\'' : ')');
+#else
+    OS << ')';
+#endif
   }
 
   // If this is a class template specialization, print the template
@@ -1446,7 +1454,11 @@ void TemplateSpecializationType::
 void TemplateSpecializationType::PrintTemplateArgumentList(
     raw_ostream &OS, ArrayRef<TemplateArgument> Args,
     const PrintingPolicy &Policy, bool SkipBrackets) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   const char *Comma = Policy.MSVCFormatting ? "," : ", ";
+#else
+  const char *Comma = ", ";
+#endif
   if (!SkipBrackets)
     OS << '<';
 
@@ -1497,7 +1509,11 @@ PrintTemplateArgumentList(raw_ostream &OS,
                           ArrayRef<TemplateArgumentLoc> Args,
                           const PrintingPolicy &Policy) {
   OS << '<';
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   const char *Comma = Policy.MSVCFormatting ? "," : ", ";
+#else
+  const char *Comma = ", ";
+#endif
 
   bool needSpace = false;
   bool FirstArg = true;

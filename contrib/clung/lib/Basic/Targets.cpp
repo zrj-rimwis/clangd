@@ -721,6 +721,7 @@ protected:
                     MacroBuilder &Builder) const override {
     Builder.defineMacro("_WIN32");
   }
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   void getVisualStudioDefines(const LangOptions &Opts,
                               MacroBuilder &Builder) const {
     if (Opts.CPlusPlus) {
@@ -774,6 +775,7 @@ protected:
 
     Builder.defineMacro("_INTEGRAL_MAX_BITS", "64");
   }
+#endif
 
 public:
   WindowsTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4164,6 +4166,7 @@ public:
 };
 
 // x86-32 Windows Visual Studio target
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 class MicrosoftX86_32TargetInfo : public WindowsX86_32TargetInfo {
 public:
   MicrosoftX86_32TargetInfo(const llvm::Triple &Triple,
@@ -4182,6 +4185,7 @@ public:
     Builder.defineMacro("_M_IX86", "600");
   }
 };
+#endif
 
 static void addCygMingDefines(const LangOptions &Opts, MacroBuilder &Builder) {
   // Mingw and cygwin define __declspec(a) to __attribute__((a)).  Clang
@@ -4484,6 +4488,7 @@ public:
 };
 
 // x86-64 Windows Visual Studio target
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 class MicrosoftX86_64TargetInfo : public WindowsX86_64TargetInfo {
 public:
   MicrosoftX86_64TargetInfo(const llvm::Triple &Triple,
@@ -4500,6 +4505,7 @@ public:
     Builder.defineMacro("_M_AMD64", "100");
   }
 };
+#endif
 
 // x86-64 MinGW target
 class MinGWX86_64TargetInfo : public WindowsX86_64TargetInfo {
@@ -5556,6 +5562,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 class WindowsARMTargetInfo : public WindowsTargetInfo<ARMleTargetInfo> {
   const llvm::Triple Triple;
 public:
@@ -5600,8 +5607,10 @@ public:
     }
   }
 };
+#endif
 
 // Windows ARM + Itanium C++ ABI Target
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 class ItaniumWindowsARMleTargetInfo : public WindowsARMTargetInfo {
 public:
   ItaniumWindowsARMleTargetInfo(const llvm::Triple &Triple,
@@ -5614,10 +5623,13 @@ public:
                         MacroBuilder &Builder) const override {
     WindowsARMTargetInfo::getTargetDefines(Opts, Builder);
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     if (Opts.MSVCCompat)
       WindowsARMTargetInfo::getVisualStudioDefines(Opts, Builder);
+#endif
   }
 };
+#endif
 
 // Windows ARM, MS (C++) ABI
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -5638,6 +5650,7 @@ public:
 #endif
 
 // ARM MinGW target
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 class MinGWARMTargetInfo : public WindowsARMTargetInfo {
 public:
   MinGWARMTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -5654,6 +5667,7 @@ public:
     addMinGWDefines(Opts, Builder);
   }
 };
+#endif
 
 // ARM Cygwin target
 class CygwinARMTargetInfo : public ARMleTargetInfo {
@@ -8270,6 +8284,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
       switch (Triple.getEnvironment()) {
       case llvm::Triple::Cygnus:
         return new CygwinARMTargetInfo(Triple, Opts);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // cause of bad layering
       case llvm::Triple::GNU:
         return new MinGWARMTargetInfo(Triple, Opts);
       case llvm::Triple::Itanium:
@@ -8280,6 +8295,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
         return new MicrosoftARMleTargetInfo(Triple, Opts);
 #else
         return new MinGWARMTargetInfo(Triple, Opts);
+#endif
 #endif
       }
     default:
@@ -8549,9 +8565,15 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
       case llvm::Triple::GNU:
         return new MinGWX86_32TargetInfo(Triple, Opts);
       case llvm::Triple::Itanium:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       case llvm::Triple::MSVC:
+#endif
       default: // Assume MSVC for unknown environments
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume not
         return new MicrosoftX86_32TargetInfo(Triple, Opts);
+#else
+        return new MinGWX86_32TargetInfo(Triple, Opts);
+#endif
       }
     }
     case llvm::Triple::Haiku:
@@ -8603,9 +8625,15 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
         return new CygwinX86_64TargetInfo(Triple, Opts);
       case llvm::Triple::GNU:
         return new MinGWX86_64TargetInfo(Triple, Opts);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       case llvm::Triple::MSVC:
+#endif
       default: // Assume MSVC for unknown environments
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume not
         return new MicrosoftX86_64TargetInfo(Triple, Opts);
+#else
+        return new MinGWX86_64TargetInfo(Triple, Opts);
+#endif
       }
     }
     case llvm::Triple::Haiku:

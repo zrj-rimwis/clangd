@@ -342,8 +342,10 @@ ArgType ScanfSpecifier::getArgType(ASTContext &Ctx) const {
         case LengthModifier::AsMAllocate:
           return ArgType::PtrTo(ArgType::CStrTy);
         case LengthModifier::AsShort:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
           if (Ctx.getTargetInfo().getTriple().isOSMSVCRT())
             return ArgType::PtrTo(ArgType::AnyCharTy);
+#endif
         default:
           return ArgType::Invalid();
       }
@@ -358,8 +360,10 @@ ArgType ScanfSpecifier::getArgType(ASTContext &Ctx) const {
         case LengthModifier::AsMAllocate:
           return ArgType::PtrTo(ArgType(ArgType::WCStrTy, "wchar_t *"));
         case LengthModifier::AsShort:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
           if (Ctx.getTargetInfo().getTriple().isOSMSVCRT())
             return ArgType::PtrTo(ArgType::AnyCharTy);
+#endif
         default:
           return ArgType::Invalid();
       }

@@ -761,11 +761,13 @@ void JumpScopeChecker::VerifyIndirectJumps() {
 
 /// Return true if a particular error+note combination must be downgraded to a
 /// warning in Microsoft mode.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static bool IsMicrosoftJumpWarning(unsigned JumpDiag, unsigned InDiagNote) {
   return (JumpDiag == diag::err_goto_into_protected_scope &&
          (InDiagNote == diag::note_protected_by_variable_init ||
           InDiagNote == diag::note_protected_by_variable_nontriv_destructor));
 }
+#endif
 
 /// Return true if a particular note should be downgraded to a compatibility
 /// warning in C++11 mode.
@@ -871,9 +873,15 @@ void JumpScopeChecker::CheckJump(Stmt *From, Stmt *To, SourceLocation DiagLoc,
   SmallVector<unsigned, 10> ToScopesError;
   SmallVector<unsigned, 10> ToScopesWarning;
   for (unsigned I = ToScope; I != CommonScope; I = Scopes[I].ParentScope) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (S.getLangOpts().MSVCCompat && JumpDiagWarning != 0 &&
         IsMicrosoftJumpWarning(JumpDiagError, Scopes[I].InDiag))
       ToScopesWarning.push_back(I);
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else if (IsCXX98CompatWarning(S, Scopes[I].InDiag))
       ToScopesCXX98Compat.push_back(I);
     else if (Scopes[I].InDiag)

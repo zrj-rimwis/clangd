@@ -362,7 +362,11 @@ static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
                                                const LangOptions &LangOpts,
                                                const FrontendOptions &FEOpts,
                                                MacroBuilder &Builder) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // this is even dangerous
   if (!LangOpts.MSVCCompat && !LangOpts.TraditionalCPP)
+#else
+  if (!false && !LangOpts.TraditionalCPP)
+#endif
     Builder.defineMacro("__STDC__");
   if (LangOpts.Freestanding)
     Builder.defineMacro("__STDC_HOSTED__", "0");
@@ -523,7 +527,11 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
                       + getClangFullRepositoryVersion() + "\"");
 #undef TOSTR
 #undef TOSTR2
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false, why so old gcc version?
   if (!LangOpts.MSVCCompat) {
+#else
+  if (!false) {
+#endif
     // Currently claim to be compatible with GCC 4.2.1-5621, but only if we're
     // not compiling for MSVC compatibility
     Builder.defineMacro("__GNUC_MINOR__", "2");
@@ -552,10 +560,18 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   // Initialize language-specific preprocessor defines.
 
   // Standard conforming mode?
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
   if (!LangOpts.GNUMode && !LangOpts.MSVCCompat)
+#else
+  if (!LangOpts.GNUMode && !false)
+#endif
     Builder.defineMacro("__STRICT_ANSI__");
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // can i assume false here? pleeze?
   if (!LangOpts.MSVCCompat && LangOpts.CPlusPlus11)
+#else
+  if (!false && LangOpts.CPlusPlus11)
+#endif
     Builder.defineMacro("__GXX_EXPERIMENTAL_CXX0X__");
 
   if (LangOpts.ObjC1) {
@@ -617,9 +633,17 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("__BLOCKS__");
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
   if (!LangOpts.MSVCCompat && LangOpts.Exceptions)
+#else
+  if (!false && LangOpts.Exceptions)
+#endif
     Builder.defineMacro("__EXCEPTIONS");
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (!LangOpts.MSVCCompat && LangOpts.RTTI)
+#else
+  if (!false && LangOpts.RTTI)
+#endif
     Builder.defineMacro("__GXX_RTTI");
   if (LangOpts.SjLjExceptions)
     Builder.defineMacro("__USING_SJLJ_EXCEPTIONS__");
@@ -627,7 +651,11 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   if (LangOpts.Deprecated)
     Builder.defineMacro("__DEPRECATED");
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (!LangOpts.MSVCCompat && LangOpts.CPlusPlus) {
+#else
+  if (!false && LangOpts.CPlusPlus) {
+#endif
     Builder.defineMacro("__GNUG__", "4");
     Builder.defineMacro("__GXX_WEAK__");
     Builder.defineMacro("__private_extern__", "extern");
@@ -840,7 +868,11 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   else
     Builder.defineMacro("__FINITE_MATH_ONLY__", "0");
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // this is dangerous
   if (!LangOpts.MSVCCompat) {
+#else
+  if (true) {
+#endif
     if (LangOpts.GNUInline || LangOpts.CPlusPlus)
       Builder.defineMacro("__GNUC_GNU_INLINE__");
     else

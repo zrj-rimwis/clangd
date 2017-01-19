@@ -488,9 +488,11 @@ public:
   bool isTargetNaCl64() const { return isTargetNaCl() && is64Bit(); }
   bool isTargetMCU() const { return TargetTriple.isOSIAMCU(); }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool isTargetWindowsMSVC() const {
     return TargetTriple.isWindowsMSVCEnvironment();
   }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isTargetKnownWindowsMSVC() const {

@@ -2940,7 +2940,11 @@ static void CollectArgsForIntegratedAssembler(Compilation &C,
   // Only default to -mincremental-linker-compatible if we think we are
   // targeting the MSVC linker.
   bool DefaultIncrementalLinkerCompatible =
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
       C.getDefaultToolChain().getTriple().isWindowsMSVCEnvironment();
+#else
+      false;
+#endif
   if (Args.hasFlag(options::OPT_mincremental_linker_compatible,
                    options::OPT_mno_incremental_linker_compatible,
                    DefaultIncrementalLinkerCompatible))
@@ -3558,6 +3562,7 @@ static void appendUserToPath(SmallVectorImpl<char> &Result) {
   Result.append(UID.begin(), UID.end());
 }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 VersionTuple visualstudio::getMSVCVersion(const Driver *D, const ToolChain &TC,
                                           const llvm::Triple &Triple,
                                           const llvm::opt::ArgList &Args,
@@ -3613,6 +3618,7 @@ VersionTuple visualstudio::getMSVCVersion(const Driver *D, const ToolChain &TC,
 #endif
   return VersionTuple();
 }
+#endif
 
 static void addPGOAndCoverageFlags(Compilation &C, const Driver &D,
                                    const InputInfo &Output, const ArgList &Args,
@@ -3937,7 +3943,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   bool IsWindowsGNU = getToolChain().getTriple().isWindowsGNUEnvironment();
   bool IsWindowsCygnus =
       getToolChain().getTriple().isWindowsCygwinEnvironment();
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool IsWindowsMSVC = getToolChain().getTriple().isWindowsMSVCEnvironment();
+#endif
   bool IsPS4CPU = getToolChain().getTriple().isPS4CPU();
   bool IsIAMCU = getToolChain().getTriple().isOSIAMCU();
 
@@ -4127,8 +4135,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     if (!Args.hasArg(options::OPT__analyzer_no_default_checks)) {
       CmdArgs.push_back("-analyzer-checker=core");
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     if (!IsWindowsMSVC) {
+#endif
       CmdArgs.push_back("-analyzer-checker=unix");
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     } else {
       // Enable "unix" checkers that also work on Windows.
       CmdArgs.push_back("-analyzer-checker=unix.API");
@@ -4138,6 +4149,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-analyzer-checker=unix.cstring.BadSizeArg");
       CmdArgs.push_back("-analyzer-checker=unix.cstring.NullArg");
     }
+#endif
 
       // Disable some unix checkers for PS4.
       if (IsPS4CPU) {
@@ -4938,7 +4950,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   //
   // If a std is supplied, only add -trigraphs if it follows the
   // option.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   bool ImplyVCPPCXXVer = false;
+#endif
   if (Arg *Std = Args.getLastArg(options::OPT_std_EQ, options::OPT_ansi)) {
     if (Std->getOption().matches(options::OPT_ansi))
       if (types::isCXX(InputType))
@@ -4964,8 +4978,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     if (!types::isCXX(InputType))
       Args.AddAllArgsTranslated(CmdArgs, options::OPT_std_default_EQ, "-std=",
                                 /*Joined=*/true);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     else if (IsWindowsMSVC)
       ImplyVCPPCXXVer = true;
+#endif
 
     Args.AddLastArg(CmdArgs, options::OPT_ftrigraphs,
                     options::OPT_fno_trigraphs);
@@ -5626,6 +5642,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 #endif
 
   // -fms-compatibility-version=18.00 is default.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   VersionTuple MSVT = visualstudio::getMSVCVersion(
       &D, getToolChain(), getToolChain().getTriple(), Args, IsWindowsMSVC);
   if (!MSVT.empty())
@@ -5633,6 +5650,8 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
         Args.MakeArgString("-fms-compatibility-version=" + MSVT.getAsString()));
 
   bool IsMSVC2015Compatible = MSVT.getMajor() >= 19;
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (ImplyVCPPCXXVer) {
     StringRef LanguageStandard;
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__
@@ -5648,14 +5667,17 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 #endif
 
     if (LanguageStandard.empty()) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // XXX huh?? why? silly
       if (IsMSVC2015Compatible)
         LanguageStandard = "-std=c++14";
       else
+#endif
         LanguageStandard = "-std=c++11";
     }
 
     CmdArgs.push_back(LanguageStandard.data());
   }
+#endif
 
   // -fno-borland-extensions is default.
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -5677,13 +5699,21 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // than 19.
   if (!Args.hasFlag(options::OPT_fthreadsafe_statics,
                     options::OPT_fno_threadsafe_statics,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false || smth
                     !IsWindowsMSVC || IsMSVC2015Compatible))
+#else
+                    true))
+#endif
     CmdArgs.push_back("-fno-threadsafe-statics");
 
   // -fno-delayed-template-parsing is default, except for Windows where MSVC STL
   // needs it.
   if (Args.hasFlag(options::OPT_fdelayed_template_parsing,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
                    options::OPT_fno_delayed_template_parsing, IsWindowsMSVC))
+#else
+                   options::OPT_fno_delayed_template_parsing, false))
+#endif
     CmdArgs.push_back("-fdelayed-template-parsing");
 
   // -fgnu-keywords default varies depending on language; only pass if
@@ -6635,11 +6665,13 @@ void Clang::AddClangCLArgs(const ArgList &Args, types::ID InputType,
 }
 #endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // wth you doing here??
 visualstudio::Compiler *Clang::getCLFallback() const {
   if (!CLFallback)
     CLFallback.reset(new visualstudio::Compiler(getToolChain()));
   return CLFallback.get();
 }
+#endif
 
 void ClangAs::AddMIPSTargetArgs(const ArgList &Args,
                                 ArgStringList &CmdArgs) const {
@@ -10195,6 +10227,7 @@ void dragonfly::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 // an installed copy of Visual Studio and, failing that, looks in the PATH,
 // making sure that whatever executable that's found is not a same-named exe
 // from clang itself to prevent clang from falling back to itself.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static std::string FindVisualStudioExecutable(const ToolChain &TC,
                                               const char *Exe,
                                               const char *ClangProgramPath) {
@@ -10210,7 +10243,9 @@ static std::string FindVisualStudioExecutable(const ToolChain &TC,
 
   return Exe;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                         const InputInfo &Output,
                                         const InputInfoList &Inputs,
@@ -10408,7 +10443,9 @@ void visualstudio::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   const char *Exec = Args.MakeArgString(linkPath);
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 void visualstudio::Compiler::ConstructJob(Compilation &C, const JobAction &JA,
                                           const InputInfo &Output,
                                           const InputInfoList &Inputs,
@@ -10539,6 +10576,7 @@ std::unique_ptr<Command> visualstudio::Compiler::GetCommand(
   return llvm::make_unique<Command>(JA, *this, Args.MakeArgString(Exec),
                                     CmdArgs, Inputs);
 }
+#endif
 
 /// MinGW Tools
 void MinGW::Assembler::ConstructJob(Compilation &C, const JobAction &JA,

@@ -1721,9 +1721,13 @@ const char *Lexer::LexUDSuffix(Token &Result, const char *CurPtr,
 
     if (!IsUDSuffix) {
       if (!isLexingRawMode())
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
         Diag(CurPtr, getLangOpts().MSVCCompat
                          ? diag::ext_ms_reserved_user_defined_literal
                          : diag::ext_reserved_user_defined_literal)
+#else
+        Diag(CurPtr, diag::ext_reserved_user_defined_literal)
+#endif
           << FixItHint::CreateInsertion(getSourceLocation(CurPtr), " ");
       return CurPtr;
     }

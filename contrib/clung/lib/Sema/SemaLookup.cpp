@@ -4477,9 +4477,11 @@ std::unique_ptr<TypoCorrectionConsumer> Sema::makeTypoCorrectionConsumer(
   // In Microsoft mode, don't perform typo correction in a template member
   // function dependent context because it interferes with the "lookup into
   // dependent bases of class templates" feature.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat && CurContext->isDependentContext() &&
       isa<CXXMethodDecl>(CurContext))
     return nullptr;
+#endif
 
   // We only attempt to correct typos for identifiers.
   IdentifierInfo *Typo = TypoName.getName().getAsIdentifierInfo();

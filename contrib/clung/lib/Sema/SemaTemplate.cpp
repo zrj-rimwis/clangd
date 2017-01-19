@@ -3167,9 +3167,13 @@ bool Sema::CheckTemplateTypeArgument(TemplateTypeParmDecl *Param,
               LookupResult::NotFoundInCurrentInstantiation) {
         // Suggest that the user add 'typename' before the NNS.
         SourceLocation Loc = AL.getSourceRange().getBegin();
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
         Diag(Loc, getLangOpts().MSVCCompat
                       ? diag::ext_ms_template_type_arg_missing_typename
                       : diag::err_template_arg_must_be_type_suggest)
+#else
+        Diag(Loc, diag::err_template_arg_must_be_type_suggest)
+#endif
             << FixItHint::CreateInsertion(Loc, "typename ");
         Diag(Param->getLocation(), diag::note_template_param_here);
 
@@ -6817,9 +6821,13 @@ Sema::CheckSpecializationInstantiationRedecl(SourceLocation NewLoc,
       //       in a program,
 
       // MSVCCompat: MSVC silently ignores duplicate explicit instantiations.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
       Diag(NewLoc, (getLangOpts().MSVCCompat)
                        ? diag::ext_explicit_instantiation_duplicate
                        : diag::err_explicit_instantiation_duplicate)
+#else
+      Diag(NewLoc, diag::err_explicit_instantiation_duplicate)
+#endif
           << PrevDecl;
       Diag(DiagLocForExplicitInstantiation(PrevDecl, PrevPointOfInstantiation),
            diag::note_previous_explicit_instantiation);

@@ -1441,8 +1441,12 @@ void NamedDecl::printQualifiedName(raw_ostream &OS,
           (ND->isAnonymousNamespace() || ND->isInline()))
         continue;
       if (ND->isAnonymousNamespace()) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
         OS << (P.MSVCFormatting ? "`anonymous namespace\'"
                                 : "(anonymous namespace)");
+#else
+        OS << "(anonymous namespace)";
+#endif
       }
       else
         OS << *ND;
@@ -1837,11 +1841,17 @@ VarDecl::TLSKind VarDecl::getTLSKind() const {
           getASTContext().getTargetInfo().isTLSSupported() &&
           hasAttr<OMPThreadPrivateDeclAttr>()))
       return TLS_None;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume only on OMP attr
     return ((getASTContext().getLangOpts().isCompatibleWithMSVC(
                 LangOptions::MSVC2015)) ||
             hasAttr<OMPThreadPrivateDeclAttr>())
                ? TLS_Dynamic
                : TLS_Static;
+#else
+    return (hasAttr<OMPThreadPrivateDeclAttr>())
+               ? TLS_Dynamic
+               : TLS_Static;
+#endif
   case TSCS___thread: // Fall through.
   case TSCS__Thread_local:
     return TLS_Static;
@@ -2541,6 +2551,7 @@ bool FunctionDecl::isMain() const {
          isNamed(this, "main");
 }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
 bool FunctionDecl::isMSVCRTEntryPoint() const {
   const TranslationUnitDecl *TUnit =
       dyn_cast<TranslationUnitDecl>(getDeclContext()->getRedeclContext());
@@ -2567,6 +2578,7 @@ bool FunctionDecl::isMSVCRTEntryPoint() const {
              true)
       .Default(false);
 }
+#endif
 
 bool FunctionDecl::isReservedGlobalPlacementOperator() const {
   assert(getDeclName().getNameKind() == DeclarationName::CXXOperatorName);
@@ -2834,6 +2846,7 @@ bool FunctionDecl::isMSExternInline() const {
 }
 #endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static bool redeclForcesDefMSVC(const FunctionDecl *Redecl) {
   if (Redecl->getStorageClass() != SC_Extern)
     return false;
@@ -2845,6 +2858,7 @@ static bool redeclForcesDefMSVC(const FunctionDecl *Redecl) {
 
   return true;
 }
+#endif
 
 static bool RedeclForcesDefC99(const FunctionDecl *Redecl) {
   // Only consider file-scope declarations in this test.
@@ -2874,12 +2888,14 @@ bool FunctionDecl::doesDeclarationForceExternallyVisibleDefinition() const {
 
   ASTContext &Context = getASTContext();
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (Context.getLangOpts().MSVCCompat) {
     const FunctionDecl *Definition;
     if (hasBody(Definition) && Definition->isInlined() &&
         redeclForcesDefMSVC(this))
       return true;
   }
+#endif
 
   if (Context.getLangOpts().GNUInline || hasAttr<GNUInlineAttr>()) {
     // With GNU inlining, a declaration with 'inline' but not 'extern', forces

@@ -1616,6 +1616,7 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
     // We will consume the typedef token here and put it back after we have
     // parsed the first identifier, transforming it into something more like:
     //   typename T_::D typedef D;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // asume false
     if (getLangOpts().MSVCCompat && NextToken().is(tok::kw_typedef)) {
       Token TypedefToken;
       PP.Lex(TypedefToken);
@@ -1626,6 +1627,7 @@ bool Parser::TryAnnotateTypeOrScopeToken(bool EnteringContext, bool NeedType) {
         Diag(Tok.getLocation(), diag::warn_expected_qualified_after_typename);
       return Result;
     }
+#endif
 
     // Parse a C++ typename-specifier, e.g., "typename T::type".
     //

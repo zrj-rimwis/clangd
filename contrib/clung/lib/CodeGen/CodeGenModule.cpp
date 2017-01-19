@@ -436,10 +436,12 @@ void CodeGenModule::Release() {
     getModule().addModuleFlag(llvm::Module::Warning, "Dwarf Version",
                               CodeGenOpts.DwarfVersion);
   }
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (CodeGenOpts.EmitCodeView) {
     // Indicate that we want CodeView in the metadata.
     getModule().addModuleFlag(llvm::Module::Warning, "CodeView", 1);
   }
+#endif
   if (CodeGenOpts.OptimizationLevel > 0 && CodeGenOpts.StrictVTablePointers) {
     // We don't support LTO with 2 with different StrictVTablePointers
     // FIXME: we could support it by stripping all the information introduced

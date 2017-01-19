@@ -609,7 +609,11 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S,
     }
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
   if (Found.empty() && !ErrorRecoveryLookup && !getLangOpts().MSVCCompat) {
+#else
+  if (Found.empty() && !ErrorRecoveryLookup && !false) {
+#endif
     // We haven't found anything, and we're not recovering from a
     // different kind of error, so look for typos.
     DeclarationName Name = Found.getLookupName();
@@ -773,6 +777,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S,
     LookupName(Found, S);
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   // In Microsoft mode, if we are within a templated function and we can't
   // resolve Identifier, then extend the SS with Identifier. This will have 
   // the effect of resolving Identifier during template instantiation. 
@@ -790,6 +795,8 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S,
   // public:
   //   void foo() { D::foo2(); }
   // };
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat) {
     DeclContext *DC = LookupCtx ? LookupCtx : CurContext;
     if (DC->isDependentContext() && DC->isFunctionOrMethod()) {
@@ -802,6 +809,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S,
       }
     }
   }
+#endif
 
   if (!Found.empty()) {
     if (TypeDecl *TD = Found.getAsSingle<TypeDecl>())

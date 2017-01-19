@@ -1040,6 +1040,7 @@ public:
   bool isPICDefaultForced() const override;
 };
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 class LLVM_LIBRARY_VISIBILITY MSVCToolChain : public ToolChain {
 public:
   MSVCToolChain(const Driver &D, const llvm::Triple &Triple,
@@ -1092,6 +1093,7 @@ protected:
   Tool *buildLinker() const override;
   Tool *buildAssembler() const override;
 };
+#endif
 
 class LLVM_LIBRARY_VISIBILITY CrossWindowsToolChain : public Generic_GCC {
 public:

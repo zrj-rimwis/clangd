@@ -5527,7 +5527,9 @@ CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,
       break;
     }
     case Sema::VAK_Undefined:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     case Sema::VAK_MSVCUndefined:
+#endif
       EmitFormatDiagnostic(
         S.PDiag(diag::warn_non_pod_vararg_with_format_string)
           << S.getLangOpts().CPlusPlus11

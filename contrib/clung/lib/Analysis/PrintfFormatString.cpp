@@ -291,9 +291,11 @@ static PrintfSpecifierResult ParsePrintfSpecifier(FormatStringHandler &H,
       break;
 #endif
     // MS specific.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     case 'Z':
       if (Target.getTriple().isOSMSVCRT())
         k = ConversionSpecifier::ZArg;
+#endif
   }
   
   // Check to see if we used the Objective-C modifier flags with
@@ -407,8 +409,10 @@ ArgType PrintfSpecifier::getArgType(ASTContext &Ctx,
       case LengthModifier::AsWide:
         return ArgType(ArgType::WIntTy, "wint_t");
       case LengthModifier::AsShort:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
         if (Ctx.getTargetInfo().getTriple().isOSMSVCRT())
           return Ctx.IntTy;
+#endif
       default:
         return ArgType::Invalid();
     }
@@ -534,16 +538,20 @@ ArgType PrintfSpecifier::getArgType(ASTContext &Ctx,
       if (IsObjCLiteral)
         return ArgType(Ctx.getPointerType(Ctx.UnsignedShortTy.withConst()),
                        "const unichar *");
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       if (Ctx.getTargetInfo().getTriple().isOSMSVCRT() &&
           LM.getKind() == LengthModifier::AsShort)
         return ArgType::CStrTy;
+#endif
       return ArgType(ArgType::WCStrTy, "wchar_t *");
     case ConversionSpecifier::CArg:
       if (IsObjCLiteral)
         return ArgType(Ctx.UnsignedShortTy, "unichar");
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       if (Ctx.getTargetInfo().getTriple().isOSMSVCRT() &&
           LM.getKind() == LengthModifier::AsShort)
         return Ctx.IntTy;
+#endif
       return ArgType(Ctx.WideCharTy, "wchar_t");
     case ConversionSpecifier::pArg:
       return ArgType::CPointerTy;

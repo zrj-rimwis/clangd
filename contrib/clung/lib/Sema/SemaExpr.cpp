@@ -890,8 +890,10 @@ Sema::VarArgKind Sema::isValidVarArgType(const QualType &Ty) {
   if (Ty->isObjCObjectType())
     return VAK_Invalid;
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat)
     return VAK_MSVCUndefined;
+#endif
 
   // FIXME: In C++11, these cases are conditionally-supported, meaning we're
   // permitted to reject them. We should consider doing so.
@@ -922,7 +924,9 @@ void Sema::checkVariadicArgument(const Expr *E, VariadicCallType CT) {
     break;
 
   case VAK_Undefined:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   case VAK_MSVCUndefined:
+#endif
     DiagRuntimeBehavior(
         E->getLocStart(), nullptr,
         PDiag(diag::warn_cannot_pass_non_pod_arg_to_vararg)
@@ -1909,8 +1913,10 @@ Sema::DiagnoseEmptyLookup(Scope *S, CXXScopeSpec &SS, LookupResult &R,
         // Give a code modification hint to insert 'this->'.
         // TODO: fixit for inserting 'Base<T>::' in the other cases.
         // Actually quite difficult!
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
         if (getLangOpts().MSVCCompat)
           diagnostic = diag::ext_found_via_dependent_bases_lookup;
+#endif
         if (isInstance) {
           Diag(R.getNameLoc(), diagnostic) << Name
             << FixItHint::CreateInsertion(R.getNameLoc(), "this->");
@@ -1943,11 +1949,13 @@ Sema::DiagnoseEmptyLookup(Scope *S, CXXScopeSpec &SS, LookupResult &R,
     // function definition declared at class scope then we must set
     // DC to the lexical parent to be able to search into the parent
     // class.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (getLangOpts().MSVCCompat && isa<FunctionDecl>(DC) &&
         cast<FunctionDecl>(DC)->getFriendObjectKind() &&
         DC->getLexicalParent()->isRecord())
       DC = DC->getLexicalParent();
     else
+#endif
       DC = DC->getParent();
   }
 
@@ -2072,6 +2080,7 @@ Sema::DiagnoseEmptyLookup(Scope *S, CXXScopeSpec &SS, LookupResult &R,
 /// recover successfully in static methods, instance methods, and other contexts
 /// where 'this' is available.  This doesn't precisely match MSVC's
 /// instantiation model, but it's close enough.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static Expr *
 recoverFromMSUnqualifiedLookup(Sema &S, ASTContext &Context,
                                DeclarationNameInfo &NameInfo,
@@ -2112,6 +2121,7 @@ recoverFromMSUnqualifiedLookup(Sema &S, ASTContext &Context,
       Context, SS.getWithLocInContext(Context), TemplateKWLoc, NameInfo,
       TemplateArgs);
 }
+#endif
 
 ExprResult
 Sema::ActOnIdExpression(Scope *S, CXXScopeSpec &SS,
@@ -2218,11 +2228,13 @@ Sema::ActOnIdExpression(Scope *S, CXXScopeSpec &SS,
   bool ADL = UseArgumentDependentLookup(SS, R, HasTrailingLParen);
 
   if (R.empty() && !ADL) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (SS.isEmpty() && getLangOpts().MSVCCompat) {
       if (Expr *E = recoverFromMSUnqualifiedLookup(*this, Context, NameInfo,
                                                    TemplateKWLoc, TemplateArgs))
         return E;
     }
+#endif
 
     // Don't diagnose an empty lookup for inline assembly.
     if (IsInlineAsmIdentifier)
@@ -2389,8 +2401,10 @@ ExprResult Sema::BuildQualifiedDeclarationNameExpr(
     // a dependent context.  If we can recover with a type, downgrade this to
     // a warning in Microsoft compatibility mode.
     unsigned DiagID = diag::err_typename_missing;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (RecoveryTSI && getLangOpts().MSVCCompat)
       DiagID = diag::ext_typename_missing;
+#endif
     SourceLocation Loc = SS.getBeginLoc();
     auto D = Diag(Loc, DiagID);
     D << SS.getScopeRep() << NameInfo.getName().getAsString()

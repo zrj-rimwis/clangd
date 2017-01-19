@@ -4567,8 +4567,10 @@ public:
   void VisitIgnoredBaseExpression(const Expr *E) {
     // While MSVC doesn't evaluate the base expression, it does diagnose the
     // presence of side-effecting behavior.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (Info.getLangOpts().MSVCCompat && !E->HasSideEffects(Info.Ctx))
       return;
+#endif
     VisitIgnoredValue(E);
   }
 };

@@ -491,7 +491,9 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
   }
   Opts.DwarfVersion = getLastArgIntValue(Args, OPT_dwarf_version_EQ, 0, Diags);
   Opts.DebugColumnInfo = Args.hasArg(OPT_dwarf_column_info);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   Opts.EmitCodeView = Args.hasArg(OPT_gcodeview);
+#endif
   Opts.WholeProgramVTables = Args.hasArg(OPT_fwhole_program_vtables);
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__
   Opts.LTOVisibilityPublicStd = Args.hasArg(OPT_flto_visibility_public_std);
@@ -1854,11 +1856,14 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   else if (Args.hasArg(OPT_fwrapv))
     Opts.setSignedOverflowBehavior(LangOptions::SOB_Defined);
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   Opts.MSVCCompat = Args.hasArg(OPT_fms_compatibility);
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.MicrosoftExt = Opts.MSVCCompat || Args.hasArg(OPT_fms_extensions);
   Opts.AsmBlocks = Args.hasArg(OPT_fasm_blocks) || Opts.MicrosoftExt;
 #endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   Opts.MSCompatibilityVersion = 0;
   if (const Arg *A = Args.getLastArg(OPT_fms_compatibility_version)) {
     VersionTuple VT;
@@ -1869,11 +1874,16 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
                                   VT.getMinor().getValueOr(0) * 100000 +
                                   VT.getSubminor().getValueOr(0);
   }
+#endif
 
   // Mimicing gcc's behavior, trigraphs are only enabled if -trigraphs
   // is specified, or -std is set to a conforming mode.
   // Trigraphs are disabled by default in c++1z onwards.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
   Opts.Trigraphs = !Opts.GNUMode && !Opts.MSVCCompat && !Opts.CPlusPlus1z;
+#else
+  Opts.Trigraphs = !Opts.GNUMode && !false && !Opts.CPlusPlus1z;
+#endif
   Opts.Trigraphs =
       Args.hasFlag(OPT_ftrigraphs, OPT_fno_trigraphs, Opts.Trigraphs);
 

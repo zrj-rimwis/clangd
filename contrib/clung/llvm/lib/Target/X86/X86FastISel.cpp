@@ -2989,8 +2989,10 @@ static unsigned computeBytesPoppedByCalleeForSRet(const X86Subtarget *Subtarget,
                                                   ImmutableCallSite *CS) {
   if (Subtarget->is64Bit())
     return 0;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (Subtarget->getTargetTriple().isOSMSVCRT())
     return 0;
+#endif
   if (CC == CallingConv::Fast || CC == CallingConv::GHC ||
       CC == CallingConv::HiPE)
     return 0;

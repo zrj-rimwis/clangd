@@ -203,7 +203,11 @@ public:
     MuslEABI,
     MuslEABIHF,
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     MSVC,
+#else
+    MSVC_disabled,
+#endif
     Itanium,
     Cygnus,
     AMDOpenCL,
@@ -512,11 +516,13 @@ public:
   }
 
   /// Checks if the environment could be MSVC.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool isWindowsMSVCEnvironment() const {
     return getOS() == Triple::Win32 &&
            (getEnvironment() == Triple::UnknownEnvironment ||
             getEnvironment() == Triple::MSVC);
   }
+#endif
 
   /// Checks if the environment is MSVC.
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
@@ -547,10 +553,12 @@ public:
   }
 
   /// Is this a "Windows" OS targeting a "MSVCRT.dll" environment.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool isOSMSVCRT() const {
     return isWindowsMSVCEnvironment() || isWindowsGNUEnvironment() ||
            isWindowsItaniumEnvironment();
   }
+#endif
 
   /// Tests whether the OS is Windows.
   bool isOSWindows() const {

@@ -1552,7 +1552,9 @@ public:
                          bool WantNontrivialTypeSourceInfo = false,
                          IdentifierInfo **CorrectedII = nullptr);
   TypeSpecifierType isTagName(IdentifierInfo &II, Scope *S);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   bool isMicrosoftMissingTypename(const CXXScopeSpec *SS, Scope *S);
+#endif
   void DiagnoseUnknownTypeName(IdentifierInfo *&II,
                                SourceLocation IILoc,
                                Scope *S,
@@ -1564,9 +1566,11 @@ public:
   /// type name has failed in a dependent context. In these situations, we
   /// automatically form a DependentTypeName that will retry lookup in a related
   /// scope during instantiation.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   ParsedType ActOnMSVCUnknownTypeName(const IdentifierInfo &II,
                                       SourceLocation NameLoc,
                                       bool IsTemplateTypeArg);
+#endif
 
   /// \brief Describes the result of the name lookup and resolution performed
   /// by \c ClassifyName().
@@ -1765,7 +1769,9 @@ public:
                                 FunctionDecl *NewFD, LookupResult &Previous,
                                 bool IsExplicitSpecialization);
   void CheckMain(FunctionDecl *FD, const DeclSpec &D);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   void CheckMSVCRTEntryPoint(FunctionDecl *FD);
+#endif
   Decl *ActOnParamDeclarator(Scope *S, Declarator &D);
   ParmVarDecl *BuildParmVarDeclForTypedef(DeclContext *DC,
                                           SourceLocation Loc,
@@ -8642,7 +8648,11 @@ public:
     VAK_Valid,
     VAK_ValidInCXX11,
     VAK_Undefined,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     VAK_MSVCUndefined,
+#else
+    VAK_MSVCUndefined_disabled,
+#endif
     VAK_Invalid
   };
 

@@ -200,6 +200,7 @@ lookupUnqualifiedTypeNameInBase(Sema &S, const IdentifierInfo &II,
   return FoundTypeDecl;
 }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static ParsedType recoverFromTypeInKnownDependentBase(Sema &S,
                                                       const IdentifierInfo &II,
                                                       SourceLocation NameLoc) {
@@ -239,6 +240,7 @@ static ParsedType recoverFromTypeInKnownDependentBase(Sema &S,
   DepTL.setQualifierLoc(SS.getWithLocInContext(Context));
   return S.CreateParsedType(T, Builder.getTypeSourceInfo(Context, T));
 }
+#endif
 
 /// \brief If the identifier refers to a type name within this scope,
 /// return the declaration of that type.
@@ -324,11 +326,13 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
 
     // For unqualified lookup in a class template in MSVC mode, look into
     // dependent base classes where the primary class template is known.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (Result.empty() && getLangOpts().MSVCCompat && (!SS || SS->isEmpty())) {
       if (ParsedType TypeInBase =
               recoverFromTypeInKnownDependentBase(*this, II, NameLoc))
         return TypeInBase;
     }
+#endif
   }
 
   NamedDecl *IIDecl = nullptr;
@@ -465,6 +469,7 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
 }
 
 // Builds a fake NNS for the given decl context.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static NestedNameSpecifier *
 synthesizeCurrentNestedNameSpecifier(ASTContext &Context, DeclContext *DC) {
   for (;; DC = DC->getLookupParent()) {
@@ -480,11 +485,13 @@ synthesizeCurrentNestedNameSpecifier(ASTContext &Context, DeclContext *DC) {
   }
   llvm_unreachable("something isn't in TU scope?");
 }
+#endif
 
 /// Find the parent class with dependent bases of the innermost enclosing method
 /// context. Do not look for enclosing CXXRecordDecls directly, or we will end
 /// up allowing unqualified dependent type names at class-level, which MSVC
 /// correctly rejects.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static const CXXRecordDecl *
 findRecordWithDependentBasesOfEnclosingMethod(const DeclContext *DC) {
   for (; DC && DC->isDependentContext(); DC = DC->getLookupParent()) {
@@ -495,7 +502,9 @@ findRecordWithDependentBasesOfEnclosingMethod(const DeclContext *DC) {
   }
   return nullptr;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 ParsedType Sema::ActOnMSVCUnknownTypeName(const IdentifierInfo &II,
                                           SourceLocation NameLoc,
                                           bool IsTemplateTypeArg) {
@@ -543,6 +552,7 @@ ParsedType Sema::ActOnMSVCUnknownTypeName(const IdentifierInfo &II,
   DepTL.setQualifierLoc(QualifierLoc);
   return CreateParsedType(T, Builder.getTypeSourceInfo(Context, T));
 }
+#endif
 
 /// isTagName() - This method is called *for error recovery purposes only*
 /// to determine if the specified name is a valid tag name ("struct foo").  If
@@ -584,6 +594,7 @@ DeclSpec::TST Sema::isTagName(IdentifierInfo &II, Scope *S) {
 ///   A<T>::TYPE a; // no typename required because A<T> is a base class.
 /// };
 /// @endcode
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 bool Sema::isMicrosoftMissingTypename(const CXXScopeSpec *SS, Scope *S) {
   if (CurContext->isRecord()) {
     if (SS->getScopeRep()->getKind() == NestedNameSpecifier::Super)
@@ -599,6 +610,7 @@ bool Sema::isMicrosoftMissingTypename(const CXXScopeSpec *SS, Scope *S) {
   }
   return CurContext->isFunctionOrMethod() || S->isFunctionPrototypeScope();
 }
+#endif
 
 void Sema::DiagnoseUnknownTypeName(IdentifierInfo *&II,
                                    SourceLocation IILoc,
@@ -679,8 +691,10 @@ void Sema::DiagnoseUnknownTypeName(IdentifierInfo *&II,
       << II << DC << SS->getRange();
   else if (isDependentScopeSpecifier(*SS)) {
     unsigned DiagID = diag::err_typename_missing;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     if (getLangOpts().MSVCCompat && isMicrosoftMissingTypename(SS, S))
       DiagID = diag::ext_typename_missing;
+#endif
 
     Diag(SS->getRange().getBegin(), DiagID)
       << SS->getScopeRep() << II->getName()
@@ -793,11 +807,13 @@ Sema::ClassifyName(Scope *S, CXXScopeSpec &SS, IdentifierInfo *&Name,
 
   // For unqualified lookup in a class template in MSVC mode, look into
   // dependent base classes where the primary class template is known.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (Result.empty() && SS.isEmpty() && getLangOpts().MSVCCompat) {
     if (ParsedType TypeInBase =
             recoverFromTypeInKnownDependentBase(*this, *Name, NameLoc))
       return TypeInBase;
   }
+#endif
 
   // Perform lookup for Objective-C instance variables (including automatically
   // synthesized instance variables), if we're in an Objective-C method.
@@ -3746,9 +3762,13 @@ Sema::ParsedFreeStandingDeclSpec(Scope *S, AccessSpecifier AS, DeclSpec &DS,
 // We will pick our mangling number depending on which version of MSVC is being
 // targeted.
 static unsigned getMSManglingNumber(const LangOptions &LO, Scope *S) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // XXX this is unclear, just go with true
   return LO.isCompatibleWithMSVC(LangOptions::MSVC2015)
              ? S->getMSCurManglingNumber()
              : S->getMSLastManglingNumber();
+#else
+  return S->getMSLastManglingNumber();
+#endif
 }
 
 void Sema::handleTagNumbering(const TagDecl *Tag, Scope *TagScope) {
@@ -8288,8 +8308,10 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
     if (!NewFD->isInvalidDecl() && NewFD->isMain())
       CheckMain(NewFD, D.getDeclSpec());
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (!NewFD->isInvalidDecl() && NewFD->isMSVCRTEntryPoint())
       CheckMSVCRTEntryPoint(NewFD);
+#endif
 
     if (!NewFD->isInvalidDecl())
       D.setRedeclaration(CheckFunctionDeclaration(S, NewFD, Previous,
@@ -8433,8 +8455,10 @@ Sema::ActOnFunctionDeclarator(Scope *S, Declarator &D, DeclContext *DC,
       if (!NewFD->isInvalidDecl() && NewFD->isMain())
         CheckMain(NewFD, D.getDeclSpec());
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
       if (!NewFD->isInvalidDecl() && NewFD->isMSVCRTEntryPoint())
         CheckMSVCRTEntryPoint(NewFD);
+#endif
 
       if (!NewFD->isInvalidDecl())
         D.setRedeclaration(CheckFunctionDeclaration(S, NewFD, Previous,
@@ -9133,6 +9157,7 @@ void Sema::CheckMain(FunctionDecl* FD, const DeclSpec& DS) {
   }
 }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 void Sema::CheckMSVCRTEntryPoint(FunctionDecl *FD) {
   QualType T = FD->getType();
   assert(T->isFunctionType() && "function decl is not of function type");
@@ -9152,6 +9177,7 @@ void Sema::CheckMSVCRTEntryPoint(FunctionDecl *FD) {
     FD->setInvalidDecl();
   }
 }
+#endif
 
 bool Sema::CheckForConstantInitializer(Expr *Init, QualType DclT) {
   // FIXME: Need strict checking.  In C89, we need to check for
@@ -12323,9 +12349,11 @@ static bool isAcceptableTagRedeclContext(Sema &S, DeclContext *OldDC,
 
   // In MSVC mode, we allow a redeclaration if the contexts are related (either
   // encloses the other).
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (S.getLangOpts().MSVCCompat &&
       (OldDC->Encloses(NewDC) || NewDC->Encloses(OldDC)))
     return true;
+#endif
 
   return false;
 }
@@ -12575,15 +12603,19 @@ Decl *Sema::ActOnTag(Scope *S, unsigned TagSpec, TagUseKind TUK,
     if (!Previous.empty() && TUK == TUK_Friend) {
       DeclContext *EnclosingNS = SearchDC->getEnclosingNamespaceContext();
       LookupResult::Filter F = Previous.makeFilter();
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // constify
       bool FriendSawTagOutsideEnclosingNamespace = false;
+#endif
       while (F.hasNext()) {
         NamedDecl *ND = F.next();
         DeclContext *DC = ND->getDeclContext()->getRedeclContext();
         if (DC->isFileContext() &&
             !EnclosingNS->Encloses(ND->getDeclContext())) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
           if (getLangOpts().MSVCCompat)
             FriendSawTagOutsideEnclosingNamespace = true;
           else
+#endif
             F.erase();
         }
       }
@@ -12591,11 +12623,13 @@ Decl *Sema::ActOnTag(Scope *S, unsigned TagSpec, TagUseKind TUK,
 
       // Diagnose this MSVC extension in the easy case where lookup would have
       // unambiguously found something outside the enclosing namespace.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume smth && false
       if (Previous.isSingleResult() && FriendSawTagOutsideEnclosingNamespace) {
         NamedDecl *ND = Previous.getFoundDecl();
         Diag(NameLoc, diag::ext_friend_tag_redecl_outside_namespace)
             << createFriendTagNNSFixIt(*this, ND, S, NameLoc);
       }
+#endif
     }
 
     // Note:  there used to be some attempt at recovery here.
@@ -13035,8 +13069,14 @@ CreateNewDecl:
         Diag(Def->getLocation(), diag::note_previous_definition);
       } else {
         unsigned DiagID = diag::ext_forward_ref_enum;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
         if (getLangOpts().MSVCCompat)
           DiagID = diag::ext_ms_forward_ref_enum;
+#else
+        if (false) {
+          /* dummy */
+        }
+#endif
         else if (getLangOpts().CPlusPlus)
           DiagID = diag::err_forward_ref_enum;
         Diag(Loc, DiagID);
@@ -13173,7 +13213,11 @@ CreateNewDecl:
   // declaration so we always pass true to setObjectOfFriendDecl to make
   // the tag name visible.
   if (TUK == TUK_Friend)
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     New->setObjectOfFriendDecl(getLangOpts().MSVCCompat);
+#else
+    New->setObjectOfFriendDecl(false);
+#endif
 
   // Set the access specifier.
   if (!Invalid && SearchDC->isRecord())
@@ -13660,8 +13704,12 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
   if (!InvalidDecl && Mutable) {
     unsigned DiagID = 0;
     if (T->isReferenceType())
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
       DiagID = getLangOpts().MSVCCompat ? diag::ext_mutable_reference
                                         : diag::err_mutable_reference;
+#else
+      DiagID = diag::err_mutable_reference;
+#endif
     else if (T.isConstQualified())
       DiagID = diag::err_mutable_const;
 
@@ -14467,7 +14515,11 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
     else {
       SourceLocation ExpLoc;
       if (getLangOpts().CPlusPlus11 && Enum->isFixed() &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
           !getLangOpts().MSVCCompat) {
+#else
+          !false) {
+#endif
         // C++11 [dcl.enum]p5: If the underlying type is fixed, [...] the
         // constant-expression in the enumerator-definition shall be a converted
         // constant expression of the underlying type.
@@ -14492,10 +14544,12 @@ EnumConstantDecl *Sema::CheckEnumConstant(EnumDecl *Enum,
           // we perform a non-narrowing conversion as part of converted constant
           // expression checking.
           if (!isRepresentableIntegerValue(Context, EnumVal, EltTy)) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
             if (getLangOpts().MSVCCompat) {
               Diag(IdLoc, diag::ext_enumerator_too_large) << EltTy;
               Val = ImpCastExprToType(Val, EltTy, CK_IntegralCast).get();
             } else
+#endif
               Diag(IdLoc, diag::err_enumerator_too_large) << EltTy;
           } else
             Val = ImpCastExprToType(Val, EltTy,

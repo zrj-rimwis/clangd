@@ -5973,7 +5973,11 @@ bool Sema::ShouldDeleteSpecialMember(CXXMethodDecl *MD, CXXSpecialMember CSM,
     // In Microsoft mode, a user-declared move only causes the deletion of the
     // corresponding copy operation, not both copy operations.
     if (RD->hasUserDeclaredMoveConstructor() &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
         (!getLangOpts().MSVCCompat || CSM == CXXCopyConstructor)) {
+#else
+        (!false || CSM == CXXCopyConstructor)) {
+#endif
       if (!Diagnose) return true;
 
       // Find any user-declared move constructor.
@@ -5985,7 +5989,11 @@ bool Sema::ShouldDeleteSpecialMember(CXXMethodDecl *MD, CXXSpecialMember CSM,
       }
       assert(UserDeclaredMove);
     } else if (RD->hasUserDeclaredMoveAssignment() &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
                (!getLangOpts().MSVCCompat || CSM == CXXCopyAssignment)) {
+#else
+               (!false || CSM == CXXCopyAssignment)) {
+#endif
       if (!Diagnose) return true;
 
       // Find any user-declared move assignment operator.
@@ -10284,7 +10292,11 @@ static void diagnoseDeprecatedCopyOperation(Sema &S, CXXMethodDecl *CopyOp,
     UserDeclaredOperation = RD->getDestructor();
   } else if (!isa<CXXConstructorDecl>(CopyOp) &&
              RD->hasUserDeclaredCopyConstructor() &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false, what a mess
              !S.getLangOpts().MSVCCompat) {
+#else
+             !false) {
+#endif
     // Find any user-declared copy constructor.
     for (auto *I : RD->ctors()) {
       if (I->isCopyConstructor()) {
@@ -10295,7 +10307,11 @@ static void diagnoseDeprecatedCopyOperation(Sema &S, CXXMethodDecl *CopyOp,
     assert(UserDeclaredOperation);
   } else if (isa<CXXConstructorDecl>(CopyOp) &&
              RD->hasUserDeclaredCopyAssignment() &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
              !S.getLangOpts().MSVCCompat) {
+#else
+             !false) {
+#endif
     // Find any user-declared move assignment operator.
     for (auto *I : RD->methods()) {
       if (I->isCopyAssignmentOperator()) {

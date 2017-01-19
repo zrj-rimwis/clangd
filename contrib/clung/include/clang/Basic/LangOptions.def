@@ -82,7 +82,9 @@
 // FIXME: A lot of the BENIGN_ options should be COMPATIBLE_ instead.
 LANGOPT(C99               , 1, 0, "C99")
 LANGOPT(C11               , 1, 0, "C11")
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 LANGOPT(MSVCCompat        , 1, 0, "Microsoft Visual C++ full compatibility mode")
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 LANGOPT(MicrosoftExt      , 1, 0, "Microsoft C++ extensions")
 LANGOPT(AsmBlocks         , 1, 0, "Microsoft inline asm blocks")
@@ -258,7 +260,9 @@ BENIGN_LANGOPT(BracketDepth, 32, 256,
                "maximum bracket nesting depth")
 BENIGN_LANGOPT(NumLargeByValueCopy, 32, 0,
         "if non-zero, warn about parameter or return Warn if parameter/return value is larger in bytes than this setting. 0 is no check.")
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 VALUE_LANGOPT(MSCompatibilityVersion, 32, 0, "Microsoft Visual C/C++ Version")
+#endif
 VALUE_LANGOPT(VtorDispMode, 2, 1, "How many vtordisps to insert")
 
 LANGOPT(ApplePragmaPack, 1, 0, "Apple gcc-compatible #pragma pack handling")

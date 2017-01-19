@@ -3830,9 +3830,11 @@ void Sema::CodeCompleteTypeQualifiers(DeclSpec &DS) {
   if (getLangOpts().C11 &&
       !(DS.getTypeQualifiers() & DeclSpec::TQ_atomic))
     Results.AddResult("_Atomic");
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat &&
       !(DS.getTypeQualifiers() & DeclSpec::TQ_unaligned))
     Results.AddResult("__unaligned");
+#endif
   Results.ExitScope();
   HandleCodeCompleteResults(this, CodeCompleter, 
                             Results.getCompletionContext(),

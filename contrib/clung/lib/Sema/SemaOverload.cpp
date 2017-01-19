@@ -998,8 +998,10 @@ bool Sema::IsOverload(FunctionDecl *New, FunctionDecl *Old,
     return false;
 
   // MSVCRT user defined entry points cannot be overloaded.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (New->isMSVCRTEntryPoint())
     return false;
+#endif
 
   FunctionTemplateDecl *OldTemplate = Old->getDescribedFunctionTemplate();
   FunctionTemplateDecl *NewTemplate = New->getDescribedFunctionTemplate();
@@ -2187,6 +2189,7 @@ bool Sema::IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
   }
 
   // MSVC allows implicit function to void* type conversion.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat && FromPointeeType->isFunctionType() &&
       ToPointeeType->isVoidType()) {
     ConvertedType = BuildSimilarlyQualifiedPointerType(FromTypePtr,
@@ -2194,6 +2197,7 @@ bool Sema::IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
                                                        ToType, Context);
     return true;
   }
+#endif
 
   // When we're overloading in C, we allow a special kind of pointer
   // conversion for compatible-but-not-identical pointee types.
@@ -2768,7 +2772,11 @@ bool Sema::CheckPointerConversion(Expr *From, QualType ToType,
 
       if (Diagnose && !IsCStyleOrFunctionalCast &&
           FromPointeeType->isFunctionType() && ToPointeeType->isVoidType()) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false, how someone writes this?
         assert(getLangOpts().MSVCCompat &&
+#else
+        assert(false &&
+#endif
                "this should only be possible with MSVCCompat!");
         Diag(From->getExprLoc(), diag::ext_ms_impcast_fn_obj)
             << From->getSourceRange();
@@ -3730,6 +3738,7 @@ CompareStandardConversionSequences(Sema &S, SourceLocation Loc,
     }
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   // In Microsoft mode, prefer an integral conversion to a
   // floating-to-integral conversion if the integral conversion
   // is between types of the same size.
@@ -3742,11 +3751,14 @@ CompareStandardConversionSequences(Sema &S, SourceLocation Loc,
   // }
   // Here, MSVC will call f(int) instead of generating a compile error
   // as clang will do in standard mode.
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (S.getLangOpts().MSVCCompat && SCS1.Second == ICK_Integral_Conversion &&
       SCS2.Second == ICK_Floating_Integral &&
       S.Context.getTypeSize(SCS1.getFromType()) ==
           S.Context.getTypeSize(SCS1.getToType(2)))
     return ImplicitConversionSequence::Better;
+#endif
 
   return ImplicitConversionSequence::Indistinguishable;
 }
@@ -11335,6 +11347,7 @@ bool Sema::buildOverloadedCallSet(Scope *S, Expr *Fn,
   // functions, including those from argument-dependent lookup.
   AddOverloadedCallCandidates(ULE, Args, *CandidateSet);
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat &&
       CurContext->isDependentContext() && !isSFINAEContext() &&
       (isa<FunctionDecl>(CurContext) || isa<CXXRecordDecl>(CurContext))) {
@@ -11356,6 +11369,7 @@ bool Sema::buildOverloadedCallSet(Scope *S, Expr *Fn,
       return true;
     }
   }
+#endif
 
   if (CandidateSet->empty())
     return false;

@@ -191,20 +191,34 @@ StringRef CGDebugInfo::getFunctionName(const FunctionDecl *FD) {
   // fully qualified name here so that stack traces are more accurate.
   // FIXME: Do this when emitting DWARF as well as when emitting CodeView after
   // evaluating the size impact.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool UseQualifiedName = DebugKind == codegenoptions::DebugLineTablesOnly &&
                           CGM.getCodeGenOpts().EmitCodeView;
+#endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (!Info && FII && !UseQualifiedName)
+#else
+  if (!Info && FII && !false)
+#endif
     return FII->getName();
 
   SmallString<128> NS;
   llvm::raw_svector_ostream OS(NS);
   PrintingPolicy Policy(CGM.getLangOpts());
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   Policy.MSVCFormatting = CGM.getCodeGenOpts().EmitCodeView;
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
   if (!UseQualifiedName)
+#else
+  if (true)
     FD->printName(OS);
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   else
     FD->printQualifiedName(OS, Policy);
+#endif
 
   // Add any template specialization args.
   if (Info) {
@@ -271,6 +285,7 @@ StringRef CGDebugInfo::getClassName(const RecordDecl *RD) {
 
   // The CodeView printer in LLVM wants to see the names of unnamed types: it is
   // used to reconstruct the fully qualified type names.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (CGM.getCodeGenOpts().EmitCodeView) {
     if (const TypedefNameDecl *D = RD->getTypedefNameForAnonDecl()) {
       assert(RD->getDeclContext() == D->getDeclContext() &&
@@ -302,6 +317,7 @@ StringRef CGDebugInfo::getClassName(const RecordDecl *RD) {
       }
     }
   }
+#endif
 
   return StringRef();
 }

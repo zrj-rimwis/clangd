@@ -788,6 +788,7 @@ const FileEntry *Preprocessor::LookupFile(
     // MSVC searches the current include stack from top to bottom for
     // headers included by quoted include directives.
     // See: http://msdn.microsoft.com/en-us/library/36k2cdd4.aspx
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (LangOpts.MSVCCompat && !isAngled) {
       for (unsigned i = 0, e = IncludeMacroStack.size(); i != e; ++i) {
         IncludeStackInfo &ISEntry = IncludeMacroStack[e - i - 1];
@@ -796,6 +797,7 @@ const FileEntry *Preprocessor::LookupFile(
             Includers.push_back(std::make_pair(FileEnt, FileEnt->getDir()));
       }
     }
+#endif
   }
 
   CurDir = CurDirLookup;
@@ -1785,14 +1787,20 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
   ModuleMap::KnownHeader SuggestedModule;
   SourceLocation FilenameLoc = FilenameTok.getLocation();
   SmallString<128> NormalizedPath;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (LangOpts.MSVCCompat) {
     NormalizedPath = Filename.str();
 #ifndef LLVM_ON_WIN32
     llvm::sys::path::native(NormalizedPath);
 #endif
   }
+#endif
   const FileEntry *File = LookupFile(
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       FilenameLoc, LangOpts.MSVCCompat ? NormalizedPath.c_str() : Filename,
+#else
+      FilenameLoc, Filename,
+#endif
       isAngled, LookupFrom, LookupFromFile, CurDir,
       Callbacks ? &SearchPath : nullptr, Callbacks ? &RelativePath : nullptr,
       &SuggestedModule);
@@ -1810,7 +1818,11 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
           // Try the lookup again, skipping the cache.
           File = LookupFile(
               FilenameLoc,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
               LangOpts.MSVCCompat ? NormalizedPath.c_str() : Filename, isAngled,
+#else
+              Filename, isAngled,
+#endif
               LookupFrom, LookupFromFile, CurDir, nullptr, nullptr,
               &SuggestedModule, /*SkipCache*/ true);
         }
@@ -1824,7 +1836,11 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
       if (isAngled) {
         File = LookupFile(
             FilenameLoc,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
             LangOpts.MSVCCompat ? NormalizedPath.c_str() : Filename, false,
+#else
+            Filename, false,
+#endif
             LookupFrom, LookupFromFile, CurDir,
             Callbacks ? &SearchPath : nullptr,
             Callbacks ? &RelativePath : nullptr,
@@ -1936,7 +1952,11 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
     // Notify the callback object that we've seen an inclusion directive.
     Callbacks->InclusionDirective(
         HashLoc, IncludeTok,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
         LangOpts.MSVCCompat ? NormalizedPath.c_str() : Filename, isAngled,
+#else
+        Filename, isAngled,
+#endif
         FilenameRange, File, SearchPath, RelativePath,
         ShouldEnter ? nullptr : SuggestedModule.getModule());
   }
@@ -1960,7 +1980,11 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
     File && !File->tryGetRealPathName().empty();
 
   if (CheckIncludePathPortability) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     StringRef Name = LangOpts.MSVCCompat ? NormalizedPath.str() : Filename;
+#else
+    StringRef Name = Filename;
+#endif
     StringRef RealPathName = File->tryGetRealPathName();
     SmallVector<StringRef, 16> Components(llvm::sys::path::begin(Name),
                                           llvm::sys::path::end(Name));
@@ -2072,6 +2096,7 @@ void Preprocessor::HandleIncludeNextDirective(SourceLocation HashLoc,
 }
 
 /// HandleMicrosoftImportDirective - Implements \#import for Microsoft Mode
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 void Preprocessor::HandleMicrosoftImportDirective(Token &Tok) {
   // The Microsoft #import directive takes a type library and generates header
   // files from it, and includes those.  This is beyond the scope of what clang
@@ -2084,14 +2109,17 @@ void Preprocessor::HandleMicrosoftImportDirective(Token &Tok) {
   // directive can be split over multiple lines using the backslash character.
   DiscardUntilEndOfDirective();
 }
+#endif
 
 /// HandleImportDirective - Implements \#import.
 ///
 void Preprocessor::HandleImportDirective(SourceLocation HashLoc,
                                          Token &ImportTok) {
   if (!LangOpts.ObjC1) {  // #import is standard for ObjC.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     if (LangOpts.MSVCCompat)
       return HandleMicrosoftImportDirective(ImportTok);
+#endif
     Diag(ImportTok, diag::ext_pp_import_directive);
   }
   return HandleIncludeDirective(HashLoc, ImportTok, nullptr, nullptr, true);

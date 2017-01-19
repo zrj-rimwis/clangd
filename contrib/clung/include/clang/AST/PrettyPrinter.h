@@ -54,7 +54,11 @@ struct PrintingPolicy {
 #else
       Half(LO.Half),
 #endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       IncludeNewlines(true), MSVCFormatting(false) { }
+#else
+      IncludeNewlines(true) { }
+#endif
 
   /// \brief Adjust this printing policy for cases where it's known that
   /// we're printing C++ code (for instance, if AST dumping reaches a
@@ -205,7 +209,9 @@ struct PrintingPolicy {
   /// \brief Use whitespace and punctuation like MSVC does. In particular, this
   /// prints anonymous namespaces as `anonymous namespace' and does not insert
   /// spaces after template arguments.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   bool MSVCFormatting : 1;
+#endif
 };
 
 } // end namespace clang

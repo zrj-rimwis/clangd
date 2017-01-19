@@ -2303,6 +2303,7 @@ bool Parser::ParseImplicitInt(DeclSpec &DS, CXXScopeSpec *SS,
     return false;
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume smth && smth && false
   if (getLangOpts().CPlusPlus && (!SS || SS->isEmpty()) &&
       getLangOpts().MSVCCompat) {
     // Lookup of an unqualified type name has failed in MSVC compatibility mode.
@@ -2320,6 +2321,7 @@ bool Parser::ParseImplicitInt(DeclSpec &DS, CXXScopeSpec *SS,
       return false;
     }
   }
+#endif
 
   // Otherwise, if we don't consume this token, we are going to emit an
   // error anyway.  Try to recover from various common problems.  Check
@@ -2719,10 +2721,12 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
     // A typedef declaration containing _Atomic<...> is among the places where
     // the class is used.  If we are currently parsing such a declaration, treat
     // the token as an identifier.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false and good riddance
     if (getLangOpts().MSVCCompat && Tok.is(tok::kw__Atomic) &&
         DS.getStorageClassSpec() == clang::DeclSpec::SCS_typedef &&
         !DS.hasTypeSpecifier() && GetLookAheadToken(1).is(tok::less))
       Tok.setKind(tok::identifier);
+#endif
 
     SourceLocation Loc = Tok.getLocation();
 

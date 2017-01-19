@@ -53,7 +53,11 @@ static void printIntegral(const TemplateArgument &TemplArg,
     }
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
   if (T->isBooleanType() && !Policy.MSVCFormatting) {
+#else
+  if (T->isBooleanType() && !false) {
+#endif
     Out << (Val.getBoolValue() ? "true" : "false");
   } else if (T->isCharType()) {
     const char Ch = Val.getZExtValue();

@@ -128,7 +128,11 @@ bool TokenLexer::MaybeRemoveCommaBeforeVaArgs(
   // In Microsoft-compatibility mode, a comma is removed in the expansion
   // of " ... , __VA_ARGS__ " if __VA_ARGS__ is empty.  This extension is
   // not supported by gcc.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (!HasPasteOperator && !PP.getLangOpts().MSVCCompat)
+#else
+  if (!HasPasteOperator && !false)
+#endif
     return false;
 
   // GCC removes the comma in the expansion of " ... , ## __VA_ARGS__ " if
@@ -283,9 +287,11 @@ void TokenLexer::ExpandFunctionArguments() {
         // behavior by not considering single commas from nested macro
         // expansions as argument separators. Set a flag on the token so we can
         // test for this later when the macro expansion is processed.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
         if (PP.getLangOpts().MSVCCompat && NumToks == 1 &&
             ResultToks.back().is(tok::comma))
           ResultToks.back().setFlag(Token::IgnoredComma);
+#endif
 
         // If the '##' came from expanding an argument, turn it into 'unknown'
         // to avoid pasting.
@@ -449,7 +455,11 @@ bool TokenLexer::Lex(Token &Tok) {
        // Special processing of L#x macros in -fms-compatibility mode.
        // Microsoft compiler is able to form a wide string literal from
        // 'L#macro_arg' construct in a function-like macro.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // confusing with comments like this
        (PP.getLangOpts().MSVCCompat &&
+#else
+       (false &&
+#endif
         isWideStringLiteralFromMacro(Tok, Tokens[CurToken])))) {
     // When handling the microsoft /##/ extension, the final token is
     // returned by PasteTokens, not the pasted token.

@@ -274,13 +274,21 @@ Tool *ToolChain::getTool(Action::ActionClass AC) const {
 static StringRef getArchNameForCompilerRTLib(const ToolChain &TC,
                                              const ArgList &Args) {
   const llvm::Triple &Triple = TC.getTriple();
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool IsWindows = Triple.isOSWindows();
+#endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (Triple.isWindowsMSVCEnvironment() && TC.getArch() == llvm::Triple::x86)
     return "i386";
+#endif
 
   if (TC.getArch() == llvm::Triple::arm || TC.getArch() == llvm::Triple::armeb)
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     return (arm::getARMFloatABI(TC, Args) == arm::FloatABI::Hard && !IsWindows)
+#else
+    return (arm::getARMFloatABI(TC, Args) == arm::FloatABI::Hard && !false)
+#endif
                ? "armhf"
                : "arm";
 
@@ -292,7 +300,11 @@ std::string ToolChain::getCompilerRT(const ArgList &Args, StringRef Component,
   const llvm::Triple &TT = getTriple();
   const char *Env = TT.isAndroid() ? "-android" : "";
   bool IsITANMSVCWindows =
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // ehem
       TT.isWindowsMSVCEnvironment() || TT.isWindowsItaniumEnvironment();
+#else
+      false || TT.isWindowsItaniumEnvironment();
+#endif
 
   StringRef Arch = getArchNameForCompilerRTLib(*this, Args);
   const char *Prefix = IsITANMSVCWindows ? "" : "lib";

@@ -101,9 +101,11 @@ private:
                       bool *EmitCodeView) const;
 #endif
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // XXX wth is here?
   visualstudio::Compiler *getCLFallback() const;
 
   mutable std::unique_ptr<visualstudio::Compiler> CLFallback;
+#endif
 
 public:
   // CAUTION! The first constructor argument ("clang") is not arbitrary,
@@ -688,6 +690,7 @@ public:
 } // end namespace dragonfly
 
 /// Visual studio tools.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 namespace visualstudio {
 VersionTuple getMSVCVersion(const Driver *D, const ToolChain &TC,
                             const llvm::Triple &Triple,
@@ -730,6 +733,7 @@ public:
                                       const char *LinkingOutput) const;
 };
 } // end namespace visualstudio
+#endif
 
 /// MinGW -- Directly call GNU Binutils assembler and linker
 namespace MinGW {

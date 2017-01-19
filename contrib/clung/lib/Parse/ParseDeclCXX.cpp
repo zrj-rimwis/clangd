@@ -1354,6 +1354,7 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
     // allow libstdc++ 4.2 and libc++ to work properly.
     TryKeywordIdentFallback(true);
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // not needed for everybody
   struct PreserveAtomicIdentifierInfoRAII {
     PreserveAtomicIdentifierInfoRAII(Token &Tok, bool Enabled)
         : AtomicII(nullptr) {
@@ -1371,17 +1372,20 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
     }
     IdentifierInfo *AtomicII;
   };
+#endif
 
   // HACK: MSVC doesn't consider _Atomic to be a keyword and its STL
   // implementation for VS2013 uses _Atomic as an identifier for one of the
   // classes in <atomic>.  When we are parsing 'struct _Atomic', don't consider
   // '_Atomic' to be a keyword.  We are careful to undo this so that clang can
   // use '_Atomic' in its own header files.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false and good riddance
   bool ShouldChangeAtomicToIdentifier = getLangOpts().MSVCCompat &&
                                         Tok.is(tok::kw__Atomic) &&
                                         TagType == DeclSpec::TST_struct;
   PreserveAtomicIdentifierInfoRAII AtomicTokenGuard(
       Tok, ShouldChangeAtomicToIdentifier);
+#endif
 
   // Parse the (optional) nested-name-specifier.
   CXXScopeSpec &SS = DS.getTypeSpecScope();
@@ -1938,9 +1942,11 @@ BaseResult Parser::ParseBaseSpecifier(Decl *ClassDecl) {
   // implementation for VS2013 uses _Atomic as an identifier for one of the
   // classes in <atomic>.  Treat '_Atomic' to be an identifier when we are
   // parsing the class-name for a base specifier.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false and good riddance
   if (getLangOpts().MSVCCompat && Tok.is(tok::kw__Atomic) &&
       NextToken().is(tok::less))
     Tok.setKind(tok::identifier);
+#endif
 
   SourceLocation EndLocation;
   SourceLocation BaseLoc;

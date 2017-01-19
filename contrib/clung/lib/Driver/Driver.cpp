@@ -2781,10 +2781,12 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       case llvm::Triple::Itanium:
         TC = new toolchains::CrossWindowsToolChain(*this, Target, Args);
         break;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       case llvm::Triple::MSVC:
       case llvm::Triple::UnknownEnvironment:
         TC = new toolchains::MSVCToolChain(*this, Target, Args);
         break;
+#endif
       }
       break;
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__

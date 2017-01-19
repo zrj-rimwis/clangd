@@ -220,7 +220,9 @@ const char *Triple::getEnvironmentTypeName(EnvironmentType Kind) {
   case Musl: return "musl";
   case MuslEABI: return "musleabi";
   case MuslEABIHF: return "musleabihf";
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   case MSVC: return "msvc";
+#endif
   case Itanium: return "itanium";
   case Cygnus: return "cygnus";
   case AMDOpenCL: return "amdopencl";
@@ -495,7 +497,9 @@ static Triple::EnvironmentType parseEnvironment(StringRef EnvironmentName) {
     .StartsWith("musleabihf", Triple::MuslEABIHF)
     .StartsWith("musleabi", Triple::MuslEABI)
     .StartsWith("musl", Triple::Musl)
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
     .StartsWith("msvc", Triple::MSVC)
+#endif
     .StartsWith("itanium", Triple::Itanium)
     .StartsWith("cygnus", Triple::Cygnus)
     .StartsWith("amdopencl", Triple::AMDOpenCL)

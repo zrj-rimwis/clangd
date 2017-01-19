@@ -77,12 +77,14 @@ public:
 
   enum AddrSpaceMapMangling { ASMM_Target, ASMM_On, ASMM_Off };
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   enum MSVCMajorVersion {
     MSVC2010 = 16,
     MSVC2012 = 17,
     MSVC2013 = 18,
     MSVC2015 = 19
   };
+#endif
 
 public:
   /// \brief Set of enabled sanitizers.
@@ -146,9 +148,11 @@ public:
            !ObjCSubscriptingLegacyRuntime;
   }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume true a.k.a latest
   bool isCompatibleWithMSVC(MSVCMajorVersion MajorVersion) const {
     return MSCompatibilityVersion >= MajorVersion * 10000000U;
   }
+#endif
 
   /// \brief Reset all of the options that are not considered when building a
   /// module.

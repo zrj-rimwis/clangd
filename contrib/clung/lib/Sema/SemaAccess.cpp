@@ -789,9 +789,11 @@ static AccessResult HasAccess(Sema &S,
         // Emulate a MSVC bug where the creation of pointer-to-member
         // to protected member of base class is allowed but only from
         // static member functions.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false, no bug emulation
         if (S.getLangOpts().MSVCCompat && !EC.Functions.empty())
           if (CXXMethodDecl* MD = dyn_cast<CXXMethodDecl>(EC.Functions.front()))
             if (MD->isStatic()) return AR_accessible;
+#endif
 
         // Despite the standard's confident wording, there is a case
         // where you can have an instance member that's neither in a
@@ -1271,6 +1273,7 @@ static void DiagnoseBadAccess(Sema &S, SourceLocation Loc,
   DiagnoseAccessPath(S, EC, Entity);
 }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 /// MSVC has a bug where if during an using declaration name lookup, 
 /// the declaration found is unaccessible (private) and that declaration 
 /// was bring into scope via another using declaration whose target
@@ -1291,6 +1294,8 @@ static void DiagnoseBadAccess(Sema &S, SourceLocation Loc,
 ///
 /// Here, B::f is private so this should fail in Standard C++, but 
 /// because B::f refers to A::f which is public MSVC accepts it.
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // no no no bug emulation no
 static bool IsMicrosoftUsingDeclarationAccessBug(Sema& S, 
                                                  SourceLocation AccessLoc,
                                                  AccessTarget &Entity) {
@@ -1308,6 +1313,7 @@ static bool IsMicrosoftUsingDeclarationAccessBug(Sema& S,
   }
   return false;
 }
+#endif
 
 /// Determines whether the accessed entity is accessible.  Public members
 /// have been weeded out by this point.
@@ -1419,9 +1425,11 @@ static AccessResult CheckEffectiveAccess(Sema &S,
     return AR_dependent;
 
   case AR_inaccessible:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // no no no no no no no!
     if (S.getLangOpts().MSVCCompat &&
         IsMicrosoftUsingDeclarationAccessBug(S, Loc, Entity))
       return AR_accessible;
+#endif
     if (!Entity.isQuiet())
       DiagnoseBadAccess(S, Loc, EC, Entity);
     return AR_inaccessible;

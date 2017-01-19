@@ -3140,7 +3140,11 @@ Expr::NullPointerConstantKind
 Expr::isNullPointerConstant(ASTContext &Ctx,
                             NullPointerConstantValueDependence NPC) const {
   if (isValueDependent() &&
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
       (!Ctx.getLangOpts().CPlusPlus11 || Ctx.getLangOpts().MSVCCompat)) {
+#else
+      (!Ctx.getLangOpts().CPlusPlus11 || false)) {
+#endif
     switch (NPC) {
     case NPC_NeverValueDependent:
       llvm_unreachable("Unexpected value dependent expression!");
@@ -3237,7 +3241,11 @@ Expr::isNullPointerConstant(ASTContext &Ctx,
     const IntegerLiteral *Lit = dyn_cast<IntegerLiteral>(this);
     if (Lit && !Lit->getValue())
       return NPCK_ZeroLiteral;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !false
     else if (!Ctx.getLangOpts().MSVCCompat || !isCXX98IntegralConstantExpr(Ctx))
+#else
+    else if (!false || !isCXX98IntegralConstantExpr(Ctx))
+#endif
       return NPCK_NotNull;
   } else {
     // If we have an integer constant expression, we need to *evaluate* it and

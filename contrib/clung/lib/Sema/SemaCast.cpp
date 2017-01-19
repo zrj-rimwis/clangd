@@ -1086,12 +1086,14 @@ static TryCastResult TryStaticCast(Sema &Self, ExprResult &SrcExpr,
 
         // Microsoft permits static_cast from 'pointer-to-void' to
         // 'pointer-to-function'.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
         if (!CStyle && Self.getLangOpts().MSVCCompat &&
             DestPointee->isFunctionType()) {
           Self.Diag(OpRange.getBegin(), diag::ext_ms_cast_fn_obj) << OpRange;
           Kind = CK_BitCast;
           return TC_Success;
         }
+#endif
       }
       else if (DestType->isObjCObjectPointerType()) {
         // allow both c-style cast and static_cast of objective-c pointers as 

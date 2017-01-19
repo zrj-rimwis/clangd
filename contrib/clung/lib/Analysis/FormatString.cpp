@@ -661,6 +661,7 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
       
     // Handle most integer flags
     case LengthModifier::AsShort:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
       if (Target.getTriple().isOSMSVCRT()) {
         switch (CS.getKind()) {
           case ConversionSpecifier::cArg:
@@ -673,6 +674,7 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
             break;
         }
       }
+#endif
       // Fall through.
     case LengthModifier::AsChar:
     case LengthModifier::AsLongLong:
@@ -791,7 +793,11 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
         case ConversionSpecifier::uArg:
         case ConversionSpecifier::xArg:
         case ConversionSpecifier::XArg:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
           return Target.getTriple().isOSMSVCRT();
+#else
+          return false;
+#endif
         default:
           return false;
       }
@@ -802,7 +808,11 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
         case ConversionSpecifier::sArg:
         case ConversionSpecifier::SArg:
         case ConversionSpecifier::ZArg:
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
           return Target.getTriple().isOSMSVCRT();
+#else
+          return false;
+#endif
         default:
           return false;
       }

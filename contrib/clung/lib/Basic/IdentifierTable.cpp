@@ -173,9 +173,11 @@ static void AddKeyword(StringRef Keyword,
   KeywordStatus AddResult = getKeywordStatus(LangOpts, Flags);
 
   // Don't add this keyword under MSVCCompat.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   if (LangOpts.MSVCCompat && (Flags & KEYNOMS18) &&
       !LangOpts.isCompatibleWithMSVC(LangOptions::MSVC2015))
     return;
+#endif
 
   // Don't add this keyword under OpenCL.
   if (LangOpts.OpenCL && (Flags & KEYNOOPENCL))

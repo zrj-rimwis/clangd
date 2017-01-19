@@ -1882,7 +1882,9 @@ private:
   void HandleIncludeNextDirective(SourceLocation HashLoc, Token &Tok);
   void HandleIncludeMacrosDirective(SourceLocation HashLoc, Token &Tok);
   void HandleImportDirective(SourceLocation HashLoc, Token &Tok);
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
   void HandleMicrosoftImportDirective(Token &Tok);
+#endif
 
 public:
   // Module inclusion testing.

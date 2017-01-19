@@ -225,7 +225,9 @@ VALUE_CODEGENOPT(DwarfVersion, 3, 0)
 
 /// Whether we should emit CodeView debug information. It's possible to emit
 /// CodeView and DWARF into the same object.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 CODEGENOPT(EmitCodeView, 1, 0)
+#endif
 
 /// The kind of inlining to perform.
 ENUM_CODEGENOPT(Inlining, InliningMethod, 2, NoInlining)

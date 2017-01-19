@@ -1930,7 +1930,9 @@ public:
 
   /// \brief Determines whether this function is a MSVCRT user defined entry
   /// point.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool isMSVCRTEntryPoint() const;
+#endif
 
   /// \brief Determines whether this operator new or delete is one
   /// of the reserved global placement operators:

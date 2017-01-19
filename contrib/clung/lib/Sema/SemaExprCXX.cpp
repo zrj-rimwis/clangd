@@ -476,10 +476,12 @@ Sema::ActOnCXXTypeid(SourceLocation OpLoc, SourceLocation LParenLoc,
     CXXTypeInfoDecl = R.getAsSingle<RecordDecl>();
     // Microsoft's typeinfo doesn't have type_info in std but in the global
     // namespace if _HAS_EXCEPTIONS is defined to 0. See PR13153.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume !smth && false
     if (!CXXTypeInfoDecl && LangOpts.MSVCCompat) {
       LookupQualifiedName(R, Context.getTranslationUnitDecl());
       CXXTypeInfoDecl = R.getAsSingle<RecordDecl>();
     }
+#endif
     if (!CXXTypeInfoDecl)
       return ExprError(Diag(OpLoc, diag::err_need_header_before_typeid));
   }
@@ -2008,10 +2010,18 @@ bool Sema::FindAllocationFunctions(SourceLocation StartLoc, SourceRange Range,
     // Didn't find a member overload. Look for a global one.
     DeclareGlobalNewDelete();
     DeclContext *TUDecl = Context.getTranslationUnitDecl();
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false and constify
     bool FallbackEnabled = IsArray && Context.getLangOpts().MSVCCompat;
+#endif
     if (FindAllocationOverload(StartLoc, Range, NewName, AllocArgs, TUDecl,
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // what a mess assume false and !false
                                /*AllowMissing=*/FallbackEnabled, OperatorNew,
                                /*Diagnose=*/!FallbackEnabled)) {
+#else
+                               /*AllowMissing=*/false, OperatorNew,
+                               /*Diagnose=*/!false)) {
+#endif
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // we done here, just return true
       if (!FallbackEnabled)
         return true;
 
@@ -2024,6 +2034,10 @@ bool Sema::FindAllocationFunctions(SourceLocation StartLoc, SourceRange Range,
       if (FindAllocationOverload(StartLoc, Range, NewName, AllocArgs, TUDecl,
                                /*AllowMissing=*/false, OperatorNew))
       return true;
+#else
+      if (!false)
+        return true;
+#endif
     }
   }
 
@@ -5853,8 +5867,10 @@ ExprResult Sema::ActOnDecltypeExpression(Expr *E) {
 
   // In MS mode, don't perform any extra checking of call return types within a
   // decltype expression.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   if (getLangOpts().MSVCCompat)
     return E;
+#endif
 
   // Perform the semantic checks we delayed until this point.
   for (unsigned I = 0, N = ExprEvalContexts.back().DelayedDecltypeCalls.size();
@@ -6118,8 +6134,14 @@ ExprResult Sema::BuildPseudoDestructorExpr(Expr *Base,
 
   if (!ObjectType->isDependentType() && !ObjectType->isScalarType() &&
       !ObjectType->isVectorType()) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
     if (getLangOpts().MSVCCompat && ObjectType->isVoidType())
       Diag(OpLoc, diag::ext_pseudo_dtor_on_void) << Base->getSourceRange();
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else {
       Diag(OpLoc, diag::err_pseudo_dtor_base_not_scalar)
         << ObjectType << Base->getSourceRange();
