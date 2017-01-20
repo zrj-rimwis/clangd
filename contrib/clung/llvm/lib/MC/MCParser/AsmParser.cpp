@@ -561,7 +561,9 @@ namespace llvm {
 extern MCAsmParserExtension *createDarwinAsmParser();
 #endif
 extern MCAsmParserExtension *createELFAsmParser();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 extern MCAsmParserExtension *createCOFFAsmParser();
+#endif
 
 }
 
@@ -586,9 +588,11 @@ AsmParser::AsmParser(SourceMgr &SM, MCContext &Ctx, MCStreamer &Out,
 
   // Initialize the platform / file format parser.
   switch (Ctx.getObjectFileInfo()->getObjectFileType()) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case MCObjectFileInfo::IsCOFF:
     PlatformParser.reset(createCOFFAsmParser());
     break;
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case MCObjectFileInfo::IsMachO:
     PlatformParser.reset(createDarwinAsmParser());

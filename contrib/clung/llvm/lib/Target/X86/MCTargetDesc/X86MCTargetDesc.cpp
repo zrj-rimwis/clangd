@@ -61,9 +61,11 @@ unsigned X86_MC::getDwarfRegFlavour(const Triple &TT, bool isEH) {
   if (TT.isOSDarwin())
     return isEH ? DWARFFlavour::X86_32_DarwinEH : DWARFFlavour::X86_32_Generic;
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (TT.isOSCygMing())
     // Unsupported by now, just quick fallback
     return DWARFFlavour::X86_32_Generic;
+#endif
   return DWARFFlavour::X86_32_Generic;
 }
 

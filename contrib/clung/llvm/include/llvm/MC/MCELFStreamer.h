@@ -52,10 +52,12 @@ public:
   void EmitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) override;
   void EmitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
                         unsigned ByteAlignment) override;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void BeginCOFFSymbolDef(const MCSymbol *Symbol) override;
   void EmitCOFFSymbolStorageClass(int StorageClass) override;
   void EmitCOFFSymbolType(int Type) override;
   void EndCOFFSymbolDef() override;
+#endif
 
   void emitELFSize(MCSymbolELF *Symbol, const MCExpr *Value) override;
 

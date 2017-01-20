@@ -79,9 +79,11 @@ public:
 
   /// AddMinGWCPlusPlusIncludePaths - Add the necessary paths to support a MinGW
   ///  libstdc++.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void AddMinGWCPlusPlusIncludePaths(StringRef Base,
                                      StringRef Arch,
                                      StringRef Version);
+#endif
 
   // AddDefaultCIncludePaths - Add paths that should always be searched.
   void AddDefaultCIncludePaths(const llvm::Triple &triple,
@@ -193,6 +195,7 @@ void InitHeaderSearch::AddGnuCPlusPlusIncludePaths(StringRef Base,
   AddPath(Base + "/backward", CXXSystem, false);
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void InitHeaderSearch::AddMinGWCPlusPlusIncludePaths(StringRef Base,
                                                      StringRef Arch,
                                                      StringRef Version) {
@@ -203,6 +206,7 @@ void InitHeaderSearch::AddMinGWCPlusPlusIncludePaths(StringRef Base,
   AddPath(Base + "/" + Arch + "/" + Version + "/include/c++/backward",
           CXXSystem, false);
 }
+#endif
 
 void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
                                             const HeaderSearchOptions &HSOpts) {
@@ -220,9 +224,11 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
     case llvm::Triple::PS4:
     case llvm::Triple::ELFIAMCU:
       break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32:
       if (triple.getEnvironment() != llvm::Triple::Cygnus)
         break;
+#endif
     default:
       // FIXME: temporary hack: hard-coded paths.
       AddPath("/usr/local/include", System, false);
@@ -315,6 +321,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
     break;
   case llvm::Triple::RTEMS:
     break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case llvm::Triple::Win32:
     switch (triple.getEnvironment()) {
     default: llvm_unreachable("Include management is handled in the driver.");
@@ -325,6 +332,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
       break;
     }
     break;
+#endif
   default:
     break;
   }
@@ -412,6 +420,7 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
   case llvm::Triple::Linux:
     llvm_unreachable("Include management is handled in the driver.");
     break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case llvm::Triple::Win32:
     switch (triple.getEnvironment()) {
     default: llvm_unreachable("Include management is handled in the driver.");
@@ -425,6 +434,7 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
       break;
     }
     break;
+#endif
   case llvm::Triple::DragonFly: // XXX how to handle this for upcoming gcc 7.0 ?
     AddPath("/usr/include/c++/5.0", CXXSystem, false);
     break;
@@ -459,6 +469,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
   case llvm::Triple::Linux:
     return;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case llvm::Triple::Win32:
     if (triple.getEnvironment() != llvm::Triple::Cygnus ||
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
@@ -468,6 +479,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
 #endif
       return;
     break;
+#endif
   }
 
   if (Lang.CPlusPlus && HSOpts.UseStandardCXXIncludes &&

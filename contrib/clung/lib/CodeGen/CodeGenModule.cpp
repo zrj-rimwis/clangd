@@ -3208,6 +3208,7 @@ CodeGenModule::GetAddrOfConstantCFString(const StringLiteral *Literal) {
     llvm::Constant *GV =
         CreateRuntimeVariable(Ty, "__CFConstantStringClassReference");
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (getTarget().getTriple().isOSBinFormatCOFF()) {
       IdentifierInfo &II = getContext().Idents.get(GV->getName());
       TranslationUnitDecl *TUDecl = getContext().getTranslationUnitDecl();
@@ -3232,6 +3233,7 @@ CodeGenModule::GetAddrOfConstantCFString(const StringLiteral *Literal) {
         CGV->setLinkage(llvm::GlobalValue::ExternalLinkage);
       }
     }
+#endif
 
     // Decay array -> ptr
     V = llvm::ConstantExpr::getGetElementPtr(Ty, GV, Zeros);
@@ -3310,7 +3312,9 @@ CodeGenModule::GetAddrOfConstantCFString(const StringLiteral *Literal) {
   switch (getTarget().getTriple().getObjectFormat()) {
   case llvm::Triple::UnknownObjectFormat:
     llvm_unreachable("unknown file format");
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case llvm::Triple::COFF:
+#endif
   case llvm::Triple::ELF:
     GV->setSection("cfstring");
     break;

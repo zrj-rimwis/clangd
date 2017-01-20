@@ -434,8 +434,14 @@ CodeGenTypes::arrangeObjCMessageSendSignature(const ObjCMethodDecl *MD,
   }
 
   FunctionType::ExtInfo einfo;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool IsWindows = getContext().getTargetInfo().getTriple().isOSWindows();
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   einfo = einfo.withCallingConv(getCallingConventionForDecl(MD, IsWindows));
+#else
+  einfo = einfo.withCallingConv(getCallingConventionForDecl(MD, false));
+#endif
 
   if (getContext().getLangOpts().ObjCAutoRefCount &&
       MD->hasAttr<NSReturnsRetainedAttr>())
@@ -3362,9 +3368,14 @@ QualType CodeGenFunction::getVarArgType(const Expr *Arg) {
   // System headers on Windows define NULL to 0 instead of 0LL on Win64. MSVC
   // implicitly widens null pointer constants that are arguments to varargs
   // functions to pointer-sized ints.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
   if (!getTarget().getTriple().isOSWindows())
+#else
+  if (!false)
+#endif
     return Arg->getType();
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // not needed
   if (Arg->getType()->isIntegerType() &&
       getContext().getTypeSize(Arg->getType()) <
           getContext().getTargetInfo().getPointerWidth(0) &&
@@ -3374,6 +3385,7 @@ QualType CodeGenFunction::getVarArgType(const Expr *Arg) {
   }
 
   return Arg->getType();
+#endif
 }
 
 // In ObjC ARC mode with no ObjC ARC exception safety, tell the ARC

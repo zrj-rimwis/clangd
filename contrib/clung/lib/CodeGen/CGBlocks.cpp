@@ -2297,6 +2297,7 @@ static void configureBlocksRuntimeObject(CodeGenModule &CGM,
                                          llvm::Constant *C) {
   auto *GV = cast<llvm::GlobalValue>(C->stripPointerCasts());
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (CGM.getTarget().getTriple().isOSBinFormatCOFF()) {
     IdentifierInfo &II = CGM.getContext().Idents.get(C->getName());
     TranslationUnitDecl *TUDecl = CGM.getContext().getTranslationUnitDecl();
@@ -2325,6 +2326,7 @@ static void configureBlocksRuntimeObject(CodeGenModule &CGM,
       GV->setLinkage(llvm::GlobalValue::ExternalLinkage);
     }
   }
+#endif
 
   if (!CGM.getLangOpts().BlocksRuntimeOptional)
     return;

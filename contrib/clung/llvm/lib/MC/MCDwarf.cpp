@@ -601,7 +601,11 @@ static void EmitGenDwarfAranges(MCStreamer *MCOS,
   // of the .debug_info.
   if (InfoSectionSymbol)
     MCOS->EmitSymbolValue(InfoSectionSymbol, 4,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // wth?? hidden COFF bit
                           asmInfo->needsDwarfSectionOffsetDirective());
+#else
+                          false);
+#endif
   else
     MCOS->EmitIntValue(0, 4);
   // The 1 byte size of an address.
@@ -667,7 +671,11 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
     MCOS->EmitIntValue(0, 4);
   else
     MCOS->EmitSymbolValue(AbbrevSectionSymbol, 4,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly___ // can this be done in a clean way? COFF
                           AsmInfo.needsDwarfSectionOffsetDirective());
+#else
+                          false);
+#endif
 
   const MCAsmInfo *asmInfo = context.getAsmInfo();
   int AddrSize = asmInfo->getPointerSize();
@@ -683,7 +691,11 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
   // which is at the start of that section so this is zero.
   if (LineSectionSymbol)
     MCOS->EmitSymbolValue(LineSectionSymbol, 4,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // i do not do this even on fortran, COFF bit
                           AsmInfo.needsDwarfSectionOffsetDirective());
+#else
+                          false);
+#endif
   else
     MCOS->EmitIntValue(0, 4);
 

@@ -13,10 +13,14 @@
 #include "llvm/IR/Operator.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCValue.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #include "llvm/Support/Dwarf.h"
 #include "llvm/Target/TargetLowering.h"
 
@@ -75,6 +79,7 @@ X86LinuxNaClTargetObjectFile::Initialize(MCContext &Ctx,
   InitializeELF(TM.Options.UseInitArray);
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 const MCExpr *X86WindowsTargetObjectFile::lowerRelativeReference(
     const GlobalValue *LHS, const GlobalValue *RHS, Mangler &Mang,
     const TargetMachine &TM) const {
@@ -100,7 +105,9 @@ const MCExpr *X86WindowsTargetObjectFile::lowerRelativeReference(
   return MCSymbolRefExpr::create(
       TM.getSymbol(LHS, Mang), MCSymbolRefExpr::VK_COFF_IMGREL32, getContext());
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static std::string APIntToHexString(const APInt &AI) {
   unsigned Width = (AI.getBitWidth() / 8) * 2;
   std::string HexString = utohexstr(AI.getLimitedValue(), /*LowerCase=*/true);
@@ -110,7 +117,9 @@ static std::string APIntToHexString(const APInt &AI) {
 
   return HexString;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static std::string scalarConstantToHexString(const Constant *C) {
   Type *Ty = C->getType();
   if (isa<UndefValue>(C)) {
@@ -131,7 +140,9 @@ static std::string scalarConstantToHexString(const Constant *C) {
     return HexString;
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSection *X86WindowsTargetObjectFile::getSectionForConstant(
     const DataLayout &DL, SectionKind Kind, const Constant *C,
     unsigned &Align) const {
@@ -170,3 +181,4 @@ MCSection *X86WindowsTargetObjectFile::getSectionForConstant(
 
   return TargetLoweringObjectFile::getSectionForConstant(DL, Kind, C, Align);
 }
+#endif

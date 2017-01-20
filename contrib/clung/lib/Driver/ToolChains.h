@@ -670,6 +670,7 @@ protected:
   Tool *buildLinker() const override;
 };
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class LLVM_LIBRARY_VISIBILITY MinGW : public ToolChain {
 public:
   MinGW(const Driver &D, const llvm::Triple &Triple,
@@ -703,6 +704,7 @@ private:
   mutable std::unique_ptr<tools::gcc::Compiler> Compiler;
   void findGccLibDir();
 };
+#endif
 
 class LLVM_LIBRARY_VISIBILITY Haiku : public Generic_ELF {
 public:
@@ -1095,6 +1097,7 @@ protected:
 };
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class LLVM_LIBRARY_VISIBILITY CrossWindowsToolChain : public Generic_GCC {
 public:
   CrossWindowsToolChain(const Driver &D, const llvm::Triple &T,
@@ -1125,6 +1128,7 @@ protected:
   Tool *buildLinker() const override;
   Tool *buildAssembler() const override;
 };
+#endif
 
 class LLVM_LIBRARY_VISIBILITY XCoreToolChain : public ToolChain {
 public:

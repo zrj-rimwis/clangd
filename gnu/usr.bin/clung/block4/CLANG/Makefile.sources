@@ -157,11 +157,9 @@ SRCS+=	BackendUtil.cpp \
 CLUNG_SRCDIRS+= lib/Driver
 SRCS+=	Action.cpp \
 	Compilation.cpp \
-	CrossWindowsToolChain.cpp \
 	Driver.cpp \
 	DriverOptions.cpp \
 	Job.cpp \
-	MinGWToolChain.cpp \
 	Multilib.cpp \
 	Phases.cpp \
 	SanitizerArgs.cpp \

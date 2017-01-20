@@ -27,7 +27,9 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #include "llvm/MC/MCSectionELF.h"
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
@@ -36,7 +38,9 @@
 #include "llvm/MC/MCSymbolELF.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/ProfileData/InstrProf.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #include "llvm/Support/Dwarf.h"
 #include "llvm/Support/ELF.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -810,6 +814,7 @@ void TargetLoweringObjectFileMachO::getNameWithPrefix(
 //                                  COFF
 //===----------------------------------------------------------------------===//
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static unsigned
 getCOFFSectionFlags(SectionKind K, const TargetMachine &TM) {
   unsigned Flags = 0;
@@ -846,7 +851,9 @@ getCOFFSectionFlags(SectionKind K, const TargetMachine &TM) {
 
   return Flags;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static const GlobalValue *getComdatGVForCOFF(const GlobalValue *GV) {
   const Comdat *C = GV->getComdat();
   assert(C && "expected GV to have a Comdat!");
@@ -863,7 +870,9 @@ static const GlobalValue *getComdatGVForCOFF(const GlobalValue *GV) {
 
   return ComdatGV;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static int getSelectionForCOFF(const GlobalValue *GV) {
   if (const Comdat *C = GV->getComdat()) {
     const GlobalValue *ComdatKey = getComdatGVForCOFF(GV);
@@ -888,7 +897,9 @@ static int getSelectionForCOFF(const GlobalValue *GV) {
   }
   return 0;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSection *TargetLoweringObjectFileCOFF::getExplicitSectionGlobal(
     const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
     const TargetMachine &TM) const {
@@ -916,7 +927,9 @@ MCSection *TargetLoweringObjectFileCOFF::getExplicitSectionGlobal(
   return getContext().getCOFFSection(Name, Characteristics, Kind, COMDATSymName,
                                      Selection);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static const char *getCOFFSectionNameForUniqueGlobal(SectionKind Kind) {
   if (Kind.isText())
     return ".text";
@@ -928,7 +941,9 @@ static const char *getCOFFSectionNameForUniqueGlobal(SectionKind Kind) {
     return ".rdata";
   return ".data";
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSection *TargetLoweringObjectFileCOFF::SelectSectionForGlobal(
     const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
     const TargetMachine &TM) const {
@@ -988,7 +1003,9 @@ MCSection *TargetLoweringObjectFileCOFF::SelectSectionForGlobal(
 
   return DataSection;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void TargetLoweringObjectFileCOFF::getNameWithPrefix(
     SmallVectorImpl<char> &OutName, const GlobalValue *GV, Mangler &Mang,
     const TargetMachine &TM) const {
@@ -1000,7 +1017,9 @@ void TargetLoweringObjectFileCOFF::getNameWithPrefix(
 
   Mang.getNameWithPrefix(OutName, GV, CannotUsePrivateLabel);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSection *TargetLoweringObjectFileCOFF::getSectionForJumpTable(
     const Function &F, Mangler &Mang, const TargetMachine &TM) const {
   // If the function can be removed, produce a unique section so that
@@ -1026,7 +1045,9 @@ MCSection *TargetLoweringObjectFileCOFF::getSectionForJumpTable(
   return getContext().getCOFFSection(Name, Characteristics, Kind, COMDATSymName,
                                      COFF::IMAGE_COMDAT_SELECT_ASSOCIATIVE, UniqueID);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void TargetLoweringObjectFileCOFF::
 emitModuleFlags(MCStreamer &Streamer,
                 ArrayRef<Module::ModuleFlagEntry> ModuleFlags,
@@ -1055,7 +1076,9 @@ emitModuleFlags(MCStreamer &Streamer,
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSection *TargetLoweringObjectFileCOFF::getStaticCtorSection(
     unsigned Priority, const MCSymbol *KeySym) const {
   return getContext().getAssociativeCOFFSection(
@@ -1067,7 +1090,9 @@ MCSection *TargetLoweringObjectFileCOFF::getStaticDtorSection(
   return getContext().getAssociativeCOFFSection(
       cast<MCSectionCOFF>(StaticDtorSection), KeySym, 0);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void TargetLoweringObjectFileCOFF::emitLinkerFlagsForGlobal(
     raw_ostream &OS, const GlobalValue *GV, const Mangler &Mang) const {
   if (!GV->hasDLLExportStorageClass() || GV->isDeclaration())
@@ -1082,6 +1107,7 @@ void TargetLoweringObjectFileCOFF::emitLinkerFlagsForGlobal(
 #endif
     OS << " -export:";
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
   if (TT.isWindowsGNUEnvironment() || TT.isWindowsCygwinEnvironment()) {
     std::string Flag;
     raw_string_ostream FlagOS(Flag);
@@ -1091,6 +1117,10 @@ void TargetLoweringObjectFileCOFF::emitLinkerFlagsForGlobal(
       OS << Flag.substr(1);
     else
       OS << Flag;
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     Mang.getNameWithPrefix(OS, GV, false);
   }
@@ -1104,3 +1134,4 @@ void TargetLoweringObjectFileCOFF::emitLinkerFlagsForGlobal(
       OS << ",data";
   }
 }
+#endif

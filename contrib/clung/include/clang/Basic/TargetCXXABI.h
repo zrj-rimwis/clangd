@@ -113,6 +113,8 @@ public:
     /// Only scattered and incomplete official documentation exists.
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     Microsoft
+#else
+    Microsoft_disabled
 #endif
   };
 

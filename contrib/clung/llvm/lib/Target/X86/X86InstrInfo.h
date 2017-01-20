@@ -85,11 +85,15 @@ CondCode GetOppositeBranchCondition(CondCode CC);
 /// a reference to a stub for a global, not the global itself.
 inline static bool isGlobalStubReference(unsigned char TargetFlag) {
   switch (TargetFlag) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__i
   case X86II::MO_DLLIMPORT: // dllimport stub.
+#endif
   case X86II::MO_GOTPCREL:  // rip-relative GOT reference.
   case X86II::MO_GOT:       // normal GOT reference.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY_PIC_BASE:        // Normal $non_lazy_ptr ref.
   case X86II::MO_DARWIN_NONLAZY:                 // Normal $non_lazy_ptr ref.
+#endif
     return true;
   default:
     return false;
@@ -104,7 +108,9 @@ inline static bool isGlobalRelativeToPICBase(unsigned char TargetFlag) {
   case X86II::MO_GOTOFF:                         // isPICStyleGOT: local global.
   case X86II::MO_GOT:                            // isPICStyleGOT: other global.
   case X86II::MO_PIC_BASE_OFFSET:                // Darwin local global.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY_PIC_BASE:        // Darwin/32 external global.
+#endif
   case X86II::MO_TLVP:                           // ??? Pretty sure..
     return true;
   default:

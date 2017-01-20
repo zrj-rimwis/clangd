@@ -293,8 +293,10 @@ SanitizerArgs::SanitizerArgs(const ToolChain &TC,
     SanitizerMask KindsToDiagnose = Kinds & ~TrappingKinds & NeedsUbsanCxxRt;
     // The runtime library supports the Microsoft C++ ABI, but only well enough
     // for CFI. FIXME: Remove this once we support vptr on Windows.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (TC.getTriple().isOSWindows())
       KindsToDiagnose &= ~CFI;
+#endif
     if (KindsToDiagnose) {
       SanitizerSet S;
       S.Mask = KindsToDiagnose;
@@ -624,6 +626,7 @@ void SanitizerArgs::addArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
       CmdArgs.push_back(Args.MakeArgString(F.second));
   }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (TC.getTriple().isOSWindows() && needsUbsanRt()) {
     // Instruct the code generator to embed linker directives in the object file
     // that cause the required runtime libraries to be linked.
@@ -633,6 +636,8 @@ void SanitizerArgs::addArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
       CmdArgs.push_back(Args.MakeArgString(
           "--dependent-lib=" + TC.getCompilerRT(Args, "ubsan_standalone_cxx")));
   }
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (TC.getTriple().isOSWindows() && needsStatsRt()) {
     CmdArgs.push_back(Args.MakeArgString("--dependent-lib=" +
                                          TC.getCompilerRT(Args, "stats_client")));
@@ -645,6 +650,7 @@ void SanitizerArgs::addArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
                                          TC.getCompilerRT(Args, "stats")));
     addIncludeLinkerOption(TC, Args, CmdArgs, "__sanitizer_stats_register");
   }
+#endif
 
   if (Sanitizers.empty())
     return;
@@ -699,7 +705,11 @@ void SanitizerArgs::addArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
 
   // Require -fvisibility= flag on non-Windows when compiling if vptr CFI is
   // enabled.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
   if (Sanitizers.hasOneOf(CFIClasses) && !TC.getTriple().isOSWindows() &&
+#else
+  if (Sanitizers.hasOneOf(CFIClasses) && !false &&
+#endif
       !Args.hasArg(options::OPT_fvisibility_EQ)) {
     TC.getDriver().Diag(clang::diag::err_drv_argument_only_allowed_with)
         << lastArgumentForMask(TC.getDriver(), Args,

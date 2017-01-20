@@ -13,12 +13,16 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCSection.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #include "llvm/MC/MCSectionELF.h"
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 
 using namespace llvm;
 
@@ -204,8 +208,10 @@ void MCObjectFileInfo::initMachOMCObjectFileInfo(const Triple &T) {
   LSDASection = Ctx->getMachOSection("__TEXT", "__gcc_except_tab", 0,
                                      SectionKind::getReadOnlyWithRel());
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   COFFDebugSymbolsSection = nullptr;
   COFFDebugTypesSection = nullptr;
+#endif
 
   if (useCompactUnwind(T)) {
     CompactUnwindSection =
@@ -523,8 +529,10 @@ void MCObjectFileInfo::initELFMCObjectFileInfo(const Triple &T) {
   LSDASection = Ctx->getELFSection(".gcc_except_table", ELF::SHT_PROGBITS,
                                    ELF::SHF_ALLOC);
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // this is strange way to do that
   COFFDebugSymbolsSection = nullptr;
   COFFDebugTypesSection = nullptr;
+#endif
 
   // Debug Info Sections.
   DwarfAbbrevSection = Ctx->getELFSection(".debug_abbrev", ELF::SHT_PROGBITS, 0,
@@ -599,6 +607,7 @@ void MCObjectFileInfo::initELFMCObjectFileInfo(const Triple &T) {
       Ctx->getELFSection(".eh_frame", EHSectionType, EHSectionFlags);
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
   EHFrameSection = Ctx->getCOFFSection(
       ".eh_frame", COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
@@ -631,6 +640,7 @@ void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
       ".rdata", COFF::IMAGE_SCN_CNT_INITIALIZED_DATA | COFF::IMAGE_SCN_MEM_READ,
       SectionKind::getReadOnly());
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (T.isKnownWindowsMSVCEnvironment() || T.isWindowsItaniumEnvironment()) {
 #else
@@ -644,6 +654,10 @@ void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
         Ctx->getCOFFSection(".CRT$XTX", COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
                                             COFF::IMAGE_SCN_MEM_READ,
                             SectionKind::getReadOnly());
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     StaticCtorSection = Ctx->getCOFFSection(
         ".ctors", COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
@@ -843,6 +857,7 @@ void MCObjectFileInfo::initCOFFMCObjectFileInfo(const Triple &T) {
                                             COFF::IMAGE_SCN_MEM_READ,
                                         SectionKind::getReadOnly());
 }
+#endif
 
 void MCObjectFileInfo::InitMCObjectFileInfo(const Triple &TheTriple, bool PIC,
                                             CodeModel::Model cm,
@@ -878,6 +893,7 @@ void MCObjectFileInfo::InitMCObjectFileInfo(const Triple &TheTriple, bool PIC,
     initMachOMCObjectFileInfo(TT);
     break;
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case Triple::COFF:
     if (!TT.isOSWindows())
       report_fatal_error(
@@ -886,6 +902,7 @@ void MCObjectFileInfo::InitMCObjectFileInfo(const Triple &TheTriple, bool PIC,
     Env = IsCOFF;
     initCOFFMCObjectFileInfo(TT);
     break;
+#endif
   case Triple::ELF:
     Env = IsELF;
     initELFMCObjectFileInfo(TT);

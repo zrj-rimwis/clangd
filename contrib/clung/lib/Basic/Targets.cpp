@@ -4147,6 +4147,7 @@ public:
 #endif
 
 // x86-32 Windows target
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class WindowsX86_32TargetInfo : public WindowsTargetInfo<X86_32TargetInfo> {
 public:
   WindowsX86_32TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4164,6 +4165,7 @@ public:
     WindowsTargetInfo<X86_32TargetInfo>::getTargetDefines(Opts, Builder);
   }
 };
+#endif
 
 // x86-32 Windows Visual Studio target
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__
@@ -4187,6 +4189,7 @@ public:
 };
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static void addCygMingDefines(const LangOptions &Opts, MacroBuilder &Builder) {
   // Mingw and cygwin define __declspec(a) to __attribute__((a)).  Clang
   // supports __declspec natively under -fms-extensions, but we define a no-op
@@ -4216,14 +4219,18 @@ static void addCygMingDefines(const LangOptions &Opts, MacroBuilder &Builder) {
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static void addMinGWDefines(const LangOptions &Opts, MacroBuilder &Builder) {
   Builder.defineMacro("__MSVCRT__");
   Builder.defineMacro("__MINGW32__");
   addCygMingDefines(Opts, Builder);
 }
+#endif
 
 // x86-32 MinGW target
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class MinGWX86_32TargetInfo : public WindowsX86_32TargetInfo {
 public:
   MinGWX86_32TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4237,8 +4244,10 @@ public:
     addMinGWDefines(Opts, Builder);
   }
 };
+#endif
 
 // x86-32 Cygwin target
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class CygwinX86_32TargetInfo : public X86_32TargetInfo {
 public:
   CygwinX86_32TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4259,6 +4268,7 @@ public:
       Builder.defineMacro("_GNU_SOURCE");
   }
 };
+#endif
 
 // x86-32 Haiku target
 class HaikuX86_32TargetInfo : public HaikuTargetInfo<X86_32TargetInfo> {
@@ -4358,8 +4368,10 @@ public:
   X86_64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : X86TargetInfo(Triple, Opts) {
     const bool IsX32 = getTriple().getEnvironment() == llvm::Triple::GNUX32;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     bool IsWinCOFF =
         getTriple().isOSWindows() && getTriple().isOSBinFormatCOFF();
+#endif
     LongWidth = LongAlign = PointerWidth = PointerAlign = IsX32 ? 32 : 64;
     LongDoubleWidth = 128;
     LongDoubleAlign = 128;
@@ -4376,8 +4388,12 @@ public:
     // Pointers are 32-bit in x32.
     resetDataLayout(IsX32
                         ? "e-m:e-p:32:32-i64:64-f80:128-n8:16:32:64-S128"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
                         : IsWinCOFF ? "e-m:w-i64:64-f80:128-n8:16:32:64-S128"
                                     : "e-m:e-i64:64-f80:128-n8:16:32:64-S128");
+#else
+                        : "e-m:e-i64:64-f80:128-n8:16:32:64-S128");
+#endif
 
     // Use fpret only for long double.
     RealTypeUsesObjCFPRet = (1 << TargetInfo::LongDouble);
@@ -4508,6 +4524,7 @@ public:
 #endif
 
 // x86-64 MinGW target
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class MinGWX86_64TargetInfo : public WindowsX86_64TargetInfo {
 public:
   MinGWX86_64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4530,8 +4547,10 @@ public:
       Builder.defineMacro("__SEH__");
   }
 };
+#endif
 
 // x86-64 Cygwin target
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class CygwinX86_64TargetInfo : public X86_64TargetInfo {
 public:
   CygwinX86_64TargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
@@ -4555,6 +4574,7 @@ public:
       Builder.defineMacro("__SEH__");
   }
 };
+#endif
 
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class DarwinX86_64TargetInfo : public DarwinTargetInfo<X86_64TargetInfo> {
@@ -4693,9 +4713,11 @@ class ARMTargetInfo : public TargetInfo {
     case llvm::Triple::NetBSD:
       WCharType = SignedInt;
       break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32:
       WCharType = UnsignedShort;
       break;
+#endif
     case llvm::Triple::Linux:
     default:
       // AAPCS 7.1.1, ARM-Linux ABI 2.4: type of wchar_t is unsigned int.
@@ -4718,6 +4740,7 @@ class ARMTargetInfo : public TargetInfo {
     if (false) {
       /* dummy */
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     } else if (T.isOSWindows()) {
       assert(!BigEndian && "Windows on ARM does not support big endian");
       resetDataLayout("e"
@@ -4728,6 +4751,7 @@ class ARMTargetInfo : public TargetInfo {
                       "-a:0:32"
                       "-n32"
                       "-S64");
+#endif
     } else if (T.isOSNaCl()) {
       assert(!BigEndian && "NaCl on ARM does not support big endian");
       resetDataLayout("e-m:e-p:32:32-i64:64-v128:64:128-a:0:32-n32-S128");
@@ -4931,9 +4955,11 @@ public:
     if (false) {
       /* dummy */
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     } else if (Triple.isOSWindows()) {
       // FIXME: this is invalid for WindowsCE
       setABI("aapcs");
+#endif
     } else {
       // Select the default based on the platform.
       switch (Triple.getEnvironment()) {
@@ -5235,7 +5261,11 @@ public:
     // FIXME: It's more complicated than this and we don't really support
     // interworking.
     // Windows on ARM does not "support" interworking
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (5 <= ArchVersion && ArchVersion <= 8 && !getTriple().isOSWindows())
+#else
+    if (5 <= ArchVersion && ArchVersion <= 8 && !false)
+#endif
       Builder.defineMacro("__THUMB_INTERWORK__");
 
     if (ABI == "aapcs" || ABI == "aapcs-linux" || ABI == "aapcs-vfp") {
@@ -5244,7 +5274,11 @@ public:
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
       if (!getTriple().isOSBinFormatMachO() && !getTriple().isOSWindows())
 #else
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // in hurry sorry
       if (!false && !getTriple().isOSWindows())
+#else
+      if (!false && !false)
+#endif
 #endif
         Builder.defineMacro("__ARM_EABI__");
       Builder.defineMacro("__ARM_PCS", "1");
@@ -8280,6 +8314,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
       return new RTEMSTargetInfo<ARMleTargetInfo>(Triple, Opts);
     case llvm::Triple::NaCl:
       return new NaClTargetInfo<ARMleTargetInfo>(Triple, Opts);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32:
       switch (Triple.getEnvironment()) {
       case llvm::Triple::Cygnus:
@@ -8298,6 +8333,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
 #endif
 #endif
       }
+#endif
     default:
       return new ARMleTargetInfo(Triple, Opts);
     }
@@ -8558,6 +8594,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
       return new MinixTargetInfo<X86_32TargetInfo>(Triple, Opts);
     case llvm::Triple::Solaris:
       return new SolarisTargetInfo<X86_32TargetInfo>(Triple, Opts);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32: {
       switch (Triple.getEnvironment()) {
       case llvm::Triple::Cygnus:
@@ -8576,6 +8613,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
 #endif
       }
     }
+#endif
     case llvm::Triple::Haiku:
       return new HaikuX86_32TargetInfo(Triple, Opts);
     case llvm::Triple::RTEMS:
@@ -8619,6 +8657,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
       return new KFreeBSDTargetInfo<X86_64TargetInfo>(Triple, Opts);
     case llvm::Triple::Solaris:
       return new SolarisTargetInfo<X86_64TargetInfo>(Triple, Opts);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32: {
       switch (Triple.getEnvironment()) {
       case llvm::Triple::Cygnus:
@@ -8636,6 +8675,7 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple,
 #endif
       }
     }
+#endif
     case llvm::Triple::Haiku:
       return new HaikuTargetInfo<X86_64TargetInfo>(Triple, Opts);
     case llvm::Triple::NaCl:

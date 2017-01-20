@@ -21,7 +21,9 @@
 #include "llvm/MC/MCInstPrinter.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
 #endif
@@ -149,6 +151,7 @@ public:
   bool EmitSymbolAttribute(MCSymbol *Symbol, MCSymbolAttr Attribute) override;
 
   void EmitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) override;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void BeginCOFFSymbolDef(const MCSymbol *Symbol) override;
   void EmitCOFFSymbolStorageClass(int StorageClass) override;
   void EmitCOFFSymbolType(int Type) override;
@@ -156,6 +159,7 @@ public:
   void EmitCOFFSafeSEH(MCSymbol const *Symbol) override;
   void EmitCOFFSectionIndex(MCSymbol const *Symbol) override;
   void EmitCOFFSecRel32(MCSymbol const *Symbol) override;
+#endif
   void emitELFSize(MCSymbolELF *Symbol, const MCExpr *Value) override;
   void EmitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
                         unsigned ByteAlignment) override;
@@ -584,6 +588,7 @@ void MCAsmStreamer::EmitSyntaxDirective() {
   // with may have a value of prefix or noprefix.
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MCAsmStreamer::BeginCOFFSymbolDef(const MCSymbol *Symbol) {
   OS << "\t.def\t ";
   Symbol->print(OS, MAI);
@@ -623,6 +628,7 @@ void MCAsmStreamer::EmitCOFFSecRel32(MCSymbol const *Symbol) {
   Symbol->print(OS, MAI);
   EmitEOL();
 }
+#endif
 
 void MCAsmStreamer::emitELFSize(MCSymbolELF *Symbol, const MCExpr *Value) {
   assert(MAI->hasDotTypeDotSizeDirective());

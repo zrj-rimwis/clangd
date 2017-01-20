@@ -655,12 +655,14 @@ static bool isSignedCharDefault(const llvm::Triple &Triple) {
   case llvm::Triple::armeb:
   case llvm::Triple::thumb:
   case llvm::Triple::thumbeb:
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // sorry in hurry
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (Triple.isOSDarwin() || Triple.isOSWindows())
 #else
     if (Triple.isOSWindows())
 #endif
       return true;
+#endif
     return false;
 
   case llvm::Triple::ppc:
@@ -852,9 +854,11 @@ arm::FloatABI arm::getARMFloatABI(const ToolChain &TC, const ArgList &Args) {
 #endif
 
     // FIXME: this is invalid for WindowsCE
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32:
       ABI = FloatABI::Hard;
       break;
+#endif
 
     case llvm::Triple::FreeBSD:
       switch (Triple.getEnvironment()) {
@@ -1133,9 +1137,11 @@ void Clang::AddARMTargetArgs(const llvm::Triple &Triple, const ArgList &Args,
       ABIName = "apcs-gnu";
     }
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   } else if (Triple.isOSWindows()) {
     // FIXME: this is invalid for WindowsCE
     ABIName = "aapcs";
+#endif
   } else {
     // Select the default based on the platform.
     switch (Triple.getEnvironment()) {
@@ -3360,6 +3366,7 @@ static bool shouldUseFramePointerForTarget(const ArgList &Args,
     }
   }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   if (Triple.isOSWindows()) {
     switch (Triple.getArch()) {
     case llvm::Triple::x86:
@@ -3380,6 +3387,7 @@ static bool shouldUseFramePointerForTarget(const ArgList &Args,
       return false;
     }
   }
+#endif
 
   return true;
 }
@@ -3940,9 +3948,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   const Driver &D = getToolChain().getDriver();
   ArgStringList CmdArgs;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false and constify
   bool IsWindowsGNU = getToolChain().getTriple().isWindowsGNUEnvironment();
   bool IsWindowsCygnus =
       getToolChain().getTriple().isWindowsCygwinEnvironment();
+#endif
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool IsWindowsMSVC = getToolChain().getTriple().isWindowsMSVCEnvironment();
 #endif
@@ -3992,6 +4002,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (Triple.isOSWindows() && (Triple.getArch() == llvm::Triple::arm ||
                                Triple.getArch() == llvm::Triple::thumb)) {
     unsigned Offset = Triple.getArch() == llvm::Triple::arm ? 4 : 6;
@@ -4001,6 +4012,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       D.Diag(diag::err_target_unsupported_arch) << Triple.getArchName()
                                                 << TripleStr;
   }
+#endif
 
   // Push all default warning arguments that are specific to
   // the given target.  These come before user provided warning options
@@ -5163,7 +5175,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   Args.AddLastArg(CmdArgs, options::OPT_fno_operator_names);
   // Emulated TLS is enabled by default on Android, and can be enabled manually
   // with -femulated-tls.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool EmulatedTLSDefault = Triple.isAndroid() || Triple.isWindowsCygwinEnvironment();
+#else
+  bool EmulatedTLSDefault = Triple.isAndroid() || false;
+#endif
   if (Args.hasFlag(options::OPT_femulated_tls, options::OPT_fno_emulated_tls,
                    EmulatedTLSDefault))
     CmdArgs.push_back("-femulated-tls");
@@ -5350,12 +5366,14 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-backend-option");
       CmdArgs.push_back("-arm-no-restrict-it");
     }
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   } else if (Triple.isOSWindows() &&
              (Triple.getArch() == llvm::Triple::arm ||
               Triple.getArch() == llvm::Triple::thumb)) {
     // Windows on ARM expects restricted IT blocks
     CmdArgs.push_back("-backend-option");
     CmdArgs.push_back("-arm-restrict-it");
+#endif
   }
 
   // Forward -cl options to -cc1
@@ -5609,7 +5627,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // -fuse-cxa-atexit is default.
   if (!Args.hasFlag(
           options::OPT_fuse_cxa_atexit, options::OPT_fno_use_cxa_atexit,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both !false
           !IsWindowsCygnus && !IsWindowsGNU &&
+#else
+          !false && !false &&
+#endif
               getToolChain().getTriple().getOS() != llvm::Triple::Solaris &&
               getToolChain().getArch() != llvm::Triple::hexagon &&
               getToolChain().getArch() != llvm::Triple::xcore &&
@@ -9464,7 +9486,9 @@ void gnutools::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
 static void AddLibgcc(const llvm::Triple &Triple, const Driver &D,
                       ArgStringList &CmdArgs, const ArgList &Args) {
   bool isAndroid = Triple.isAndroid();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isCygMing = Triple.isOSCygMing();
+#endif
   bool IsIAMCU = Triple.isOSIAMCU();
   bool StaticLibgcc = Args.hasArg(options::OPT_static_libgcc) ||
                       Args.hasArg(options::OPT_static);
@@ -9475,10 +9499,18 @@ static void AddLibgcc(const llvm::Triple &Triple, const Driver &D,
     if (D.CCCIsCXX())
       CmdArgs.push_back("-lgcc");
   } else {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (!D.CCCIsCXX() && !isCygMing)
+#else
+    if (!D.CCCIsCXX() && !false)
+#endif
       CmdArgs.push_back("--as-needed");
     CmdArgs.push_back("-lgcc_s");
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (!D.CCCIsCXX() && !isCygMing)
+#else
+    if (!D.CCCIsCXX() && !false)
+#endif
       CmdArgs.push_back("--no-as-needed");
   }
 
@@ -9506,7 +9538,9 @@ static void AddRunTimeLibs(const ToolChain &TC, const Driver &D,
     switch (TC.getTriple().getOS()) {
     default:
       llvm_unreachable("unsupported OS");
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // hmm interesting what is cooking here
     case llvm::Triple::Win32:
+#endif
     case llvm::Triple::Linux:
       addClangRT(TC, Args, CmdArgs);
       break;
@@ -10579,6 +10613,7 @@ std::unique_ptr<Command> visualstudio::Compiler::GetCommand(
 #endif
 
 /// MinGW Tools
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MinGW::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                     const InputInfo &Output,
                                     const InputInfoList &Inputs,
@@ -10608,7 +10643,9 @@ void MinGW::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
     SplitDebugInfo(getToolChain(), C, *this, JA, Args, Output,
                    SplitDebugName(Args, Inputs[0]));
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MinGW::Linker::AddLibGCC(const ArgList &Args,
                               ArgStringList &CmdArgs) const {
   if (Args.hasArg(options::OPT_mthreads))
@@ -10638,7 +10675,9 @@ void MinGW::Linker::AddLibGCC(const ArgList &Args,
   CmdArgs.push_back("-lmingwex");
   CmdArgs.push_back("-lmsvcrt");
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MinGW::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                  const InputInfo &Output,
                                  const InputInfoList &Inputs,
@@ -10798,6 +10837,7 @@ void MinGW::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   const char *Exec = Args.MakeArgString(TC.GetProgramPath(LinkerName.data()));
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif
 
 /// XCore Tools
 // We pass assemble and link construction to the xcc tool.
@@ -10863,6 +10903,7 @@ void XCore::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void CrossWindows::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
                                            const InputInfo &Output,
                                            const InputInfoList &Inputs,
@@ -10901,7 +10942,9 @@ void CrossWindows::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
 
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void CrossWindows::Linker::ConstructJob(Compilation &C, const JobAction &JA,
                                         const InputInfo &Output,
                                         const InputInfoList &Inputs,
@@ -11052,6 +11095,7 @@ void CrossWindows::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 
   C.addCommand(llvm::make_unique<Command>(JA, *this, Exec, CmdArgs, Inputs));
 }
+#endif
 
 void tools::SHAVE::Compiler::ConstructJob(Compilation &C, const JobAction &JA,
                                           const InputInfo &Output,

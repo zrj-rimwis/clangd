@@ -93,6 +93,7 @@ public:
 
 
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class TargetLoweringObjectFileMachO : public TargetLoweringObjectFile {
 public:
   ~TargetLoweringObjectFileMachO() override {}
@@ -136,9 +137,11 @@ public:
   void getNameWithPrefix(SmallVectorImpl<char> &OutName, const GlobalValue *GV,
                          Mangler &Mang, const TargetMachine &TM) const override;
 };
+#endif
 
 
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class TargetLoweringObjectFileCOFF : public TargetLoweringObjectFile {
   mutable unsigned NextUniqueID = 0;
 
@@ -173,6 +176,7 @@ public:
   void emitLinkerFlagsForGlobal(raw_ostream &OS, const GlobalValue *GV,
                                 const Mangler &Mang) const override;
 };
+#endif
 
 } // end namespace llvm
 

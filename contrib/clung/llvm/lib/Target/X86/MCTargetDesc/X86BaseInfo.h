@@ -184,17 +184,29 @@ namespace X86II {
     /// MO_DLLIMPORT - On a symbol operand "FOO", this indicates that the
     /// reference is actually to the "__imp_FOO" symbol.  This is used for
     /// dllimport linkage on windows.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // to catch things early
     MO_DLLIMPORT,
+#else
+    MO_DLLIMPORT_disabled,
+#endif
 
     /// MO_DARWIN_NONLAZY - On a symbol operand "FOO", this indicates that the
     /// reference is actually to the "FOO$non_lazy_ptr" symbol, which is a
     /// non-PIC-base-relative reference to a non-hidden dyld lazy pointer stub.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // to catch things early
     MO_DARWIN_NONLAZY,
+#else
+    MO_DARWIN_NONLAZY_disabled,
+#endif
 
     /// MO_DARWIN_NONLAZY_PIC_BASE - On a symbol operand "FOO", this indicates
     /// that the reference is actually to "FOO$non_lazy_ptr - PICBASE", which is
     /// a PIC-base-relative reference to a non-hidden dyld lazy pointer stub.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MO_DARWIN_NONLAZY_PIC_BASE,
+#else
+    MO_DARWIN_NONLAZY_PIC_BASE_disabled,
+#endif
 
     /// MO_TLVP - On a symbol operand this indicates that the immediate is
     /// some TLS offset.

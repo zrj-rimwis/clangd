@@ -69,9 +69,12 @@ X86Subtarget::classifyLocalReference(const GlobalValue *GV) const {
     return X86II::MO_NO_FLAG;
 
   // The COFF dynamic linker just patches the executable sections.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (isTargetCOFF())
     return X86II::MO_NO_FLAG;
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false
   if (isTargetDarwin()) {
     // 32 bit macho has no relocation for a-b if a is undefined, even if
     // b is in the section that is being relocated.
@@ -82,6 +85,7 @@ X86Subtarget::classifyLocalReference(const GlobalValue *GV) const {
 
     return X86II::MO_PIC_BASE_OFFSET;
   }
+#endif
 
   return X86II::MO_GOTOFF;
 }
@@ -95,17 +99,21 @@ unsigned char X86Subtarget::classifyGlobalReference(const GlobalValue *GV,
   if (TM.shouldAssumeDSOLocal(M, GV))
     return classifyLocalReference(GV);
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (isTargetCOFF())
     return X86II::MO_DLLIMPORT;
+#endif
 
   if (is64Bit())
     return X86II::MO_GOTPCREL;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false
   if (isTargetDarwin()) {
     if (!isPositionIndependent())
       return X86II::MO_DARWIN_NONLAZY;
     return X86II::MO_DARWIN_NONLAZY_PIC_BASE;
   }
+#endif
 
   return X86II::MO_GOT;
 }
@@ -121,7 +129,9 @@ X86Subtarget::classifyGlobalFunctionReference(const GlobalValue *GV,
   if (TM.shouldAssumeDSOLocal(M, GV))
     return X86II::MO_NO_FLAG;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // how some one got here?
   assert(!isTargetCOFF());
+#endif
 
   if (isTargetELF())
     return X86II::MO_PLT;
@@ -169,7 +179,11 @@ bool X86Subtarget::isLegalToCallImmediateAddr() const {
   // FIXME: I386 PE/COFF supports PC relative calls using IMAGE_REL_I386_REL32
   // but WinCOFFObjectWriter::RecordRelocation cannot emit them.  Once it does,
   // the following check for Win32 should be removed.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume smth || false
   if (In64BitMode || isTargetWin32())
+#else
+  if (In64BitMode || false)
+#endif
     return false;
   return isTargetELF() || TM.getRelocationModel() == Reloc::Static;
 }
@@ -231,7 +245,11 @@ void X86Subtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
   // 32 and 64 bit) and for all 64-bit targets.
   if (StackAlignOverride)
     stackAlignment = StackAlignOverride;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false
   else if (isTargetDarwin() || isTargetLinux() || isTargetSolaris() ||
+#else
+  else if (false || isTargetLinux() || isTargetSolaris() ||
+#endif
            isTargetKFreeBSD() || In64BitMode)
     stackAlignment = 16;
 }
@@ -326,10 +344,14 @@ X86Subtarget::X86Subtarget(const Triple &TT, StringRef CPU, StringRef FS,
     setPICStyle(PICStyles::None);
   else if (is64Bit())
     setPICStyle(PICStyles::RIPRel);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   else if (isTargetCOFF())
     setPICStyle(PICStyles::None);
+#endif
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false
   else if (isTargetDarwin())
     setPICStyle(PICStyles::StubPIC);
+#endif
   else if (isTargetELF())
     setPICStyle(PICStyles::GOT);
 }

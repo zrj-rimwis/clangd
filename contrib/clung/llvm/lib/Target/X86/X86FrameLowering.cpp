@@ -457,17 +457,23 @@ MachineInstr *X86FrameLowering::emitStackProbe(MachineFunction &MF,
                                                const DebugLoc &DL,
                                                bool InProlog) const {
   const X86Subtarget &STI = MF.getSubtarget<X86Subtarget>();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (STI.isTargetWindowsCoreCLR()) {
     if (InProlog) {
       return emitStackProbeInlineStub(MF, MBB, MBBI, DL, true);
     } else {
       return emitStackProbeInline(MF, MBB, MBBI, DL, false);
     }
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     return emitStackProbeCall(MF, MBB, MBBI, DL, InProlog);
   }
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void X86FrameLowering::inlineStackProbe(MachineFunction &MF,
                                         MachineBasicBlock &PrologMBB) const {
   const StringRef ChkStkStubSymbol = "__chkstk_stub";
@@ -492,7 +498,9 @@ void X86FrameLowering::inlineStackProbe(MachineFunction &MF,
     ChkStkStub->eraseFromParent();
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MachineInstr *X86FrameLowering::emitStackProbeInline(
     MachineFunction &MF, MachineBasicBlock &MBB,
     MachineBasicBlock::iterator MBBI, const DebugLoc &DL, bool InProlog) const {
@@ -708,6 +716,7 @@ MachineInstr *X86FrameLowering::emitStackProbeInline(
 
   return &*ContinueMBBI;
 }
+#endif
 
 MachineInstr *X86FrameLowering::emitStackProbeCall(
     MachineFunction &MF, MachineBasicBlock &MBB,
@@ -773,6 +782,7 @@ MachineInstr *X86FrameLowering::emitStackProbeCall(
   return &*MBBI;
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MachineInstr *X86FrameLowering::emitStackProbeInlineStub(
     MachineFunction &MF, MachineBasicBlock &MBB,
     MachineBasicBlock::iterator MBBI, const DebugLoc &DL, bool InProlog) const {
@@ -784,6 +794,7 @@ MachineInstr *X86FrameLowering::emitStackProbeInlineStub(
 
   return &*MBBI;
 }
+#endif
 
 static unsigned calculateSetFPREG(uint64_t SPAdjust) {
   // Win64 ABI has a less restrictive limitation of 240; 128 works equally well
@@ -965,7 +976,9 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
     X86FI->setCalleeSavedFrameSize(
       X86FI->getCalleeSavedFrameSize() - TailCallReturnAddrDelta);
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false and constify
   bool UseStackProbe = (STI.isOSWindows() && !STI.isTargetMachO());
+#endif
 
   // The default stack probe size is 4096 if the function has no stackprobesize
   // attribute.
@@ -1207,6 +1220,7 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
   if (IsWin64Prologue && !IsFunclet && TRI->needsStackRealignment(MF))
     AlignedNumBytes = alignTo(AlignedNumBytes, MaxAlign);
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   if (AlignedNumBytes >= StackProbeSize && UseStackProbe) {
     // Check whether EAX is livein for this block.
     bool isEAXAlive = isEAXLiveIn(MBB);
@@ -1257,6 +1271,10 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
       MI->setFlag(MachineInstr::FrameSetup);
       MBB.insert(MBBI, MI);
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (NumBytes) {
     emitSPUpdate(MBB, MBBI, -(int64_t)NumBytes, /*InEpilogue=*/false);
   }
@@ -2228,8 +2246,16 @@ void X86FrameLowering::adjustForSegmentedStacks(
 
   if (MF.getFunction()->isVarArg())
     report_fatal_error("Segmented stacks do not support vararg functions.");
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   if (!STI.isTargetLinux() && !STI.isTargetDarwin() && !STI.isTargetWin32() &&
+#else
+  if (!STI.isTargetLinux() && !false && !false &&
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
       !STI.isTargetWin64() && !STI.isTargetFreeBSD() &&
+#else
+      !false && !STI.isTargetFreeBSD() &&
+#endif
       !STI.isTargetDragonFly())
     report_fatal_error("Segmented stacks not supported on this platform.");
 
@@ -2305,9 +2331,12 @@ void X86FrameLowering::adjustForSegmentedStacks(
     } else if (STI.isTargetDarwin()) {
       TlsReg = X86::GS;
       TlsOffset = 0x48 + 90*4;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     } else if (STI.isTargetWin32()) {
       TlsReg = X86::FS;
       TlsOffset = 0x14; // pvArbitrary, reserved for application use
+#endif
+/* zrj: XXX is this valid for us? */
     } else if (STI.isTargetDragonFly()) {
       TlsReg = X86::FS;
       TlsOffset = 0x10; // use tls_tcb.tcb_segstack
@@ -2323,7 +2352,11 @@ void X86FrameLowering::adjustForSegmentedStacks(
       BuildMI(checkMBB, DL, TII.get(X86::LEA32r), ScratchReg).addReg(X86::ESP)
         .addImm(1).addReg(0).addImm(-StackSize).addReg(0);
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (STI.isTargetLinux() || STI.isTargetWin32() || STI.isTargetWin64() ||
+#else
+    if (STI.isTargetLinux() || false || false ||
+#endif
         STI.isTargetDragonFly()) {
       BuildMI(checkMBB, DL, TII.get(X86::CMP32rm)).addReg(ScratchReg)
         .addReg(0).addImm(0).addReg(0).addImm(TlsOffset).addReg(TlsReg);

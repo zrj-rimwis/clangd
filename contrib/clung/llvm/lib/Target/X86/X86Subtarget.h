@@ -472,7 +472,11 @@ public:
   bool isTargetPS4() const { return TargetTriple.isPS4(); }
 
   bool isTargetELF() const { return TargetTriple.isOSBinFormatELF(); }
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   bool isTargetCOFF() const { return TargetTriple.isOSBinFormatCOFF(); }
+#else
+  bool isTargetCOFF() const { return false; }
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool isTargetMachO() const { return TargetTriple.isOSBinFormatMachO(); }
 #else
@@ -500,30 +504,49 @@ public:
   }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetWindowsCoreCLR() const {
     return TargetTriple.isWindowsCoreCLREnvironment();
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetWindowsCygwin() const {
     return TargetTriple.isWindowsCygwinEnvironment();
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetWindowsGNU() const {
     return TargetTriple.isWindowsGNUEnvironment();
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetWindowsItanium() const {
     return TargetTriple.isWindowsItaniumEnvironment();
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetCygMing() const { return TargetTriple.isOSCygMing(); }
+#else
+  bool isTargetCygMing() const { return false; }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isOSWindows() const { return TargetTriple.isOSWindows(); }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetWin64() const {
     return In64BitMode && TargetTriple.isOSWindows();
   }
+#else
+  bool isTargetWin64() const { return false; }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isTargetWin32() const {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return !In64BitMode && (isTargetCygMing() || isTargetKnownWindowsMSVC());
@@ -531,6 +554,7 @@ public:
     return !In64BitMode && (isTargetCygMing() || false);
 #endif
   }
+#endif
 
   bool isPICStyleGOT() const { return PICStyle == PICStyles::GOT; }
   bool isPICStyleRIPRel() const { return PICStyle == PICStyles::RIPRel; }
@@ -541,6 +565,7 @@ public:
 
   bool isPositionIndependent() const { return TM.isPositionIndependent(); }
 
+//#ifdef LVM_ENABLE_MSWIN // __DragonFly__ // XXX need this for now, uefi
   bool isCallingConvWin64(CallingConv::ID CC) const {
     switch (CC) {
     // On Win64, all these conventions just use the default convention.
@@ -563,6 +588,7 @@ public:
       return false;
     }
   }
+//#endif
 
   /// Classify a global variable reference for the current subtarget according
   /// to how we should reference it in a non-pcrel context.

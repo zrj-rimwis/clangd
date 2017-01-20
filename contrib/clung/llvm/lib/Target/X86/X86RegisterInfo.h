@@ -30,7 +30,9 @@ private:
 
   /// IsWin64 - Is the target on of win64 flavours
   ///
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // why this one is in class??
   bool IsWin64;
+#endif
 
   /// SlotSize - Stack slot size in bytes.
   ///

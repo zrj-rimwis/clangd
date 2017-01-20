@@ -757,7 +757,11 @@ bool FormatSpecifier::hasValidLengthModifier(const TargetInfo &Target) const {
 #else
           return !false &&
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
                  !Target.getTriple().isOSWindows();
+#else
+                 !false;
+#endif
         default:
           return false;
       }

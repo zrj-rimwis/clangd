@@ -775,7 +775,9 @@ static const char* getSectionNameForBitcode(const Triple &T) {
   case Triple::MachO:
     return "__LLVM,__bitcode";
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case Triple::COFF:
+#endif
   case Triple::ELF:
   case Triple::UnknownObjectFormat:
     return ".llvmbc";
@@ -789,7 +791,9 @@ static const char* getSectionNameForCommandline(const Triple &T) {
   case Triple::MachO:
     return "__LLVM,__cmdline";
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case Triple::COFF:
+#endif
   case Triple::ELF:
   case Triple::UnknownObjectFormat:
     return ".llvmcmd";

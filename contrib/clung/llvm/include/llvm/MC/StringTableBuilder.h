@@ -19,7 +19,20 @@ namespace llvm {
 /// \brief Utility for building string tables with deduplicated suffixes.
 class StringTableBuilder {
 public:
-  enum Kind { ELF, WinCOFF, MachO, RAW };
+  enum Kind {
+    ELF,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // rewrite
+    WinCOFF,
+#else
+    WinCOFF_disabled,
+#endif
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
+    MachO,
+#else
+    MachO_disabled,
+#endif
+    RAW
+   };
 
 private:
   SmallString<256> StringTable;

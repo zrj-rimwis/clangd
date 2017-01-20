@@ -96,8 +96,10 @@ MCObjectWriter *createX86MachObjectWriter(raw_pwrite_stream &OS, bool Is64Bit,
 MCObjectWriter *createX86ELFObjectWriter(raw_pwrite_stream &OS, bool IsELF64,
                                          uint8_t OSABI, uint16_t EMachine);
 /// Construct an X86 Win COFF object writer.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCObjectWriter *createX86WinCOFFObjectWriter(raw_pwrite_stream &OS,
                                              bool Is64Bit);
+#endif
 
 /// Returns the sub or super register of a specific X86 register.
 /// e.g. getX86SubSuperRegister(X86::EAX, 16) returns X86::AX.

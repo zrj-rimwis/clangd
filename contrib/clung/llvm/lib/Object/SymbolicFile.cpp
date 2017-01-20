@@ -11,8 +11,10 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Object/COFF.h"
 #include "llvm/Object/COFFImportFile.h"
+#endif
 #include "llvm/Object/IRObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Object/SymbolicFile.h"
@@ -39,13 +41,16 @@ Expected<std::unique_ptr<SymbolicFile>> SymbolicFile::createSymbolicFile(
   // Fallthrough
   case sys::fs::file_magic::unknown:
   case sys::fs::file_magic::archive:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case sys::fs::file_magic::macho_universal_binary:
+#endif
   case sys::fs::file_magic::windows_resource:
     return errorCodeToError(object_error::invalid_file_type);
   case sys::fs::file_magic::elf:
   case sys::fs::file_magic::elf_executable:
   case sys::fs::file_magic::elf_shared_object:
   case sys::fs::file_magic::elf_core:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case sys::fs::file_magic::macho_executable:
   case sys::fs::file_magic::macho_fixed_virtual_memory_shared_lib:
   case sys::fs::file_magic::macho_core:
@@ -56,13 +61,22 @@ Expected<std::unique_ptr<SymbolicFile>> SymbolicFile::createSymbolicFile(
   case sys::fs::file_magic::macho_dynamically_linked_shared_lib_stub:
   case sys::fs::file_magic::macho_dsym_companion:
   case sys::fs::file_magic::macho_kext_bundle:
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case sys::fs::file_magic::pecoff_executable:
     return ObjectFile::createObjectFile(Object, Type);
   case sys::fs::file_magic::coff_import_library:
     return std::unique_ptr<SymbolicFile>(new COFFImportFile(Object));
+#endif
   case sys::fs::file_magic::elf_relocatable:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case sys::fs::file_magic::macho_object:
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case sys::fs::file_magic::coff_object: {
+#else
+    {
+#endif
     Expected<std::unique_ptr<ObjectFile>> Obj =
         ObjectFile::createObjectFile(Object, Type);
     if (!Obj || !Context)

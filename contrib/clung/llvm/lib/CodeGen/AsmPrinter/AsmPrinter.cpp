@@ -1722,10 +1722,12 @@ void AsmPrinter::EmitLabelDifference(const MCSymbol *Hi, const MCSymbol *Lo,
 void AsmPrinter::EmitLabelPlusOffset(const MCSymbol *Label, uint64_t Offset,
                                      unsigned Size,
                                      bool IsSectionRelative) const {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false, only for COFF.. even check is stupid
   if (MAI->needsDwarfSectionOffsetDirective() && IsSectionRelative) {
     OutStreamer->EmitCOFFSecRel32(Label);
     return;
   }
+#endif
 
   // Emit Label+Offset (or just Label if Offset is zero)
   const MCExpr *Expr = MCSymbolRefExpr::create(Label, OutContext);

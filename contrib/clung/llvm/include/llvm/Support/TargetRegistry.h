@@ -446,11 +446,13 @@ public:
     switch (T.getObjectFormat()) {
     default:
       llvm_unreachable("Unknown object format");
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case Triple::COFF:
       assert(T.isOSWindows() && "only Windows COFF is supported");
       S = COFFStreamerCtorFn(Ctx, TAB, OS, Emitter, RelaxAll,
                              IncrementalLinkerCompatible);
       break;
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case Triple::MachO:
       if (MachOStreamerCtorFn)

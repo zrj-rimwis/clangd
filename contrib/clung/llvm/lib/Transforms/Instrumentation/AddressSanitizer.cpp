@@ -79,9 +79,11 @@ static const uint64_t kMIPS64_ShadowOffset64 = 1ULL << 37;
 static const uint64_t kAArch64_ShadowOffset64 = 1ULL << 36;
 static const uint64_t kFreeBSD_ShadowOffset32 = 1ULL << 30;
 static const uint64_t kFreeBSD_ShadowOffset64 = 1ULL << 46;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static const uint64_t kWindowsShadowOffset32 = 3ULL << 28;
 // TODO(wwchrome): Experimental for asan Win64, may change.
 static const uint64_t kWindowsShadowOffset64 = 0x1ULL << 45;  // 32TB.
+#endif
 
 static const size_t kMinStackMallocSize = 1 << 6;   // 64B
 static const size_t kMaxStackMallocSize = 1 << 16;  // 64K
@@ -379,7 +381,9 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
   bool IsMIPS64 = TargetTriple.getArch() == llvm::Triple::mips64 ||
                   TargetTriple.getArch() == llvm::Triple::mips64el;
   bool IsAArch64 = TargetTriple.getArch() == llvm::Triple::aarch64;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false and constify
   bool IsWindows = TargetTriple.isOSWindows();
+#endif
 
   ShadowMapping Mapping;
 
@@ -397,8 +401,10 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
       // If we're targeting iOS and x86, the binary is built for iOS simulator.
       Mapping.Offset = IsX86 ? kIOSSimShadowOffset32 : kIOSShadowOffset32;
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     else if (IsWindows)
       Mapping.Offset = kWindowsShadowOffset32;
+#endif
     else
       Mapping.Offset = kDefaultShadowOffset32;
   } else {  // LongSize == 64
@@ -413,8 +419,10 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
         Mapping.Offset = kLinuxKasan_ShadowOffset64;
       else
         Mapping.Offset = kSmallX86_64ShadowOffset;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     } else if (IsWindows && IsX86_64) {
       Mapping.Offset = kWindowsShadowOffset64;
+#endif
     } else if (IsMIPS64)
       Mapping.Offset = kMIPS64_ShadowOffset64;
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__

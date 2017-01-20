@@ -857,7 +857,9 @@ class X86_32ABIInfo : public SwiftABIInfo {
   bool IsDarwinVectorABI;
 #endif
   bool IsRetSmallStructInRegABI;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   bool IsWin32StructABI;
+#endif
   bool IsSoftFloatABI;
   bool IsMCUABI;
   unsigned DefaultNumRegisterParameters;
@@ -903,11 +905,15 @@ class X86_32ABIInfo : public SwiftABIInfo {
 
   /// \brief Rewrite the function info so that all memory arguments use
   /// inalloca.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void rewriteWithInAlloca(CGFunctionInfo &FI) const;
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void addFieldToArgStruct(SmallVector<llvm::Type *, 6> &FrameFields,
                            CharUnits &StackOffset, ABIArgInfo &Info,
                            QualType Type) const;
+#endif
 
 public:
 
@@ -924,7 +930,9 @@ public:
     : SwiftABIInfo(CGT),
 #endif
       IsRetSmallStructInRegABI(RetSmallStructInRegABI), 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
       IsWin32StructABI(Win32StructABI),
+#endif
       IsSoftFloatABI(SoftFloatABI),
       IsMCUABI(CGT.getTarget().getTriple().isOSIAMCU()),
       DefaultNumRegisterParameters(NumRegisterParameters) {}
@@ -1154,11 +1162,16 @@ bool X86_32ABIInfo::canExpandIndirectArgument(QualType Ty) const {
     return false;
   const RecordDecl *RD = RT->getDecl();
   if (const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(RD)) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
     if (!IsWin32StructABI ) {
+#else
+    if (!false) {
+#endif
       // On non-Windows, we have to conservatively match our old bitcode
       // prototypes in order to be ABI-compatible at the bitcode level.
       if (!CXXRD->isCLike())
         return false;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // not needed
     } else {
       // Don't do this for dynamic classes.
       if (CXXRD->isDynamicClass())
@@ -1168,6 +1181,7 @@ bool X86_32ABIInfo::canExpandIndirectArgument(QualType Ty) const {
         if (!isEmptyRecord(getContext(), Base.getType(), /*AllowArrays=*/true))
           return false;
       }
+#endif
     }
   }
 
@@ -1270,7 +1284,11 @@ ABIArgInfo X86_32ABIInfo::classifyReturnType(QualType RetTy,
       // We apply a similar transformation for pointer types to improve the
       // quality of the generated IR.
       if (const Type *SeltTy = isSingleElementStruct(RetTy, getContext()))
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
         if ((!IsWin32StructABI && SeltTy->isRealFloatingType())
+#else
+        if ((!false && SeltTy->isRealFloatingType())
+#endif
             || SeltTy->hasPointerRepresentation())
           return ABIArgInfo::getDirect(CGT.ConvertType(QualType(SeltTy, 0)));
 
@@ -1418,8 +1436,10 @@ bool X86_32ABIInfo::shouldAggregateUseDirect(QualType Ty, CCState &State,
   // On Windows, aggregates other than HFAs are never passed in registers, and
   // they do not consume register slots. Homogenous floating-point aggregates
   // (HFAs) have already been dealt with at this point.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (IsWin32StructABI && isAggregateTypeForABI(Ty))
     return false;
+#endif
 
   NeedsPadding = false;
   InReg = !IsMCUABI;
@@ -1500,7 +1520,11 @@ ABIArgInfo X86_32ABIInfo::classifyArgumentType(QualType Ty,
       return getIndirectResult(Ty, true, State);
 
     // Ignore empty structs/unions on non-Windows.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
     if (!IsWin32StructABI && isEmptyRecord(getContext(), Ty, true))
+#else
+    if (!false && isEmptyRecord(getContext(), Ty, true))
+#endif
       return ABIArgInfo::getIgnore();
 
     llvm::LLVMContext &LLVMContext = getVMContext();
@@ -1609,9 +1633,14 @@ void X86_32ABIInfo::computeInfo(CGFunctionInfo &FI) const {
   // If we needed to use inalloca for any argument, do a second pass and rewrite
   // all the memory arguments to use inalloca.
   if (UsedInAlloca)
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // XXX investigate InAlloca crap
     rewriteWithInAlloca(FI);
+#else
+    assert(false && "zrj: inalloca only supported on win32");
+#endif
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void
 X86_32ABIInfo::addFieldToArgStruct(SmallVector<llvm::Type *, 6> &FrameFields,
                                    CharUnits &StackOffset, ABIArgInfo &Info,
@@ -1634,7 +1663,9 @@ X86_32ABIInfo::addFieldToArgStruct(SmallVector<llvm::Type *, 6> &FrameFields,
     FrameFields.push_back(Ty);
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static bool isArgInAlloca(const ABIArgInfo &Info) {
   // Leave ignored and inreg arguments alone.
   switch (Info.getKind()) {
@@ -1658,7 +1689,9 @@ static bool isArgInAlloca(const ABIArgInfo &Info) {
   }
   llvm_unreachable("invalid enum");
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void X86_32ABIInfo::rewriteWithInAlloca(CGFunctionInfo &FI) const {
   assert(IsWin32StructABI && "inalloca only supported on win32");
 
@@ -1703,6 +1736,7 @@ void X86_32ABIInfo::rewriteWithInAlloca(CGFunctionInfo &FI) const {
                                         /*isPacked=*/true),
                   StackAlign);
 }
+#endif
 
 Address X86_32ABIInfo::EmitVAArg(CodeGenFunction &CGF,
                                  Address VAListAddr, QualType Ty) const {
@@ -1746,7 +1780,9 @@ bool X86_32TargetCodeGenInfo::isStructReturnInRegABI(
   case llvm::Triple::FreeBSD:
   case llvm::Triple::OpenBSD:
   case llvm::Triple::Bitrig:
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case llvm::Triple::Win32:
+#endif
     return true;
   default:
     return false;
@@ -2008,6 +2044,7 @@ public:
 };
 
 /// WinX86_64ABIInfo - The Windows X86_64 ABI information.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume not needed
 class WinX86_64ABIInfo : public ABIInfo {
 public:
   WinX86_64ABIInfo(CodeGen::CodeGenTypes &CGT)
@@ -2036,6 +2073,7 @@ private:
 
   bool IsMingw64;
 };
+#endif
 
 class X86_64TargetCodeGenInfo : public TargetCodeGenInfo {
 public:
@@ -2134,6 +2172,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static std::string qualifyWindowsLibrary(llvm::StringRef Lib) {
   // If the argument does not end in .lib, automatically add the suffix.
   // If the argument contains a space, enclose it in quotes.
@@ -2146,7 +2185,9 @@ static std::string qualifyWindowsLibrary(llvm::StringRef Lib) {
   ArgStr += Quote ? "\"" : "";
   return ArgStr;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class WinX86_32TargetCodeGenInfo : public X86_32TargetCodeGenInfo {
 public:
   WinX86_32TargetCodeGenInfo(CodeGen::CodeGenTypes &CGT,
@@ -2172,7 +2213,9 @@ public:
   }
 #endif
 };
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static void addStackProbeSizeTargetAttribute(const Decl *D,
                                              llvm::GlobalValue *GV,
                                              CodeGen::CodeGenModule &CGM) {
@@ -2185,7 +2228,9 @@ static void addStackProbeSizeTargetAttribute(const Decl *D,
     }
   }
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void WinX86_32TargetCodeGenInfo::setTargetAttributes(const Decl *D,
                                                      llvm::GlobalValue *GV,
                                             CodeGen::CodeGenModule &CGM) const {
@@ -2193,7 +2238,9 @@ void WinX86_32TargetCodeGenInfo::setTargetAttributes(const Decl *D,
 
   addStackProbeSizeTargetAttribute(D, GV, CGM);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class WinX86_64TargetCodeGenInfo : public TargetCodeGenInfo {
 public:
   WinX86_64TargetCodeGenInfo(CodeGen::CodeGenTypes &CGT,
@@ -2231,7 +2278,9 @@ public:
   }
 #endif
 };
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void WinX86_64TargetCodeGenInfo::setTargetAttributes(const Decl *D,
                                                      llvm::GlobalValue *GV,
                                             CodeGen::CodeGenModule &CGM) const {
@@ -2246,6 +2295,7 @@ void WinX86_64TargetCodeGenInfo::setTargetAttributes(const Decl *D,
 
   addStackProbeSizeTargetAttribute(D, GV, CGM);
 }
+#endif
 }
 
 void X86_64ABIInfo::postMerge(unsigned AggregateSize, Class &Lo,
@@ -3564,6 +3614,7 @@ Address X86_64ABIInfo::EmitMSVAArg(CodeGenFunction &CGF, Address VAListAddr,
                           /*allowHigherAlign*/ false);
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 ABIArgInfo WinX86_64ABIInfo::classify(QualType Ty, unsigned &FreeSSERegs,
                                       bool IsReturnType) const {
 
@@ -3638,7 +3689,9 @@ ABIArgInfo WinX86_64ABIInfo::classify(QualType Ty, unsigned &FreeSSERegs,
 
   return ABIArgInfo::getDirect();
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void WinX86_64ABIInfo::computeInfo(CGFunctionInfo &FI) const {
   bool IsVectorCall =
       FI.getCallingConvention() == llvm::CallingConv::X86_VectorCall;
@@ -3653,7 +3706,9 @@ void WinX86_64ABIInfo::computeInfo(CGFunctionInfo &FI) const {
   for (auto &I : FI.arguments())
     I.info = classify(I.type, FreeSSERegs, false);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 Address WinX86_64ABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
                                     QualType Ty) const {
   return emitVoidPtrVAArg(CGF, VAListAddr, Ty, /*indirect*/ false,
@@ -3661,6 +3716,7 @@ Address WinX86_64ABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
                           CharUnits::fromQuantity(8),
                           /*allowHigherAlign*/ false);
 }
+#endif
 
 // PowerPC-32
 namespace {
@@ -5118,6 +5174,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class WindowsARMTargetCodeGenInfo : public ARMTargetCodeGenInfo {
 public:
   WindowsARMTargetCodeGenInfo(CodeGenTypes &CGT, ARMABIInfo::ABIKind K)
@@ -5138,12 +5195,15 @@ public:
   }
 #endif
 };
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void WindowsARMTargetCodeGenInfo::setTargetAttributes(
     const Decl *D, llvm::GlobalValue *GV, CodeGen::CodeGenModule &CGM) const {
   ARMTargetCodeGenInfo::setTargetAttributes(D, GV, CGM);
   addStackProbeSizeTargetAttribute(D, GV, CGM);
 }
+#endif
 }
 
 void ARMABIInfo::computeInfo(CGFunctionInfo &FI) const {
@@ -7975,10 +8035,12 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
   case llvm::Triple::armeb:
   case llvm::Triple::thumb:
   case llvm::Triple::thumbeb: {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (Triple.getOS() == llvm::Triple::Win32) {
       return SetCGInfo(
           new WindowsARMTargetCodeGenInfo(Types, ARMABIInfo::AAPCS_VFP));
     }
+#endif
 
     ARMABIInfo::ABIKind Kind = ARMABIInfo::AAPCS;
     StringRef ABIStr = getTarget().getABI();
@@ -8044,12 +8106,21 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
 #endif
     bool RetSmallStructInRegABI =
         X86_32TargetCodeGenInfo::isStructReturnInRegABI(Triple, CodeGenOpts);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     bool IsWin32FloatStructABI = Triple.isOSWindows() && !Triple.isOSCygMing();
+#else
+    const bool IsWin32FloatStructABI = false;
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false, XXX simplify by removing all
     if (Triple.getOS() == llvm::Triple::Win32) {
       return SetCGInfo(new WinX86_32TargetCodeGenInfo(
           Types, IsDarwinVectorABI, RetSmallStructInRegABI,
           IsWin32FloatStructABI, CodeGenOpts.NumRegisterParameters));
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       return SetCGInfo(new X86_32TargetCodeGenInfo(
           Types, IsDarwinVectorABI, RetSmallStructInRegABI,
@@ -8066,8 +8137,10 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
              : ABI == "avx" ? X86AVXABILevel::AVX : X86AVXABILevel::None);
 
     switch (Triple.getOS()) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32:
       return SetCGInfo(new WinX86_64TargetCodeGenInfo(Types, AVXLevel));
+#endif
     case llvm::Triple::PS4:
       return SetCGInfo(new PS4TargetCodeGenInfo(Types, AVXLevel));
     default:

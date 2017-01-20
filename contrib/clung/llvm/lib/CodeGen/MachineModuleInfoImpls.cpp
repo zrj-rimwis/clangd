@@ -21,7 +21,9 @@ using namespace llvm;
 //===----------------------------------------------------------------------===//
 
 // Out of line virtual method.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // you got to be kidding me
 void MachineModuleInfoMachO::anchor() {}
+#endif
 void MachineModuleInfoELF::anchor() {}
 
 static int SortSymbolPair(const void *LHS, const void *RHS) {

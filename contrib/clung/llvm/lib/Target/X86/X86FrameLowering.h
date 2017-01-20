@@ -56,8 +56,10 @@ public:
                                const DebugLoc &DL, bool InProlog) const;
 
   /// Replace a StackProbe inline-stub with the actual probe code inline.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void inlineStackProbe(MachineFunction &MF,
                         MachineBasicBlock &PrologMBB) const override;
+#endif
 
   void emitCalleeSavedFrameMoves(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MBBI,
@@ -188,17 +190,21 @@ private:
                                    const DebugLoc &DL, bool InProlog) const;
 
   /// Emit target stack probe as an inline sequence.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   MachineInstr *emitStackProbeInline(MachineFunction &MF,
                                      MachineBasicBlock &MBB,
                                      MachineBasicBlock::iterator MBBI,
                                      const DebugLoc &DL, bool InProlog) const;
+#endif
 
   /// Emit a stub to later inline the target stack probe.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   MachineInstr *emitStackProbeInlineStub(MachineFunction &MF,
                                          MachineBasicBlock &MBB,
                                          MachineBasicBlock::iterator MBBI,
                                          const DebugLoc &DL,
                                          bool InProlog) const;
+#endif
 
   /// Aligns the stack pointer by ANDing it with -MaxAlign.
   void BuildStackAlignAND(MachineBasicBlock &MBB,

@@ -254,9 +254,6 @@ def TargetMips : TargetArch<["mips", "mipsel"]>;
 def TargetMSP430 : TargetArch<["msp430"]>;
 def TargetX86 : TargetArch<["x86"]>;
 def TargetAnyX86 : TargetArch<["x86", "x86_64"]>;
-def TargetWindows : TargetArch<["x86", "x86_64", "arm", "thumb"]> {
-  let OSes = ["Win32"];
-}
 
 class Attr {
   // The various ways in which an attribute can be spelled in source

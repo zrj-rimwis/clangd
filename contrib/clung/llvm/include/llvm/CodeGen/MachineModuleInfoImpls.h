@@ -22,6 +22,7 @@ class MCSymbol;
 
 /// MachineModuleInfoMachO - This is a MachineModuleInfoImpl implementation
 /// for MachO targets.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 class MachineModuleInfoMachO : public MachineModuleInfoImpl {
   /// GVStubs - Darwin '$non_lazy_ptr' stubs.  The key is something like
   /// "Lfoo$non_lazy_ptr", the value is something like "_foo". The extra bit
@@ -53,6 +54,7 @@ public:
     return getSortedStubs(ThreadLocalGVStubs);
   }
 };
+#endif
 
 /// MachineModuleInfoELF - This is a MachineModuleInfoImpl implementation
 /// for ELF targets.

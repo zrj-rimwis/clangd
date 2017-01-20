@@ -3267,8 +3267,12 @@ void Sema::AddAlignedAttr(SourceRange AttrRange, Decl *D, Expr *E,
 
   // Alignment calculations can wrap around if it's greater than 2**28.
   unsigned MaxValidAlignment =
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // wth?
       Context.getTargetInfo().getTriple().isOSBinFormatCOFF() ? 8192
                                                               : 268435456;
+#else
+      268435456;
+#endif
   if (AlignVal > MaxValidAlignment) {
     Diag(AttrLoc, diag::err_attribute_aligned_too_great) << MaxValidAlignment
                                                          << E->getSourceRange();
@@ -3882,12 +3886,20 @@ bool Sema::CheckCallingConvAttr(const AttributeList &attr, CallingConv &CC,
   case AttributeList::AT_SwiftCall: CC = CC_Swift; break;
   case AttributeList::AT_VectorCall: CC = CC_X86VectorCall; break;
   case AttributeList::AT_MSABI:
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // be careful with this one, uefi
     CC = Context.getTargetInfo().getTriple().isOSWindows() ? CC_C :
                                                              CC_X86_64Win64;
+#else
+    CC = CC_X86_64Win64;
+#endif
     break;
   case AttributeList::AT_SysVABI:
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     CC = Context.getTargetInfo().getTriple().isOSWindows() ? CC_X86_64SysV :
                                                              CC_C;
+#else
+    CC = CC_C;
+#endif
     break;
   case AttributeList::AT_Pcs: {
     StringRef StrRef;

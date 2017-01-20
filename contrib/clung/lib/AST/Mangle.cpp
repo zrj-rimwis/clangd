@@ -64,13 +64,20 @@ static bool isExternC(const NamedDecl *ND) {
 
 static CCMangling getCallingConvMangling(const ASTContext &Context,
                                          const NamedDecl *ND) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   const TargetInfo &TI = Context.getTargetInfo();
   const llvm::Triple &Triple = TI.getTriple();
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
   if (!Triple.isOSWindows() ||
       !(Triple.getArch() == llvm::Triple::x86 ||
         Triple.getArch() == llvm::Triple::x86_64))
+#else
+  if (!false)
+#endif
     return CCM_Other;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // not needed
   if (Context.getLangOpts().CPlusPlus && !isExternC(ND) &&
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       TI.getCXXABI() == TargetCXXABI::Microsoft)
@@ -97,6 +104,7 @@ static CCMangling getCallingConvMangling(const ASTContext &Context,
   case CC_X86VectorCall:
     return CCM_Vector;
   }
+#endif
 }
 
 bool MangleContext::shouldMangleDeclName(const NamedDecl *D) {

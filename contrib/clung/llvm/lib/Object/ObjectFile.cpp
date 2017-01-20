@@ -11,7 +11,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Object/COFF.h"
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/Object/MachO.h"
 #endif
@@ -106,10 +108,12 @@ ObjectFile::createObjectFile(MemoryBufferRef Object, sys::fs::file_magic Type) {
   case sys::fs::file_magic::macho_kext_bundle:
     return createMachOObjectFile(Object);
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case sys::fs::file_magic::coff_object:
   case sys::fs::file_magic::coff_import_library:
   case sys::fs::file_magic::pecoff_executable:
     return errorOrToExpected(createCOFFObjectFile(Object));
+#endif
   }
   llvm_unreachable("Unexpected Object File Type");
 }

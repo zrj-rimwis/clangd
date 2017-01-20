@@ -350,7 +350,6 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCRegisterInfo.cpp \
 	MCSchedule.cpp \
 	MCSection.cpp \
-	MCSectionCOFF.cpp \
 	MCSectionELF.cpp \
 	MCStreamer.cpp \
 	MCSubtargetInfo.cpp \
@@ -359,8 +358,7 @@ SRCS+=	ELFObjectWriter.cpp \
 	MCTargetOptions.cpp \
 	MCValue.cpp \
 	StringTableBuilder.cpp \
-	SubtargetFeature.cpp \
-	WinCOFFObjectWriter.cpp
+	SubtargetFeature.cpp
 
 #LIB=	LLVMMCDisassembler
 LLVM_SRCDIRS+= lib/MC/MCDisassembler
@@ -370,7 +368,6 @@ SRCS+=	MCRelocationInfo.cpp
 LLVM_SRCDIRS+= lib/MC/MCParser
 SRCS+=	AsmLexer.cpp \
 	AsmParser.cpp \
-	COFFAsmParser.cpp \
 	ELFAsmParser.cpp \
 	MCAsmLexer.cpp \
 	MCAsmParser.cpp \
@@ -419,7 +416,6 @@ SRCS+=	DependencyAnalysis.cpp \
 LLVM_SRCDIRS+= lib/Object
 SRCS+=	Archive.cpp \
 	Binary.cpp \
-	COFFObjectFile.cpp \
 	ELF.cpp \
 	ELFObjectFile.cpp \
 	zLO_Error.cpp \
@@ -701,8 +697,7 @@ SRCS+=	X86AsmBackend.cpp \
 	X86ELFObjectWriter.cpp \
 	X86MCAsmInfo.cpp \
 	X86MCCodeEmitter.cpp \
-	X86MCTargetDesc.cpp \
-	X86WinCOFFObjectWriter.cpp
+	X86MCTargetDesc.cpp
 
 #LIB=	LLVMX86Info
 LLVM_SRCDIRS+= lib/Target/X86/TargetInfo

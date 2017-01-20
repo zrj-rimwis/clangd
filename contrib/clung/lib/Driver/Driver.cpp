@@ -2345,7 +2345,11 @@ InputInfo Driver::BuildJobsForActionNoCache(
 
 const char *Driver::getDefaultImageName() const {
   llvm::Triple Target(llvm::Triple::normalize(DefaultTargetTriple));
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false, srsly???
   return Target.isOSWindows() ? "a.exe" : "a.out";
+#else
+  return "a.out";
+#endif
 }
 
 /// \brief Create output filename based on ArgValue, which could either be a
@@ -2763,6 +2767,7 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
     case llvm::Triple::AMDHSA:
       TC = new toolchains::AMDGPUToolChain(*this, Target, Args);
       break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case llvm::Triple::Win32:
       switch (Target.getEnvironment()) {
       default:
@@ -2789,6 +2794,7 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
 #endif
       }
       break;
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     case llvm::Triple::CUDA:
       TC = new toolchains::CudaToolChain(*this, Target, Args);

@@ -104,11 +104,17 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     }
 
     // Jump to label or value in register.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     bool IsWin64 = STI->isTargetWin64();
+#endif
     if (Opcode == X86::TCRETURNdi || Opcode == X86::TCRETURNdi64) {
       unsigned Op = (Opcode == X86::TCRETURNdi)
                         ? X86::TAILJMPd
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
                         : (IsWin64 ? X86::TAILJMPd64_REX : X86::TAILJMPd64);
+#else
+                        : X86::TAILJMPd64;
+#endif
       MachineInstrBuilder MIB = BuildMI(MBB, MBBI, DL, TII->get(Op));
       if (JumpTarget.isGlobal())
         MIB.addGlobalAddress(JumpTarget.getGlobal(), JumpTarget.getOffset(),
@@ -121,13 +127,21 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     } else if (Opcode == X86::TCRETURNmi || Opcode == X86::TCRETURNmi64) {
       unsigned Op = (Opcode == X86::TCRETURNmi)
                         ? X86::TAILJMPm
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
                         : (IsWin64 ? X86::TAILJMPm64_REX : X86::TAILJMPm64);
+#else
+                        : X86::TAILJMPm64;
+#endif
       MachineInstrBuilder MIB = BuildMI(MBB, MBBI, DL, TII->get(Op));
       for (unsigned i = 0; i != 5; ++i)
         MIB.addOperand(MBBI->getOperand(i));
     } else if (Opcode == X86::TCRETURNri64) {
       BuildMI(MBB, MBBI, DL,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
               TII->get(IsWin64 ? X86::TAILJMPr64_REX : X86::TAILJMPr64))
+#else
+              TII->get(X86::TAILJMPr64))
+#endif
           .addReg(JumpTarget.getReg(), RegState::Kill);
     } else {
       BuildMI(MBB, MBBI, DL, TII->get(X86::TAILJMPr))

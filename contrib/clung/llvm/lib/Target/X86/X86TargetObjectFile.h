@@ -58,6 +58,7 @@ namespace llvm {
   };
 
   /// \brief This implementation is used for Windows targets on x86 and x86-64.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   class X86WindowsTargetObjectFile : public TargetLoweringObjectFileCOFF {
     const MCExpr *
     lowerRelativeReference(const GlobalValue *LHS, const GlobalValue *RHS,
@@ -70,6 +71,7 @@ namespace llvm {
                                      const Constant *C,
                                      unsigned &Align) const override;
   };
+#endif
 
 } // end namespace llvm
 

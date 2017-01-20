@@ -48,7 +48,9 @@ namespace llvm {
   class MCSectionMachO;
 #endif
   class MCSectionELF;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   class MCSectionCOFF;
+#endif
 #ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
   class CodeViewContext;
 #endif
@@ -86,7 +88,9 @@ namespace llvm {
     /// objects.
     BumpPtrAllocator Allocator;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     SpecificBumpPtrAllocator<MCSectionCOFF> COFFAllocator;
+#endif
     SpecificBumpPtrAllocator<MCSectionELF> ELFAllocator;
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     SpecificBumpPtrAllocator<MCSectionMachO> MachOAllocator;
@@ -210,6 +214,7 @@ namespace llvm {
       }
     };
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     struct COFFSectionKey {
       std::string SectionName;
       StringRef GroupName;
@@ -229,12 +234,15 @@ namespace llvm {
         return UniqueID < Other.UniqueID;
       }
     };
+#endif
 
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     StringMap<MCSectionMachO *> MachOUniquingMap;
 #endif
     std::map<ELFSectionKey, MCSectionELF *> ELFUniquingMap;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     std::map<COFFSectionKey, MCSectionCOFF *> COFFUniquingMap;
+#endif
     StringMap<bool> ELFRelSecNames;
 
     SpecificBumpPtrAllocator<MCSubtargetInfo> MCSubtargetAllocator;
@@ -417,6 +425,7 @@ namespace llvm {
 
     MCSectionELF *createELFGroupSection(const MCSymbolELF *Group);
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     MCSectionCOFF *getCOFFSection(StringRef Section, unsigned Characteristics,
                                   SectionKind Kind, StringRef COMDATSymName,
                                   int Selection,
@@ -428,14 +437,17 @@ namespace llvm {
                                   const char *BeginSymName = nullptr);
 
     MCSectionCOFF *getCOFFSection(StringRef Section);
+#endif
 
     /// Gets or creates a section equivalent to Sec that is associated with the
     /// section containing KeySym. For example, to create a debug info section
     /// associated with an inline function, pass the normal debug info section
     /// as Sec and the function symbol as KeySym.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     MCSectionCOFF *
     getAssociativeCOFFSection(MCSectionCOFF *Sec, const MCSymbol *KeySym,
                               unsigned UniqueID = GenericSectionID);
+#endif
 
     // Create and save a copy of STI and return a reference to the copy.
     MCSubtargetInfo &getSubtargetCopy(const MCSubtargetInfo &STI);

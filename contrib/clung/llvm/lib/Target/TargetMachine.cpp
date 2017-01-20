@@ -120,8 +120,10 @@ bool TargetMachine::shouldAssumeDSOLocal(const Module &M,
     return false;
 
   // Every other GV is local on COFF
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (TT.isOSBinFormatCOFF())
     return true;
+#endif
 
   if (GV && (GV->hasLocalLinkage() || !GV->hasDefaultVisibility()))
     return true;

@@ -9,7 +9,9 @@
 
 #include "llvm/MC/StringTableBuilder.h"
 #include "llvm/ADT/STLExtras.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #include "llvm/Support/Endian.h"
 
 #include <vector>
@@ -24,13 +26,17 @@ StringTableBuilder::StringTableBuilder(Kind K, unsigned Alignment)
   case RAW:
     Size = 0;
     break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case MachO:
+#endif
   case ELF:
     Size = 1;
     break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case WinCOFF:
     Size = 4;
     break;
+#endif
   }
 }
 
@@ -109,21 +115,27 @@ void StringTableBuilder::finalizeStringTable(bool Optimize) {
   case RAW:
     break;
   case ELF:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case MachO:
+#endif
     // Start the table with a NUL byte.
     StringTable += '\x00';
     break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case WinCOFF:
     // Make room to write the table size later.
     StringTable.append(4, '\x00');
     break;
+#endif
   }
 
   StringRef Previous;
   for (StringOffsetPair *P : Strings) {
     StringRef S = P->first.Val;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (K == WinCOFF)
       assert(S.size() > COFF::NameSize && "Short string in COFF string table!");
+#endif
 
     if (Optimize && Previous.endswith(S)) {
       size_t Pos = StringTable.size() - S.size() - (K != RAW);
@@ -152,11 +164,14 @@ void StringTableBuilder::finalizeStringTable(bool Optimize) {
   case RAW:
   case ELF:
     break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case MachO:
     // Pad to multiple of 4.
     while (StringTable.size() % 4)
       StringTable += '\x00';
     break;
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case WinCOFF:
     // Write the table size in the first word.
     assert(StringTable.size() <= std::numeric_limits<uint32_t>::max());
@@ -164,6 +179,7 @@ void StringTableBuilder::finalizeStringTable(bool Optimize) {
     support::endian::write<uint32_t, support::little, support::unaligned>(
         StringTable.data(), Size);
     break;
+#endif
   }
 
   Size = StringTable.size();

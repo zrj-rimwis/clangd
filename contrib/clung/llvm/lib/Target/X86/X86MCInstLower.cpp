@@ -67,7 +67,9 @@ public:
   MCOperand LowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym) const;
 
 private:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // sneaky
   MachineModuleInfoMachO &getMachOMMI() const;
+#endif
   Mangler *getMang() const {
     return AsmPrinter.Mang;
   }
@@ -112,9 +114,11 @@ X86MCInstLower::X86MCInstLower(const MachineFunction &mf,
     : Ctx(mf.getContext()), MF(mf), TM(mf.getTarget()), MAI(*TM.getMCAsmInfo()),
       AsmPrinter(asmprinter) {}
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 MachineModuleInfoMachO &X86MCInstLower::getMachOMMI() const {
   return MF.getMMI().getObjFileInfo<MachineModuleInfoMachO>();
 }
+#endif
 
 
 /// GetSymbolFromOperand - Lower an MO_GlobalAddress or MO_ExternalSymbol
@@ -129,14 +133,18 @@ GetSymbolFromOperand(const MachineOperand &MO) const {
   StringRef Suffix;
 
   switch (MO.getTargetFlags()) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // wow
   case X86II::MO_DLLIMPORT:
     // Handle dllimport linkage.
     Name += "__imp_";
     break;
+#endif
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY:
   case X86II::MO_DARWIN_NONLAZY_PIC_BASE:
     Suffix = "$non_lazy_ptr";
     break;
+#endif
   }
 
   if (!Suffix.empty())
@@ -160,6 +168,7 @@ GetSymbolFromOperand(const MachineOperand &MO) const {
   // before we return the symbol.
   switch (MO.getTargetFlags()) {
   default: break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY:
   case X86II::MO_DARWIN_NONLAZY_PIC_BASE: {
     MachineModuleInfoImpl::StubValueTy &StubSym =
@@ -173,6 +182,7 @@ GetSymbolFromOperand(const MachineOperand &MO) const {
     }
     break;
   }
+#endif
   }
 
   return Sym;
@@ -189,8 +199,12 @@ MCOperand X86MCInstLower::LowerSymbolOperand(const MachineOperand &MO,
   default: llvm_unreachable("Unknown target flag on GV operand");
   case X86II::MO_NO_FLAG:    // No flag.
   // These affect the name of the symbol, not any suffix.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY:
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case X86II::MO_DLLIMPORT:
+#endif
     break;
 
   case X86II::MO_TLVP:      RefKind = MCSymbolRefExpr::VK_TLVP; break;
@@ -217,7 +231,9 @@ MCOperand X86MCInstLower::LowerSymbolOperand(const MachineOperand &MO,
   case X86II::MO_GOTOFF:    RefKind = MCSymbolRefExpr::VK_GOTOFF; break;
   case X86II::MO_PLT:       RefKind = MCSymbolRefExpr::VK_PLT; break;
   case X86II::MO_PIC_BASE_OFFSET:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // should i include prev one too?
   case X86II::MO_DARWIN_NONLAZY_PIC_BASE:
+#endif
     Expr = MCSymbolRefExpr::create(Sym, Ctx);
     // Subtract the pic base.
     Expr = MCBinaryExpr::createSub(Expr,

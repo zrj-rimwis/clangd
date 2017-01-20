@@ -308,9 +308,13 @@ static inline Comdat *getOrCreateProfileComdat(Module &M, Function &F,
   // name. The linker targeting COFF also requires that the COMDAT
   // a section is associated to must precede the associating section. For this
   // reason, we must choose the counter var's name as the name of the comdat.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   StringRef ComdatPrefix = (Triple(M.getTargetTriple()).isOSBinFormatCOFF()
                                 ? getInstrProfCountersVarPrefix()
                                 : getInstrProfComdatPrefix());
+#else
+  StringRef ComdatPrefix = getInstrProfComdatPrefix();
+#endif
   return M.getOrInsertComdat(StringRef(getVarName(Inc, ComdatPrefix)));
 }
 

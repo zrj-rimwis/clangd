@@ -935,10 +935,15 @@ bool CodeGenModule::HasHiddenLTOVisibility(const CXXRecordDecl *RD) {
 #endif
     return false;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (getTriple().isOSBinFormatCOFF()) {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     if (RD->hasAttr<DLLExportAttr>() || RD->hasAttr<DLLImportAttr>())
       return false;
+#endif
+#else
+  if (false) {
+    /* dummy */
 #endif
   } else {
     if (LV.getVisibility() != HiddenVisibility)

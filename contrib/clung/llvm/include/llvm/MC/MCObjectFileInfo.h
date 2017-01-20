@@ -126,8 +126,10 @@ protected:
   /// Section for newer gnu pubtypes.
   MCSection *DwarfGnuPubTypesSection;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   MCSection *COFFDebugSymbolsSection;
   MCSection *COFFDebugTypesSection;
+#endif
 
   /// Extra TLS Variable Data section.
   ///
@@ -188,10 +190,12 @@ protected:
   MCSection *ThreadLocalPointerSection;
 
   /// COFF specific sections.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   MCSection *DrectveSection;
   MCSection *PDataSection;
   MCSection *XDataSection;
   MCSection *SXDataSection;
+#endif
 
 public:
   void InitMCObjectFileInfo(const Triple &TT, bool PIC, CodeModel::Model CM,
@@ -270,12 +274,14 @@ public:
   MCSection *getDwarfCUIndexSection() const { return DwarfCUIndexSection; }
   MCSection *getDwarfTUIndexSection() const { return DwarfTUIndexSection; }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   MCSection *getCOFFDebugSymbolsSection() const {
     return COFFDebugSymbolsSection;
   }
   MCSection *getCOFFDebugTypesSection() const {
     return COFFDebugTypesSection;
   }
+#endif
 
 
   MCSection *getTLSExtraDataSection() const { return TLSExtraDataSection; }
@@ -301,6 +307,7 @@ public:
   }
 
   // MachO specific sections.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   const MCSection *getTLSTLVSection() const { return TLSTLVSection; }
   const MCSection *getTLSThreadInitSection() const {
     return TLSThreadInitSection;
@@ -333,18 +340,33 @@ public:
   MCSection *getThreadLocalPointerSection() const {
     return ThreadLocalPointerSection;
   }
+#endif
 
   // COFF specific sections.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   MCSection *getDrectveSection() const { return DrectveSection; }
   MCSection *getPDataSection() const { return PDataSection; }
   MCSection *getXDataSection() const { return XDataSection; }
   MCSection *getSXDataSection() const { return SXDataSection; }
+#endif
 
   MCSection *getEHFrameSection() {
     return EHFrameSection;
   }
 
-  enum Environment { IsMachO, IsELF, IsCOFF };
+  enum Environment {
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // rewrite
+    IsMachO,
+#else
+    IsMachO_disabled,
+#endif
+    IsELF,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
+    IsCOFF,
+#else
+    IsCOFF_disabled
+#endif
+  };
   Environment getObjectFileType() const { return Env; }
 
   bool isPositionIndependent() const { return PositionIndependent; }
@@ -356,9 +378,13 @@ private:
   MCContext *Ctx;
   Triple TT;
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   void initMachOMCObjectFileInfo(const Triple &T);
+#endif
   void initELFMCObjectFileInfo(const Triple &T);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   void initCOFFMCObjectFileInfo(const Triple &T);
+#endif
 
 public:
   const Triple &getTargetTriple() const { return TT; }

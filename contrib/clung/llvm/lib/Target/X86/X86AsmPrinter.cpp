@@ -30,13 +30,17 @@
 #include "llvm/MC/MCCodeEmitter.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
 #endif
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSymbol.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetRegistry.h"
@@ -58,6 +62,7 @@ bool X86AsmPrinter::runOnMachineFunction(MachineFunction &MF) {
 
   SetupMachineFunction(MF);
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (Subtarget->isTargetCOFF()) {
     bool Intrn = MF.getFunction()->hasInternalLinkage();
     OutStreamer->BeginCOFFSymbolDef(CurrentFnSym);
@@ -67,6 +72,7 @@ bool X86AsmPrinter::runOnMachineFunction(MachineFunction &MF) {
                                                << COFF::SCT_COMPLEX_TYPE_SHIFT);
     OutStreamer->EndCOFFSymbolDef();
   }
+#endif
 
   // Emit the rest of the function body.
   EmitFunctionBody();
@@ -93,17 +99,26 @@ static void printSymbolOperand(X86AsmPrinter &P, const MachineOperand &MO,
     const GlobalValue *GV = MO.getGlobal();
 
     MCSymbol *GVSym;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false
     if (MO.getTargetFlags() == X86II::MO_DARWIN_NONLAZY ||
         MO.getTargetFlags() == X86II::MO_DARWIN_NONLAZY_PIC_BASE)
       GVSym = P.getSymbolWithGlobalValueBase(GV, "$non_lazy_ptr");
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else
       GVSym = P.getSymbol(GV);
 
     // Handle dllimport linkage.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume not
     if (MO.getTargetFlags() == X86II::MO_DLLIMPORT)
       GVSym =
           P.OutContext.getOrCreateSymbol(Twine("__imp_") + GVSym->getName());
+#endif
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false
     if (MO.getTargetFlags() == X86II::MO_DARWIN_NONLAZY ||
         MO.getTargetFlags() == X86II::MO_DARWIN_NONLAZY_PIC_BASE) {
       MCSymbol *Sym = P.getSymbolWithGlobalValueBase(GV, "$non_lazy_ptr");
@@ -113,6 +128,7 @@ static void printSymbolOperand(X86AsmPrinter &P, const MachineOperand &MO,
         StubSym = MachineModuleInfoImpl::
           StubValueTy(P.getSymbol(GV), !GV->hasInternalLinkage());
     }
+#endif
 
     // If the name begins with a dollar-sign, enclose it in parens.  We do this
     // to avoid having it look like an integer immediate to the assembler.
@@ -133,8 +149,12 @@ static void printSymbolOperand(X86AsmPrinter &P, const MachineOperand &MO,
     llvm_unreachable("Unknown target flag on GV operand");
   case X86II::MO_NO_FLAG:    // No flag.
     break;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY:
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case X86II::MO_DLLIMPORT:
+#endif
     // These affect the name of the symbol, not any suffix.
     break;
   case X86II::MO_GOT_ABSOLUTE_ADDRESS:
@@ -143,7 +163,9 @@ static void printSymbolOperand(X86AsmPrinter &P, const MachineOperand &MO,
     O << ']';
     break;
   case X86II::MO_PIC_BASE_OFFSET:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case X86II::MO_DARWIN_NONLAZY_PIC_BASE:
+#endif
     O << '-';
     P.MF->getPICBaseSymbol()->print(O, P.MAI);
     break;
@@ -505,6 +527,7 @@ void X86AsmPrinter::EmitStartOfAsmFile(Module &M) {
     OutStreamer->SwitchSection(getObjFileLowering().getTextSection());
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (TT.isOSBinFormatCOFF()) {
     // Emit an absolute @feat.00 symbol.  This appears to be some kind of
     // compiler features bitfield read by link.exe.
@@ -524,6 +547,7 @@ void X86AsmPrinter::EmitStartOfAsmFile(Module &M) {
           S, MCConstantExpr::create(int64_t(1), MMI->getContext()));
     }
   }
+#endif
   OutStreamer->EmitSyntaxDirective();
 
   // If this is not inline asm and we're in 16-bit
@@ -629,6 +653,7 @@ void X86AsmPrinter::EmitEndOfAsmFile(Module &M) {
   }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   if (TT.isOSBinFormatCOFF()) {
     const TargetLoweringObjectFileCOFF &TLOFCOFF =
         static_cast<const TargetLoweringObjectFileCOFF&>(getObjFileLowering());
@@ -653,6 +678,7 @@ void X86AsmPrinter::EmitEndOfAsmFile(Module &M) {
 
     SM.serializeToStackMapSection();
   }
+#endif
 
   if (TT.isOSBinFormatELF()) {
     SM.serializeToStackMapSection();

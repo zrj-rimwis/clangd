@@ -89,7 +89,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
 
   // memset_pattern16 is only available on iOS 3.0 and Mac OS X 10.5 and later.
   // All versions of watchOS support it.
-#ifdef LLVM_ENABLE_MACHO // __DragonFly__
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // why this one leaks to others?
   if (T.isMacOSX()) {
     if (T.isMacOSXVersionLT(10, 5))
       TLI.setUnavailable(LibFunc::memset_pattern16);
@@ -98,7 +98,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
       TLI.setUnavailable(LibFunc::memset_pattern16);
   } else if (!T.isWatchOS()) {
 #else
-  {
+  if (true) {
 #endif
     TLI.setUnavailable(LibFunc::memset_pattern16);
   }
@@ -132,6 +132,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     TLI.setUnavailable(LibFunc::fiprintf);
   }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false && !false
   if (T.isOSWindows() && !T.isOSCygMing()) {
     // Win32 does not support long double
     TLI.setUnavailable(LibFunc::acosl);
@@ -295,6 +296,7 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     TLI.setUnavailable(LibFunc::frexpf);
     TLI.setUnavailable(LibFunc::llabs);
   }
+#endif
 
   switch (T.getOS()) {
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__

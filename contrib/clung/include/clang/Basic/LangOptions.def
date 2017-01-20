@@ -263,7 +263,9 @@ BENIGN_LANGOPT(NumLargeByValueCopy, 32, 0,
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__
 VALUE_LANGOPT(MSCompatibilityVersion, 32, 0, "Microsoft Visual C/C++ Version")
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 VALUE_LANGOPT(VtorDispMode, 2, 1, "How many vtordisps to insert")
+#endif
 
 LANGOPT(ApplePragmaPack, 1, 0, "Apple gcc-compatible #pragma pack handling")
 

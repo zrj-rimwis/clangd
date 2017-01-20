@@ -149,10 +149,12 @@ void AsmPrinter::emitDwarfSymbolReference(const MCSymbol *Label,
                                           bool ForceOffset) const {
   if (!ForceOffset) {
     // On COFF targets, we have to emit the special .secrel32 directive.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // only for COFF, XXX check useSplitDwarf()
     if (MAI->needsDwarfSectionOffsetDirective()) {
       OutStreamer->EmitCOFFSecRel32(Label);
       return;
     }
+#endif
 
     // If the format uses relocations with dwarf, refer to the symbol directly.
     if (MAI->doesDwarfUseRelocationsAcrossSections()) {

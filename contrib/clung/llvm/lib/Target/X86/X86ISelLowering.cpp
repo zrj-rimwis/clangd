@@ -126,10 +126,12 @@ X86TargetLowering::X86TargetLowering(const X86TargetMachine &TM,
     // Darwin should use _setjmp/_longjmp instead of setjmp/longjmp.
     setUseUnderscoreSetJmp(false);
     setUseUnderscoreLongJmp(false);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   } else if (Subtarget.isTargetWindowsGNU()) {
     // MS runtime is weird: it exports _setjmp, but longjmp!
     setUseUnderscoreSetJmp(true);
     setUseUnderscoreLongJmp(false);
+#endif
   } else {
     setUseUnderscoreSetJmp(true);
     setUseUnderscoreLongJmp(true);
@@ -13288,6 +13290,7 @@ X86TargetLowering::LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const {
     return DAG.getCopyFromReg(Chain, DL, Reg, PtrVT, Chain.getValue(1));
   }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false || false || false
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (Subtarget.isTargetKnownWindowsMSVC() ||
 #else
@@ -13359,6 +13362,7 @@ X86TargetLowering::LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const {
     // pointer with the offset of the variable.
     return DAG.getNode(ISD::ADD, dl, PtrVT, res, Offset);
   }
+#endif
 
   llvm_unreachable("TLS not implemented for this target.");
 }
@@ -16893,7 +16897,11 @@ X86TargetLowering::LowerDYNAMIC_STACKALLOC(SDValue Op,
                                            SelectionDAG &DAG) const {
   MachineFunction &MF = DAG.getMachineFunction();
   bool SplitStack = MF.shouldSplitStack();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool Lower = (Subtarget.isOSWindows() && !Subtarget.isTargetMachO()) ||
+#else
+  bool Lower = (false) ||
+#endif
                SplitStack;
   SDLoc dl(Op);
 

@@ -3393,11 +3393,19 @@ bool Sema::SemaBuiltinVAStart(CallExpr *TheCall) {
     clang::CallingConv CC = CC_C;
     if (const FunctionDecl *FD = getCurFunctionDecl())
       CC = FD->getType()->getAs<FunctionType>()->getCallConv();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // a bit confussing but looks good
     if ((OS == llvm::Triple::Win32 && CC == CC_X86_64SysV) ||
         (OS != llvm::Triple::Win32 && CC == CC_X86_64Win64))
+#else
+    if (false || (true && CC == CC_X86_64Win64))
+#endif
       return Diag(TheCall->getCallee()->getLocStart(),
                   diag::err_va_start_used_in_wrong_abi_function)
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // so why masking?
              << (OS != llvm::Triple::Win32);
+#else
+             << false;
+#endif
   }
   return SemaBuiltinVAStartImpl(TheCall);
 }
@@ -3416,7 +3424,11 @@ bool Sema::SemaBuiltinMSVAStart(CallExpr *TheCall) {
   if (const FunctionDecl *FD = getCurFunctionDecl())
     CC = FD->getType()->getAs<FunctionType>()->getCallConv();
   if (CC == CC_X86_64SysV ||
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
       (TT.getOS() != llvm::Triple::Win32 && CC != CC_X86_64Win64))
+#else
+      (true && CC != CC_X86_64Win64))
+#endif
     return Diag(Callee->getLocStart(),
                 diag::err_ms_va_start_used_in_sysv_function);
   return SemaBuiltinVAStartImpl(TheCall);

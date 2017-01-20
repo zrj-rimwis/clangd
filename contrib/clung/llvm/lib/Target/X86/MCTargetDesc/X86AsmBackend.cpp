@@ -20,7 +20,9 @@
 #endif
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCRegisterInfo.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #include "llvm/MC/MCSectionELF.h"
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
@@ -432,6 +434,7 @@ public:
   }
 };
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 class WindowsX86AsmBackend : public X86AsmBackend {
   bool Is64Bit;
 
@@ -453,6 +456,7 @@ public:
     return createX86WinCOFFObjectWriter(OS, Is64Bit);
   }
 };
+#endif
 
 namespace CU {
 
@@ -855,8 +859,10 @@ MCAsmBackend *llvm::createX86_32AsmBackend(const Target &T,
     return new DarwinX86_32AsmBackend(T, MRI, CPU);
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
   if (TheTriple.isOSWindows() && TheTriple.isOSBinFormatCOFF())
     return new WindowsX86AsmBackend(T, false, CPU);
+#endif
 
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
 
@@ -880,8 +886,10 @@ MCAsmBackend *llvm::createX86_64AsmBackend(const Target &T,
   }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
   if (TheTriple.isOSWindows() && TheTriple.isOSBinFormatCOFF())
     return new WindowsX86AsmBackend(T, true, CPU);
+#endif
 
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
 

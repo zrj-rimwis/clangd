@@ -7933,9 +7933,18 @@ X86InstrInfo::getSerializableDirectMachineOperandTargetFlags() const {
       {MO_DTPOFF, "x86-dtpoff"},
       {MO_NTPOFF, "x86-ntpoff"},
       {MO_GOTNTPOFF, "x86-gotntpoff"},
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume need the mangling
       {MO_DLLIMPORT, "x86-dllimport"},
+#else
+      {MO_DLLIMPORT_disabled, "x86-dllimport"},
+#endif
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // smth fishy
       {MO_DARWIN_NONLAZY, "x86-darwin-nonlazy"},
       {MO_DARWIN_NONLAZY_PIC_BASE, "x86-darwin-nonlazy-pic-base"},
+#else
+      {MO_DARWIN_NONLAZY_disabled, "x86-darwin-nonlazy"},
+      {MO_DARWIN_NONLAZY_PIC_BASE_disabled, "x86-darwin-nonlazy-pic-base"},
+#endif
       {MO_TLVP, "x86-tlvp"},
       {MO_TLVP_PIC_BASE, "x86-tlvp-pic-base"},
       {MO_SECREL, "x86-secrel"}};

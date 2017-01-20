@@ -128,15 +128,19 @@ bool X86CallFrameOptimization::isLegal(MachineFunction &MF) {
   // We can't encode multiple DW_CFA_GNU_args_size or DW_CFA_def_cfa_offset
   // in the compact unwind encoding that Darwin uses. So, bail if there
   // is a danger of that being generated.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume false && smth
   if (STI->isTargetDarwin() &&
       (!MF.getMMI().getLandingPads().empty() ||
        (MF.getFunction()->needsUnwindTableEntry() && !TFL->hasFP(MF))))
     return false;
+#endif
 
   // It is not valid to change the stack pointer outside the prolog/epilog
   // on 64-bit Windows.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (STI->isTargetWin64())
     return false;
+#endif
 
   // You would expect straight-line code between call-frame setup and
   // call-frame destroy. You would be wrong. There are circumstances (e.g.

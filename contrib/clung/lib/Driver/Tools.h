@@ -34,9 +34,11 @@ class MachO;
 
 namespace tools {
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 namespace visualstudio {
 class Compiler;
 }
+#endif
 
 using llvm::opt::ArgStringList;
 
@@ -736,6 +738,7 @@ public:
 #endif
 
 /// MinGW -- Directly call GNU Binutils assembler and linker
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 namespace MinGW {
 class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
 public:
@@ -765,6 +768,7 @@ private:
   void AddLibGCC(const llvm::opt::ArgList &Args, ArgStringList &CmdArgs) const;
 };
 } // end namespace MinGW
+#endif
 
 namespace arm {
 enum class FloatABI {
@@ -825,6 +829,7 @@ public:
 };
 } // end namespace XCore.
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 namespace CrossWindows {
 class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
 public:
@@ -852,6 +857,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 } // end namespace CrossWindows
+#endif
 
 /// SHAVE tools -- Directly call moviCompile and moviAsm
 namespace SHAVE {

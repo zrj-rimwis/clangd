@@ -31,7 +31,9 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Object/COFF.h"
+#endif
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/TargetRegistry.h"
@@ -281,8 +283,10 @@ public:
       /* dummy */
     }
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     else if (Triple.isOSBinFormatCOFF())
       ASTSym->setSection("clangast");
+#endif
     else
       ASTSym->setSection("__clangast");
 
@@ -324,13 +328,20 @@ void ObjectFilePCHContainerReader::ExtractPCH(
     llvm::MemoryBufferRef Buffer, llvm::BitstreamReader &StreamFile) const {
   if (auto OF = llvm::object::ObjectFile::createObjectFile(Buffer)) {
     auto *Obj = OF.get().get();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false and constify
     bool IsCOFF = isa<llvm::object::COFFObjectFile>(Obj);
+#endif
     // Find the clang AST section in the container.
     for (auto &Section : OF->get()->sections()) {
       StringRef Name;
       Section.getName(Name);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // a bit confusing
       if ((!IsCOFF && Name == "__clangast") ||
           ( IsCOFF && Name ==   "clangast")) {
+#else
+      if ((!false && Name == "__clangast") ||
+          ( false && Name ==   "clangast")) {
+#endif
         StringRef Buf;
         Section.getContents(Buf);
         StreamFile.init((const unsigned char *)Buf.begin(),

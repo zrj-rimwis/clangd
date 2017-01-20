@@ -19,12 +19,16 @@
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSection.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #include "llvm/MC/MCSymbol.h"
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__
 #include "llvm/MC/MCWin64EH.h"
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/raw_ostream.h"
@@ -128,13 +132,23 @@ void MCStreamer::EmitValue(const MCExpr *Value, unsigned Size, SMLoc Loc) {
 
 void MCStreamer::EmitSymbolValue(const MCSymbol *Sym, unsigned Size,
                                  bool IsSectionRelative) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   assert((!IsSectionRelative || Size == 4) &&
+#else
+  assert((!false || Size == 4) &&
+#endif
          "SectionRelative value requires 4-bytes");
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false, can it be not hardcoded?
   if (!IsSectionRelative)
+#else
+  if (!false)
+#endif
     EmitValueImpl(MCSymbolRefExpr::create(Sym, getContext()), Size);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // this is the hidden COFF case
   else
     EmitCOFFSecRel32(Sym);
+#endif
 }
 
 void MCStreamer::EmitGPRel64Value(const MCExpr *Value) {
@@ -544,6 +558,7 @@ void MCStreamer::EmitWinEHHandlerData() {
 }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 static MCSection *getWinCFISection(MCContext &Context, unsigned *NextWinCFIID,
                                    MCSection *MainCFISec,
                                    const MCSection *TextSec) {
@@ -576,6 +591,7 @@ MCSection *MCStreamer::getAssociatedXDataSection(const MCSection *TextSec) {
                           getContext().getObjectFileInfo()->getXDataSection(),
                           TextSec);
 }
+#endif
 #endif
 
 void MCStreamer::EmitSyntaxDirective() {}
@@ -683,6 +699,7 @@ void MCStreamer::EmitWinCFIEndProlog() {
 }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MCStreamer::EmitCOFFSafeSEH(MCSymbol const *Symbol) {
 }
 
@@ -691,6 +708,7 @@ void MCStreamer::EmitCOFFSectionIndex(MCSymbol const *Symbol) {
 
 void MCStreamer::EmitCOFFSecRel32(MCSymbol const *Symbol) {
 }
+#endif
 
 /// EmitRawText - If this file is backed by an assembly streamer, this dumps
 /// the specified string in the output .s file.  This capability is
@@ -793,11 +811,15 @@ void MCStreamer::emitAbsoluteSymbolDiff(const MCSymbol *Hi, const MCSymbol *Lo,
 void MCStreamer::EmitAssemblerFlag(MCAssemblerFlag Flag) {}
 void MCStreamer::EmitThumbFunc(MCSymbol *Func) {}
 void MCStreamer::EmitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) {}
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MCStreamer::BeginCOFFSymbolDef(const MCSymbol *Symbol) {}
 void MCStreamer::EndCOFFSymbolDef() {}
+#endif
 void MCStreamer::EmitFileDirective(StringRef Filename) {}
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MCStreamer::EmitCOFFSymbolStorageClass(int StorageClass) {}
 void MCStreamer::EmitCOFFSymbolType(int Type) {}
+#endif
 void MCStreamer::emitELFSize(MCSymbolELF *Symbol, const MCExpr *Value) {}
 void MCStreamer::EmitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
                                        unsigned ByteAlignment) {}

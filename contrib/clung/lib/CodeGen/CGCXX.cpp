@@ -173,10 +173,12 @@ bool CodeGenModule::TryEmitDefinitionAsAlias(GlobalDecl AliasDecl,
   // A COFF weak external alias cannot satisfy a normal undefined symbol
   // reference from another TU. The other TU must also mark the referenced
   // symbol as weak, which we cannot rely on.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (llvm::GlobalValue::isWeakForLinker(Linkage) &&
       getTriple().isOSBinFormatCOFF()) {
     return true;
   }
+#endif
 
   if (!InEveryTU) {
     // If we don't have a definition for the destructor yet, don't

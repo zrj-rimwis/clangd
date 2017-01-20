@@ -157,8 +157,10 @@ const char *DataLayout::getManglingComponent(const Triple &T) {
   if (T.isOSBinFormatMachO())
     return "-m:o";
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
   if (T.isOSWindows() && T.isOSBinFormatCOFF())
     return T.getArch() == Triple::x86 ? "-m:x" : "-m:w";
+#endif
   return "-m:e";
 }
 

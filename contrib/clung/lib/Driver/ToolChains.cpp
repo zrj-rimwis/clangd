@@ -2703,13 +2703,21 @@ bool Generic_GCC::IsUnwindTablesDefault() const {
 }
 
 bool Generic_GCC::isPICDefault() const {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume smth && false, silly
   return getArch() == llvm::Triple::x86_64 && getTriple().isOSWindows();
+#else
+  return false;
+#endif
 }
 
 bool Generic_GCC::isPIEDefault() const { return false; }
 
 bool Generic_GCC::isPICDefaultForced() const {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // this is stupid, fix isPICDefault()
   return getArch() == llvm::Triple::x86_64 && getTriple().isOSWindows();
+#else
+  return false;
+#endif
 }
 
 bool Generic_GCC::IsIntegratedAssemblerDefault() const {

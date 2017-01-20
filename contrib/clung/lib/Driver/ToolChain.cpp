@@ -299,17 +299,27 @@ std::string ToolChain::getCompilerRT(const ArgList &Args, StringRef Component,
                                      bool Shared) const {
   const llvm::Triple &TT = getTriple();
   const char *Env = TT.isAndroid() ? "-android" : "";
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false and constify
   bool IsITANMSVCWindows =
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__ // ehem
       TT.isWindowsMSVCEnvironment() || TT.isWindowsItaniumEnvironment();
 #else
       false || TT.isWindowsItaniumEnvironment();
 #endif
+#endif
 
   StringRef Arch = getArchNameForCompilerRTLib(*this, Args);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   const char *Prefix = IsITANMSVCWindows ? "" : "lib";
+#else
+  const char *Prefix = "lib";
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // wow
   const char *Suffix = Shared ? (Triple.isOSWindows() ? ".dll" : ".so")
                               : (IsITANMSVCWindows ? ".lib" : ".a");
+#else
+  const char *Suffix = Shared ? ".so" :  ".a";
+#endif
 
   SmallString<128> Path(getDriver().ResourceDir);
   StringRef OSLibName = Triple.isOSFreeBSD() ? "freebsd" : getOS();
@@ -506,8 +516,10 @@ std::string ToolChain::ComputeLLVMTriple(const ArgList &Args,
                                        false);
 #endif
     // FIXME: this is invalid for WindowsCE
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (getTriple().isOSWindows())
       ThumbDefault = true;
+#endif
     std::string ArchName;
     if (IsBigEndian)
       ArchName = "armeb";

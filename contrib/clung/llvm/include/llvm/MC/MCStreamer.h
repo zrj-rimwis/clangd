@@ -459,6 +459,7 @@ public:
   /// \brief Start emitting COFF symbol definition
   ///
   /// \param Symbol - The symbol to have its External & Type fields set.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   virtual void BeginCOFFSymbolDef(const MCSymbol *Symbol);
 
   /// \brief Emit the storage class of the symbol.
@@ -485,6 +486,7 @@ public:
   ///
   /// \param Symbol - Symbol the section relative relocation should point to.
   virtual void EmitCOFFSecRel32(MCSymbol const *Symbol);
+#endif
 
   /// \brief Emit an ELF .size directive.
   ///

@@ -92,7 +92,9 @@ MCAsmInfo::MCAsmInfo() {
   DwarfUsesRelocationsAcrossSections = true;
   DwarfFDESymbolsUseAbsDiff = false;
   DwarfRegNumForCFI = false;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   NeedsDwarfSectionOffsetDirective = false;
+#endif
   UseParensForSymbolVariant = false;
   UseLogicalShr = true;
 

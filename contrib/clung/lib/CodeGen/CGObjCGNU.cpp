@@ -1075,6 +1075,7 @@ llvm::Value *CGObjCGNU::GetClass(CodeGenFunction &CGF,
                                  const ObjCInterfaceDecl *OID) {
   auto *Value =
       GetClassNamed(CGF, OID->getNameAsString(), OID->isWeakImported());
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     if (auto *ClassSymbol = dyn_cast<llvm::GlobalVariable>(Value)) {
       auto DLLStorage = llvm::GlobalValue::DefaultStorageClass;
@@ -1087,11 +1088,13 @@ llvm::Value *CGObjCGNU::GetClass(CodeGenFunction &CGF,
       ClassSymbol->setDLLStorageClass(DLLStorage);
     }
   }
+#endif
   return Value;
 }
 
 llvm::Value *CGObjCGNU::EmitNSAutoreleasePoolClassRef(CodeGenFunction &CGF) {
   auto *Value  = GetClassNamed(CGF, "NSAutoreleasePool", false);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     if (auto *ClassSymbol = dyn_cast<llvm::GlobalVariable>(Value)) {
       IdentifierInfo &II = CGF.CGM.getContext().Idents.get("NSAutoreleasePool");
@@ -1114,6 +1117,7 @@ llvm::Value *CGObjCGNU::EmitNSAutoreleasePoolClassRef(CodeGenFunction &CGF) {
       ClassSymbol->setDLLStorageClass(DLLStorage);
     }
   }
+#endif
   return Value;
 }
 
@@ -2391,6 +2395,7 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
       NULLPtr, NULLPtr, 0x12L, ClassName.c_str(), nullptr, Zeros[0],
       GenerateIvarList(empty, empty, empty), ClassMethodList, NULLPtr, NULLPtr,
       NULLPtr, ZeroPtr, ZeroPtr, true);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     auto Storage = llvm::GlobalValue::DefaultStorageClass;
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -2401,6 +2406,7 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
 #endif
     cast<llvm::GlobalValue>(MetaClassStruct)->setDLLStorageClass(Storage);
   }
+#endif
 
   // Generate the class structure
   llvm::Constant *ClassStruct = GenerateClassStructure(
@@ -2408,6 +2414,7 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
       llvm::ConstantInt::get(LongTy, instanceSize), IvarList, MethodList,
       GenerateProtocolList(Protocols), IvarOffsetArray, Properties,
       StrongIvarBitmap, WeakIvarBitmap);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (CGM.getTriple().isOSBinFormatCOFF()) {
     auto Storage = llvm::GlobalValue::DefaultStorageClass;
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
@@ -2418,6 +2425,7 @@ void CGObjCGNU::GenerateClass(const ObjCImplementationDecl *OID) {
 #endif
     cast<llvm::GlobalValue>(ClassStruct)->setDLLStorageClass(Storage);
   }
+#endif
 
   // Resolve the class aliases, if they exist.
   if (ClassPtrAlias) {

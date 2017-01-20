@@ -58,7 +58,9 @@ X86RegisterInfo::X86RegisterInfo(const Triple &TT)
 
   // Cache some information.
   Is64Bit = TT.isArch64Bit();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false and constify
   IsWin64 = Is64Bit && TT.isOSWindows();
+#endif
 
   // Use a callee-saved register as the base pointer.  These registers must
   // not conflict with any ABI requirements.  For example, in 32-bit mode PIC
@@ -199,7 +201,11 @@ X86RegisterInfo::getPointerRegClass(const MachineFunction &MF,
 const TargetRegisterClass *
 X86RegisterInfo::getGPRsForTailCall(const MachineFunction &MF) const {
   const Function *F = MF.getFunction();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // note keep for uefi 2nd part
   if (IsWin64 || (F && F->getCallingConv() == CallingConv::X86_64_Win64))
+#else
+  if (false || (F && F->getCallingConv() == CallingConv::X86_64_Win64))
+#endif
     return &X86::GR64_TCW64RegClass;
   else if (Is64Bit)
     return &X86::GR64_TCRegClass;
@@ -270,15 +276,23 @@ X86RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
              CSR_64_CXX_TLS_Darwin_PE_SaveList : CSR_64_TLS_Darwin_SaveList;
     break;
   case CallingConv::Intel_OCL_BI: {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // prune these from X86GenRegisterInfo.inc
     if (HasAVX512 && IsWin64)
       return CSR_Win64_Intel_OCL_BI_AVX512_SaveList;
+#endif
     if (HasAVX512 && Is64Bit)
       return CSR_64_Intel_OCL_BI_AVX512_SaveList;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (HasAVX && IsWin64)
       return CSR_Win64_Intel_OCL_BI_AVX_SaveList;
+#endif
     if (HasAVX && Is64Bit)
       return CSR_64_Intel_OCL_BI_AVX_SaveList;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
     if (!HasAVX && !IsWin64 && Is64Bit)
+#else
+    if (!HasAVX && !false && Is64Bit)
+#endif
       return CSR_64_Intel_OCL_BI_SaveList;
     break;
   }
@@ -315,8 +329,10 @@ X86RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   }
 
   if (Is64Bit) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     if (IsWin64)
       return CSR_Win64_SaveList;
+#endif
     if (CallsEHReturn)
       return CSR_64EHRet_SaveList;
     if (Subtarget.getTargetLowering()->supportSwiftError() &&
@@ -366,15 +382,23 @@ X86RegisterInfo::getCallPreservedMask(const MachineFunction &MF,
       return CSR_64_TLS_Darwin_RegMask;
     break;
   case CallingConv::Intel_OCL_BI: {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // prune these from .td
     if (HasAVX512 && IsWin64)
       return CSR_Win64_Intel_OCL_BI_AVX512_RegMask;
+#endif
     if (HasAVX512 && Is64Bit)
       return CSR_64_Intel_OCL_BI_AVX512_RegMask;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (HasAVX && IsWin64)
       return CSR_Win64_Intel_OCL_BI_AVX_RegMask;
+#endif
     if (HasAVX && Is64Bit)
       return CSR_64_Intel_OCL_BI_AVX_RegMask;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume !false
     if (!HasAVX && !IsWin64 && Is64Bit)
+#else
+    if (!HasAVX && !false && Is64Bit)
+#endif
       return CSR_64_Intel_OCL_BI_RegMask;
     break;
   }
@@ -411,8 +435,10 @@ X86RegisterInfo::getCallPreservedMask(const MachineFunction &MF,
   // Unlike getCalleeSavedRegs(), we don't have MMI so we can't check
   // callsEHReturn().
   if (Is64Bit) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (IsWin64)
       return CSR_Win64_RegMask;
+#endif
     if (Subtarget.getTargetLowering()->supportSwiftError() &&
         MF.getFunction()->getAttributes().hasAttrSomewhere(
             Attribute::SwiftError))

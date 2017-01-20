@@ -1893,7 +1893,9 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.PascalStrings = Args.hasArg(OPT_fpascal_strings);
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   Opts.VtorDispMode = getLastArgIntValue(Args, OPT_vtordisp_mode_EQ, 1, Diags);
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   Opts.Borland = Args.hasArg(OPT_fborland_extensions);
 #endif

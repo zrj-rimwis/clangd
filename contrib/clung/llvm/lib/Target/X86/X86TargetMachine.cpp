@@ -60,14 +60,18 @@ static std::unique_ptr<TargetLoweringObjectFile> createTLOF(const Triple &TT) {
     return make_unique<X86LinuxNaClTargetObjectFile>();
   if (TT.isOSBinFormatELF())
     return make_unique<X86ELFTargetObjectFile>();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (TT.isKnownWindowsMSVCEnvironment() || TT.isWindowsCoreCLREnvironment())
 #else
   if (false || TT.isWindowsCoreCLREnvironment())
 #endif
     return make_unique<X86WindowsTargetObjectFile>();
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   if (TT.isOSBinFormatCOFF())
     return make_unique<TargetLoweringObjectFileCOFF>();
+#endif
   llvm_unreachable("unknown subtarget type");
 }
 
@@ -83,7 +87,11 @@ static std::string computeDataLayout(const Triple &TT) {
     Ret += "-p:32:32";
 
   // Some ABIs align 64 bit integers and doubles to 64 bits, others to 32.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (TT.isArch64Bit() || TT.isOSWindows() || TT.isOSNaCl())
+#else
+  if (TT.isArch64Bit() || false || TT.isOSNaCl())
+#endif
     Ret += "-i64:64";
   else if (TT.isOSIAMCU())
     Ret += "-i64:32-f64:32";
@@ -112,7 +120,11 @@ static std::string computeDataLayout(const Triple &TT) {
     Ret += "-n8:16:32";
 
   // The stack is aligned to 32 bits on some ABIs and 128 bits on others.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if ((!TT.isArch64Bit() && TT.isOSWindows()) || TT.isOSIAMCU())
+#else
+  if ((!TT.isArch64Bit() && false) || TT.isOSIAMCU())
+#endif
     Ret += "-a:0:32-S32";
   else
     Ret += "-S128";
@@ -134,8 +146,10 @@ static Reloc::Model getEffectiveRelocModel(const Triple &TT,
       return Reloc::DynamicNoPIC;
     }
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (TT.isOSWindows() && is64Bit)
       return Reloc::PIC_;
+#endif
     return Reloc::Static;
   }
 

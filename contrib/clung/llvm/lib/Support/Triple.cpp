@@ -182,7 +182,9 @@ const char *Triple::getOSTypeName(OSType Kind) {
   case NetBSD: return "netbsd";
   case OpenBSD: return "openbsd";
   case Solaris: return "solaris";
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case Win32: return "windows";
+#endif
   case Haiku: return "haiku";
   case Minix: return "minix";
   case RTEMS: return "rtems";
@@ -224,9 +226,13 @@ const char *Triple::getEnvironmentTypeName(EnvironmentType Kind) {
   case MSVC: return "msvc";
 #endif
   case Itanium: return "itanium";
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case Cygnus: return "cygnus";
+#endif
   case AMDOpenCL: return "amdopencl";
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case CoreCLR: return "coreclr";
+#endif
   }
 
   llvm_unreachable("Invalid EnvironmentType!");
@@ -461,8 +467,10 @@ static Triple::OSType parseOS(StringRef OSName) {
     .StartsWith("netbsd", Triple::NetBSD)
     .StartsWith("openbsd", Triple::OpenBSD)
     .StartsWith("solaris", Triple::Solaris)
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     .StartsWith("win32", Triple::Win32)
     .StartsWith("windows", Triple::Win32)
+#endif
     .StartsWith("haiku", Triple::Haiku)
     .StartsWith("minix", Triple::Minix)
     .StartsWith("rtems", Triple::RTEMS)
@@ -501,15 +509,21 @@ static Triple::EnvironmentType parseEnvironment(StringRef EnvironmentName) {
     .StartsWith("msvc", Triple::MSVC)
 #endif
     .StartsWith("itanium", Triple::Itanium)
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     .StartsWith("cygnus", Triple::Cygnus)
+#endif
     .StartsWith("amdopencl", Triple::AMDOpenCL)
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     .StartsWith("coreclr", Triple::CoreCLR)
+#endif
     .Default(Triple::UnknownEnvironment);
 }
 
 static Triple::ObjectFormatType parseFormat(StringRef EnvironmentName) {
   return StringSwitch<Triple::ObjectFormatType>(EnvironmentName)
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     .EndsWith("coff", Triple::COFF)
+#endif
     .EndsWith("elf", Triple::ELF)
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     .EndsWith("macho", Triple::MachO)
@@ -580,7 +594,9 @@ static Triple::SubArchType parseSubArch(StringRef SubArchName) {
 static const char *getObjectFormatTypeName(Triple::ObjectFormatType Kind) {
   switch (Kind) {
   case Triple::UnknownObjectFormat: return "";
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case Triple::COFF: return "coff";
+#endif
   case Triple::ELF: return "elf";
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case Triple::MachO: return "macho";
@@ -605,8 +621,10 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
       /* dummy */
     }
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     else if (T.isOSWindows())
       return Triple::COFF;
+#endif
     return Triple::ELF;
 
   case Triple::aarch64_be:
@@ -725,8 +743,10 @@ Triple::Triple(const Twine &ArchStr, const Twine &VendorStr, const Twine &OSStr,
 }
 
 std::string Triple::normalize(StringRef Str) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool IsMinGW32 = false;
   bool IsCygwin = false;
+#endif
 
   // Parse into components.
   SmallVector<StringRef, 4> Components;
@@ -746,8 +766,10 @@ std::string Triple::normalize(StringRef Str) {
   OSType OS = UnknownOS;
   if (Components.size() > 2) {
     OS = parseOS(Components[2]);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     IsCygwin = Components[2].startswith("cygwin");
     IsMinGW32 = Components[2].startswith("mingw");
+#endif
   }
   EnvironmentType Environment = UnknownEnvironment;
   if (Components.size() > 3)
@@ -791,9 +813,15 @@ std::string Triple::normalize(StringRef Str) {
         break;
       case 2:
         OS = parseOS(Comp);
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume both false
         IsCygwin = Comp.startswith("cygwin");
         IsMinGW32 = Comp.startswith("mingw");
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
         Valid = OS != UnknownOS || IsCygwin || IsMinGW32;
+#else
+        Valid = OS != UnknownOS || false || false;
+#endif
         break;
       case 3:
         Environment = parseEnvironment(Comp);
@@ -874,6 +902,7 @@ std::string Triple::normalize(StringRef Str) {
     }
   }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   if (OS == Triple::Win32) {
     Components.resize(4);
     Components[2] = "windows";
@@ -899,6 +928,7 @@ std::string Triple::normalize(StringRef Str) {
       Components[4] = getObjectFormatTypeName(ObjectFormat);
     }
   }
+#endif
 
   // Stick the corrected components back together to form the normalized string.
   std::string Normalized;
@@ -1476,9 +1506,11 @@ StringRef Triple::getARMCPUForArch(StringRef MArch) const {
     if (!MArch.empty() && MArch == "v6")
       return "arm1176jzf-s";
     break;
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case llvm::Triple::Win32:
     // FIXME: this is invalid for WindowsCE
     return "cortex-a9";
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case llvm::Triple::MacOSX:
   case llvm::Triple::IOS:

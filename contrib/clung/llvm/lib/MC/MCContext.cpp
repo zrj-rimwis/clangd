@@ -19,18 +19,24 @@
 #include "llvm/MC/MCLabel.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/MC/MCSectionCOFF.h"
+#endif
 #include "llvm/MC/MCSectionELF.h"
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSectionMachO.h"
 #endif
 #include "llvm/MC/MCStreamer.h"
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__i
 #include "llvm/MC/MCSymbolCOFF.h"
+#endif
 #include "llvm/MC/MCSymbolELF.h"
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/MC/MCSymbolMachO.h"
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ELF.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -79,7 +85,9 @@ MCContext::~MCContext() {
 
 void MCContext::reset() {
   // Call the destructors so the fragments are freed
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   COFFAllocator.DestroyAll();
+#endif
   ELFAllocator.DestroyAll();
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   MachOAllocator.DestroyAll();
@@ -108,7 +116,9 @@ void MCContext::reset() {
   MachOUniquingMap.clear();
 #endif
   ELFUniquingMap.clear();
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   COFFUniquingMap.clear();
+#endif
 
   NextID.clear();
   AllowTemporaryLabels = true;
@@ -168,8 +178,10 @@ MCSymbol *MCContext::createSymbolImpl(const StringMapEntry<bool> *Name,
                                       bool IsTemporary) {
   if (MOFI) {
     switch (MOFI->getObjectFileType()) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case MCObjectFileInfo::IsCOFF:
       return new (Name, *this) MCSymbolCOFF(Name, IsTemporary);
+#endif
     case MCObjectFileInfo::IsELF:
       return new (Name, *this) MCSymbolELF(Name, IsTemporary);
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
@@ -400,6 +412,7 @@ MCSectionELF *MCContext::createELFGroupSection(const MCSymbolELF *Group) {
   return Result;
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSectionCOFF *MCContext::getCOFFSection(StringRef Section,
                                          unsigned Characteristics,
                                          SectionKind Kind,
@@ -431,7 +444,9 @@ MCSectionCOFF *MCContext::getCOFFSection(StringRef Section,
   Iter->second = Result;
   return Result;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSectionCOFF *MCContext::getCOFFSection(StringRef Section,
                                          unsigned Characteristics,
                                          SectionKind Kind,
@@ -439,7 +454,9 @@ MCSectionCOFF *MCContext::getCOFFSection(StringRef Section,
   return getCOFFSection(Section, Characteristics, Kind, "", 0, GenericSectionID,
                         BeginSymName);
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSectionCOFF *MCContext::getCOFFSection(StringRef Section) {
   COFFSectionKey T{Section, "", 0, GenericSectionID};
   auto Iter = COFFUniquingMap.find(T);
@@ -447,7 +464,9 @@ MCSectionCOFF *MCContext::getCOFFSection(StringRef Section) {
     return nullptr;
   return Iter->second;
 }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 MCSectionCOFF *MCContext::getAssociativeCOFFSection(MCSectionCOFF *Sec,
                                                     const MCSymbol *KeySym,
                                                     unsigned UniqueID) {
@@ -468,6 +487,7 @@ MCSectionCOFF *MCContext::getAssociativeCOFFSection(MCSectionCOFF *Sec,
   return getCOFFSection(Sec->getSectionName(), Characteristics, Sec->getKind(),
                         "", 0, UniqueID);
 }
+#endif
 
 MCSubtargetInfo &MCContext::getSubtargetCopy(const MCSubtargetInfo &STI) {
   return *new (MCSubtargetAllocator.Allocate()) MCSubtargetInfo(STI);

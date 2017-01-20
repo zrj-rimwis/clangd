@@ -222,7 +222,9 @@ protected:
   /// directive only.  Defaults to false.
   bool UsesELFSectionDirectiveForBSS;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // XXX wth this doing there for COFF?
   bool NeedsDwarfSectionOffsetDirective;
+#endif
 
   //===--- Alignment Information ----------------------------------------===//
 
@@ -456,9 +458,11 @@ public:
     return UsesELFSectionDirectiveForBSS;
   }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume hardocded false, just stupid
   bool needsDwarfSectionOffsetDirective() const {
     return NeedsDwarfSectionOffsetDirective;
   }
+#endif
 
   // Accessors.
 

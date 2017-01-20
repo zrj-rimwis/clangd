@@ -164,7 +164,11 @@ public:
     NetBSD,
     OpenBSD,
     Solaris,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     Win32,
+#else
+    Win32_disabled,
+#endif
     Haiku,
     Minix,
     RTEMS,
@@ -209,15 +213,31 @@ public:
     MSVC_disabled,
 #endif
     Itanium,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     Cygnus,
+#else
+    Cygnus_disabled,
+#endif
     AMDOpenCL,
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     CoreCLR,
+#else
+    CoreCLR_disabled,
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // this is silly
     LastEnvironmentType = CoreCLR
+#else
+    LastEnvironmentType = CoreCLR_disabled
+#endif
   };
   enum ObjectFormatType {
     UnknownObjectFormat,
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     COFF,
+#else
+    COFF_disabled,
+#endif
     ELF,
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MachO,
@@ -531,26 +551,36 @@ public:
   }
 #endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isWindowsCoreCLREnvironment() const {
     return getOS() == Triple::Win32 && getEnvironment() == Triple::CoreCLR;
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isWindowsItaniumEnvironment() const {
     return getOS() == Triple::Win32 && getEnvironment() == Triple::Itanium;
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isWindowsCygwinEnvironment() const {
     return getOS() == Triple::Win32 && getEnvironment() == Triple::Cygnus;
   }
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isWindowsGNUEnvironment() const {
     return getOS() == Triple::Win32 && getEnvironment() == Triple::GNU;
   }
+#endif
 
   /// Tests for either Cygwin or MinGW OS
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isOSCygMing() const {
     return isWindowsCygwinEnvironment() || isWindowsGNUEnvironment();
   }
+#endif
 
   /// Is this a "Windows" OS targeting a "MSVCRT.dll" environment.
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
@@ -561,9 +591,11 @@ public:
 #endif
 
   /// Tests whether the OS is Windows.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   bool isOSWindows() const {
     return getOS() == Triple::Win32;
   }
+#endif
 
   /// Tests whether the OS is NaCl (Native Client)
   bool isOSNaCl() const {
@@ -591,9 +623,11 @@ public:
   }
 
   /// Tests whether the OS uses the COFF binary format.
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   bool isOSBinFormatCOFF() const {
     return getObjectFormat() == Triple::COFF;
   }
+#endif
 
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   /// Tests whether the environment is MachO.

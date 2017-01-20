@@ -11,7 +11,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 #include "llvm/Support/COFF.h"
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
 #include "llvm/Support/MachO.h"
 #endif
@@ -985,6 +987,7 @@ file_magic identify_magic(StringRef Magic) {
   if (Magic.size() < 4)
     return file_magic::unknown;
   switch ((unsigned char)Magic[0]) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case 0x00: {
       // COFF bigobj or short import library file
       if (Magic[1] == (char)0x00 && Magic[2] == (char)0xff &&
@@ -1013,6 +1016,7 @@ file_magic identify_magic(StringRef Magic) {
         return file_magic::coff_object;
       break;
     }
+#endif
     case 0xDE:  // 0x0B17C0DE = BC wraper
       if (Magic[1] == (char)0xC0 && Magic[2] == (char)0x17 &&
           Magic[3] == (char)0x0B)
@@ -1116,15 +1120,20 @@ file_magic identify_magic(StringRef Magic) {
     case 0x50: // mc68K
     case 0x4c: // 80386 Windows
     case 0xc4: // ARMNT Windows
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
       if (Magic[1] == 0x01)
         return file_magic::coff_object;
+#endif
 
     case 0x90: // PA-RISC Windows
     case 0x68: // mc68K Windows
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
       if (Magic[1] == 0x02)
         return file_magic::coff_object;
+#endif
       break;
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case 'M': // Possible MS-DOS stub on Windows PE file
       if (Magic[1] == 'Z') {
         uint32_t off = read32le(Magic.data() + 0x3c);
@@ -1134,11 +1143,14 @@ file_magic identify_magic(StringRef Magic) {
           return file_magic::pecoff_executable;
       }
       break;
+#endif
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case 0x64: // x86-64 Windows.
       if (Magic[1] == char(0x86))
         return file_magic::coff_object;
       break;
+#endif
 
     default:
       break;

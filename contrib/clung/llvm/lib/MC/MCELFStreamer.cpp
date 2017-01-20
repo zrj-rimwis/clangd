@@ -647,6 +647,7 @@ void MCELFStreamer::EmitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) {
   llvm_unreachable("ELF doesn't support this directive");
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
 void MCELFStreamer::BeginCOFFSymbolDef(const MCSymbol *Symbol) {
   llvm_unreachable("ELF doesn't support this directive");
 }
@@ -662,6 +663,7 @@ void MCELFStreamer::EmitCOFFSymbolType(int Type) {
 void MCELFStreamer::EndCOFFSymbolDef() {
   llvm_unreachable("ELF doesn't support this directive");
 }
+#endif
 
 void MCELFStreamer::EmitZerofill(MCSection *Section, MCSymbol *Symbol,
                                  uint64_t Size, unsigned ByteAlignment) {
