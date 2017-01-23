@@ -707,9 +707,11 @@ ExprResult Sema::DefaultLvalueConversion(Expr *E) {
   
   // Loading a __weak object implicitly retains the value, so we need a cleanup to 
   // balance that.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount &&
       E->getType().getObjCLifetime() == Qualifiers::OCL_Weak)
     Cleanup.setExprNeedsCleanups(true);
+#endif
 
   ExprResult Res = ImplicitCastExpr::Create(Context, T, CK_LValueToRValue, E,
                                             nullptr, VK_RValue);
@@ -884,8 +886,10 @@ Sema::VarArgKind Sema::isValidVarArgType(const QualType &Ty) {
           !Record->hasNonTrivialDestructor())
         return VAK_ValidInCXX11;
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && Ty->isObjCLifetimeType())
     return VAK_Valid;
+#endif
 
   if (Ty->isObjCObjectType())
     return VAK_Invalid;
@@ -2536,6 +2540,7 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
           ObjCIvarRefExpr(IV, IV->getUsageType(SelfExpr.get()->getType()), Loc,
                           IV->getLocation(), SelfExpr.get(), true, true);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (getLangOpts().ObjCAutoRefCount) {
         if (IV->getType().getObjCLifetime() == Qualifiers::OCL_Weak) {
           if (!Diags.isIgnored(diag::warn_arc_repeated_use_of_weak, Loc))
@@ -2545,6 +2550,7 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
           Diag(Loc, diag::warn_implicitly_retains_self)
             << FixItHint::CreateInsertion(Loc, "self->");
       }
+#endif
       
       return Result;
     }
@@ -4874,10 +4880,12 @@ bool Sema::GatherArgumentsForCall(SourceLocation CallLoc, FunctionDecl *FDecl,
           FDecl && FDecl->hasAttr<CFAuditedTransferAttr>() &&
           (!Param || !Param->hasAttr<CFConsumedAttr>()))
         Arg = stripARCUnbridgedCast(Arg);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       else if (getLangOpts().ObjCAutoRefCount &&
                FDecl && FDecl->hasAttr<CFAuditedTransferAttr>() &&
                (!Param || !Param->hasAttr<CFConsumedAttr>()))
         CFAudited = true;
+#endif
 
       InitializedEntity Entity =
           Param ? InitializedEntity::InitializeParameter(Context, Param,
@@ -5648,12 +5656,16 @@ void Sema::maybeExtendBlockObject(ExprResult &E) {
   assert(E.get()->isRValue());
 
   // Only do this in an r-value context.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
   if (!getLangOpts().ObjCAutoRefCount) return;
 
   E = ImplicitCastExpr::Create(Context, E.get()->getType(),
                                CK_ARCExtendBlockObject, E.get(),
                                /*base path*/ nullptr, VK_RValue);
   Cleanup.setExprNeedsCleanups(true);
+#else
+  return;
+#endif
 }
 
 /// Prepare a conversion of the given expression to an ObjC object
@@ -6897,6 +6909,7 @@ QualType Sema::FindCompositeObjCPointerType(ExprResult &LHS, ExprResult &RHS,
   }
   // Check Objective-C object pointer types and 'void *'
   if (LHSTy->isVoidPointerType() && RHSTy->isObjCObjectPointerType()) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount) {
       // ARC forbids the implicit conversion of object pointers to 'void *',
       // so these types are not compatible.
@@ -6905,6 +6918,7 @@ QualType Sema::FindCompositeObjCPointerType(ExprResult &LHS, ExprResult &RHS,
       LHS = RHS = true;
       return QualType();
     }
+#endif
     QualType lhptee = LHSTy->getAs<PointerType>()->getPointeeType();
     QualType rhptee = RHSTy->getAs<ObjCObjectPointerType>()->getPointeeType();
     QualType destPointee
@@ -6917,6 +6931,7 @@ QualType Sema::FindCompositeObjCPointerType(ExprResult &LHS, ExprResult &RHS,
     return destType;
   }
   if (LHSTy->isObjCObjectPointerType() && RHSTy->isVoidPointerType()) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount) {
       // ARC forbids the implicit conversion of object pointers to 'void *',
       // so these types are not compatible.
@@ -6925,6 +6940,7 @@ QualType Sema::FindCompositeObjCPointerType(ExprResult &LHS, ExprResult &RHS,
       LHS = RHS = true;
       return QualType();
     }
+#endif
     QualType lhptee = LHSTy->getAs<ObjCObjectPointerType>()->getPointeeType();
     QualType rhptee = RHSTy->getAs<PointerType>()->getPointeeType();
     QualType destPointee
@@ -7566,10 +7582,12 @@ Sema::CheckAssignmentConstraints(QualType LHSType, ExprResult &RHS,
       Kind = CK_BitCast;
       Sema::AssignConvertType result = 
         checkObjCPointerTypesForAssignment(*this, LHSType, RHSType);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (getLangOpts().ObjCAutoRefCount &&
           result == Compatible && 
           !CheckObjCARCUnavailableWeakConversion(OrigLHSType, RHSType))
         result = IncompatibleObjCWeakRef;
+#endif
       return result;
     }
 
@@ -7764,10 +7782,12 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &CallerRHS,
       if (Res.isInvalid())
         return Incompatible;
       Sema::AssignConvertType result = Compatible;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (getLangOpts().ObjCAutoRefCount &&
           !CheckObjCARCUnavailableWeakConversion(LHSType,
                                                  RHS.get()->getType()))
         result = IncompatibleObjCWeakRef;
+#endif
       RHS = Res;
       return result;
     }
@@ -7843,12 +7863,14 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &CallerRHS,
     // Check for various Objective-C errors. If we are not reporting
     // diagnostics and just checking for errors, e.g., during overload
     // resolution, return Incompatible to indicate the failure.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount &&
         CheckObjCARCConversion(SourceRange(), Ty, E, CCK_ImplicitConversion,
                                Diagnose, DiagnoseCFAudited) != ACR_okay) {
       if (!Diagnose)
         return Incompatible;
     }
+#endif
     if (getLangOpts().ObjC1 &&
         (CheckObjCBridgeRelatedConversions(E->getLocStart(), LHSType,
                                            E->getType(), E, Diagnose) ||
@@ -9412,17 +9434,21 @@ QualType Sema::CheckCompareOperands(ExprResult &LHS, ExprResult &RHS,
       }
       if (LHSIsNull && !RHSIsNull) {
         Expr *E = LHS.get();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
         if (getLangOpts().ObjCAutoRefCount)
           CheckObjCARCConversion(SourceRange(), RHSType, E, CCK_ImplicitConversion);
+#endif
         LHS = ImpCastExprToType(E, RHSType,
                                 RPT ? CK_BitCast :CK_CPointerToObjCPointerCast);
       }
       else {
         Expr *E = RHS.get();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
         if (getLangOpts().ObjCAutoRefCount)
           CheckObjCARCConversion(SourceRange(), LHSType, E,
                                  CCK_ImplicitConversion, /*Diagnose=*/true,
                                  /*DiagnoseCFAudited=*/false, Opc);
+#endif
         RHS = ImpCastExprToType(E, LHSType,
                                 LPT ? CK_BitCast :CK_CPointerToObjCPointerCast);
       }
@@ -9911,6 +9937,7 @@ static bool CheckForModifiableLvalue(Expr *E, SourceLocation Loc, Sema &S) {
 
     // In ARC, use some specialized diagnostics for occasions where we
     // infer 'const'.  These are always pseudo-strong variables.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount) {
       DeclRefExpr *declRef = dyn_cast<DeclRefExpr>(E->IgnoreParenCasts());
       if (declRef && isa<VarDecl>(declRef->getDecl())) {
@@ -9943,6 +9970,7 @@ static bool CheckForModifiableLvalue(Expr *E, SourceLocation Loc, Sema &S) {
         }
       }
     }
+#endif
 
     // If none of the special cases above are triggered, then this is a
     // simple const assignment.
@@ -10101,8 +10129,10 @@ QualType Sema::CheckAssignmentOperands(Expr *LHSExpr, ExprResult &RHS,
                              RHS.get()->getLocStart()))
           getCurFunction()->markSafeWeakUse(RHS.get());
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       } else if (getLangOpts().ObjCAutoRefCount) {
         checkUnsafeExprAssigns(Loc, LHSExpr, RHS.get());
+#endif
       }
     }
   } else {

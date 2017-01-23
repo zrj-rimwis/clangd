@@ -156,6 +156,7 @@ void Sema::CheckObjCMethodOverride(ObjCMethodDecl *NewMethod,
       Diag(Overridden->getLocation(), 
            diag::note_related_result_type_overridden);
   }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     if ((NewMethod->hasAttr<NSReturnsRetainedAttr>() !=
          Overridden->hasAttr<NSReturnsRetainedAttr>())) {
@@ -187,6 +188,7 @@ void Sema::CheckObjCMethodOverride(ObjCMethodDecl *NewMethod,
       }
     }
   }
+#endif
 }
 
 /// \brief Check a method declaration for compatibility with the Objective-C
@@ -324,17 +326,20 @@ void Sema::ActOnStartOfObjCMethodDef(Scope *FnBodyScope, Decl *D) {
 
   // Introduce all of the other parameters into this scope.
   for (auto *Param : MDecl->parameters()) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !smth && false && !smth
     if (!Param->isInvalidDecl() &&
         getLangOpts().ObjCAutoRefCount &&
         !HasExplicitOwnershipAttr(*this, Param))
       Diag(Param->getLocation(), diag::warn_arc_strong_pointer_objc_pointer) <<
             Param->getType();
+#endif
     
     if (Param->getIdentifier())
       PushOnScopeChains(Param, FnBodyScope);
   }
 
   // In ARC, disallow definition of retain/release/autorelease/retainCount
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     switch (MDecl->getMethodFamily()) {
     case OMF_retain:
@@ -359,6 +364,7 @@ void Sema::ActOnStartOfObjCMethodDef(Scope *FnBodyScope, Decl *D) {
       break;
     }
   }
+#endif
 
   // Warn on deprecated methods under -Wdeprecated-implementations,
   // and prepare for warning on missing super calls.
@@ -407,7 +413,11 @@ void Sema::ActOnStartOfObjCMethodDef(Scope *FnBodyScope, Decl *D) {
     if (const ObjCInterfaceDecl *SuperClass = IC->getSuperClass()) {
       ObjCMethodFamily Family = MDecl->getMethodFamily();
       if (Family == OMF_dealloc) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false ||, but confussing
         if (!(getLangOpts().ObjCAutoRefCount ||
+#else
+        if (!(false ||
+#endif
               getLangOpts().getGC() == LangOptions::GCOnly))
           getCurFunction()->ObjCShouldCallSuper = true;
 
@@ -2464,9 +2474,11 @@ static bool checkMethodFamilyMismatch(Sema &S, ObjCMethodDecl *impl,
 void Sema::WarnConflictingTypedMethods(ObjCMethodDecl *ImpMethodDecl,
                                        ObjCMethodDecl *MethodDecl,
                                        bool IsProtocolMethodDecl) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount &&
       checkMethodFamilyMismatch(*this, ImpMethodDecl, MethodDecl))
     return;
+#endif
 
   CheckMethodOverrideReturn(*this, ImpMethodDecl, MethodDecl, 
                             IsProtocolMethodDecl, false, 
@@ -3150,12 +3162,14 @@ bool Sema::MatchTwoMethodDeclarations(const ObjCMethodDecl *left,
   if (left->isHidden() || right->isHidden())
     return false;
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount &&
       (left->hasAttr<NSReturnsRetainedAttr>()
          != right->hasAttr<NSReturnsRetainedAttr>() ||
        left->hasAttr<NSConsumesSelfAttr>()
          != right->hasAttr<NSConsumesSelfAttr>()))
     return false;
+#endif
 
   ObjCMethodDecl::param_const_iterator
     li = left->param_begin(), le = left->param_end(), ri = right->param_begin(),
@@ -3168,9 +3182,11 @@ bool Sema::MatchTwoMethodDeclarations(const ObjCMethodDecl *left,
     if (!matchTypes(Context, strategy, lparm->getType(), rparm->getType()))
       return false;
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount &&
         lparm->hasAttr<NSConsumedAttr>() != rparm->hasAttr<NSConsumedAttr>())
       return false;
+#endif
   }
   return true;
 }
@@ -3493,14 +3509,20 @@ void Sema::DiagnoseMultipleMethodInGlobalPool(SmallVectorImpl<ObjCMethodDecl*> &
   // differences.  In ARC, however, we also need to check for loose
   // mismatches, because most of them are errors.
   if (!strictSelectorMatch ||
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       (issueDiagnostic && getLangOpts().ObjCAutoRefCount))
+#else
+      (issueDiagnostic && false))
+#endif
     for (unsigned I = 1, N = Methods.size(); I != N; ++I) {
       // This checks if the methods differ in type mismatch.
       if (!MatchTwoMethodDeclarations(Methods[0], Methods[I], MMS_loose) &&
           !isAcceptableMethodMismatch(Methods[0], Methods[I])) {
         issueDiagnostic = true;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
         if (getLangOpts().ObjCAutoRefCount)
           issueError = true;
+#endif
         break;
       }
     }
@@ -4461,8 +4483,10 @@ Decl *Sema::ActOnMethodDeclaration(
   CheckObjCMethodOverrides(ObjCMethod, CurrentClass, RTC);
 
   bool ARCError = false;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount)
     ARCError = CheckARCMethodDecl(ObjCMethod);
+#endif
 
   // Infer the related result type when possible.
   if (!ARCError && RTC == Sema::RTC_Compatible &&
@@ -4597,8 +4621,10 @@ VarDecl *Sema::BuildObjCExceptionDecl(TypeSourceInfo *TInfo, QualType T,
   New->setExceptionVariable(true);
   
   // In ARC, infer 'retaining' for variables of retainable type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && inferObjCARCLifetime(New))
     Invalid = true;
+#endif
 
   if (Invalid)
     New->setInvalidDecl();

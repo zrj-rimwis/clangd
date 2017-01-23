@@ -57,7 +57,9 @@
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/Internalize.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
 #include "llvm/Transforms/ObjCARC.h"
+#endif
 #include <system_error>
 using namespace llvm;
 
@@ -567,7 +569,9 @@ bool LTOCodeGenerator::compileOptimized(ArrayRef<raw_pwrite_stream *> Out) {
 
   // If the bitcode files contain ARC code and were compiled with optimization,
   // the ObjCARCContractPass must be run, so do it unconditionally here.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // mmm lets avoid a serious bug :)
   preCodeGenPasses.add(createObjCARCContractPass());
+#endif
   preCodeGenPasses.run(*MergedModule);
 
   // Re-externalize globals that may have been internalized to increase scope

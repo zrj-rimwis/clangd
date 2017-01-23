@@ -47,9 +47,6 @@ SRCS+=	AliasAnalysis.cpp \
 	MemoryDependenceAnalysis.cpp \
 	MemoryLocation.cpp \
 	ModuleSummaryAnalysis.cpp \
-	ObjCARCAliasAnalysis.cpp \
-	ObjCARCAnalysisUtils.cpp \
-	ObjCARCInstKind.cpp \
 	OptimizationDiagnosticInfo.cpp \
 	OrderedBasicBlock.cpp \
 	PHITransAddr.cpp \
@@ -409,17 +406,6 @@ SRCS+=	ArgumentPromotion.cpp \
 	StripDeadPrototypes.cpp \
 	StripSymbols.cpp \
 	WholeProgramDevirt.cpp
-
-# maybe not needed
-#LIB=	LLVMObjCARCOpts
-LLVM_SRCDIRS+= lib/Transforms/ObjCARC
-SRCS+=	DependencyAnalysis.cpp \
-	ObjCARCAPElim.cpp \
-	ObjCARCContract.cpp \
-	ObjCARCExpand.cpp \
-	ObjCARCOpts.cpp \
-	ProvenanceAnalysis.cpp \
-	PtrState.cpp
 
 #LIB=	LLVMObject
 LLVM_SRCDIRS+= lib/Object

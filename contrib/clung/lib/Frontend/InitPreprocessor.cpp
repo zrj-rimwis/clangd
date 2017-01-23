@@ -325,6 +325,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
     Out << "template<typename _Tp> struct __is_scalar;\n"
         << "\n";
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (LangOpts.ObjCAutoRefCount) {
       Out << "template<typename _Tp>\n"
           << "struct __is_scalar<__attribute__((objc_ownership(strong))) _Tp> {\n"
@@ -333,6 +334,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
           << "};\n"
           << "\n";
     }
+#endif
       
     if (LangOpts.ObjCWeak) {
       Out << "template<typename _Tp>\n"
@@ -343,6 +345,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
           << "\n";
     }
     
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (LangOpts.ObjCAutoRefCount) {
       Out << "template<typename _Tp>\n"
           << "struct __is_scalar<__attribute__((objc_ownership(autoreleasing)))"
@@ -352,6 +355,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
           << "};\n"
           << "\n";
     }
+#endif
       
     Out << "}\n";
   }
@@ -1044,7 +1048,11 @@ void clang::InitializePreprocessor(
     // Install definitions to make Objective-C++ ARC work well with various
     // C++ Standard Library implementations.
     if (LangOpts.ObjC1 && LangOpts.CPlusPlus &&
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false || stmh
         (LangOpts.ObjCAutoRefCount || LangOpts.ObjCWeak)) {
+#else
+        (false || LangOpts.ObjCWeak)) {
+#endif
       switch (InitOpts.ObjCXXARCStandardLibrary) {
       case ARCXX_nolib:
       case ARCXX_libcxx:

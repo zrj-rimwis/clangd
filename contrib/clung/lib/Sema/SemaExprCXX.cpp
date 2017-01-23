@@ -1587,12 +1587,14 @@ Sema::BuildCXXNew(SourceRange Range, bool UseGlobal,
   }
 
   // In ARC, infer 'retaining' for the allocated 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount &&
       AllocType.getObjCLifetime() == Qualifiers::OCL_None &&
       AllocType->isObjCLifetimeType()) {
     AllocType = Context.getLifetimeQualifiedType(AllocType,
                                     AllocType->getObjCARCImplicitLifetime());
   }
+#endif
 
   QualType ResultType = Context.getPointerType(AllocType);
     
@@ -1924,6 +1926,7 @@ bool Sema::CheckAllocatedType(QualType AllocType, SourceLocation Loc,
   else if (unsigned AddressSpace = AllocType.getAddressSpace())
     return Diag(Loc, diag::err_address_space_qualified_new)
       << AllocType.getUnqualifiedType() << AddressSpace;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   else if (getLangOpts().ObjCAutoRefCount) {
     if (const ArrayType *AT = Context.getAsArrayType(AllocType)) {
       QualType BaseAllocType = Context.getBaseElementType(AT);
@@ -1933,6 +1936,7 @@ bool Sema::CheckAllocatedType(QualType AllocType, SourceLocation Loc,
           << BaseAllocType;
     }
   }
+#endif
            
   return false;
 }
@@ -3557,6 +3561,7 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
           ToType->isObjCObjectPointerType())
         EmitRelatedResultTypeNote(From);
     } 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     else if (getLangOpts().ObjCAutoRefCount &&
              !CheckObjCARCUnavailableWeakConversion(ToType, 
                                                     From->getType())) {
@@ -3569,6 +3574,7 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
           << (Action == AA_Casting) << From->getType() << ToType 
           << From->getSourceRange();
     }
+#endif
              
     CastKind Kind = CK_Invalid;
     CXXCastPath BasePath;
@@ -3582,8 +3588,10 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
       (void) PrepareCastToObjCObjectPointer(E);
       From = E.get();
     }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount)
       CheckObjCARCConversion(SourceRange(), ToType, From, CCK);
+#endif
     From = ImpCastExprToType(From, ToType, Kind, VK_RValue, &BasePath, CCK)
              .get();
     break;
@@ -4446,9 +4454,11 @@ static bool evaluateTypeTrait(Sema &S, TypeTrait Kind, SourceLocation KWLoc,
     if (Kind == clang::TT_IsTriviallyConstructible) {
       // Under Objective-C ARC, if the destination has non-trivial Objective-C
       // lifetime, this is a non-trivial construction.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (S.getLangOpts().ObjCAutoRefCount &&
           hasNontrivialObjCLifetime(T.getNonReferenceType()))
         return false;
+#endif
 
       // The initialization succeeded; now make sure there are no non-trivial
       // calls.
@@ -4668,9 +4678,11 @@ static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
     if (BTT == BTT_IsTriviallyAssignable) {
       // Under Objective-C ARC, if the destination has non-trivial Objective-C
       // lifetime, this is a non-trivial assignment.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (Self.getLangOpts().ObjCAutoRefCount &&
           hasNontrivialObjCLifetime(LhsT.getNonReferenceType()))
         return false;
+#endif
 
       return !Result.get()->hasNonTrivialCall(Self.Context);
     }
@@ -5630,6 +5642,7 @@ ExprResult Sema::MaybeBindToTemporary(Expr *E) {
 
   // In ARC, calls that return a retainable type can return retained,
   // in which case we have to insert a consuming cast.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false, big block
   if (getLangOpts().ObjCAutoRefCount &&
       E->getType()->isObjCRetainableType()) {
 
@@ -5708,6 +5721,7 @@ ExprResult Sema::MaybeBindToTemporary(Expr *E) {
     return ImplicitCastExpr::Create(Context, E->getType(), ck, E, nullptr,
                                     VK_RValue);
   }
+#endif
 
   if (!getLangOpts().CPlusPlus)
     return E;

@@ -1424,7 +1424,11 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
 
       // Non-ARC captures of retainable pointers are strong and
       // therefore require a call to _Block_object_assign.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, wth is here??
       } else if (!qs.getObjCLifetime() && !getLangOpts().ObjCAutoRefCount) {
+#else
+      } else if (!qs.getObjCLifetime() && !false) {
+#endif
         // fall through
 
       // Otherwise the memcpy is fine.
@@ -1591,7 +1595,11 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
         useARCWeakDestroy = true;
 
       // Non-ARC captures are strong, and we need to use _Block_object_dispose.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, wth is here??
       } else if (!qs.hasObjCLifetime() && !getLangOpts().ObjCAutoRefCount) {
+#else
+      } else if (!qs.hasObjCLifetime() && !false) {
+#endif
         // fall through
 
       // Otherwise, we have nothing to do.

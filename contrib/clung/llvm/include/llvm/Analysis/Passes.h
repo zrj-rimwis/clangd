@@ -28,7 +28,9 @@ namespace llvm {
   // createObjCARCAAWrapperPass - This pass implements ObjC-ARC-based
   // alias analysis.
   //
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   ImmutablePass *createObjCARCAAWrapperPass();
+#endif
 
   FunctionPass *createPAEvalPass();
 

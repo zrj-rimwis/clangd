@@ -1448,7 +1448,11 @@ RValue CodeGenFunction::EmitLoadOfLValue(LValue LV, SourceLocation Loc) {
   }
   if (LV.getQuals().getObjCLifetime() == Qualifiers::OCL_Weak) {
     // In MRC mode, we do a load+autorelease.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
     if (!getLangOpts().ObjCAutoRefCount) {
+#else
+    if (!false) {
+#endif
       return RValue::get(EmitARCLoadWeak(LV.getAddress()));
     }
 

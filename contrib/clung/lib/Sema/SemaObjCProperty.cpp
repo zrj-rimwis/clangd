@@ -581,8 +581,11 @@ ObjCPropertyDecl *Sema::CreatePropertyDecl(Scope *S,
   } else if (getOwnershipRule(Attributes) || !isReadWrite) {
     isAssign = false;
   } else {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false || smth
     isAssign = (!getLangOpts().ObjCAutoRefCount ||
                 !T->isObjCRetainableType());
+    isAssign = !false;
+#endif
   }
 
   // Issue a warning if property is 'assign' as default and its
@@ -722,8 +725,12 @@ static void checkARCPropertyImpl(Sema &S, SourceLocation propertyImplLoc,
 
   // None isn't a valid lifetime for an object ivar in ARC, and
   // __autoreleasing is never valid; don't diagnose twice.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false || smth
   if ((ivarLifetime == Qualifiers::OCL_None &&
        S.getLangOpts().ObjCAutoRefCount) ||
+#else
+  if (false ||
+#endif
       ivarLifetime == Qualifiers::OCL_Autoreleasing)
     return;
 
@@ -1039,12 +1046,14 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       CompleteTypeErr = true;
     }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount &&
         (property->getPropertyAttributesAsWritten() &
          ObjCPropertyDecl::OBJC_PR_readonly) &&
         PropertyIvarType->isObjCRetainableType()) {
       setImpliedPropertyAttributeForReadOnlyProperty(property, Ivar);    
     }
+#endif
     
     ObjCPropertyDecl::PropertyAttributeKind kind 
       = property->getPropertyAttributes();
@@ -1053,7 +1062,9 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
     if (kind & ObjCPropertyDecl::OBJC_PR_weak) {
       // Add GC __weak to the ivar type if the property is weak.
       if (getLangOpts().getGC() != LangOptions::NonGC) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, thus no assert
         assert(!getLangOpts().ObjCAutoRefCount);
+#endif
         if (PropertyIvarType.isObjCGCStrong()) {
           Diag(PropertyDiagLoc, diag::err_gc_weak_property_strong_type);
           Diag(property->getLocation(), diag::note_property_declare);
@@ -1114,7 +1125,11 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
     if (!Ivar) {
       // In ARC, give the ivar a lifetime qualifier based on the
       // property attributes.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false || smth
       if ((getLangOpts().ObjCAutoRefCount || isARCWeak) &&
+#else
+      if ((false || isARCWeak) &&
+#endif
           !PropertyIvarType.getObjCLifetime() &&
           PropertyIvarType->isObjCRetainableType()) {
 
@@ -1223,7 +1238,11 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
         // Fall thru - see previous comment
       }
     }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false || smth
     if (getLangOpts().ObjCAutoRefCount || isARCWeak ||
+#else
+    if (false || isARCWeak ||
+#endif
         Ivar->getType().getObjCLifetime())
       checkARCPropertyImpl(*this, PropertyLoc, property, Ivar);
   } else if (PropertyIvar)
@@ -1283,6 +1302,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
            diag::warn_property_getter_owning_mismatch);
       Diag(property->getLocation(), diag::note_property_declare);
     }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount && Synthesize)
       switch (getterMethod->getMethodFamily()) {
         case OMF_retain:
@@ -1295,6 +1315,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
         default:
           break;
       }
+#endif
   }
   if (ObjCMethodDecl *setterMethod = property->getSetterMethodDecl()) {
     setterMethod->createImplicitParams(Context, IDecl);
@@ -2049,9 +2070,11 @@ void Sema::DiagnoseOwningPropertyGetterSynthesis(const ObjCImplementationDecl *D
       ObjCMethodFamily family = method->getMethodFamily();
       if (family == OMF_alloc || family == OMF_copy ||
           family == OMF_mutableCopy || family == OMF_new) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
         if (getLangOpts().ObjCAutoRefCount)
           Diag(PD->getLocation(), diag::err_cocoa_naming_owned_rule);
         else
+#endif
           Diag(PD->getLocation(), diag::warn_cocoa_naming_owned_rule);
 
         // Look for a getter explicitly declared alongside the property.
@@ -2248,8 +2271,10 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property) {
           SectionAttr::CreateImplicit(Context, SectionAttr::GNU_section,
                                       SA->getName(), Loc));
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount)
       CheckARCMethodDecl(GetterMethod);
+#endif
   } else
     // A user declared getter will be synthesize when @synthesize of
     // the property with the same name is seen in the @implementation
@@ -2315,8 +2340,10 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property) {
                                         SA->getName(), Loc));
       // It's possible for the user to have set a very odd custom
       // setter selector that causes it to have a method family.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (getLangOpts().ObjCAutoRefCount)
         CheckARCMethodDecl(SetterMethod);
+#endif
     } else
       // A user declared setter will be synthesize when @synthesize of
       // the property with the same name is seen in the @implementation
@@ -2406,12 +2433,14 @@ void Sema::CheckObjCPropertyAttributes(Decl *PDecl,
         << "assign" << "strong";
       Attributes &= ~ObjCDeclSpec::DQ_PR_strong;
     }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount  &&
         (Attributes & ObjCDeclSpec::DQ_PR_weak)) {
       Diag(Loc, diag::err_objc_property_attr_mutually_exclusive)
         << "assign" << "weak";
       Attributes &= ~ObjCDeclSpec::DQ_PR_weak;
     }
+#endif
     if (PropertyDecl->hasAttr<IBOutletCollectionAttr>())
       Diag(Loc, diag::warn_iboutletcollection_property_assign);
   } else if (Attributes & ObjCDeclSpec::DQ_PR_unsafe_unretained) {
@@ -2430,12 +2459,14 @@ void Sema::CheckObjCPropertyAttributes(Decl *PDecl,
         << "unsafe_unretained" << "strong";
       Attributes &= ~ObjCDeclSpec::DQ_PR_strong;
     }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount  &&
         (Attributes & ObjCDeclSpec::DQ_PR_weak)) {
       Diag(Loc, diag::err_objc_property_attr_mutually_exclusive)
         << "unsafe_unretained" << "weak";
       Attributes &= ~ObjCDeclSpec::DQ_PR_weak;
     }
+#endif
   } else if (Attributes & ObjCDeclSpec::DQ_PR_copy) {
     if (Attributes & ObjCDeclSpec::DQ_PR_retain) {
       Diag(Loc, diag::err_objc_property_attr_mutually_exclusive)
@@ -2487,10 +2518,12 @@ void Sema::CheckObjCPropertyAttributes(Decl *PDecl,
   if (!getOwnershipRule(Attributes) && PropertyTy->isObjCRetainableType()) {
     if (Attributes & ObjCDeclSpec::DQ_PR_readonly) {
       // do nothing
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     } else if (getLangOpts().ObjCAutoRefCount) {
       // With arc, @property definitions should default to strong when 
       // not specified.
       PropertyDecl->setPropertyAttributes(ObjCPropertyDecl::OBJC_PR_strong);
+#endif
     } else if (PropertyTy->isObjCObjectPointerType()) {
         bool isAnyClassTy = 
           (PropertyTy->isObjCClassType() || 

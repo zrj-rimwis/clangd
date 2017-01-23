@@ -47,7 +47,11 @@ CodeGenFunction::CodeGenFunction(CodeGenModule &cgm, bool suppressNewContext)
       CurFn(nullptr), ReturnValue(Address::invalid()),
       CapturedStmtInfo(nullptr),
       SanOpts(CGM.getLangOpts().Sanitize), IsSanitizerScope(false),
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
       CurFuncIsThunk(false), AutoreleaseResult(false), SawAsmBlock(false),
+#else
+      CurFuncIsThunk(false), SawAsmBlock(false),
+#endif
 #ifdef CLANG_ENABLE_MSSEH // __DragonFly__
       IsOutlinedSEHHelper(false),
 #endif
@@ -850,10 +854,12 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
     // Tell the epilog emitter to autorelease the result.  We do this
     // now so that various specialized functions can suppress it
     // during their IR-generation.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount &&
         !CurFnInfo->isReturnsRetained() &&
         RetTy->isObjCRetainableType())
       AutoreleaseResult = true;
+#endif
   }
 
   EmitStartEHSpec(CurCodeDecl);

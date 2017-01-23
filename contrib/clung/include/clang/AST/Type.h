@@ -1725,8 +1725,10 @@ public:
   bool isBlockCompatibleObjCPointerType(ASTContext &ctx) const;
   bool isObjCSelType() const;                 // Class
   bool isObjCBuiltinType() const;               // 'id' or 'Class'
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   bool isObjCARCBridgableType() const;
   bool isCARCBridgableType() const;
+#endif
   bool isTemplateTypeParmType() const;          // C++ template type parameter
   bool isNullPtrType() const;                   // C++0x nullptr_t
   bool isAtomicType() const;                    // C11 _Atomic()

@@ -7639,7 +7639,9 @@ public:
                                            bool IsInstance);
 
   bool CheckARCMethodDecl(ObjCMethodDecl *method);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   bool inferObjCARCLifetime(ValueDecl *decl);
+#endif
 
   ExprResult
   HandleExprPropertyRefExpr(const ObjCObjectPointerType *OPT,
@@ -9004,6 +9006,7 @@ public:
 
   /// \brief Checks for invalid conversions and casts between
   /// retainable pointers and other pointer kinds.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
   ARCConversionResult CheckObjCARCConversion(SourceRange castRange,
                                              QualType castType, Expr *&op,
                                              CheckedConversionKind CCK,
@@ -9011,12 +9014,15 @@ public:
                                              bool DiagnoseCFAudited = false,
                                              BinaryOperatorKind Opc = BO_PtrMemD
                                              );
+#endif
 
   Expr *stripARCUnbridgedCast(Expr *e);
   void diagnoseARCUnbridgedCast(Expr *e);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume true
   bool CheckObjCARCUnavailableWeakConversion(QualType castType,
                                              QualType ExprType);
+#endif
 
   /// checkRetainCycles - Check whether an Objective-C message send
   /// might create an obvious retain cycle.

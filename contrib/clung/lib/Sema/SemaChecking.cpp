@@ -6730,7 +6730,11 @@ CheckReturnStackAddr(Sema &S, Expr *RetValExp, QualType lhsType,
   // Perform checking for returned stack addresses, local blocks,
   // label addresses or references to temporaries.
   if (lhsType->isPointerType() ||
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, but there is a bug sigh
       (!S.getLangOpts().ObjCAutoRefCount && lhsType->isBlockPointerType())) {
+#else
+      (!false && lhsType->isBlockPointerType())) {
+#endif
     stackE = EvalAddr(RetValExp, refVars, /*ParentDecl=*/nullptr);
   } else if (lhsType->isReferenceType()) {
     stackE = EvalVal(RetValExp, refVars, /*ParentDecl=*/nullptr);

@@ -1443,12 +1443,6 @@ def Unavailable : InheritableAttr {
   let Documentation = [Undocumented];
 }
 
-def ArcWeakrefUnavailable : InheritableAttr {
-  let Spellings = [GNU<"objc_arc_weak_reference_unavailable">];
-  let Subjects = SubjectList<[ObjCInterface], ErrorDiag>;
-  let Documentation = [Undocumented];
-}
-
 def ObjCGC : TypeAttr {
   let Spellings = [GNU<"objc_gc">];
   let Args = [IdentifierArgument<"Kind">];

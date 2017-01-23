@@ -1016,7 +1016,11 @@ CGObjCGNU::CGObjCGNU(CodeGenModule &cgm, unsigned runtimeABIVersion,
               true));
 
   const LangOptions &Opts = CGM.getLangOpts();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if ((Opts.getGC() != LangOptions::NonGC) || Opts.ObjCAutoRefCount)
+#else
+  if ((Opts.getGC() != LangOptions::NonGC) || false)
+#endif
     RuntimeVersion = 10;
 
   // Don't bother initialising the GC stuff unless we're compiling in GC mode
@@ -2608,9 +2612,11 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
         Elements.push_back(llvm::ConstantInt::get(IntTy, 2));
         break;
       case LangOptions::NonGC:
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
         if (CGM.getLangOpts().ObjCAutoRefCount)
           Elements.push_back(llvm::ConstantInt::get(IntTy, 1));
         else
+#endif
           Elements.push_back(llvm::ConstantInt::get(IntTy, 0));
         break;
       case LangOptions::HybridGC:

@@ -3654,6 +3654,7 @@ BuildImplicitMemberInitializer(Sema &SemaRef, CXXConstructorDecl *Constructor,
     }
   }
   
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (SemaRef.getLangOpts().ObjCAutoRefCount &&
       FieldBaseElementType->isObjCRetainableType() &&
       FieldBaseElementType.getObjCLifetime() != Qualifiers::OCL_None &&
@@ -3667,6 +3668,7 @@ BuildImplicitMemberInitializer(Sema &SemaRef, CXXConstructorDecl *Constructor,
                                                  Loc);
     return false;
   }
+#endif
       
   // Nothing to initialize.
   CXXMemberInit = nullptr;
@@ -6302,6 +6304,7 @@ static bool checkTrivialClassMembers(Sema &S, CXXRecordDecl *RD,
     //   [...] nontrivally ownership-qualified types are [...] not trivially
     //   default constructible, copy constructible, move constructible, copy
     //   assignable, move assignable, or destructible [...]
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount &&
         FieldType.hasNonTrivialObjCLifetime()) {
       if (Diagnose)
@@ -6309,6 +6312,7 @@ static bool checkTrivialClassMembers(Sema &S, CXXRecordDecl *RD,
           << RD << FieldType.getObjCLifetime();
       return false;
     }
+#endif
 
     bool ConstRHS = ConstArg && !FI->isMutable();
     if (!checkTrivialSubobjectCall(S, FI->getLocation(), FieldType, ConstRHS,
@@ -11446,7 +11450,11 @@ void Sema::DefineImplicitLambdaToBlockPointerConversion(
   // behavior.  Note that only the general conversion function does this
   // (since it's unusable otherwise); in the case where we inline the
   // block literal, it has block literal lifetime semantics.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !smth && !false, but wth???
   if (!BuildBlock.isInvalid() && !getLangOpts().ObjCAutoRefCount)
+#else
+  if (!BuildBlock.isInvalid() && !false)
+#endif
     BuildBlock = ImplicitCastExpr::Create(Context, BuildBlock.get()->getType(),
                                           CK_CopyAndAutoreleaseBlockObject,
                                           BuildBlock.get(), nullptr, VK_RValue);
@@ -12325,8 +12333,10 @@ VarDecl *Sema::BuildExceptionDeclaration(Scope *S,
   ExDecl->setExceptionVariable(true);
   
   // In ARC, infer 'retaining' for variables of retainable type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && inferObjCARCLifetime(ExDecl))
     Invalid = true;
+#endif
 
   if (!Invalid && !ExDeclType->isDependentType()) {
     if (const RecordType *recordType = ExDeclType->getAs<RecordType>()) {

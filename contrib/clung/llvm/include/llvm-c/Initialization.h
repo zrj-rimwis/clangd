@@ -34,7 +34,9 @@ extern "C" {
 void LLVMInitializeCore(LLVMPassRegistryRef R);
 void LLVMInitializeTransformUtils(LLVMPassRegistryRef R);
 void LLVMInitializeScalarOpts(LLVMPassRegistryRef R);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 void LLVMInitializeObjCARCOpts(LLVMPassRegistryRef R);
+#endif
 void LLVMInitializeVectorization(LLVMPassRegistryRef R);
 void LLVMInitializeInstCombine(LLVMPassRegistryRef R);
 void LLVMInitializeIPO(LLVMPassRegistryRef R);

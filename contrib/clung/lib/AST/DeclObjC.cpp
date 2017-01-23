@@ -390,8 +390,10 @@ void ObjCInterfaceDecl::collectPropertiesToImplement(PropertyMap &PM,
 bool ObjCInterfaceDecl::isArcWeakrefUnavailable() const {
   const ObjCInterfaceDecl *Class = this;
   while (Class) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (Class->hasAttr<ArcWeakrefUnavailableAttr>())
       return true;
+#endif
     Class = Class->getSuperClass();
   }
   return false;
@@ -1021,6 +1023,7 @@ QualType ObjCMethodDecl::getSelfType(ASTContext &Context,
   } else // we have a factory method.
     selfTy = Context.getObjCClassType();
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Context.getLangOpts().ObjCAutoRefCount) {
     if (isInstanceMethod()) {
       selfIsConsumed = hasAttr<NSConsumesSelfAttr>();
@@ -1044,6 +1047,7 @@ QualType ObjCMethodDecl::getSelfType(ASTContext &Context,
       selfIsPseudoStrong = true;
     }
   }
+#endif
   return selfTy;
 }
 

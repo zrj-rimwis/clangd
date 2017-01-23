@@ -65,7 +65,9 @@ static bool hasFeature(StringRef Feature, const LangOptions &LangOpts,
                         .Case("cplusplus", LangOpts.CPlusPlus)
                         .Case("cplusplus11", LangOpts.CPlusPlus11)
                         .Case("objc", LangOpts.ObjC1)
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
                         .Case("objc_arc", LangOpts.ObjCAutoRefCount)
+#endif
                         .Case("opencl", LangOpts.OpenCL)
                         .Case("tls", Target.isTLSSupported())
                         .Case("zvector", LangOpts.ZVector)

@@ -1101,8 +1101,10 @@ static bool HasFeature(const Preprocessor &PP, StringRef Feature) {
       .Case("efficiency_sanitizer",
             LangOpts.Sanitize.hasOneOf(SanitizerKind::Efficiency))
       // Objective-C features
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
       .Case("objc_arr", LangOpts.ObjCAutoRefCount) // FIXME: REMOVE?
       .Case("objc_arc", LangOpts.ObjCAutoRefCount)
+#endif
       .Case("objc_arc_weak", LangOpts.ObjCWeak)
       .Case("objc_default_synthesize_properties", LangOpts.ObjC2)
       .Case("objc_fixed_enum", LangOpts.ObjC2)

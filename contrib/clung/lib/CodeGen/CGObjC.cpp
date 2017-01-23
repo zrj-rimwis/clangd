@@ -136,10 +136,12 @@ llvm::Value *CodeGenFunction::EmitObjCCollectionLiteral(const Expr *E,
   
   // In ARC, we may need to do extra work to keep all the keys and
   // values alive until after the call.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false and constify
   SmallVector<llvm::Value *, 16> NeededObjects;
   bool TrackNeededObjects =
     (getLangOpts().ObjCAutoRefCount &&
     CGM.getCodeGenOpts().OptimizationLevel != 0);
+#endif
 
   // Perform the actual initialialization of the array(s).
   for (uint64_t i = 0; i < NumElements; i++) {
@@ -152,9 +154,11 @@ llvm::Value *CodeGenFunction::EmitObjCCollectionLiteral(const Expr *E,
 
       llvm::Value *value = EmitScalarExpr(Rhs);
       EmitStoreThroughLValue(RValue::get(value), LV, true);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (TrackNeededObjects) {
         NeededObjects.push_back(value);
       }
+#endif
     } else {      
       // Emit the key and store it to the appropriate array slot.
       const Expr *Key = DLE->getKeyValueElement(i).Key;
@@ -171,10 +175,12 @@ llvm::Value *CodeGenFunction::EmitObjCCollectionLiteral(const Expr *E,
           ElementType, AlignmentSource::Decl);
       llvm::Value *valueValue = EmitScalarExpr(Value);
       EmitStoreThroughLValue(RValue::get(valueValue), ValueLV, /*isInit=*/true);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (TrackNeededObjects) {
         NeededObjects.push_back(keyValue);
         NeededObjects.push_back(valueValue);
       }
+#endif
     }
   }
   
@@ -214,9 +220,11 @@ llvm::Value *CodeGenFunction::EmitObjCCollectionLiteral(const Expr *E,
   // passed in a buffer that is essentially __unsafe_unretained.
   // Therefore we must prevent the optimizer from releasing them until
   // after the call.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (TrackNeededObjects) {
     EmitARCIntrinsicUse(NeededObjects);
   }
+#endif
 
   return Builder.CreateBitCast(result.getScalarVal(), 
                                ConvertType(E->getType()));
@@ -363,11 +371,13 @@ RValue CodeGenFunction::EmitObjCMessageExpr(const ObjCMessageExpr *E,
   // safe because the receiver value is always loaded from 'self',
   // which we zero out.  We don't want to Block_copy block receivers,
   // though.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false and constify
   bool retainSelf =
     (!isDelegateInit &&
      CGM.getLangOpts().ObjCAutoRefCount &&
      method &&
      method->hasAttr<NSConsumesSelfAttr>());
+#endif
 
   CGObjCRuntime &Runtime = CGM.getObjCRuntime();
   bool isSuperMessage = false;
@@ -379,11 +389,16 @@ RValue CodeGenFunction::EmitObjCMessageExpr(const ObjCMessageExpr *E,
   switch (E->getReceiverKind()) {
   case ObjCMessageExpr::Instance:
     ReceiverType = E->getInstanceReceiver()->getType();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (retainSelf) {
       TryEmitResult ter = tryEmitARCRetainScalarExpr(*this,
                                                    E->getInstanceReceiver());
       Receiver = ter.getPointer();
       if (ter.getInt()) retainSelf = false;
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else
       Receiver = EmitScalarExpr(E->getInstanceReceiver());
     break;
@@ -413,16 +428,20 @@ RValue CodeGenFunction::EmitObjCMessageExpr(const ObjCMessageExpr *E,
     break;
   }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (retainSelf)
     Receiver = EmitARCRetainNonBlock(Receiver);
+#endif
 
   // In ARC, we sometimes want to "extend the lifetime"
   // (i.e. retain+autorelease) of receivers of returns-inner-pointer
   // messages.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && method &&
       method->hasAttr<ObjCReturnsInnerPointerAttr>() &&
       shouldExtendReceiverForInnerPointerMessage(E))
     Receiver = EmitARCRetainAutorelease(ReceiverType, Receiver);
+#endif
 
   QualType ResultType = method ? method->getReturnType() : E->getType();
 
@@ -437,7 +456,11 @@ RValue CodeGenFunction::EmitObjCMessageExpr(const ObjCMessageExpr *E,
   // be an undefined read and write of an object in unordered
   // expressions.
   if (isDelegateInit) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     assert(getLangOpts().ObjCAutoRefCount &&
+#else
+    assert(false &&
+#endif
            "delegate init calls should only be marked in ARC");
 
     // Do an unsafe store of null into self.
@@ -540,6 +563,7 @@ void CodeGenFunction::StartObjCMethod(const ObjCMethodDecl *OMD,
                 OMD->getLocation(), StartLoc);
 
   // In ARC, certain methods get an extra cleanup.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (CGM.getLangOpts().ObjCAutoRefCount &&
       OMD->isInstanceMethod() &&
       OMD->getSelector().isUnarySelector()) {
@@ -548,6 +572,7 @@ void CodeGenFunction::StartObjCMethod(const ObjCMethodDecl *OMD,
     if (ident->isStr("dealloc"))
       EHStack.pushCleanup<FinishARCDealloc>(getARCCleanupKind());
   }
+#endif
 }
 
 static llvm::Value *emitARCRetainLoadOfScalar(CodeGenFunction &CGF,
@@ -693,6 +718,7 @@ PropertyImplStrategy::PropertyImplStrategy(CodeGenModule &CGM,
     // In ARC, if the property is non-atomic, use expression emission,
     // which translates to objc_storeStrong.  This isn't required, but
     // it's slightly nicer.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     } else if (CGM.getLangOpts().ObjCAutoRefCount && !IsAtomic) {
       // Using standard expression emission for the setter is only
       // acceptable if the ivar is __strong, which won't be true if
@@ -705,6 +731,7 @@ PropertyImplStrategy::PropertyImplStrategy(CodeGenModule &CGM,
       else
         Kind = SetPropertyAndExpressionGet;
       return;
+#endif
 
     // Otherwise, we need to at least use setProperty.  However, if
     // the property isn't atomic, we can use normal expression
@@ -922,7 +949,9 @@ CodeGenFunction::generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
                         Builder.CreateBitCast(ReturnValue, bitcastType));
 
     // Make sure we don't do an autorelease.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // we sure
     AutoreleaseResult = false;
+#endif
     return;
   }
 
@@ -970,7 +999,9 @@ CodeGenFunction::generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
     EmitReturnOfRValue(RV, propType);
 
     // objc_getProperty does an autorelease, so we should suppress ours.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // we dont have to
     AutoreleaseResult = false;
+#endif
 
     return;
   }
@@ -1005,8 +1036,13 @@ CodeGenFunction::generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
       } else {
         // We want to load and autoreleaseReturnValue ARC __weak ivars.
         if (LV.getQuals().getObjCLifetime() == Qualifiers::OCL_Weak) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
           if (getLangOpts().ObjCAutoRefCount) {
             value = emitARCRetainLoadOfScalar(*this, LV, ivarType);
+#else
+          if (false) {
+            /* dummy */
+#endif
           } else {
             value = EmitARCLoadWeak(LV.getAddress());
           }
@@ -1015,7 +1051,9 @@ CodeGenFunction::generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
         // final autorelease.
         } else {
           value = EmitLoadOfLValue(LV, SourceLocation()).getScalarVal();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false already
           AutoreleaseResult = false;
+#endif
         }
 
         value = Builder.CreateBitCast(
@@ -1408,7 +1446,9 @@ void CodeGenFunction::GenerateObjCCtorDtorMethod(ObjCImplementationDecl *IMP,
   // Emit .cxx_construct.
   if (ctor) {
     // Suppress the final autorelease in ARC.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false already
     AutoreleaseResult = false;
+#endif
 
     for (const auto *IvarInit : IMP->inits()) {
       FieldDecl *Field = IvarInit->getAnyMember();
@@ -1496,11 +1536,16 @@ void CodeGenFunction::EmitObjCForCollectionStmt(const ObjCForCollectionStmt &S){
 
   // Emit the collection pointer.  In ARC, we do a retain.
   llvm::Value *Collection;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     Collection = EmitARCRetainScalarExpr(S.getCollection());
 
     // Enter a cleanup to do the release.
     EmitObjCConsumeObject(S.getCollection()->getType(), Collection);
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     Collection = EmitScalarExpr(S.getCollection());
   }
@@ -2394,9 +2439,11 @@ namespace {
 }
 
 void CodeGenFunction::EmitObjCAutoreleasePoolCleanup(llvm::Value *Ptr) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (CGM.getLangOpts().ObjCAutoRefCount)
     EHStack.pushCleanup<CallObjCAutoreleasePoolObject>(NormalCleanup, Ptr);
   else
+#endif
     EHStack.pushCleanup<CallObjCMRRAutoreleasePoolObject>(NormalCleanup, Ptr);
 }
 
@@ -2970,11 +3017,13 @@ llvm::Value *CodeGenFunction::EmitARCExtendBlockObject(const Expr *e) {
 
 llvm::Value *CodeGenFunction::EmitObjCThrowOperand(const Expr *expr) {
   // In ARC, retain and autorelease the expression.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     // Do so before running any cleanups for the full-expression.
     // EmitARCRetainAutoreleaseScalarExpr does this for us.
     return EmitARCRetainAutoreleaseScalarExpr(expr);
   }
+#endif
 
   // Otherwise, use the normal scalar-expression emission.  The
   // exception machinery doesn't do anything special with the

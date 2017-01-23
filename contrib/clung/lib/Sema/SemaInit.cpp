@@ -3370,6 +3370,7 @@ maybeRecoverWithZeroInitialization(Sema &S, InitializationSequence &Sequence,
 static void MaybeProduceObjCObject(Sema &S,
                                    InitializationSequence &Sequence,
                                    const InitializedEntity &Entity) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false and return
   if (!S.getLangOpts().ObjCAutoRefCount) return;
 
   /// When initializing a parameter, produce the value if it's marked
@@ -3392,6 +3393,9 @@ static void MaybeProduceObjCObject(Sema &S,
 
     Sequence.AddProduceObjCObjectStep(Entity.getType());
   }
+#else
+  return;
+#endif
 }
 
 static void TryListInitialization(Sema &S,
@@ -4812,8 +4816,10 @@ static void checkIndirectCopyRestoreSource(Sema &S, Expr *src) {
   InvalidICRKind iik = isInvalidICRSource(S.Context, src, false, isWeakAccess);
   // If isWeakAccess to true, there will be an implicit 
   // load which requires a cleanup.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCAutoRefCount && isWeakAccess)
     S.Cleanup.setExprNeedsCleanups(true);
+#endif
 
   if (iik == IIK_okay) return;
 
@@ -5100,17 +5106,21 @@ void InitializationSequence::InitializeFrom(Sema &S,
 
   // Determine whether we should consider writeback conversions for
   // Objective-C ARC.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false and constify
   bool allowObjCWritebackConversion = S.getLangOpts().ObjCAutoRefCount &&
          Entity.isParameterKind();
+#endif
 
   // We're at the end of the line for C: it's either a write-back conversion
   // or it's a C assignment. There's no need to check anything else.
   if (!S.getLangOpts().CPlusPlus) {
     // If allowed, check whether this is an Objective-C writeback conversion.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (allowObjCWritebackConversion &&
         tryObjCWritebackConversion(S, *this, Entity, Initializer)) {
       return;
     }
+#endif
 
     if (TryOCLSamplerInitialization(S, *this, DestType, Initializer))
       return;
@@ -5191,7 +5201,11 @@ void InitializationSequence::InitializeFrom(Sema &S,
                               /*AllowExplicitConversions*/ false,
                               /*InOverloadResolution*/ false,
                               /*CStyle=*/Kind.isCStyleOrFunctionalCast(),
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                               allowObjCWritebackConversion);
+#else
+                              false);
+#endif
 
   if (ICS.isStandard() &&
       ICS.Standard.Second == ICK_Writeback_Conversion) {
@@ -6492,8 +6506,12 @@ InitializationSequence::Perform(Sema &S,
       // need cleanups. Likewise if we're extending this temporary to automatic
       // storage duration -- we need to register its cleanup during the
       // full-expression's cleanups.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false || stmg
       if ((S.getLangOpts().ObjCAutoRefCount &&
            MTE->getType()->isObjCLifetimeType()) ||
+#else
+      if (false ||
+#endif
           (MTE->getStorageDuration() == SD_Automatic &&
            MTE->getType().isDestructedType()))
         S.Cleanup.setExprNeedsCleanups(true);

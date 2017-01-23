@@ -3218,6 +3218,7 @@ bool Sema::CheckTemplateTypeArgument(TemplateTypeParmDecl *Param,
   // Objective-C ARC:
   //   If an explicitly-specified template argument type is a lifetime type
   //   with no lifetime qualifier, the __strong lifetime qualifier is inferred.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount &&
       ArgType->isObjCLifetimeType() &&
       !ArgType.getObjCLifetime()) {
@@ -3225,6 +3226,7 @@ bool Sema::CheckTemplateTypeArgument(TemplateTypeParmDecl *Param,
     Qs.setObjCLifetime(Qualifiers::OCL_Strong);
     ArgType = Context.getQualifiedType(ArgType, Qs);
   }
+#endif
   
   Converted.push_back(TemplateArgument(ArgType));
   return false;

@@ -637,9 +637,11 @@ Decl *TemplateDeclInstantiator::VisitVarDecl(VarDecl *D,
                                  DI->getType(), DI, D->getStorageClass());
 
   // In ARC, infer 'retaining' for variables of retainable type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (SemaRef.getLangOpts().ObjCAutoRefCount && 
       SemaRef.inferObjCARCLifetime(Var))
     Var->setInvalidDecl();
+#endif
 
   // Substitute the nested name specifier, if any.
   if (SubstQualifier(D, Var))

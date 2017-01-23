@@ -548,7 +548,9 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
   Opts.DumpCoverageMapping = Args.hasArg(OPT_dump_coverage_mapping);
   Opts.AsmVerbose = Args.hasArg(OPT_masm_verbose);
   Opts.AssumeSaneOperatorNew = !Args.hasArg(OPT_fno_assume_sane_operator_new);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not available
   Opts.ObjCAutoRefCountExceptions = Args.hasArg(OPT_fobjc_arc_exceptions);
+#endif
   Opts.CXAAtExit = !Args.hasArg(OPT_fno_use_cxa_atexit);
   Opts.CXXCtorDtorAliases = Args.hasArg(OPT_mconstructor_aliases);
   Opts.CodeModel = getCodeModel(Args, Diags);
@@ -1762,11 +1764,13 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
       Opts.setGC(LangOptions::GCOnly);
     else if (Args.hasArg(OPT_fobjc_gc))
       Opts.setGC(LangOptions::HybridGC);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     else if (Args.hasArg(OPT_fobjc_arc)) {
       Opts.ObjCAutoRefCount = 1;
       if (!Opts.ObjCRuntime.allowsARC())
         Diags.Report(diag::err_arc_unsupported_on_runtime);
     }
+#endif
 
     // ObjCWeakRuntime tracks whether the runtime supports __weak, not
     // whether the feature is actually enabled.  This is predominantly
@@ -1789,8 +1793,10 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
       } else {
         Opts.ObjCWeak = 1;
       }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     } else if (Opts.ObjCAutoRefCount) {
       Opts.ObjCWeak = Opts.ObjCWeakRuntime;
+#endif
     }
 
     if (Args.hasArg(OPT_fno_objc_infer_related_result_type))
@@ -2275,6 +2281,7 @@ static void ParsePreprocessorArgs(PreprocessorOptions &Opts, ArgList &Args,
     Opts.addRemappedFile(Split.first, Split.second);
   }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not available
   if (Arg *A = Args.getLastArg(OPT_fobjc_arc_cxxlib_EQ)) {
     StringRef Name = A->getValue();
     unsigned Library = llvm::StringSwitch<unsigned>(Name)
@@ -2287,6 +2294,7 @@ static void ParsePreprocessorArgs(PreprocessorOptions &Opts, ArgList &Args,
     else
       Opts.ObjCXXARCStandardLibrary = (ObjCXXARCStandardLibraryKind)Library;
   }
+#endif
 }
 
 static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
@@ -2417,8 +2425,10 @@ bool CompilerInvocation::CreateFromArgs(CompilerInvocation &Res,
     // ObjCAAutoRefCount and Sanitize LangOpts are used to setup the
     // PassManager in BackendUtil.cpp. They need to be initializd no matter
     // what the input type is.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false, XXX wth is this madness???
     if (Args.hasArg(OPT_fobjc_arc))
       LangOpts.ObjCAutoRefCount = 1;
+#endif
     // PIClevel and PIELevel are needed during code generation and this should be
     // set regardless of the input type.
     LangOpts.PICLevel = getLastArgIntValue(Args, OPT_pic_level, 0, Diags);

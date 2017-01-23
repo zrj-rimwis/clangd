@@ -443,9 +443,11 @@ CodeGenTypes::arrangeObjCMessageSendSignature(const ObjCMethodDecl *MD,
   einfo = einfo.withCallingConv(getCallingConventionForDecl(MD, false));
 #endif
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getContext().getLangOpts().ObjCAutoRefCount &&
       MD->hasAttr<NSReturnsRetainedAttr>())
     einfo = einfo.withProducesResult(true);
+#endif
 
   RequiredArgs required =
     (MD->isVariadic() ? RequiredArgs(argTys.size()) : RequiredArgs::All);
@@ -2755,7 +2757,11 @@ void CodeGenFunction::EmitFunctionEpilog(const CGFunctionInfo &FI,
         // Reuse the debug location from the store unless there is
         // cleanup code to be emitted between the store and return
         // instruction.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
         if (EmitRetDbgLoc && !AutoreleaseResult)
+#else
+        if (EmitRetDbgLoc && !false)
+#endif
           RetDbgLoc = SI->getDebugLoc();
         // Get the stored value and nuke the now-dead store.
         RV = SI->getValueOperand();
@@ -2783,6 +2789,7 @@ void CodeGenFunction::EmitFunctionEpilog(const CGFunctionInfo &FI,
 
     // In ARC, end functions that return a retainable type with a call
     // to objc_autoreleaseReturnValue.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false, something fishy here
     if (AutoreleaseResult) {
 #ifndef NDEBUG
       // Type::isObjCRetainabletype has to be called on a QualType that hasn't
@@ -2800,12 +2807,17 @@ void CodeGenFunction::EmitFunctionEpilog(const CGFunctionInfo &FI,
       else
         llvm_unreachable("Unexpected function/method type");
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       assert(getLangOpts().ObjCAutoRefCount &&
+#else
+      assert(false &&
+#endif
              !FI.isReturnsRetained() &&
              RT->isObjCRetainableType());
 #endif
       RV = emitAutoreleaseOfResult(*this, RV);
     }
+#endif
 
     break;
 
@@ -3291,7 +3303,11 @@ void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
   DisableDebugLocationUpdates Dis(*this, E);
   if (const ObjCIndirectCopyRestoreExpr *CRE
         = dyn_cast<ObjCIndirectCopyRestoreExpr>(E)) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume flase
     assert(getLangOpts().ObjCAutoRefCount);
+#else
+    assert(false);
+#endif
     assert(getContext().hasSameType(E->getType(), type));
     return emitWritebackArg(*this, args, CRE);
   }
@@ -3390,6 +3406,7 @@ QualType CodeGenFunction::getVarArgType(const Expr *Arg) {
 
 // In ObjC ARC mode with no ObjC ARC exception safety, tell the ARC
 // optimizer it can aggressively ignore unwind edges.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 void
 CodeGenFunction::AddObjCARCExceptionMetadata(llvm::Instruction *Inst) {
   if (CGM.getCodeGenOpts().OptimizationLevel != 0 &&
@@ -3397,6 +3414,7 @@ CodeGenFunction::AddObjCARCExceptionMetadata(llvm::Instruction *Inst) {
     Inst->setMetadata("clang.arc.no_objc_arc_exceptions",
                       CGM.getNoObjCARCExceptionsMetadata());
 }
+#endif
 
 /// Emits a call to the given no-arguments nounwind runtime function.
 llvm::CallInst *
@@ -3516,8 +3534,10 @@ CodeGenFunction::EmitCallOrInvoke(llvm::Value *Callee,
 
   // In ObjC ARC mode with no ObjC ARC exception safety, tell the ARC
   // optimizer it can aggressively ignore unwind edges.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   if (CGM.getLangOpts().ObjCAutoRefCount)
     AddObjCARCExceptionMetadata(Inst);
+#endif
 
   return llvm::CallSite(Inst);
 }
@@ -4010,8 +4030,10 @@ RValue CodeGenFunction::EmitCall(const CGFunctionInfo &CallInfo,
 
   // In ObjC ARC mode with no ObjC ARC exception safety, tell the ARC
   // optimizer it can aggressively ignore unwind edges.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   if (CGM.getLangOpts().ObjCAutoRefCount)
     AddObjCARCExceptionMetadata(CS.getInstruction());
+#endif
 
   // If the call doesn't return, finish the basic block and clear the
   // insertion point; this allows the rest of IRgen to discard

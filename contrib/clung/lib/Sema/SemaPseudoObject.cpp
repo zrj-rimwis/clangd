@@ -854,12 +854,14 @@ ExprResult ObjCPropertyOpBuilder::buildRValueOperation(Expr *op) {
           result = S.ImpCastExprToType(result.get(), propType, CK_BitCast);
       }
     }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount) {
       Qualifiers::ObjCLifetime LT = propType.getObjCLifetime();
       if (LT == Qualifiers::OCL_Weak)
         if (!S.Diags.isIgnored(diag::warn_arc_repeated_use_of_weak, RefExpr->getLocation()))
               S.getCurFunction()->markSafeWeakUse(RefExpr);
     }
+#endif
   }
 
   return result;
@@ -928,10 +930,12 @@ ObjCPropertyOpBuilder::buildAssignmentOperation(Scope *Sc,
   if (result.isInvalid()) return ExprError();
 
   // Various warnings about property assignments in ARC.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCAutoRefCount && InstanceReceiver) {
     S.checkRetainCycles(InstanceReceiver->getSourceExpr(), RHS);
     S.checkUnsafeExprAssigns(opcLoc, LHS, RHS);
   }
+#endif
 
   return result;
 }
@@ -975,11 +979,13 @@ ObjCPropertyOpBuilder::buildIncDecOperation(Scope *Sc, SourceLocation opcLoc,
 }
 
 ExprResult ObjCPropertyOpBuilder::complete(Expr *SyntacticForm) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCAutoRefCount && isWeakProperty() &&
       !S.Diags.isIgnored(diag::warn_arc_repeated_use_of_weak,
                          SyntacticForm->getLocStart()))
       S.recordUseOfEvaluatedWeak(SyntacticRefExpr,
                                  SyntacticRefExpr->isMessagingGetter());
+#endif
 
   return PseudoOpBuilder::complete(SyntacticForm);
 }
@@ -1017,10 +1023,12 @@ ObjCSubscriptOpBuilder::buildAssignmentOperation(Scope *Sc,
   if (result.isInvalid()) return ExprError();
   
   // Various warnings about objc Index'ed assignments in ARC.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCAutoRefCount && InstanceBase) {
     S.checkRetainCycles(InstanceBase->getSourceExpr(), RHS);
     S.checkUnsafeExprAssigns(opcLoc, LHS, RHS);
   }
+#endif
   
   return result;
 }
@@ -1124,6 +1132,7 @@ Sema::ObjCSubscriptKind
 
 /// CheckKeyForObjCARCConversion - This routine suggests bridge casting of CF
 /// objects used as dictionary subscript key objects.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static void CheckKeyForObjCARCConversion(Sema &S, QualType ContainerT, 
                                          Expr *Key) {
   if (ContainerT.isNull())
@@ -1142,6 +1151,7 @@ static void CheckKeyForObjCARCConversion(Sema &S, QualType ContainerT,
   S.CheckObjCARCConversion(Key->getSourceRange(), 
                          T, Key, Sema::CCK_ImplicitConversion);
 }
+#endif
 
 bool ObjCSubscriptOpBuilder::findAtIndexGetter() {
   if (AtIndexGetter)
@@ -1158,10 +1168,12 @@ bool ObjCSubscriptOpBuilder::findAtIndexGetter() {
   Sema::ObjCSubscriptKind Res = 
     S.CheckSubscriptingKind(RefExpr->getKeyExpr());
   if (Res == Sema::OS_Error) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
     if (S.getLangOpts().ObjCAutoRefCount)
       CheckKeyForObjCARCConversion(S, ResultType, 
                                    RefExpr->getKeyExpr());
     return false;
+#endif
   }
   bool arrayRef = (Res == Sema::OS_Array);
   
@@ -1267,10 +1279,12 @@ bool ObjCSubscriptOpBuilder::findAtIndexSetter() {
   Sema::ObjCSubscriptKind Res = 
     S.CheckSubscriptingKind(RefExpr->getKeyExpr());
   if (Res == Sema::OS_Error) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount)
       CheckKeyForObjCARCConversion(S, ResultType, 
                                    RefExpr->getKeyExpr());
     return false;
+#endif
   }
   bool arrayRef = (Res == Sema::OS_Array);
   

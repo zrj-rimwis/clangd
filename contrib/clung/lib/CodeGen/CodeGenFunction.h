@@ -274,7 +274,9 @@ public:
   bool CurFuncIsThunk;
 
   /// In ARC, whether we should autorelease the return value.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   bool AutoreleaseResult;
+#endif
 
   /// Whether we processed a Microsoft-style asm block during CodeGen. These can
   /// potentially set the return value.
@@ -1396,7 +1398,11 @@ public:
       return getLangOpts().Exceptions;
     case QualType::DK_objc_strong_lifetime:
       return getLangOpts().Exceptions &&
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
              CGM.getCodeGenOpts().ObjCAutoRefCountExceptions;
+#else
+             false;
+#endif
     }
     llvm_unreachable("bad destruction kind");
   }
@@ -3073,8 +3079,12 @@ public:
   /// Retrieves the default cleanup kind for an ARC cleanup.
   /// Except under -fobjc-arc-eh, ARC cleanups are normal-only.
   CleanupKind getARCCleanupKind() {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     return CGM.getCodeGenOpts().ObjCAutoRefCountExceptions
              ? NormalAndEHCleanup : NormalCleanup;
+#else
+    return NormalCleanup;
+#endif
   }
 
   // ARC primitives.
@@ -3521,7 +3531,9 @@ private:
   BlockByrefHelpers *buildByrefHelpers(llvm::StructType &byrefType,
                                   const AutoVarEmission &emission);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   void AddObjCARCExceptionMetadata(llvm::Instruction *Inst);
+#endif
 
   llvm::Value *GetValueForARMHint(unsigned BuiltinID);
 };

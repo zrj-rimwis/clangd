@@ -47,7 +47,9 @@
 #include "llvm/Transforms/IPO/FunctionImport.h"
 #include "llvm/Transforms/IPO/Internalize.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
 #include "llvm/Transforms/ObjCARC.h"
+#endif
 #include "llvm/Transforms/Utils/FunctionImportUtils.h"
 
 #include <numeric>
@@ -206,7 +208,9 @@ std::unique_ptr<MemoryBuffer> codegenModule(Module &TheModule,
 
     // If the bitcode files contain ARC code and were compiled with optimization,
     // the ObjCARCContractPass must be run, so do it unconditionally here.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // mmm no we don't :)
     PM.add(createObjCARCContractPass());
+#endif
 
     // Setup the codegen now.
     if (TM.addPassesToEmitFile(PM, OS, TargetMachine::CGFT_ObjectFile,

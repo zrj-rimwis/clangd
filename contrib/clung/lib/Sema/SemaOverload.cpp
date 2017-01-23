@@ -1370,9 +1370,11 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
     return ExprError();
 
   // Objective-C ARC: Determine whether we will allow the writeback conversion.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false && smth and constify
   bool AllowObjCWritebackConversion
     = getLangOpts().ObjCAutoRefCount && 
       (Action == AA_Passing || Action == AA_Sending);
+#endif
   if (getLangOpts().ObjC1)
     CheckObjCBridgeRelatedConversions(From->getLocStart(),
                                       ToType, From->getType(), From);
@@ -1381,7 +1383,11 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
                                 AllowExplicit,
                                 /*InOverloadResolution=*/false,
                                 /*CStyle=*/false,
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                 AllowObjCWritebackConversion,
+#else
+                                false,
+#endif
                                 /*AllowObjCConversionOnExplicit=*/false);
   return PerformImplicitConversion(From, ToType, ICS, Action);
 }
@@ -2158,7 +2164,11 @@ bool Sema::IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
   // , including objective-c pointers.
   QualType ToPointeeType = ToTypePtr->getPointeeType();
   if (FromType->isObjCObjectPointerType() && ToPointeeType->isVoidType() &&
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
       !getLangOpts().ObjCAutoRefCount) {
+#else
+      !false) {
+#endif
     ConvertedType = BuildSimilarlyQualifiedPointerType(
                                       FromType->getAs<ObjCObjectPointerType>(),
                                                        ToPointeeType,
@@ -2442,10 +2452,13 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
 /// this conversion.
 bool Sema::isObjCWritebackConversion(QualType FromType, QualType ToType,
                                      QualType &ConvertedType) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false || smth, and return early
   if (!getLangOpts().ObjCAutoRefCount || 
       Context.hasSameUnqualifiedType(FromType, ToType))
+#endif
     return false;
   
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed ^^^
   // Parameter must be a pointer to __autoreleasing (with no other qualifiers).
   QualType ToPointee;
   if (const PointerType *ToPointer = ToType->getAs<PointerType>())
@@ -2496,6 +2509,7 @@ bool Sema::isObjCWritebackConversion(QualType FromType, QualType ToType,
   FromPointee = Context.getQualifiedType(FromPointee, FromQuals);
   ConvertedType = Context.getPointerType(FromPointee);
   return true;
+#endif
 }
 
 bool Sema::IsBlockPointerConversion(QualType FromType, QualType ToType,
@@ -5853,7 +5867,11 @@ Sema::AddOverloadCandidate(FunctionDecl *Function,
                                 SuppressUserConversions,
                                 /*InOverloadResolution=*/true,
                                 /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                   getLangOpts().ObjCAutoRefCount,
+#else
+                                  false,
+#endif
                                 AllowExplicit);
       if (Candidate.Conversions[ArgIdx].isBad()) {
         Candidate.Viable = false;
@@ -5921,7 +5939,11 @@ Sema::SelectBestMethod(Selector Sel, MultiExprArg Args, bool IsInstance,
                                 /*SuppressUserConversions*/false,
                                 /*InOverloadResolution=*/true,
                                 /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                 getLangOpts().ObjCAutoRefCount,
+#else
+                                false,
+#endif
                                 /*AllowExplicit*/false);
         if (ConversionState.isBad()) {
           Match = false;
@@ -6236,7 +6258,11 @@ Sema::AddMethodCandidate(CXXMethodDecl *Method, DeclAccessPair FoundDecl,
                                 SuppressUserConversions,
                                 /*InOverloadResolution=*/true,
                                 /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                   getLangOpts().ObjCAutoRefCount);
+#else
+                                  false);
+#endif
       if (Candidate.Conversions[ArgIdx + 1].isBad()) {
         Candidate.Viable = false;
         Candidate.FailureKind = ovl_fail_bad_conversion;
@@ -6697,7 +6723,11 @@ void Sema::AddSurrogateCandidate(CXXConversionDecl *Conversion,
                                 /*SuppressUserConversions=*/false,
                                 /*InOverloadResolution=*/false,
                                 /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                   getLangOpts().ObjCAutoRefCount);
+#else
+                                  false);
+#endif
       if (Candidate.Conversions[ArgIdx + 1].isBad()) {
         Candidate.Viable = false;
         Candidate.FailureKind = ovl_fail_bad_conversion;
@@ -6826,7 +6856,11 @@ void Sema::AddBuiltinCandidate(QualType ResultTy, QualType *ParamTys,
                                 ArgIdx == 0 && IsAssignmentOperator,
                                 /*InOverloadResolution=*/false,
                                 /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                   getLangOpts().ObjCAutoRefCount);
+#else
+                                  false);
+#endif
     }
     if (Candidate.Conversions[ArgIdx].isBad()) {
       Candidate.Viable = false;
@@ -10075,7 +10109,11 @@ static void CompleteNonViableCandidate(Sema &S, OverloadCandidate *Cand,
                                 SuppressUserConversions,
                                 /*InOverloadResolution*/ true,
                                 /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                                   S.getLangOpts().ObjCAutoRefCount);
+#else
+                                  false);
+#endif
     return;
   }
 
@@ -10087,7 +10125,11 @@ static void CompleteNonViableCandidate(Sema &S, OverloadCandidate *Cand,
           S, Args[ArgIdx], Proto->getParamType(ArgIdx), SuppressUserConversions,
           /*InOverloadResolution=*/true,
           /*AllowObjCWritebackConversion=*/
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
           S.getLangOpts().ObjCAutoRefCount);
+#else
+          false);
+#endif
       // Store the FixIt in the candidate if it exists.
       if (!Unfixable && Cand->Conversions[ConvIdx].isBad())
         Unfixable = !Cand->TryToFixBadConversion(ConvIdx, S);

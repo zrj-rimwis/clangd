@@ -1341,9 +1341,11 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
     //   - an interface
     ObjCInterfaceDecl *IDecl = OTy->getInterface();
     if (!IDecl) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false, wow goto, so c++11 :DDD
       if (S.getLangOpts().ObjCAutoRefCount &&
           (OTy->isObjCId() || OTy->isObjCClass()))
         goto fail;
+#endif
       // There's an implicit 'isa' ivar on all objects.
       // But we only actually find it this way on objects of type 'id',
       // apparently.
@@ -1443,6 +1445,7 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
       }
     }
     bool warn = true;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount) {
       Expr *BaseExp = BaseExpr.get()->IgnoreParenImpCasts();
       if (UnaryOperator *UO = dyn_cast<UnaryOperator>(BaseExp))
@@ -1455,6 +1458,7 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
           warn = false;
         }
     }
+#endif
     if (warn) {
       if (ObjCMethodDecl *MD = S.getCurMethodDecl()) {
         ObjCMethodFamily MF = MD->getMethodFamily();
@@ -1470,12 +1474,14 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
         IV, IV->getUsageType(BaseType), MemberLoc, OpLoc, BaseExpr.get(),
         IsArrow);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount) {
       if (IV->getType().getObjCLifetime() == Qualifiers::OCL_Weak) {
         if (!S.Diags.isIgnored(diag::warn_arc_repeated_use_of_weak, MemberLoc))
           S.recordUseOfEvaluatedWeak(Result);
       }
     }
+#endif
 
     return Result;
   }

@@ -1997,6 +1997,7 @@ bool QualType::isCXX98PODType(const ASTContext &Context) const {
   if ((*this)->isIncompleteType())
     return false;
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Context.getLangOpts().ObjCAutoRefCount) {
     switch (getObjCLifetime()) {
     case Qualifiers::OCL_ExplicitNone:
@@ -2011,6 +2012,7 @@ bool QualType::isCXX98PODType(const ASTContext &Context) const {
       break;
     }        
   }
+#endif
   
   QualType CanonicalType = getTypePtr()->CanonicalType;
   switch (CanonicalType->getTypeClass()) {
@@ -2059,6 +2061,7 @@ bool QualType::isTrivialType(const ASTContext &Context) const {
   if ((*this)->isIncompleteType())
     return false;
   
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Context.getLangOpts().ObjCAutoRefCount) {
     switch (getObjCLifetime()) {
     case Qualifiers::OCL_ExplicitNone:
@@ -2075,6 +2078,7 @@ bool QualType::isTrivialType(const ASTContext &Context) const {
       break;
     }        
   }
+#endif
   
   QualType CanonicalType = getTypePtr()->CanonicalType;
   if (CanonicalType->isDependentType())
@@ -2111,6 +2115,7 @@ bool QualType::isTriviallyCopyableType(const ASTContext &Context) const {
   if ((*this)->isArrayType())
     return Context.getBaseElementType(*this).isTriviallyCopyableType(Context);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Context.getLangOpts().ObjCAutoRefCount) {
     switch (getObjCLifetime()) {
     case Qualifiers::OCL_ExplicitNone:
@@ -2127,6 +2132,7 @@ bool QualType::isTriviallyCopyableType(const ASTContext &Context) const {
       break;
     }        
   }
+#endif
 
   // C++11 [basic.types]p9
   //   Scalar types, trivially copyable class types, arrays of such types, and
@@ -2272,6 +2278,7 @@ bool QualType::isCXX11PODType(const ASTContext &Context) const {
   if (ty->isDependentType())
     return false;
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Context.getLangOpts().ObjCAutoRefCount) {
     switch (getObjCLifetime()) {
     case Qualifiers::OCL_ExplicitNone:
@@ -2286,6 +2293,7 @@ bool QualType::isCXX11PODType(const ASTContext &Context) const {
       break;
     }        
   }
+#endif
 
   // C++11 [basic.types]p9:
   //   Scalar types, POD classes, arrays of such types, and cv-qualified
@@ -3758,11 +3766,14 @@ bool Type::isObjCLifetimeType() const {
 
 /// \brief Determine whether the given type T is a "bridgable" Objective-C type,
 /// which is either an Objective-C object pointer type or an 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 bool Type::isObjCARCBridgableType() const {
   return isObjCObjectPointerType() || isBlockPointerType();
 }
+#endif
 
 /// \brief Determine whether the given type T is a "bridgeable" C type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
 bool Type::isCARCBridgableType() const {
   const PointerType *Pointer = getAs<PointerType>();
   if (!Pointer)
@@ -3771,6 +3782,7 @@ bool Type::isCARCBridgableType() const {
   QualType Pointee = Pointer->getPointeeType();
   return Pointee->isVoidType() || Pointee->isRecordType();
 }
+#endif
 
 bool Type::hasSizedVLAType() const {
   if (!isVariablyModifiedType()) return false;

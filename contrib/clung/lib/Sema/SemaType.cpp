@@ -648,7 +648,9 @@ static void distributeTypeAttrsFromDeclarator(TypeProcessingState &state,
       break;
 
     case AttributeList::AT_NSReturnsRetained:
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
       if (!state.getSema().getLangOpts().ObjCAutoRefCount)
+#endif
         break;
       // fallthrough
 
@@ -1977,8 +1979,10 @@ QualType Sema::BuildPointerType(QualType T,
   assert(!T->isObjCObjectType() && "Should build ObjCObjectPointerType");
 
   // In ARC, it is forbidden to build pointers to unqualified pointers.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount)
     T = inferARCLifetimeForPointee(*this, T, Loc, /*reference*/ false);
+#endif
 
   // Build the pointer type.
   return Context.getPointerType(T);
@@ -2037,8 +2041,10 @@ QualType Sema::BuildReferenceType(QualType T, bool SpelledAsLValue,
     return QualType();
 
   // In ARC, it is forbidden to build references to unqualified pointers.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount)
     T = inferARCLifetimeForPointee(*this, T, Loc, /*reference*/ true);
+#endif
 
   // Handle restrict on references.
   if (LValueRef)
@@ -4280,10 +4286,12 @@ static TypeSourceInfo *GetFullTypeForDeclarator(TypeProcessingState &state,
             }
           }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
           if (LangOpts.ObjCAutoRefCount && Param->hasAttr<NSConsumedAttr>()) {
             ExtParameterInfos[i] = ExtParameterInfos[i].withIsConsumed(true);
             HasAnyInterestingExtParameterInfos = true;
           }
+#endif
 
           if (auto attr = Param->getAttr<ParameterABIAttr>()) {
             ExtParameterInfos[i] =
@@ -4605,8 +4613,10 @@ TypeSourceInfo *Sema::GetTypeForDeclarator(Declarator &D, Scope *S) {
   TypeSourceInfo *ReturnTypeInfo = nullptr;
   QualType T = GetDeclSpecTypeForDeclarator(state, ReturnTypeInfo);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (D.isPrototypeContext() && getLangOpts().ObjCAutoRefCount)
     inferARCWriteback(state, T);
+#endif
 
   return GetFullTypeForDeclarator(state, T, ReturnTypeInfo);
 }
@@ -5445,7 +5455,11 @@ static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
 
   // Just ignore lifetime attributes other than __weak and __unsafe_unretained
   // outside of ARC mode.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
   if (!S.getLangOpts().ObjCAutoRefCount &&
+#else
+  if (!false &&
+#endif
       lifetime != Qualifiers::OCL_Weak &&
       lifetime != Qualifiers::OCL_ExplicitNone) {
     return true;
@@ -5504,7 +5518,11 @@ static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
   // Doing this does means we miss some trivial consistency checks that
   // would've triggered in ARC, but that's better than trying to solve all
   // the coexistence problems with __unsafe_unretained.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
   if (!S.getLangOpts().ObjCAutoRefCount &&
+#else
+  if (!false &&
+#endif
       lifetime == Qualifiers::OCL_ExplicitNone) {
     type = S.Context.getAttributedType(
                              AttributedType::attr_objc_inert_unsafe_unretained,
@@ -6155,7 +6173,11 @@ static bool handleFunctionTypeAttr(TypeProcessingState &state,
   // ns_returns_retained is not always a type attribute, but if we got
   // here, we're treating it as one right now.
   if (attr.getKind() == AttributeList::AT_NSReturnsRetained) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     assert(S.getLangOpts().ObjCAutoRefCount &&
+#else
+    assert(false &&
+#endif
            "ns_returns_retained treated as type attribute in non-ARC");
     if (attr.getNumArgs()) return true;
 
@@ -6706,7 +6728,9 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
       break;
 
     case AttributeList::AT_NSReturnsRetained:
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
       if (!state.getSema().getLangOpts().ObjCAutoRefCount)
+#endif
         break;
       // fallthrough into the function attrs
 

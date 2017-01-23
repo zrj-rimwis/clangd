@@ -1233,6 +1233,7 @@ ExprResult Sema::ParseObjCSelectorExpression(Selector Sel,
 
   // In ARC, forbid the user from using @selector for 
   // retain/release/autorelease/dealloc/retainCount.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     switch (Sel.getMethodFamily()) {
     case OMF_retain:
@@ -1257,6 +1258,7 @@ ExprResult Sema::ParseObjCSelectorExpression(Selector Sel,
       break;
     }
   }
+#endif
   QualType Ty = Context.getObjCSelType();
   return new (Context) ObjCSelectorExpr(Ty, Sel, AtLoc, RParenLoc);
 }
@@ -1575,17 +1577,21 @@ bool Sema::CheckMessageArgumentTypes(QualType ReceiverType,
     }
 
     unsigned DiagID;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount)
       DiagID = diag::err_arc_method_not_found;
     else
+#endif
       DiagID = isClassMessage ? diag::warn_class_method_not_found
                               : diag::warn_inst_method_not_found;
     if (!getLangOpts().DebuggerSupport) {
       const ObjCMethodDecl *OMD = SelectorsForTypoCorrection(Sel, ReceiverType);
       if (OMD && !OMD->isInvalidDecl()) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
         if (getLangOpts().ObjCAutoRefCount)
           DiagID = diag::error_method_not_found_with_typo;
         else
+#endif
           DiagID = isClassMessage ? diag::warn_class_method_not_found_with_typo
                                   : diag::warn_instance_method_not_found_with_typo;
         Selector MatchedSel = OMD->getSelector();
@@ -2434,14 +2440,22 @@ ExprResult Sema::BuildClassMessage(TypeSourceInfo *ReceiverTypeInfo,
       = SuperLoc.isValid()? SourceRange(SuperLoc)
                           : ReceiverTypeInfo->getTypeLoc().getSourceRange();
     if (RequireCompleteType(Loc, Context.getObjCInterfaceType(Class),
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
                             (getLangOpts().ObjCAutoRefCount
                                ? diag::err_arc_receiver_forward_class
                                : diag::warn_receiver_forward_class),
+#else
+                            diag::warn_receiver_forward_class,
+#endif
                             TypeRange)) {
       // A forward class used in messaging is treated as a 'Class'
       Method = LookupFactoryMethodInGlobalPool(Sel, 
                                                SourceRange(LBracLoc, RBracLoc));
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
       if (Method && !getLangOpts().ObjCAutoRefCount)
+#else
+      if (Method && !false)
+#endif
         Diag(Method->getLocation(), diag::note_method_sent_forward_class)
           << Method->getDeclName();
     }
@@ -2649,7 +2663,11 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
     // special conversion in order to look up a receiver.
     if (ReceiverType->isObjCRetainableType()) {
       // do nothing
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
     } else if (!getLangOpts().ObjCAutoRefCount &&
+#else
+    } else if (!false &&
+#endif
                !Context.getObjCIdType().isNull() &&
                (ReceiverType->isPointerType() || 
                 ReceiverType->isIntegerType())) {
@@ -2804,13 +2822,19 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
         // definition is found in a module that's not visible.
         const ObjCInterfaceDecl *forwardClass = nullptr;
         if (RequireCompleteType(Loc, OCIType->getPointeeType(),
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
               getLangOpts().ObjCAutoRefCount
                 ? diag::err_arc_receiver_forward_instance
                 : diag::warn_receiver_forward_instance,
+#else
+              diag::warn_receiver_forward_instance,
+#endif
                                 Receiver? Receiver->getSourceRange()
                                         : SourceRange(SuperLoc))) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
           if (getLangOpts().ObjCAutoRefCount)
             return ExprError();
+#endif
           
           forwardClass = OCIType->getInterfaceDecl();
           Diag(Receiver ? Receiver->getLocStart() 
@@ -2828,12 +2852,14 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
           // If we have implementations in scope, check "private" methods.
           Method = ClassDecl->lookupPrivateMethod(Sel);
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
           if (!Method && getLangOpts().ObjCAutoRefCount) {
             Diag(SelLoc, diag::err_arc_may_not_respond)
               << OCIType->getPointeeType() << Sel << RecRange
               << SourceRange(SelectorLocs.front(), SelectorLocs.back());
             return ExprError();
           }
+#endif
 
           if (!Method && (!Receiver || !isSelfExpr(Receiver))) {
             // If we still haven't found a method, look in the global pool. This
@@ -2943,6 +2969,7 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
 
   // In ARC, forbid the user from sending messages to 
   // retain/release/autorelease/dealloc/retainCount explicitly.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     ObjCMethodFamily family =
       (Method ? Method->getMethodFamily() : Sel.getMethodFamily());
@@ -3020,6 +3047,7 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
       break;
     }
   }
+#endif
 
   DiagnoseCStringFormatDirectiveInObjCAPI(*this, Method, Sel, Args, NumArgs);
   
@@ -3042,6 +3070,7 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
 #endif
   }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     // In ARC, annotate delegate init calls.
     if (Result->getMethodFamily() == OMF_init &&
@@ -3073,6 +3102,7 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
       }
     }
   }
+#endif
 
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume no check available
   CheckObjCCircularContainer(Result);
@@ -3182,13 +3212,17 @@ static ARCConversionTypeClass classifyTypeForARCConversion(QualType type) {
   }
   
   if (isIndirect) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (type->isObjCARCBridgableType())
       return ACTC_indirectRetainable;
+#endif
     return ACTC_none;
   }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (type->isObjCARCBridgableType())
     return ACTC_retainable;
+#endif
 
   return ACTC_none;
 }
@@ -3227,7 +3261,11 @@ namespace {
 
     static bool isCFType(QualType type) {
       // Someday this can use ns_bridged.  For now, it has to do this.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       return type->isCARCBridgableType();
+#else
+      return false;
+#endif
     }
 
   public:
@@ -4069,6 +4107,7 @@ Sema::CheckObjCBridgeRelatedConversions(SourceLocation Loc,
   return false;
 }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 Sema::ARCConversionResult
 Sema::CheckObjCARCConversion(SourceRange castRange, QualType castType,
                              Expr *&castExpr, CheckedConversionKind CCK,
@@ -4179,6 +4218,7 @@ Sema::CheckObjCARCConversion(SourceRange castRange, QualType castType,
   }
   return ACR_okay;
 }
+#endif
 
 /// Given that we saw an expression with the ARCUnbridgedCastTy
 /// placeholder type, complain bitterly.
@@ -4255,6 +4295,7 @@ Expr *Sema::stripARCUnbridgedCast(Expr *e) {
   }
 }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 bool Sema::CheckObjCARCUnavailableWeakConversion(QualType castType,
                                                  QualType exprType) {
   QualType canCastType = 
@@ -4271,6 +4312,7 @@ bool Sema::CheckObjCARCUnavailableWeakConversion(QualType castType,
   }
   return true;
 }
+#endif
 
 /// Look for an ObjCReclaimReturnedObject cast and destroy it.
 static Expr *maybeUndoReclaimObject(Expr *e) {
@@ -4304,6 +4346,7 @@ ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,
   if (T->isDependentType() || SubExpr->isTypeDependent()) {
     // Okay: we'll build a dependent expression type.
     CK = CK_Dependent;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false && smth
   } else if (T->isObjCARCBridgableType() && FromType->isCARCBridgableType()) {
     // Casting CF -> id
     CK = (T->isBlockPointerType() ? CK_AnyPointerToBlockPointerCast
@@ -4338,6 +4381,8 @@ ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,
       MustConsume = true;
       break;
     }
+#endif
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false && smth
   } else if (T->isCARCBridgableType() && FromType->isObjCARCBridgableType()) {
     // Okay: id -> CF
     CK = CK_BitCast;
@@ -4376,6 +4421,7 @@ ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,
       break;
     }
     }
+#endif
   } else {
     Diag(LParenLoc, diag::err_arc_bridge_cast_incompatible)
       << FromType << T << Kind

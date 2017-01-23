@@ -295,7 +295,9 @@ private:
 #endif
   std::unique_ptr<CGDebugInfo> DebugInfo;
   std::unique_ptr<ObjCEntrypoints> ObjCData;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   llvm::MDNode *NoObjCARCExceptionsMetadata = nullptr;
+#endif
   std::unique_ptr<llvm::IndexedInstrProfReader> PGOReader;
   InstrProfStats PGOStats;
   std::unique_ptr<llvm::SanitizerStatReport> SanStats;
@@ -597,11 +599,13 @@ public:
 
   CGDebugInfo *getModuleDebugInfo() { return DebugInfo.get(); }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   llvm::MDNode *getNoObjCARCExceptionsMetadata() {
     if (!NoObjCARCExceptionsMetadata)
       NoObjCARCExceptionsMetadata = llvm::MDNode::get(getLLVMContext(), None);
     return NoObjCARCExceptionsMetadata;
   }
+#endif
 
   ASTContext &getContext() const { return Context; }
   const LangOptions &getLangOpts() const { return LangOpts; }

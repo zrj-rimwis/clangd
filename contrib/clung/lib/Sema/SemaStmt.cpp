@@ -106,6 +106,7 @@ void Sema::ActOnForEachDeclStmt(DeclGroupPtrTy dg) {
   // In ARC, we don't need to retain the iteration variable of a fast
   // enumeration loop.  Rather than actually trying to catch that
   // during declaration processing, we remove the consequences here.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount) {
     QualType type = var->getType();
 
@@ -118,6 +119,7 @@ void Sema::ActOnForEachDeclStmt(DeclGroupPtrTy dg) {
       var->setARCPseudoStrong(true);
     }
   }
+#endif
 }
 
 /// \brief Diagnose unused comparisons, both builtin and overloaded operators.
@@ -271,10 +273,12 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S) {
     return;
 
   if (const ObjCMessageExpr *ME = dyn_cast<ObjCMessageExpr>(E)) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount && ME->isDelegateInitCall()) {
       Diag(Loc, diag::err_arc_unused_init_message) << R1;
       return;
     }
+#endif
     const ObjCMethodDecl *MD = ME->getMethodDecl();
     if (MD) {
       if (const auto *A = MD->getAttr<WarnUnusedResultAttr>()) {
@@ -1727,10 +1731,14 @@ Sema::CheckObjCForCollectionOperand(SourceLocation forLoc, Expr *collection) {
   // If we have a forward-declared type, we can't do this check.
   // Under ARC, it is an error not to have a forward-declared class.
   if (iface &&
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       (getLangOpts().ObjCAutoRefCount
            ? RequireCompleteType(forLoc, QualType(objectType, 0),
                                  diag::err_arc_collection_forward, collection)
            : !isCompleteType(forLoc, QualType(objectType, 0)))) {
+#else
+      (!isCompleteType(forLoc, QualType(objectType, 0)))) {
+#endif
     // Otherwise, if we have any useful type information, check that
     // the type declares the appropriate method.
   } else if (iface || !objectType->qual_empty()) {
@@ -1876,9 +1884,11 @@ static bool FinishForRangeVarDecl(Sema &SemaRef, VarDecl *Decl, Expr *Init,
   // In ARC, infer lifetime.
   // FIXME: ARC may want to turn this into 'const __unsafe_unretained' if
   // we're doing the equivalent of fast iteration.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (SemaRef.getLangOpts().ObjCAutoRefCount &&
       SemaRef.inferObjCARCLifetime(Decl))
     Decl->setInvalidDecl();
+#endif
 
   SemaRef.AddInitializerToDecl(Decl, Init, /*DirectInit=*/false,
                                /*TypeMayContainAuto=*/false);

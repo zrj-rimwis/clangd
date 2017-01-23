@@ -5552,6 +5552,7 @@ static void SetNestedNameSpecifier(DeclaratorDecl *DD, Declarator &D) {
   DD->setQualifierInfo(SS.getWithLocInContext(DD->getASTContext()));
 }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 bool Sema::inferObjCARCLifetime(ValueDecl *decl) {
   QualType type = decl->getType();
   Qualifiers::ObjCLifetime lifetime = type.getObjCLifetime();
@@ -5595,6 +5596,7 @@ bool Sema::inferObjCARCLifetime(ValueDecl *decl) {
 
   return false;
 }
+#endif
 
 static void checkAttributesAfterMerging(Sema &S, NamedDecl &ND) {
   // Ensure that an auto decl is deduced otherwise the checks below might cache
@@ -6385,8 +6387,10 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
 
   // In auto-retain/release, infer strong retension for variables of
   // retainable type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && inferObjCARCLifetime(NewVD))
     NewVD->setInvalidDecl();
+#endif
 
   // Handle GNU asm-label extension (encoded as an attribute).
   if (Expr *E = (Expr*)D.getAsmLabel()) {
@@ -6971,7 +6975,9 @@ void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
     if (getLangOpts().getGC() != LangOptions::NonGC)
       Diag(NewVD->getLocation(), diag::warn_gc_attribute_weak_on_local);
     else {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, thus no assert
       assert(!getLangOpts().ObjCAutoRefCount);
+#endif
       Diag(NewVD->getLocation(), diag::warn_attribute_weak_on_local);
     }
   }
@@ -9671,8 +9677,10 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init,
     assert(VDecl->isLinkageValid());
 
     // In ARC, infer lifetime.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount && inferObjCARCLifetime(VDecl))
       VDecl->setInvalidDecl();
+#endif
 
     // If this is a redeclaration, check that the type we just deduced matches
     // the previously declared type.
@@ -11096,6 +11104,7 @@ ParmVarDecl *Sema::CheckParameter(DeclContext *DC, SourceLocation StartLoc,
                                   QualType T, TypeSourceInfo *TSInfo,
                                   StorageClass SC) {
   // In ARC, infer a lifetime qualifier for appropriate parameter types.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount &&
       T.getObjCLifetime() == Qualifiers::OCL_None &&
       T->isObjCLifetimeType()) {
@@ -11117,6 +11126,7 @@ ParmVarDecl *Sema::CheckParameter(DeclContext *DC, SourceLocation StartLoc,
     }
     T = Context.getLifetimeQualifiedType(T, lifetime);
   }
+#endif
 
   ParmVarDecl *New = ParmVarDecl::Create(Context, DC, StartLoc, NameLoc, Name,
                                          Context.getAdjustedParameterType(T),
@@ -13795,8 +13805,10 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
 
   // In auto-retain/release, infer strong retension for fields of
   // retainable type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && inferObjCARCLifetime(NewFD))
     NewFD->setInvalidDecl();
+#endif
 
   if (T.isObjCGCWeak())
     Diag(Loc, diag::warn_attribute_weak_on_field);
@@ -13836,6 +13848,7 @@ bool Sema::CheckNontrivialField(FieldDecl *FD) {
         member = CXXDestructor;
 
       if (member != CXXInvalid) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !smth && false && smth
         if (!getLangOpts().CPlusPlus11 &&
             getLangOpts().ObjCAutoRefCount && RDecl->hasObjectMember()) {
           // Objective-C++ ARC: it is an error to have a non-trivial field of
@@ -13851,6 +13864,7 @@ bool Sema::CheckNontrivialField(FieldDecl *FD) {
             return false;
           }
         }
+#endif
 
         Diag(FD->getLocation(), getLangOpts().CPlusPlus11 ?
                diag::warn_cxx98_compat_nontrivial_union_or_anon_struct_member :
@@ -13970,8 +13984,10 @@ Decl *Sema::ActOnIvar(Scope *S,
     NewID->setInvalidDecl();
 
   // In ARC, infer 'retaining' for ivars of retainable type.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (getLangOpts().ObjCAutoRefCount && inferObjCARCLifetime(NewID))
     NewID->setInvalidDecl();
+#endif
 
   if (D.getDeclSpec().isModulePrivateSpecified())
     NewID->setModulePrivate();
@@ -14217,6 +14233,7 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
         << FixItHint::CreateInsertion(FD->getLocation(), "*");
       QualType T = Context.getObjCObjectPointerType(FD->getType());
       FD->setType(T);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false && smth && !smth && ()
     } else if (getLangOpts().ObjCAutoRefCount && Record && !ARCErrReported &&
                (!getLangOpts().CPlusPlus || Record->isUnion())) {
       // It's an error in ARC if a field has lifetime.
@@ -14239,6 +14256,7 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
         }
         ARCErrReported = true;
       }
+#endif
     } else if (getLangOpts().ObjC1 &&
                getLangOpts().getGC() != LangOptions::NonGC &&
                Record && !Record->hasObjectMember()) {

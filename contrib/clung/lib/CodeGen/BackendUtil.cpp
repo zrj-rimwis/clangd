@@ -42,7 +42,9 @@
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Instrumentation.h"
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
 #include "llvm/Transforms/ObjCARC.h"
+#endif
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 #ifdef LLVM_ENABLE_SYMBOLREWRITER
@@ -129,6 +131,7 @@ private:
 
 }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static void addObjCARCAPElimPass(const PassManagerBuilder &Builder, PassManagerBase &PM) {
   if (Builder.OptLevel > 0)
     PM.add(createObjCARCAPElimPass());
@@ -143,6 +146,7 @@ static void addObjCARCOptPass(const PassManagerBuilder &Builder, PassManagerBase
   if (Builder.OptLevel > 0)
     PM.add(createObjCARCOptPass());
 }
+#endif
 
 static void addAddDiscriminatorsPass(const PassManagerBuilder &Builder,
                                      legacy::PassManagerBase &PM) {
@@ -357,6 +361,7 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
                          addAddDiscriminatorsPass);
 
   // In ObjC ARC mode, add the main ARC optimization passes.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (LangOpts.ObjCAutoRefCount) {
     PMBuilder.addExtension(PassManagerBuilder::EP_EarlyAsPossible,
                            addObjCARCExpandPass);
@@ -365,6 +370,7 @@ void EmitAssemblyHelper::CreatePasses(legacy::PassManager &MPM,
     PMBuilder.addExtension(PassManagerBuilder::EP_ScalarOptimizerLate,
                            addObjCARCOptPass);
   }
+#endif
 
   if (LangOpts.Sanitize.has(SanitizerKind::LocalBounds)) {
     PMBuilder.addExtension(PassManagerBuilder::EP_ScalarOptimizerLate,
@@ -637,8 +643,10 @@ bool EmitAssemblyHelper::AddEmitPasses(legacy::PassManager &CodeGenPasses,
   // Add ObjC ARC final-cleanup optimizations. This is done as part of the
   // "codegen" passes so that it isn't run multiple times when there is
   // inlining happening.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // this should be properly controlled
   if (CodeGenOpts.OptimizationLevel > 0)
     CodeGenPasses.add(createObjCARCContractPass());
+#endif
 
   if (TM->addPassesToEmitFile(CodeGenPasses, OS, CGFT,
                               /*DisableVerify=*/!CodeGenOpts.VerifyModule)) {

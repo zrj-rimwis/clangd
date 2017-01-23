@@ -29,7 +29,9 @@ void initializeTransformUtils(PassRegistry&);
 void initializeScalarOpts(PassRegistry&);
 
 /// Initialize all passes linked into the ObjCARCOpts library.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 void initializeObjCARCOpts(PassRegistry&);
+#endif
 
 /// Initialize all passes linked into the Vectorize library.
 void initializeVectorization(PassRegistry&);
@@ -238,11 +240,13 @@ void initializeModuleSummaryIndexWrapperPassPass(PassRegistry &);
 void initializeNameAnonFunctionPass(PassRegistry &);
 void initializeNaryReassociatePass(PassRegistry&);
 void initializeNoAAPass(PassRegistry&);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 void initializeObjCARCAAWrapperPassPass(PassRegistry&);
 void initializeObjCARCAPElimPass(PassRegistry&);
 void initializeObjCARCContractPass(PassRegistry&);
 void initializeObjCARCExpandPass(PassRegistry&);
 void initializeObjCARCOptPass(PassRegistry&);
+#endif
 void initializeOptimizationRemarkEmitterWrapperPassPass(PassRegistry&);
 void initializeOptimizePHIsPass(PassRegistry&);
 void initializePAEvalPass(PassRegistry &);

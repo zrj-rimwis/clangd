@@ -2245,7 +2245,11 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
                                  tok::kw___bridge_transfer,
                                  tok::kw___bridge_retained,
                                  tok::kw___bridge_retain));
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
   if (BridgeCast && !getLangOpts().ObjCAutoRefCount) {
+#else
+  if (BridgeCast && !false) {
+#endif
     if (!TryConsumeToken(tok::kw___bridge)) {
       StringRef BridgeCastName = Tok.getName();
       SourceLocation BridgeKeywordLoc = ConsumeToken();

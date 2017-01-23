@@ -333,7 +333,9 @@ void CodeGenFunction::EmitCallAndReturnForThunk(llvm::Value *Callee,
     CGM.getCXXABI().EmitReturnFromThunk(*this, RV, ResultType);
 
   // Disable the final ARC autorelease.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // not needed
   AutoreleaseResult = false;
+#endif
 
   FinishThunk();
 }

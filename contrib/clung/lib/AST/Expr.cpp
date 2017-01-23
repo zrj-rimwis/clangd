@@ -2094,6 +2094,7 @@ bool Expr::isUnusedResultAWarning(const Expr *&WarnE, SourceLocation &Loc,
 
   case ObjCMessageExprClass: {
     const ObjCMessageExpr *ME = cast<ObjCMessageExpr>(this);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (Ctx.getLangOpts().ObjCAutoRefCount &&
         ME->isInstanceMessage() &&
         !ME->getType()->isVoidType() &&
@@ -2103,6 +2104,7 @@ bool Expr::isUnusedResultAWarning(const Expr *&WarnE, SourceLocation &Loc,
       R1 = ME->getSourceRange();
       return true;
     }
+#endif
 
     if (const ObjCMethodDecl *MD = ME->getMethodDecl())
       if (MD->hasAttr<WarnUnusedResultAttr>()) {

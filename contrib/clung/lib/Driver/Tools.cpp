@@ -284,10 +284,11 @@ static void AddLinkerInputs(const ToolChain &TC, const InputInfoList &Inputs,
 
 /// \brief Determine whether Objective-C automated reference counting is
 /// enabled.
-// zrj: kill XXX XXX
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not available
 static bool isObjCAutoRefCount(const ArgList &Args) {
   return Args.hasFlag(options::OPT_fobjc_arc, options::OPT_fno_objc_arc, false);
 }
+#endif
 
 /// \brief Determine whether we are linking the ObjC runtime.
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
@@ -4852,7 +4853,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   Args.AddLastArg(CmdArgs, options::OPT_working_directory);
 
   bool ARCMTEnabled = false;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, strange..
   if (!Args.hasArg(options::OPT_fno_objc_arc, options::OPT_fobjc_arc)) {
+#else
+  if (!false) {
+#endif
     if (const Arg *A = Args.getLastArg(options::OPT_ccc_arcmt_check,
                                        options::OPT_ccc_arcmt_modify,
                                        options::OPT_ccc_arcmt_migrate)) {
@@ -5798,6 +5803,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // Allow -fno-objc-arr to trump -fobjc-arr/-fobjc-arc.
   // NOTE: This logic is duplicated in ToolChains.cpp.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not available
   bool ARC = isObjCAutoRefCount(Args);
   if (ARC) {
     getToolChain().CheckObjCARC();
@@ -5822,6 +5828,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-fobjc-arc-exceptions");
 
   }
+#endif
 
   // -fobjc-infer-related-result-type is the default, except in the Objective-C
   // rewriter.
@@ -5834,8 +5841,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   if (!GCArg)
     GCArg = Args.getLastArg(options::OPT_fobjc_gc);
   if (GCArg) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (ARC) {
       D.Diag(diag::err_drv_objc_gc_arr) << GCArg->getAsString(Args);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else if (getToolChain().SupportsObjCGC()) {
       GCArg->render(Args, CmdArgs);
     } else {

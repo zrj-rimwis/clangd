@@ -2361,14 +2361,22 @@ static void handleObjCMethodFamilyAttr(Sema &S, Decl *decl,
 static void handleObjCNSObject(Sema &S, Decl *D, const AttributeList &Attr) {
   if (TypedefNameDecl *TD = dyn_cast<TypedefNameDecl>(D)) {
     QualType T = TD->getUnderlyingType();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
     if (!T->isCARCBridgableType()) {
+#else
+    if (!false) {
+#endif
       S.Diag(TD->getLocation(), diag::err_nsobject_attribute);
       return;
     }
   }
   else if (ObjCPropertyDecl *PD = dyn_cast<ObjCPropertyDecl>(D)) {
     QualType T = PD->getType();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (!T->isCARCBridgableType()) {
+#else
+    if (!false) {
+#endif
       S.Diag(PD->getLocation(), diag::err_nsobject_attribute);
       return;
     }
@@ -4267,10 +4275,14 @@ void Sema::AddNSConsumedAttr(SourceRange attrRange, Decl *D,
     // attributes even in ARC, but require template instantiations to be
     // set up correctly.
     Diag(D->getLocStart(),
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume smth && smth && false
          (isTemplateInstantiation && isNSConsumed &&
             getLangOpts().ObjCAutoRefCount
           ? diag::err_ns_attribute_wrong_parameter_type
           : diag::warn_ns_attribute_wrong_parameter_type))
+#else
+         diag::warn_ns_attribute_wrong_parameter_type)
+#endif
       << attrRange
       << (isNSConsumed ? "ns_consumed" : "cf_consumed")
       << (isNSConsumed ? /*objc pointers*/ 0 : /*cf pointers*/ 1);
@@ -4291,9 +4303,11 @@ static void handleNSReturnsRetainedAttr(Sema &S, Decl *D,
 
   if (ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D))
     returnType = MD->getReturnType();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   else if (S.getLangOpts().ObjCAutoRefCount && hasDeclarator(D) &&
            (Attr.getKind() == AttributeList::AT_NSReturnsRetained))
     return; // ignore: was handled as a type attribute
+#endif
   else if (ObjCPropertyDecl *PD = dyn_cast<ObjCPropertyDecl>(D))
     returnType = PD->getType();
   else if (FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
@@ -5705,9 +5719,11 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_Unavailable:
     handleAttrWithMessage<UnavailableAttr>(S, D, Attr);
     break;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not available
   case AttributeList::AT_ArcWeakrefUnavailable:
     handleSimpleAttribute<ArcWeakrefUnavailableAttr>(S, D, Attr);
     break;
+#endif
   case AttributeList::AT_ObjCRootClass:
     handleSimpleAttribute<ObjCRootClassAttr>(S, D, Attr);
     break;
@@ -6242,6 +6258,7 @@ static void handleDelayedForbiddenType(Sema &S, DelayedDiagnostic &diag,
                                                   diag.Loc));
     return;
   }
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false, tsk tsk tsk
   if (S.getLangOpts().ObjCAutoRefCount)
     if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(decl)) {
       // FIXME: we may want to suppress diagnostics for all
@@ -6253,6 +6270,7 @@ static void handleDelayedForbiddenType(Sema &S, DelayedDiagnostic &diag,
         return;
       }
     }
+#endif
 
   S.Diag(diag.Loc, diag.getForbiddenTypeDiagnostic())
     << diag.getForbiddenTypeOperand() << diag.getForbiddenTypeArgument();
@@ -6355,9 +6373,11 @@ static void DoEmitAvailabilityWarning(Sema &S, Sema::AvailabilityDiagnostic K,
         // Most of these failures are due to extra restrictions in ARC;
         // reflect that in the primary diagnostic when applicable.
         auto flagARCError = [&] {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false, srsly???
           if (S.getLangOpts().ObjCAutoRefCount &&
               S.getSourceManager().isInSystemHeader(D->getLocation()))
             diag = diag::err_unavailable_in_arc;
+#endif
         };
 
         switch (attr->getImplicitReason()) {

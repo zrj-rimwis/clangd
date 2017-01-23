@@ -1115,10 +1115,12 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
     // Objective-C ARC:
     //   If template deduction would produce an argument type with lifetime type
     //   but no lifetime qualifier, the __strong lifetime qualifier is inferred.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount &&
         DeducedType->isObjCLifetimeType() &&
         !DeducedQs.hasObjCLifetime())
       DeducedQs.setObjCLifetime(Qualifiers::OCL_Strong);
+#endif
     
     DeducedType = S.Context.getQualifiedType(DeducedType.getUnqualifiedType(),
                                              DeducedQs);
@@ -2681,6 +2683,7 @@ CheckOriginalCallArgDeduction(Sema &S, Sema::OriginalCallArg OriginalArg,
     // been given strong or (when dealing with a const reference)
     // unsafe_unretained lifetime. If so, update the original
     // qualifiers to include this lifetime.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false && (smth)
     if (S.getLangOpts().ObjCAutoRefCount &&
         ((DeducedAQuals.getObjCLifetime() == Qualifiers::OCL_Strong &&
           AQuals.getObjCLifetime() == Qualifiers::OCL_None) ||
@@ -2688,6 +2691,7 @@ CheckOriginalCallArgDeduction(Sema &S, Sema::OriginalCallArg OriginalArg,
           DeducedAQuals.getObjCLifetime() == Qualifiers::OCL_ExplicitNone))) {
       AQuals.setObjCLifetime(DeducedAQuals.getObjCLifetime());
     }
+#endif
 
     if (AQuals == DeducedAQuals) {
       // Qualifiers match; there's nothing to do.

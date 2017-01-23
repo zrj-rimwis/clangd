@@ -120,6 +120,7 @@ namespace {
       Self.CheckCastAlign(SrcExpr.get(), DestType, OpRange);
     }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
     void checkObjCARCConversion(Sema::CheckedConversionKind CCK) {
       assert(Self.getLangOpts().ObjCAutoRefCount);
 
@@ -129,6 +130,7 @@ namespace {
         IsARCUnbridgedCast = true;
       SrcExpr = src;
     }
+#endif
 
     /// Check for and handle non-overload placeholder expressions.
     void checkNonOverloadPlaceholders() {
@@ -868,8 +870,10 @@ void CastOperation::CheckReinterpretCast() {
     }
     SrcExpr = ExprError();
   } else if (tcr == TC_Success) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (Self.getLangOpts().ObjCAutoRefCount)
       checkObjCARCConversion(Sema::CCK_OtherCast);
+#endif
     DiagnoseReinterpretUpDownCast(Self, SrcExpr.get(), DestType, OpRange);
   }
 }
@@ -932,8 +936,10 @@ void CastOperation::CheckStaticCast() {
   } else if (tcr == TC_Success) {
     if (Kind == CK_BitCast)
       checkCastAlign();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (Self.getLangOpts().ObjCAutoRefCount)
       checkObjCARCConversion(Sema::CCK_OtherCast);
+#endif
   } else if (Kind == CK_BitCast) {
     checkCastAlign();
   }
@@ -2277,8 +2283,10 @@ void CastOperation::CheckCXXCStyleCast(bool FunctionalStyle,
     }
   }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Self.getLangOpts().ObjCAutoRefCount && tcr == TC_Success)
     checkObjCARCConversion(CCK);
+#endif
 
   if (tcr != TC_Success && msg != 0) {
     if (SrcExpr.get()->getType() == Self.Context.OverloadTy) {
@@ -2543,6 +2551,7 @@ void CastOperation::CheckCStyleCast() {
   }
 
   // ARC imposes extra restrictions on casts.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (Self.getLangOpts().ObjCAutoRefCount) {
     checkObjCARCConversion(Sema::CCK_CStyleCast);
     if (SrcExpr.isInvalid())
@@ -2571,6 +2580,7 @@ void CastOperation::CheckCStyleCast() {
       return;
     }
   }
+#endif
   
   DiagnoseCastOfObjCSEL(Self, SrcExpr, DestType);
   DiagnoseCallingConvCast(Self, SrcExpr, DestType, OpRange);

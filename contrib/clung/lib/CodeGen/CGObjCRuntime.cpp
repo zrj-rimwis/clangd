@@ -326,9 +326,14 @@ void CGObjCRuntime::EmitAtSynchronizedStmt(CodeGenFunction &CGF,
   // ARC release and lock-release cleanups.
   const Expr *lockExpr = S.getSynchExpr();
   llvm::Value *lock;
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (CGF.getLangOpts().ObjCAutoRefCount) {
     lock = CGF.EmitARCRetainScalarExpr(lockExpr);
     lock = CGF.EmitObjCConsumeObject(lockExpr->getType(), lock);
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     lock = CGF.EmitScalarExpr(lockExpr);
   }

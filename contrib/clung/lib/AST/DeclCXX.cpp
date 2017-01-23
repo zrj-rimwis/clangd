@@ -710,8 +710,13 @@ void CXXRecordDecl::addedMember(Decl *D) {
     ASTContext &Context = getASTContext();
     QualType T = Context.getBaseElementType(Field->getType());
     if (T->isObjCRetainableType() || T.isObjCGCStrong()) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
       if (!Context.getLangOpts().ObjCAutoRefCount) {
+#else
+      if (!false) {
+#endif
         setHasObjectMember(true);
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
       } else if (T.getObjCLifetime() != Qualifiers::OCL_ExplicitNone) {
         // Objective-C Automatic Reference Counting:
         //   If a class has a non-static data member of Objective-C pointer
@@ -724,6 +729,7 @@ void CXXRecordDecl::addedMember(Decl *D) {
         Data.PlainOldData = false;
         Data.HasTrivialSpecialMembers = 0;
         Data.HasIrrelevantDestructor = false;
+#endif
       }
     } else if (!T.isCXX98PODType(Context))
       data().PlainOldData = false;

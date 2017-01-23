@@ -1833,6 +1833,7 @@ static void AddOrdinaryNameResults(Sema::ParserCompletionContext CCC,
     // Fall through: conditions and statements can have expressions.
 
   case Sema::PCC_ParenthesizedExpression:
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false wow that will soon break :)
     if (SemaRef.getLangOpts().ObjCAutoRefCount &&
         CCC == Sema::PCC_ParenthesizedExpression) {
       // (__bridge <type>)<expression>
@@ -1859,6 +1860,7 @@ static void AddOrdinaryNameResults(Sema::ParserCompletionContext CCC,
       Builder.AddPlaceholderChunk("expression");
       Results.AddResult(Result(Builder.TakeString()));      
     }
+#endif
     // Fall through
 
   case Sema::PCC_Expression: {

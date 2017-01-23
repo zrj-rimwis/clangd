@@ -211,8 +211,12 @@ public:
   static InitializedEntity InitializeParameter(ASTContext &Context,
                                                ParmVarDecl *Parm,
                                                QualType Type) {
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false but wth with static_cast<false> ???
     bool Consumed = (Context.getLangOpts().ObjCAutoRefCount &&
                      Parm->hasAttr<NSConsumedAttr>());
+#else
+    const bool Consumed = false;
+#endif
 
     InitializedEntity Entity;
     Entity.Kind = EK_Parameter;

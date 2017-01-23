@@ -294,7 +294,9 @@ public:
   virtual bool SupportsObjCGC() const { return true; }
 
   /// Complain if this tool chain doesn't support Objective-C ARC.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume die
   virtual void CheckObjCARC() const {}
+#endif
 
   /// UseDwarfDebugFlags - Embed the compile options to clang into the Dwarf
   /// compile unit information.
