@@ -8271,10 +8271,12 @@ void DiagnoseNullConversion(Sema &S, Expr *E, QualType T, SourceLocation CC) {
                                       S.getFixItZeroLiteralForType(T, Loc));
 }
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 void checkObjCArrayLiteral(Sema &S, QualType TargetType,
                            ObjCArrayLiteral *ArrayLiteral);
 void checkObjCDictionaryLiteral(Sema &S, QualType TargetType,
                                 ObjCDictionaryLiteral *DictionaryLiteral);
+#endif
 
 /// Check a single element within a collection literal against the
 /// target element type.
@@ -8300,14 +8302,17 @@ void checkObjCCollectionLiteralElement(Sema &S, QualType TargetElementType,
       << Element->getSourceRange();
   }
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   if (auto ArrayLiteral = dyn_cast<ObjCArrayLiteral>(Element))
     checkObjCArrayLiteral(S, TargetElementType, ArrayLiteral);
   else if (auto DictionaryLiteral = dyn_cast<ObjCDictionaryLiteral>(Element))
     checkObjCDictionaryLiteral(S, TargetElementType, DictionaryLiteral);
+#endif
 }
 
 /// Check an Objective-C array literal being converted to the given
 /// target type.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume no check available
 void checkObjCArrayLiteral(Sema &S, QualType TargetType,
                            ObjCArrayLiteral *ArrayLiteral) {
   if (!S.NSArrayDecl)
@@ -8333,9 +8338,11 @@ void checkObjCArrayLiteral(Sema &S, QualType TargetType,
                                       0);
   }
 }
+#endif
 
 /// Check an Objective-C dictionary literal being converted to the given
 /// target type.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume no check avaialble
 void checkObjCDictionaryLiteral(Sema &S, QualType TargetType,
                                 ObjCDictionaryLiteral *DictionaryLiteral) {
   if (!S.NSDictionaryDecl)
@@ -8362,6 +8369,7 @@ void checkObjCDictionaryLiteral(Sema &S, QualType TargetType,
     checkObjCCollectionLiteralElement(S, TargetObjectType, Element.Value, 2);
   }
 }
+#endif
 
 // Helper function to filter out cases for constant width constant conversion.
 // Don't warn on char array initialization or for non-decimal values.
@@ -8430,10 +8438,12 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
 
   // Check implicit casts from Objective-C collection literals to specialized
   // collection types, e.g., NSArray<NSString *> *.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   if (auto *ArrayLiteral = dyn_cast<ObjCArrayLiteral>(E))
     checkObjCArrayLiteral(S, QualType(Target, 0), ArrayLiteral);
   else if (auto *DictionaryLiteral = dyn_cast<ObjCDictionaryLiteral>(E))
     checkObjCDictionaryLiteral(S, QualType(Target, 0), DictionaryLiteral);
+#endif
 
   // Strip vector types.
   if (isa<VectorType>(Source)) {
@@ -10213,6 +10223,7 @@ static bool isSetterLikeSelector(Selector sel) {
   return !isLowercase(str.front());
 }
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 static Optional<int> GetNSMutableArrayArgumentIndex(Sema &S,
                                                     ObjCMessageExpr *Message) {
   bool IsMutableArray = S.NSAPIObj->isSubclassOfNSClass(
@@ -10246,7 +10257,9 @@ static Optional<int> GetNSMutableArrayArgumentIndex(Sema &S,
 
   return None;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 static
 Optional<int> GetNSMutableDictionaryArgumentIndex(Sema &S,
                                                   ObjCMessageExpr *Message) {
@@ -10279,7 +10292,9 @@ Optional<int> GetNSMutableDictionaryArgumentIndex(Sema &S,
 
   return None;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 static Optional<int> GetNSSetArgumentIndex(Sema &S, ObjCMessageExpr *Message) {
   bool IsMutableSet = S.NSAPIObj->isSubclassOfNSClass(
                                                 Message->getReceiverInterface(),
@@ -10313,7 +10328,9 @@ static Optional<int> GetNSSetArgumentIndex(Sema &S, ObjCMessageExpr *Message) {
 
   return None;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume no check available
 void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
   if (!Message->isInstanceMessage()) {
     return;
@@ -10378,6 +10395,7 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
     }
   }
 }
+#endif
 
 /// Check a message send to see if it's likely to cause a retain cycle.
 void Sema::checkRetainCycles(ObjCMessageExpr *msg) {

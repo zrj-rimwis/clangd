@@ -1986,7 +1986,9 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   Opts.ParseUnknownAnytype = Args.hasArg(OPT_funknown_anytype);
   Opts.DebuggerSupport = Args.hasArg(OPT_fdebugger_support);
   Opts.DebuggerCastResultToId = Args.hasArg(OPT_fdebugger_cast_result_to_id);
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   Opts.DebuggerObjCLiteral = Args.hasArg(OPT_fdebugger_objc_literal);
+#endif
   Opts.ApplePragmaPack = Args.hasArg(OPT_fapple_pragma_pack);
   Opts.CurrentModule = Args.getLastArgValue(OPT_fmodule_name_EQ);
   Opts.AppExt = Args.hasArg(OPT_fapplication_extension);

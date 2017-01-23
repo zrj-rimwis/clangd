@@ -106,11 +106,13 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
 #else
     CXXTypeInfoDecl(nullptr),
 #endif
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
     NSNumberDecl(nullptr), NSValueDecl(nullptr),
     NSStringDecl(nullptr), StringWithUTF8StringMethod(nullptr),
     ValueWithBytesObjCTypeMethod(nullptr),
     NSArrayDecl(nullptr), ArrayWithObjectsMethod(nullptr),
     NSDictionaryDecl(nullptr), DictionaryWithObjectsMethod(nullptr),
+#endif
     MSAsmLabelNameCounter(0),
     GlobalNewDeleteDeclared(false),
     TUKind(TUKind),
@@ -126,11 +128,15 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
   TUScope = nullptr;
 
   LoadedExternalKnownNamespaces = false;
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   for (unsigned I = 0; I != NSAPI::NumNSNumberLiteralMethods; ++I)
     NSNumberLiteralMethods[I] = nullptr;
+#endif
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   if (getLangOpts().ObjC1)
     NSAPIObj.reset(new NSAPI(Context));
+#endif
 
   if (getLangOpts().CPlusPlus)
     FieldCollector.reset(new CXXFieldCollector());

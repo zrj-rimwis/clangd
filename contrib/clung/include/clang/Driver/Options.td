@@ -1015,7 +1015,6 @@ def fno_objc_infer_related_result_type : Flag<["-"],
   HelpText<
     "do not infer Objective-C related result type based on method family">,
   Flags<[CC1Option]>;
-def fobjc_link_runtime: Flag<["-"], "fobjc-link-runtime">, Group<f_Group>;
 def fobjc_weak : Flag<["-"], "fobjc-weak">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Enable ARC-style weak references in Objective-C">;
 

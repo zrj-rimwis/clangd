@@ -3837,6 +3837,7 @@ Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
             << IDecl->getIdentifier();
           // See if NSObject is in the current scope, and if it is, suggest
           // adding " : NSObject " to the class declaration.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume it was not found
           NamedDecl *IF = LookupSingleName(TUScope,
                                            NSAPIObj->getNSClassId(NSAPI::ClassId_NSObject),
                                            DeclLoc, LookupOrdinaryName);
@@ -3844,6 +3845,10 @@ Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
           if (NSObjectDecl && NSObjectDecl->getDefinition()) {
             Diag(SuperClassLoc, diag::note_objc_needs_superclass)
               << FixItHint::CreateInsertion(SuperClassLoc, " : NSObject ");
+#else
+          if (false) {
+            /* dummy */
+#endif
           } else {
             Diag(SuperClassLoc, diag::note_objc_needs_superclass);
           }

@@ -8918,6 +8918,7 @@ static bool hasIsEqualMethod(Sema &S, const Expr *LHS, const Expr *RHS) {
     return false;
 
   // Try to find the -isEqual: method.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume that failed
   Selector IsEqualSel = S.NSAPIObj->getIsEqualSelector();
   ObjCMethodDecl *Method = S.LookupMethodInObjectType(IsEqualSel,
                                                       InterfaceType,
@@ -8946,6 +8947,9 @@ static bool hasIsEqualMethod(Sema &S, const Expr *LHS, const Expr *RHS) {
     return false;
 
   return true;
+#else
+  return false;
+#endif
 }
 
 Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {

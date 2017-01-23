@@ -1192,6 +1192,7 @@ bool ObjCSubscriptOpBuilder::findAtIndexGetter() {
   bool receiverIdType = (BaseT->isObjCIdType() ||
                          BaseT->isObjCQualifiedIdType());
   
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !smth && false
   if (!AtIndexGetter && S.getLangOpts().DebuggerObjCLiteral) {
     AtIndexGetter = ObjCMethodDecl::Create(S.Context, SourceLocation(), 
                            SourceLocation(), AtIndexGetterSelector,
@@ -1214,6 +1215,7 @@ bool ObjCSubscriptOpBuilder::findAtIndexGetter() {
                                                 nullptr);
     AtIndexGetter->setMethodParams(S.Context, Argument, None);
   }
+#endif
 
   if (!AtIndexGetter) {
     if (!receiverIdType) {
@@ -1301,6 +1303,7 @@ bool ObjCSubscriptOpBuilder::findAtIndexSetter() {
   bool receiverIdType = (BaseT->isObjCIdType() ||
                          BaseT->isObjCQualifiedIdType());
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !smth && false
   if (!AtIndexSetter && S.getLangOpts().DebuggerObjCLiteral) {
     TypeSourceInfo *ReturnTInfo = nullptr;
     QualType ReturnType = S.Context.VoidTy;
@@ -1332,6 +1335,7 @@ bool ObjCSubscriptOpBuilder::findAtIndexSetter() {
     Params.push_back(key);
     AtIndexSetter->setMethodParams(S.Context, Params, None);
   }
+#endif
   
   if (!AtIndexSetter) {
     if (!receiverIdType) {

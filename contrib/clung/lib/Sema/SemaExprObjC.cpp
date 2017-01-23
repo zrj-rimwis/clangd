@@ -17,9 +17,13 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/StmtVisitor.h"
 #include "clang/AST/TypeLoc.h"
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 #include "clang/Analysis/DomainSpecific/CocoaConventions.h"
+#endif
 #include "clang/Edit/Commit.h"
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 #include "clang/Edit/Rewriters.h"
+#endif
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Initialization.h"
 #include "clang/Sema/Lookup.h"
@@ -112,6 +116,7 @@ ExprResult Sema::BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S){
       Ty = Context.getObjCIdType();
     }
   } else {
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume failed
     IdentifierInfo *NSIdent = NSAPIObj->getNSClassId(NSAPI::ClassId_NSString);
     NamedDecl *IF = LookupSingleName(TUScope, NSIdent, AtLoc,
                                      LookupOrdinaryName);
@@ -119,6 +124,11 @@ ExprResult Sema::BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S){
       Context.setObjCConstantStringInterface(StrIF);
       Ty = Context.getObjCConstantStringInterface();
       Ty = Context.getObjCObjectPointerType(Ty);
+#else
+    IdentifierInfo *NSIdent=nullptr;
+    if (false) {
+      /* dummy */
+#endif
     } else {
       // If there is no NSString interface defined, implicitly declare
       // a @class NSString; and use that instead. This is to make sure
@@ -166,6 +176,7 @@ static bool validateBoxingMethod(Sema &S, SourceLocation Loc,
 }
 
 /// \brief Maps ObjCLiteralKind to NSClassIdKindKind
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 static NSAPI::NSClassIdKindKind ClassKindFromLiteralKind(
                                             Sema::ObjCLiteralKind LiteralKind) {
   switch (LiteralKind) {
@@ -188,10 +199,12 @@ static NSAPI::NSClassIdKindKind ClassKindFromLiteralKind(
   }
   llvm_unreachable("LiteralKind can't be converted into a ClassKind");
 }
+#endif
 
 /// \brief Validates ObjCInterfaceDecl availability.
 /// ObjCInterfaceDecl, used to create ObjC literals, should be defined
 /// if clang not in a debugger mode.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
 static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
                                             SourceLocation Loc,
                                             Sema::ObjCLiteralKind LiteralKind) {
@@ -210,6 +223,7 @@ static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
 
   return true;
 }
+#endif
 
 /// \brief Looks up ObjCInterfaceDecl of a given NSClassIdKindKind.
 /// Used to create ObjC literals, such as NSDictionary (@{}),
@@ -217,27 +231,36 @@ static bool ValidateObjCLiteralInterfaceDecl(Sema &S, ObjCInterfaceDecl *Decl,
 static ObjCInterfaceDecl *LookupObjCInterfaceDeclForLiteral(Sema &S,
                                             SourceLocation Loc,
                                             Sema::ObjCLiteralKind LiteralKind) {
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   NSAPI::NSClassIdKindKind ClassKind = ClassKindFromLiteralKind(LiteralKind);
   IdentifierInfo *II = S.NSAPIObj->getNSClassId(ClassKind);
   NamedDecl *IF = S.LookupSingleName(S.TUScope, II, Loc,
                                      Sema::LookupOrdinaryName);
   ObjCInterfaceDecl *ID = dyn_cast_or_null<ObjCInterfaceDecl>(IF);
+#else
+  ObjCInterfaceDecl *ID = nullptr;
+#endif
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false && false
   if (!ID && S.getLangOpts().DebuggerObjCLiteral) {
     ASTContext &Context = S.Context;
     TranslationUnitDecl *TU = Context.getTranslationUnitDecl();
     ID = ObjCInterfaceDecl::Create (Context, TU, SourceLocation(), II,
                                     nullptr, nullptr, SourceLocation());
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // is already nullptr for return above
   if (!ValidateObjCLiteralInterfaceDecl(S, ID, Loc, LiteralKind)) {
     ID = nullptr;
   }
+#endif
 
   return ID;
 }
 
 /// \brief Retrieve the NSNumber factory method that should be used to create
 /// an Objective-C literal for the given type.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume nullptr
 static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
                                                 QualType NumberType,
                                                 bool isLiteral = false,
@@ -308,6 +331,7 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
   S.NSNumberLiteralMethods[*Kind] = Method;
   return Method;
 }
+#endif
 
 /// BuildObjCNumericLiteral - builds an ObjCBoxedExpr AST node for the
 /// numeric literal expression. Type of the expression will be "NSNumber *".
@@ -340,11 +364,16 @@ ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
   // Look for the appropriate method within NSNumber.
   // Construct the literal.
   SourceRange NR(Number->getSourceRange());
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   ObjCMethodDecl *Method = getNSNumberFactoryMethod(*this, AtLoc, NumberType,
                                                     true, NR);
   if (!Method)
+#else
+  if (!false)
+#endif
     return ExprError();
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   // Convert the number to the type that the parameter expects.
   ParmVarDecl *ParamDecl = Method->parameters()[0];
   InitializedEntity Entity = InitializedEntity::InitializeParameter(Context,
@@ -360,6 +389,7 @@ ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
   return MaybeBindToTemporary(
            new (Context) ObjCBoxedExpr(Number, NSNumberPointer, Method,
                                        SourceRange(AtLoc, NR.getEnd())));
+#endif
 }
 
 ExprResult Sema::ActOnObjCBoolLiteral(SourceLocation AtLoc, 
@@ -426,6 +456,7 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
         isa<FloatingLiteral>(OrigElement) ||
         isa<ObjCBoolLiteralExpr>(OrigElement) ||
         isa<CXXBoolLiteralExpr>(OrigElement)) {
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (S.NSAPIObj->getNSNumberFactoryMethodKind(OrigElement->getType())) {
         int Which = isa<CharacterLiteral>(OrigElement) ? 1
                   : (isa<CXXBoolLiteralExpr>(OrigElement) ||
@@ -444,6 +475,7 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
         Element = Result.get();
         Recovered = true;
       }
+#endif
     }
     // If this is potentially an Objective-C string literal, add the '@'.
     else if (StringLiteral *String = dyn_cast<StringLiteral>(OrigElement)) {
@@ -516,6 +548,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     QualType PointeeType = PT->getPointeeType();
     if (Context.hasSameUnqualifiedType(PointeeType, Context.CharTy)) {
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
       if (!NSStringDecl) {
         NSStringDecl = LookupObjCInterfaceDeclForLiteral(*this, Loc,
                                                          Sema::LK_String);
@@ -564,6 +597,9 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
       
       BoxingMethod = StringWithUTF8StringMethod;
       BoxedType = NSStringPointer;
+#else
+      return ExprError();
+#endif
     }
   } else if (ValueType->isBuiltinType()) {
     // The other types we support are numeric, char and BOOL/bool. We could also
@@ -571,6 +607,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     // NSSize. See NSValue (NSValueGeometryExtensions) in <Foundation/NSGeometry.h>
     // for more details.
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
     // Check for a top-level character literal.
     if (const CharacterLiteral *Char =
         dyn_cast<CharacterLiteral>(ValueExpr->IgnoreParens())) {
@@ -697,6 +734,9 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
 
     BoxingMethod = ValueWithBytesObjCTypeMethod;
     BoxedType = NSValuePointer;
+#else
+    BoxingMethod = nullptr;
+#endif
   }
 
   if (!BoxingMethod) {
@@ -705,6 +745,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     return ExprError();
   }
   
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   DiagnoseUseOfDecl(BoxingMethod, Loc);
 
   ExprResult ConvertedValueExpr;
@@ -729,6 +770,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     new (Context) ObjCBoxedExpr(ValueExpr, BoxedType,
                                       BoxingMethod, SR);
   return MaybeBindToTemporary(BoxedExpr);
+#endif
 }
 
 /// Build an ObjC subscript pseudo-object expression, given that
@@ -764,6 +806,7 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
 }
 
 ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed and return err
   SourceLocation Loc = SR.getBegin();
 
   if (!NSArrayDecl) {
@@ -865,10 +908,14 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
   return MaybeBindToTemporary(
            ObjCArrayLiteral::Create(Context, Elements, Ty,
                                     ArrayWithObjectsMethod, SR));
+#else
+  return ExprError();
+#endif
 }
 
 ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
                               MutableArrayRef<ObjCDictionaryElement> Elements) {
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed and return err
   SourceLocation Loc = SR.getBegin();
 
   if (!NSDictionaryDecl) {
@@ -1042,6 +1089,9 @@ ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
   return MaybeBindToTemporary(ObjCDictionaryLiteral::Create(
       Context, Elements, HasPackExpansions, Ty,
       DictionaryWithObjectsMethod, SR));
+#else
+  return ExprError();
+#endif
 }
 
 ExprResult Sema::BuildObjCEncodeExpression(SourceLocation AtLoc,
@@ -2216,6 +2266,7 @@ ExprResult Sema::BuildClassMessageImplicit(QualType ReceiverType,
                            /*isImplicit=*/true);
 }
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume ignored
 static void applyCocoaAPICheck(Sema &S, const ObjCMessageExpr *Msg,
                                unsigned DiagID,
                                bool (*refactor)(const ObjCMessageExpr *,
@@ -2254,11 +2305,14 @@ static void applyCocoaAPICheck(Sema &S, const ObjCMessageExpr *Msg,
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume "we good"
 static void checkCocoaAPI(Sema &S, const ObjCMessageExpr *Msg) {
   applyCocoaAPICheck(S, Msg, diag::warn_objc_redundant_literal_use,
                      edit::rewriteObjCRedundantCallWithLiteral);
 }
+#endif
 
 /// \brief Diagnose use of %s directive in an NSString which is being passed
 /// as formatting string to formatting method.
@@ -2459,8 +2513,10 @@ ExprResult Sema::BuildClassMessage(TypeSourceInfo *ReceiverTypeInfo,
                                      ReceiverTypeInfo, Sel, SelectorLocs,
                                      Method, makeArrayRef(Args, NumArgs),
                                      RBracLoc, isImplicit);
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
     if (!isImplicit)
       checkCocoaAPI(*this, Result);
+#endif
   }
   return MaybeBindToTemporary(Result);
 }
@@ -2980,8 +3036,10 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
                                      Receiver, Sel, SelectorLocs, Method,
                                      makeArrayRef(Args, NumArgs), RBracLoc,
                                      isImplicit);
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
     if (!isImplicit)
       checkCocoaAPI(*this, Result);
+#endif
   }
 
   if (getLangOpts().ObjCAutoRefCount) {
@@ -3016,7 +3074,9 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
     }
   }
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume no check available
   CheckObjCCircularContainer(Result);
+#endif
 
   return MaybeBindToTemporary(Result);
 }
@@ -3308,9 +3368,11 @@ namespace {
         return ACC_invalid;
       
       // Otherwise, it's +0 unless it follows the create convention.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume it is not
       if (ento::coreFoundation::followsCreateRule(fn))
         return Diagnose ? ACC_plusOne 
                         : ACC_invalid; // ACC_plusOne if we start accepting this
+#endif
 
       return ACC_plusZero;
     }

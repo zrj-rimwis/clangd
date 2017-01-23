@@ -11732,6 +11732,7 @@ Decl *Sema::ActOnFinishFunctionBody(Decl *dcl, Stmt *Body,
       assert(isDesignated && InitMethod);
       (void)isDesignated;
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false // isn't everything complicated enough already?
       auto superIsNSObject = [&](const ObjCMethodDecl *MD) {
         auto IFace = MD->getClassInterface();
         if (!IFace)
@@ -11742,9 +11743,14 @@ Decl *Sema::ActOnFinishFunctionBody(Decl *dcl, Stmt *Body,
         return SuperD->getIdentifier() ==
             NSAPIObj->getNSClassId(NSAPI::ClassId_NSObject);
       };
+#endif
       // Don't issue this warning for unavailable inits or direct subclasses
       // of NSObject.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (!MD->isUnavailable() && !superIsNSObject(MD)) {
+#else
+      if (!MD->isUnavailable() && !false) {
+#endif
         Diag(MD->getLocation(),
              diag::warn_objc_designated_init_missing_super_call);
         Diag(InitMethod->getLocation(),

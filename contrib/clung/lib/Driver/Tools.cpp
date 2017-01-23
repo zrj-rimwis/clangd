@@ -284,11 +284,13 @@ static void AddLinkerInputs(const ToolChain &TC, const InputInfoList &Inputs,
 
 /// \brief Determine whether Objective-C automated reference counting is
 /// enabled.
+// zrj: kill XXX XXX
 static bool isObjCAutoRefCount(const ArgList &Args) {
   return Args.hasFlag(options::OPT_fobjc_arc, options::OPT_fno_objc_arc, false);
 }
 
 /// \brief Determine whether we are linking the ObjC runtime.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static bool isObjCRuntimeLinked(const ArgList &Args) {
   if (isObjCAutoRefCount(Args)) {
     Args.ClaimAllArgs(options::OPT_fobjc_link_runtime);
@@ -296,6 +298,7 @@ static bool isObjCRuntimeLinked(const ArgList &Args) {
   }
   return Args.hasArg(options::OPT_fobjc_link_runtime);
 }
+#endif
 
 static bool forwardToGCC(const Option &O) {
   // Don't forward inputs from the original command line.  They are added from

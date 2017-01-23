@@ -24,7 +24,9 @@
 #include "clang/AST/ExternalASTSource.h"
 #include "clang/AST/LocInfoType.h"
 #include "clang/AST/MangleNumberingContext.h"
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 #include "clang/AST/NSAPI.h"
+#endif
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/ExpressionTraits.h"
@@ -753,9 +755,12 @@ public:
 #endif
 
   /// \brief Caches identifiers/selectors for NSFoundation APIs.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   std::unique_ptr<NSAPI> NSAPIObj;
+#endif
 
   /// \brief The declaration of the Objective-C NSNumber class.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   ObjCInterfaceDecl *NSNumberDecl;
 
   /// \brief The declaration of the Objective-C NSValue class.
@@ -766,11 +771,15 @@ public:
 
   /// \brief Pointer to NSValue type (NSValue *).
   QualType NSValuePointer;
+#endif
 
   /// \brief The Objective-C NSNumber methods used to create NSNumber literals.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   ObjCMethodDecl *NSNumberLiteralMethods[NSAPI::NumNSNumberLiteralMethods];
+#endif
 
   /// \brief The declaration of the Objective-C NSString class.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
   ObjCInterfaceDecl *NSStringDecl;
 
   /// \brief Pointer to NSString type (NSString *).
@@ -796,6 +805,7 @@ public:
 
   /// \brief id<NSCopying> type.
   QualType QIDNSCopying;
+#endif
 
   /// \brief will hold 'respondsToSelector:'
   Selector RespondsToSelectorSel;
@@ -9564,7 +9574,9 @@ private:
 
   /// \brief Check whether receiver is mutable ObjC container which
   /// attempts to add itself into the container
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume no check available
   void CheckObjCCircularContainer(ObjCMessageExpr *Message);
+#endif
 
   void AnalyzeDeleteExprMismatch(const CXXDeleteExpr *DE);
   void AnalyzeDeleteExprMismatch(FieldDecl *Field, SourceLocation DeleteLoc,

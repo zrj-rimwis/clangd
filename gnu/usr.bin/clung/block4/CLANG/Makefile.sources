@@ -35,7 +35,6 @@ SRCS+=	APValue.cpp \
 	ItaniumMangle.cpp \
 	Mangle.cpp \
 	NestedNameSpecifier.cpp \
-	NSAPI.cpp \
 	OpenMPClause.cpp \
 	ParentMap.cpp \
 	RawCommentList.cpp \
@@ -65,7 +64,6 @@ SRCS+=	AnalysisDeclContext.cpp \
 	CFG.cpp \
 	CFGReachabilityAnalysis.cpp \
 	CFGStmtMap.cpp \
-	CocoaConventions.cpp \
 	Consumed.cpp \
 	FormatString.cpp \
 	ObjCNoReturn.cpp \
@@ -172,8 +170,7 @@ SRCS+=	Action.cpp \
 #LIB=	clangEdit
 CLUNG_SRCDIRS+= lib/Edit
 SRCS+=	Commit.cpp \
-	EditedSource.cpp \
-	RewriteObjCFoundationAPI.cpp
+	EditedSource.cpp
 
 #LIB=	clangFrontend
 CLUNG_SRCDIRS+= lib/Frontend
