@@ -13943,17 +13943,23 @@ Decl *Sema::ActOnIvar(Scope *S,
   ObjCContainerDecl *EnclosingContext;
   if (ObjCImplementationDecl *IMPDecl =
       dyn_cast<ObjCImplementationDecl>(EnclosingDecl)) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (LangOpts.ObjCRuntime.isFragile()) {
     // Case of ivar declared in an implementation. Context is that of its class.
       EnclosingContext = IMPDecl->getClassInterface();
       assert(EnclosingContext && "Implementation has no class interface!");
     }
     else
+#endif
       EnclosingContext = EnclosingDecl;
   } else {
     if (ObjCCategoryDecl *CDecl =
         dyn_cast<ObjCCategoryDecl>(EnclosingDecl)) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
       if (LangOpts.ObjCRuntime.isFragile() || !CDecl->IsClassExtension()) {
+#else
+      if (false || !CDecl->IsClassExtension()) {
+#endif
         Diag(Loc, diag::err_misplaced_ivar) << CDecl->IsClassExtension();
         return nullptr;
       }
@@ -13999,9 +14005,11 @@ Decl *Sema::ActOnIvar(Scope *S,
     IdResolver.AddDecl(NewID);
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (LangOpts.ObjCRuntime.isNonFragile() &&
       !NewID->isInvalidDecl() && isa<ObjCInterfaceDecl>(EnclosingDecl))
     Diag(Loc, diag::warn_ivars_in_interface);
+#endif
 
   return NewID;
 }
@@ -14012,7 +14020,11 @@ Decl *Sema::ActOnIvar(Scope *S,
 /// then add an implicit `char :0` ivar to the end of that interface.
 void Sema::ActOnLastBitfield(SourceLocation DeclLoc,
                              SmallVectorImpl<Decl *> &AllIvarDecls) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false || smth
   if (LangOpts.ObjCRuntime.isFragile() || AllIvarDecls.empty())
+#else
+  if (false || AllIvarDecls.empty())
+#endif
     return;
 
   Decl *ivarDecl = AllIvarDecls[AllIvarDecls.size()-1];

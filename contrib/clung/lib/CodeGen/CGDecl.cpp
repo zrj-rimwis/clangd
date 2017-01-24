@@ -1329,7 +1329,9 @@ void CodeGenFunction::EmitExprAsInit(const Expr *init, const ValueDecl *D,
       // TODO: how can we delay here if D is captured by its initializer?
       EmitAggExpr(init, AggValueSlot::forLValue(lvalue,
                                               AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                          AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                               AggValueSlot::IsNotAliased));
     }
     return;

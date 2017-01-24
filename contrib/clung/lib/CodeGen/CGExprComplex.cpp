@@ -130,9 +130,11 @@ public:
   ComplexPairTy VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     return EmitLoadOfLValue(E);
   }
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   ComplexPairTy VisitObjCMessageExpr(ObjCMessageExpr *E) {
     return CGF.EmitObjCMessageExpr(E).getComplexVal();
   }
+#endif
   ComplexPairTy VisitArraySubscriptExpr(Expr *E) { return EmitLoadOfLValue(E); }
   ComplexPairTy VisitMemberExpr(const Expr *E) { return EmitLoadOfLValue(E); }
   ComplexPairTy VisitOpaqueValueExpr(OpaqueValueExpr *E) {

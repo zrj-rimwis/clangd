@@ -20,7 +20,9 @@
 #include "llvm/Support/Compiler.h"
 
 namespace clang {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 class ObjCRuntime;
+#endif
 
 namespace driver {
 class Command;
@@ -92,9 +94,11 @@ private:
 
   enum RewriteKind { RK_None, RK_Fragile, RK_NonFragile };
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   ObjCRuntime AddObjCRuntimeArgs(const llvm::opt::ArgList &args,
                                  llvm::opt::ArgStringList &cmdArgs,
                                  RewriteKind rewrite) const;
+#endif
 
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__
   void AddClangCLArgs(const llvm::opt::ArgList &Args, types::ID InputType,

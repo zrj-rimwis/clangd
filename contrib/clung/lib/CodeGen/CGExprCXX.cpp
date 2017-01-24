@@ -17,7 +17,9 @@
 #endif
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "clang/CodeGen/CGFunctionInfo.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "llvm/IR/CallSite.h"
@@ -823,7 +825,9 @@ static void StoreAnyExprIntoOneUnit(CodeGenFunction &CGF, const Expr *Init,
     AggValueSlot Slot
       = AggValueSlot::forAddr(NewPtr, AllocType.getQualifiers(),
                               AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                               AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                               AggValueSlot::IsNotAliased);
     CGF.EmitAggExpr(Init, Slot);
     return;

@@ -1105,22 +1105,30 @@ static bool HasFeature(const Preprocessor &PP, StringRef Feature) {
       .Case("objc_arr", LangOpts.ObjCAutoRefCount) // FIXME: REMOVE?
       .Case("objc_arc", LangOpts.ObjCAutoRefCount)
 #endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_arc_weak", LangOpts.ObjCWeak)
+#endif
       .Case("objc_default_synthesize_properties", LangOpts.ObjC2)
       .Case("objc_fixed_enum", LangOpts.ObjC2)
       .Case("objc_instancetype", LangOpts.ObjC2)
       .Case("objc_kindof", LangOpts.ObjC2)
       .Case("objc_modules", LangOpts.ObjC2 && LangOpts.Modules)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_nonfragile_abi", LangOpts.ObjCRuntime.isNonFragile())
+#endif
       .Case("objc_property_explicit_atomic",
             true) // Does clang support explicit "atomic" keyword?
       .Case("objc_protocol_qualifier_mangling", true)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_weak_class", LangOpts.ObjCRuntime.hasWeakClassImport())
+#endif
       .Case("ownership_holds", true)
       .Case("ownership_returns", true)
       .Case("ownership_takes", true)
       .Case("objc_bool", true)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_subscripting", LangOpts.ObjCRuntime.isNonFragile())
+#endif
       .Case("objc_array_literals", LangOpts.ObjC2)
       .Case("objc_dictionary_literals", LangOpts.ObjC2)
       .Case("objc_boxed_expressions", LangOpts.ObjC2)

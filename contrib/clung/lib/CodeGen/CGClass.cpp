@@ -551,7 +551,9 @@ static void EmitBaseInitializer(CodeGenFunction &CGF,
   AggValueSlot AggSlot =
     AggValueSlot::forAddr(V, Qualifiers(),
                           AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                           AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                           AggValueSlot::IsNotAliased);
 
   CGF.EmitAggExpr(BaseInit->getInit(), AggSlot);
@@ -599,7 +601,9 @@ static void EmitAggMemberInitializer(CodeGenFunction &CGF,
       AggValueSlot Slot =
         AggValueSlot::forLValue(LV,
                                 AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                 AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                 AggValueSlot::IsNotAliased);
 
       CGF.EmitAggExpr(Init, Slot);
@@ -2396,7 +2400,9 @@ CodeGenFunction::EmitDelegatingCXXConstructorCall(const CXXConstructorDecl *Ctor
   AggValueSlot AggSlot =
     AggValueSlot::forAddr(ThisPtr, Qualifiers(),
                           AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                           AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                           AggValueSlot::IsNotAliased);
 
   EmitAggExpr(Ctor->init_begin()[0]->getInit(), AggSlot);

@@ -11,7 +11,9 @@
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
 #include "clang/Basic/Cuda.h"
 #endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "clang/Basic/ObjCRuntime.h"
+#endif
 #include "clang/Basic/Version.h"
 #include "clang/Basic/VirtualFileSystem.h"
 #include "clang/Config/config.h" // for GCC_INSTALL_PREFIX

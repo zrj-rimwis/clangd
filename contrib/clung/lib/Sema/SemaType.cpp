@@ -5554,12 +5554,20 @@ static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
 
   // Sometimes, __weak isn't allowed.
   if (lifetime == Qualifiers::OCL_Weak &&
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false
       !S.getLangOpts().ObjCWeak && !NonObjCPointer) {
+#else
+      !false && !NonObjCPointer) {
+#endif
 
     // Use a specialized diagnostic if the runtime just doesn't support them.
     unsigned diagnostic =
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
       (S.getLangOpts().ObjCWeakRuntime ? diag::err_arc_weak_disabled
                                        : diag::err_arc_weak_no_runtime);
+#else
+      diag::err_arc_weak_no_runtime;
+#endif
 
     // In any case, delay the diagnostic until we know what we're parsing.
     diagnoseOrDelay(S, AttrLoc, diagnostic, type);

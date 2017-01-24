@@ -1375,8 +1375,10 @@ uint64_t ASTWriter::WriteControlBlock(Preprocessor &PP,
   for (StringRef Feature : LangOpts.ModuleFeatures)
     AddString(Feature, Record);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed XXX investigate what is done here
   Record.push_back((unsigned) LangOpts.ObjCRuntime.getKind());
   AddVersionTuple(LangOpts.ObjCRuntime.getVersion(), Record);
+#endif
 
   AddString(LangOpts.CurrentModule, Record);
 

@@ -4187,7 +4187,11 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
       } else if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND)) {
         unsigned BuiltinID = FD->getBuiltinID();
         if (BuiltinID == Builtin::BI__builtin___CFStringMakeConstantString ||
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
             BuiltinID == Builtin::BI__builtin___NSStringMakeConstantString) {
+#else
+            false) {
+#endif
           const Expr *Arg = CE->getArg(0);
           return checkFormatStringExpr(S, Arg, Args,
                                        HasVAListArg, format_idx,

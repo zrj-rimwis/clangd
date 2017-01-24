@@ -336,6 +336,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
     }
 #endif
       
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (LangOpts.ObjCWeak) {
       Out << "template<typename _Tp>\n"
           << "struct __is_scalar<__attribute__((objc_ownership(weak))) _Tp> {\n"
@@ -344,6 +345,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
           << "};\n"
           << "\n";
     }
+#endif
     
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (LangOpts.ObjCAutoRefCount) {
@@ -579,19 +581,24 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("__GXX_EXPERIMENTAL_CXX0X__");
 
   if (LangOpts.ObjC1) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (LangOpts.ObjCRuntime.isNonFragile()) {
       Builder.defineMacro("__OBJC2__");
       
       if (LangOpts.ObjCExceptions)
         Builder.defineMacro("OBJC_ZEROCOST_EXCEPTIONS");
     }
+#endif
 
     if (LangOpts.getGC() != LangOptions::NonGC)
       Builder.defineMacro("__OBJC_GC__");
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (LangOpts.ObjCRuntime.isNeXTFamily())
       Builder.defineMacro("__NEXT_RUNTIME__");
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (LangOpts.ObjCRuntime.getKind() == ObjCRuntime::ObjFW) {
       VersionTuple tuple = LangOpts.ObjCRuntime.getVersion();
 
@@ -607,6 +614,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
                           Twine(tuple.getMajor() * 10000 + minor * 100 +
                                 subminor));
     }
+#endif
 
     Builder.defineMacro("IBOutlet", "__attribute__((iboutlet))");
     Builder.defineMacro("IBOutletCollection(ClassName)",
@@ -1047,6 +1055,7 @@ void clang::InitializePreprocessor(
 
     // Install definitions to make Objective-C++ ARC work well with various
     // C++ Standard Library implementations.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed, just kill it
     if (LangOpts.ObjC1 && LangOpts.CPlusPlus &&
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false || stmh
         (LangOpts.ObjCAutoRefCount || LangOpts.ObjCWeak)) {
@@ -1063,6 +1072,7 @@ void clang::InitializePreprocessor(
         break;
       }
     }
+#endif
   }
   
   // Even with predefines off, some macros are still predefined.

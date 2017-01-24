@@ -15,7 +15,9 @@
 #include "CGCall.h"
 #include "CGCleanup.h"
 #include "CGDebugInfo.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CGOpenMPRuntime.h"
 #include "CGRecordLayout.h"
 #include "CodeGenFunction.h"
@@ -180,7 +182,9 @@ void CodeGenFunction::EmitAnyExprToMem(const Expr *E,
   case TEK_Aggregate: {
     EmitAggExpr(E, AggValueSlot::forAddr(Location, Quals,
                                          AggValueSlot::IsDestructed_t(IsInit),
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                          AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                          AggValueSlot::IsAliased_t(!IsInit)));
     return;
   }
@@ -386,7 +390,9 @@ EmitMaterializeTemporaryExpr(const MaterializeTemporaryExpr *M) {
       EmitAggExpr(E, AggValueSlot::forAddr(Object,
                                            E->getType().getQualifiers(),
                                            AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                            AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                            AggValueSlot::IsNotAliased));
       break;
     }
@@ -975,8 +981,10 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
   case Expr::ObjCPropertyRefExprClass:
     llvm_unreachable("cannot emit a property reference directly");
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Expr::ObjCSelectorExprClass:
     return EmitObjCSelectorLValue(cast<ObjCSelectorExpr>(E));
+#endif
   case Expr::ObjCIsaExprClass:
     return EmitObjCIsaExpr(cast<ObjCIsaExpr>(E));
   case Expr::BinaryOperatorClass:
@@ -1040,10 +1048,12 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
   case Expr::CXXTypeidExprClass:
     return EmitCXXTypeidLValue(cast<CXXTypeidExpr>(E));
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Expr::ObjCMessageExprClass:
     return EmitObjCMessageExprLValue(cast<ObjCMessageExpr>(E));
   case Expr::ObjCIvarRefExprClass:
     return EmitObjCIvarRefLValue(cast<ObjCIvarRefExpr>(E));
+#endif
   case Expr::StmtExprClass:
     return EmitStmtExprLValue(cast<StmtExpr>(E));
   case Expr::UnaryOperatorClass:
@@ -1440,12 +1450,14 @@ void CodeGenFunction::EmitStoreOfScalar(llvm::Value *value, LValue lvalue,
 /// method emits the address of the lvalue, then loads the result as an rvalue,
 /// returning the rvalue.
 RValue CodeGenFunction::EmitLoadOfLValue(LValue LV, SourceLocation Loc) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
   if (LV.isObjCWeak()) {
     // load of a __weak object.
     Address AddrWeakObj = LV.getAddress();
     return RValue::get(CGM.getObjCRuntime().EmitObjCWeakRead(*this,
                                                              AddrWeakObj));
   }
+#endif
   if (LV.getQuals().getObjCLifetime() == Qualifiers::OCL_Weak) {
     // In MRC mode, we do a load+autorelease.
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
@@ -1648,6 +1660,7 @@ void CodeGenFunction::EmitStoreThroughLValue(RValue Src, LValue Dst,
     }
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
   if (Dst.isObjCWeak() && !Dst.isNonGC()) {
     // load of a __weak object.
     Address LvalueDst = Dst.getAddress();
@@ -1655,7 +1668,9 @@ void CodeGenFunction::EmitStoreThroughLValue(RValue Src, LValue Dst,
      CGM.getObjCRuntime().EmitObjCWeakAssign(*this, src, LvalueDst);
     return;
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
   if (Dst.isObjCStrong() && !Dst.isNonGC()) {
     // load of a __strong object.
     Address LvalueDst = Dst.getAddress();
@@ -1680,6 +1695,7 @@ void CodeGenFunction::EmitStoreThroughLValue(RValue Src, LValue Dst,
       CGM.getObjCRuntime().EmitObjCStrongCastAssign(*this, src, LvalueDst);
     return;
   }
+#endif
 
   assert(Src.isScalar() && "Can't emit an agg store with this method");
   EmitStoreOfScalar(Src.getScalarVal(), Dst, isInit);
@@ -2235,10 +2251,12 @@ LValue CodeGenFunction::EmitUnaryOpLValue(const UnaryOperator *E) {
     // of a pointer to object; as in void foo (__weak id *param); *param = 0;
     // But, we continue to generate __strong write barrier on indirect write
     // into a pointer to object.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
     if (getLangOpts().ObjC1 &&
         getLangOpts().getGC() != LangOptions::NonGC &&
         LV.isObjCWeak())
       LV.setNonGC(!E->isOBJCGCCandidate(getContext()));
+#endif
     return LV;
   }
   case UO_Real:
@@ -3930,6 +3948,7 @@ CodeGenFunction::EmitLambdaLValue(const LambdaExpr *E) {
                         AlignmentSource::Decl);
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 LValue CodeGenFunction::EmitObjCMessageExprLValue(const ObjCMessageExpr *E) {
   RValue RV = EmitObjCMessageExpr(E);
 
@@ -3943,18 +3962,24 @@ LValue CodeGenFunction::EmitObjCMessageExprLValue(const ObjCMessageExpr *E) {
 
   return MakeNaturalAlignPointeeAddrLValue(RV.getScalarVal(), E->getType());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 LValue CodeGenFunction::EmitObjCSelectorLValue(const ObjCSelectorExpr *E) {
   Address V =
     CGM.getObjCRuntime().GetAddrOfSelector(*this, E->getSelector());
   return MakeAddrLValue(V, E->getType(), AlignmentSource::Decl);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitIvarOffset(const ObjCInterfaceDecl *Interface,
                                              const ObjCIvarDecl *Ivar) {
   return CGM.getObjCRuntime().EmitIvarOffset(*this, Interface, Ivar);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 LValue CodeGenFunction::EmitLValueForIvar(QualType ObjectTy,
                                           llvm::Value *BaseValue,
                                           const ObjCIvarDecl *Ivar,
@@ -3962,7 +3987,9 @@ LValue CodeGenFunction::EmitLValueForIvar(QualType ObjectTy,
   return CGM.getObjCRuntime().EmitObjCValueForIvar(*this, ObjectTy, BaseValue,
                                                    Ivar, CVRQualifiers);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 LValue CodeGenFunction::EmitObjCIvarRefLValue(const ObjCIvarRefExpr *E) {
   // FIXME: A lot of the code below could be shared with EmitMemberExpr.
   llvm::Value *BaseValue = nullptr;
@@ -3986,6 +4013,7 @@ LValue CodeGenFunction::EmitObjCIvarRefLValue(const ObjCIvarRefExpr *E) {
   setObjCGCLValueClass(getContext(), E, LV);
   return LV;
 }
+#endif
 
 LValue CodeGenFunction::EmitStmtExprLValue(const StmtExpr *E) {
   // Can only get l-value for message expression returning aggregate type

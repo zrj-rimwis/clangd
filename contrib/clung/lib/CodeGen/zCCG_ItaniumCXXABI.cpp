@@ -3788,7 +3788,9 @@ static void InitCatchParam(CodeGenFunction &CGF,
   CGF.EmitAggExpr(copyExpr,
                   AggValueSlot::forAddr(ParamAddr, Qualifiers(),
                                         AggValueSlot::IsNotDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                         AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                         AggValueSlot::IsNotAliased));
 
   // Leave the terminate scope.

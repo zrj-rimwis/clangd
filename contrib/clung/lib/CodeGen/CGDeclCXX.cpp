@@ -13,7 +13,9 @@
 
 #include "CodeGenFunction.h"
 #include "CGCXXABI.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CGOpenMPRuntime.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "llvm/ADT/StringExtras.h"
@@ -36,12 +38,18 @@ static void EmitDeclInit(CodeGenFunction &CGF, const VarDecl &D,
   switch (CGF.getEvaluationKind(type)) {
   case TEK_Scalar: {
     CodeGenModule &CGM = CGF.CGM;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume both false
     if (lv.isObjCStrong())
       CGM.getObjCRuntime().EmitObjCGlobalAssign(CGF, CGF.EmitScalarExpr(Init),
                                                 DeclPtr, D.getTLSKind());
     else if (lv.isObjCWeak())
       CGM.getObjCRuntime().EmitObjCWeakAssign(CGF, CGF.EmitScalarExpr(Init),
                                               DeclPtr);
+#else
+    if (false) {
+      /* dummy */
+    }
+#endif
     else
       CGF.EmitScalarInit(Init, &D, lv, false);
     return;
@@ -51,7 +59,9 @@ static void EmitDeclInit(CodeGenFunction &CGF, const VarDecl &D,
     return;
   case TEK_Aggregate:
     CGF.EmitAggExpr(Init, AggValueSlot::forLValue(lv,AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                           AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                                   AggValueSlot::IsNotAliased));
     return;
   }

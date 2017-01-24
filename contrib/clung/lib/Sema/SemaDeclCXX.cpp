@@ -12323,8 +12323,10 @@ VarDecl *Sema::BuildExceptionDeclaration(Scope *S,
       Invalid = true;
     } else if (T->isObjCObjectPointerType()) {
       // FIXME: should this be a test for macosx-fragile specifically?
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
       if (getLangOpts().ObjCRuntime.isFragile())
         Diag(Loc, diag::warn_objc_pointer_cxx_catch_fragile);
+#endif
     }
   }
 

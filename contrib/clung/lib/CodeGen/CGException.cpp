@@ -14,7 +14,9 @@
 #include "CodeGenFunction.h"
 #include "CGCXXABI.h"
 #include "CGCleanup.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "TargetInfo.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/StmtCXX.h"
@@ -71,9 +73,13 @@ llvm::Constant *CodeGenModule::getTerminateFn() {
     else
       name = "\01?terminate@@YAXXZ";
 #endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   } else if (getLangOpts().ObjC1 &&
              getLangOpts().ObjCRuntime.hasTerminate())
     name = "objc_terminate";
+#else
+  }
+#endif
   else
     name = "abort";
   return CreateRuntimeFunction(FTy, name);
@@ -138,6 +144,7 @@ static const EHPersonality &getCPersonality(const llvm::Triple &T,
   return EHPersonality::GNU_C;
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static const EHPersonality &getObjCPersonality(const llvm::Triple &T,
                                                const LangOptions &L) {
   switch (L.ObjCRuntime.getKind()) {
@@ -157,6 +164,7 @@ static const EHPersonality &getObjCPersonality(const llvm::Triple &T,
   }
   llvm_unreachable("bad runtime kind");
 }
+#endif
 
 static const EHPersonality &getCXXPersonality(const llvm::Triple &T,
                                               const LangOptions &L) {
@@ -171,6 +179,7 @@ static const EHPersonality &getCXXPersonality(const llvm::Triple &T,
 
 /// Determines the personality function to use when both C++
 /// and Objective-C exceptions are being caught.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static const EHPersonality &getObjCXXPersonality(const llvm::Triple &T,
                                                  const LangOptions &L) {
   switch (L.ObjCRuntime.getKind()) {
@@ -197,6 +206,7 @@ static const EHPersonality &getObjCXXPersonality(const llvm::Triple &T,
   }
   llvm_unreachable("bad runtime kind");
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSSEH // __DragonFly__
 static const EHPersonality &getSEHPersonalityMSVC(const llvm::Triple &T) {
@@ -229,12 +239,20 @@ const EHPersonality &EHPersonality::get(CodeGenModule &CGM,
   }
 #endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // wow what a logic
   if (L.CPlusPlus && L.ObjC1)
     return getObjCXXPersonality(T, L);
+#else
+  if (false) {
+    /* dummy */
+  }
+#endif
   else if (L.CPlusPlus)
     return getCXXPersonality(T, L);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   else if (L.ObjC1)
     return getObjCPersonality(T, L);
+#endif
   else
     return getCPersonality(T, L);
 }
@@ -258,6 +276,7 @@ static llvm::Constant *getOpaquePersonalityFn(CodeGenModule &CGM,
 }
 
 /// Check whether a landingpad instruction only uses C++ features.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool LandingPadHasOnlyCXXUses(llvm::LandingPadInst *LPI) {
   for (unsigned I = 0, E = LPI->getNumClauses(); I != E; ++I) {
     // Look for something that would've been returned by the ObjC
@@ -286,9 +305,11 @@ static bool LandingPadHasOnlyCXXUses(llvm::LandingPadInst *LPI) {
   }
   return true;
 }
+#endif
 
 /// Check whether a personality function could reasonably be swapped
 /// for a C++ personality function.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool PersonalityHasOnlyCXXUses(llvm::Constant *Fn) {
   for (llvm::User *U : Fn->users()) {
     // Conditionally white-list bitcasts.
@@ -312,6 +333,7 @@ static bool PersonalityHasOnlyCXXUses(llvm::Constant *Fn) {
 
   return true;
 }
+#endif
 
 /// Try to use the C++ personality function in ObjC++.  Not doing this
 /// can cause some incompatibilities with gcc, which is more
@@ -324,6 +346,7 @@ void CodeGenModule::SimplifyPersonality() {
 
   // Both the problem this endeavors to fix and the way the logic
   // above works is specific to the NeXT runtime.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false and return early
   if (!LangOpts.ObjCRuntime.isNeXTFamily())
     return;
 
@@ -353,6 +376,9 @@ void CodeGenModule::SimplifyPersonality() {
 
   Fn->replaceAllUsesWith(CXXFn);
   Fn->eraseFromParent();
+#else
+  return;
+#endif
 }
 
 /// Returns the value to inject into a selector to indicate the
@@ -428,10 +454,15 @@ void CodeGenFunction::EmitCXXThrowExpr(const CXXThrowExpr *E,
                                        bool KeepInsertionPoint) {
   if (const Expr *SubExpr = E->getSubExpr()) {
     QualType ThrowType = SubExpr->getType();
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
     if (ThrowType->isObjCObjectPointerType()) {
       const Stmt *ThrowStmt = E->getSubExpr();
       const ObjCAtThrowStmt S(E->getExprLoc(), const_cast<Stmt *>(ThrowStmt));
       CGM.getObjCRuntime().EmitThrowStmt(*this, S, false);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       CGM.getCXXABI().emitThrow(*this, E);
     }
@@ -587,9 +618,11 @@ void CodeGenFunction::EnterCXXTryStmt(const CXXTryStmt &S, bool IsFnTryBlock) {
           C->getCaughtType().getNonReferenceType(), CaughtTypeQuals);
 
       CatchTypeInfo TypeInfo{nullptr, 0};
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
       if (CaughtType->isObjCObjectPointerType())
         TypeInfo.RTTI = CGM.getObjCRuntime().GetEHType(CaughtType);
       else
+#endif
         TypeInfo = CGM.getCXXABI().getAddrOfCXXCatchHandlerType(
             CaughtType, C->getCaughtType());
       CatchScope->setHandler(I, TypeInfo, Handler);

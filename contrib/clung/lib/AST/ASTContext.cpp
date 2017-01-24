@@ -5591,6 +5591,7 @@ static void EncodeBitField(const ASTContext *Ctx, std::string& S,
   // information is not especially sensible, but we're stuck with it for
   // compatibility with GCC, although providing it breaks anything that
   // actually uses runtime introspection and wants to work on both runtimes...
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (Ctx->getLangOpts().ObjCRuntime.isGNUFamily()) {
     const RecordDecl *RD = FD->getParent();
     const ASTRecordLayout &RL = Ctx->getASTRecordLayout(RD);
@@ -5602,6 +5603,7 @@ static void EncodeBitField(const ASTContext *Ctx, std::string& S,
       S += getObjCEncodingForPrimitiveKind(Ctx, BT->getKind());
     }
   }
+#endif
   S += llvm::utostr(FD->getBitWidthValue(*Ctx));
 }
 

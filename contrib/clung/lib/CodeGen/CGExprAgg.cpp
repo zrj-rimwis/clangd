@@ -12,7 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "CodeGenFunction.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CodeGenModule.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclCXX.h"
@@ -42,7 +44,11 @@ class AggExprEmitter : public StmtVisitor<AggExprEmitter> {
   ///     need to use the GC API.
   ///   - The destination slot is potentially aliased.
   bool shouldUseDestForReturnSlot() const {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // aasume false
     return !(Dest.requiresGCollection() || Dest.isPotentiallyAliased());
+#else
+    return !(false || Dest.isPotentiallyAliased());
+#endif
   }
 
   ReturnValueSlot getReturnValueSlot() const {
@@ -87,11 +93,13 @@ public:
   void EmitArrayInit(Address DestPtr, llvm::ArrayType *AType,
                      QualType elementType, InitListExpr *E);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   AggValueSlot::NeedsGCBarriers_t needsGC(QualType T) {
     if (CGF.getLangOpts().getGC() && TypeRequiresGCollection(T))
       return AggValueSlot::NeedsGCBarriers;
     return AggValueSlot::DoesNotNeedGCBarriers;
   }
+#endif
 
   bool TypeRequiresGCollection(QualType T);
 
@@ -155,7 +163,9 @@ public:
   void VisitBinAssign(const BinaryOperator *E);
   void VisitBinComma(const BinaryOperator *E);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   void VisitObjCMessageExpr(ObjCMessageExpr *E);
+#endif
   void VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     EmitAggLoadOfLValue(E);
   }
@@ -283,7 +293,11 @@ void AggExprEmitter::EmitFinalDestCopy(QualType type, const LValue &src) {
 
   AggValueSlot srcAgg =
     AggValueSlot::forLValue(src, AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                             needsGC(type), AggValueSlot::IsAliased);
+#else
+                            AggValueSlot::IsAliased);
+#endif
   EmitCopy(type, Dest, srcAgg);
 }
 
@@ -293,6 +307,7 @@ void AggExprEmitter::EmitFinalDestCopy(QualType type, const LValue &src) {
 ///   ignored
 void AggExprEmitter::EmitCopy(QualType type, const AggValueSlot &dest,
                               const AggValueSlot &src) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (dest.requiresGCollection()) {
     CharUnits sz = CGF.getContext().getTypeSizeInChars(type);
     llvm::Value *size = llvm::ConstantInt::get(CGF.SizeTy, sz.getQuantity());
@@ -302,6 +317,7 @@ void AggExprEmitter::EmitCopy(QualType type, const AggValueSlot &dest,
                                                       size);
     return;
   }
+#endif
 
   // If the result of the assignment is used, copy the LHS there also.
   // It's volatile if either side is.  Use the minimum alignment of
@@ -663,7 +679,9 @@ void AggExprEmitter::VisitCastExpr(CastExpr *E) {
         valueDest = AggValueSlot::forAddr(valueAddr,
                                           valueDest.getQualifiers(),
                                           valueDest.isExternallyDestructed(),
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume nt needed
                                           valueDest.requiresGCollection(),
+#endif
                                           valueDest.isPotentiallyAliased(),
                                           AggValueSlot::IsZeroed);
       }
@@ -764,10 +782,12 @@ void AggExprEmitter::VisitCallExpr(const CallExpr *E) {
   EmitMoveFromReturnSlot(E, RV);
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 void AggExprEmitter::VisitObjCMessageExpr(ObjCMessageExpr *E) {
   RValue RV = CGF.EmitObjCMessageExpr(E, getReturnValueSlot());
   EmitMoveFromReturnSlot(E, RV);
 }
+#endif
 
 void AggExprEmitter::VisitBinComma(const BinaryOperator *E) {
   CGF.EmitIgnoredExpr(E->getLHS());
@@ -887,7 +907,9 @@ void AggExprEmitter::VisitBinAssign(const BinaryOperator *E) {
 
     EmitCopy(E->getLHS()->getType(),
              AggValueSlot::forLValue(LHS, AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                      needsGC(E->getLHS()->getType()),
+#endif
                                      AggValueSlot::IsAliased),
              Dest);
     return;
@@ -908,7 +930,9 @@ void AggExprEmitter::VisitBinAssign(const BinaryOperator *E) {
   // Codegen the RHS so that it stores directly into the LHS.
   AggValueSlot LHSSlot =
     AggValueSlot::forLValue(LHS, AggValueSlot::IsDestructed, 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                             needsGC(E->getLHS()->getType()),
+#endif
                             AggValueSlot::IsAliased);
   // A non-volatile aggregate destination might have volatile member.
   if (!LHSSlot.isVolatile() &&
@@ -1084,7 +1108,9 @@ AggExprEmitter::EmitInitializationToLValue(Expr *E, LValue LV) {
   case TEK_Aggregate:
     CGF.EmitAggExpr(E, AggValueSlot::forLValue(LV,
                                                AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                       AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                                AggValueSlot::IsNotAliased,
                                                Dest.isZeroed()));
     return;
@@ -1200,7 +1226,9 @@ void AggExprEmitter::VisitInitListExpr(InitListExpr *E) {
       AggValueSlot AggSlot =
         AggValueSlot::forAddr(V, Qualifiers(),
                               AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                               AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                               AggValueSlot::IsNotAliased);
       CGF.EmitAggExpr(E->getInit(curInitIndex++), AggSlot);
 
@@ -1451,7 +1479,9 @@ LValue CodeGenFunction::EmitAggExprToLValue(const Expr *E) {
   Address Temp = CreateMemTemp(E->getType());
   LValue LV = MakeAddrLValue(Temp, E->getType());
   EmitAggExpr(E, AggValueSlot::forLValue(LV, AggValueSlot::IsNotDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                          AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                          AggValueSlot::IsNotAliased));
   return LV;
 }
@@ -1545,6 +1575,7 @@ void CodeGenFunction::EmitAggregateCopy(Address DestPtr,
   SrcPtr = Builder.CreateElementBitCast(SrcPtr, Int8Ty);
 
   // Don't do any of the memmove_collectable tests if GC isn't set.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // XXX assume not needed, wth..
   if (CGM.getLangOpts().getGC() == LangOptions::NonGC) {
     // fall through
   } else if (const RecordType *RecordTy = Ty->getAs<RecordType>()) {
@@ -1564,6 +1595,7 @@ void CodeGenFunction::EmitAggregateCopy(Address DestPtr,
       }
     }
   }
+#endif
 
   auto Inst = Builder.CreateMemCpy(DestPtr, SrcPtr, SizeVal, isVolatile);
 

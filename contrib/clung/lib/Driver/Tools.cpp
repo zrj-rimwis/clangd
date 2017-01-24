@@ -12,7 +12,9 @@
 #include "ToolChains.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/LangOptions.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "clang/Basic/ObjCRuntime.h"
+#endif
 #include "clang/Basic/Version.h"
 #include "clang/Config/config.h"
 #include "clang/Driver/Action.h"
@@ -2728,6 +2730,7 @@ static void getTargetFeatures(const ToolChain &TC, const llvm::Triple &Triple,
   }
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool
 shouldUseExceptionTablesForObjCExceptions(const ObjCRuntime &runtime,
                                           const llvm::Triple &Triple) {
@@ -2748,6 +2751,7 @@ shouldUseExceptionTablesForObjCExceptions(const ObjCRuntime &runtime,
            Triple.getArch() == llvm::Triple::arm));
 #endif
 }
+#endif
 
 /// Adds exception related arguments to the driver command arguments. There's a
 /// master flag, -fexceptions and also language specific flags to enable/disable
@@ -2755,7 +2759,9 @@ shouldUseExceptionTablesForObjCExceptions(const ObjCRuntime &runtime,
 /// disable C++ exceptions but enable Objective-C exceptions.
 static void addExceptionArgs(const ArgList &Args, types::ID InputType,
                              const ToolChain &TC, bool KernelOrKext,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                              const ObjCRuntime &objcRuntime,
+#endif
                              ArgStringList &CmdArgs) {
   const Driver &D = TC.getDriver();
   const llvm::Triple &Triple = TC.getTriple();
@@ -2778,6 +2784,7 @@ static void addExceptionArgs(const ArgList &Args, types::ID InputType,
 
   // Obj-C exceptions are enabled by default, regardless of -fexceptions. This
   // is not necessarily sensible, but follows GCC.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed?
   if (types::isObjC(InputType) &&
       Args.hasFlag(options::OPT_fobjc_exceptions,
                    options::OPT_fno_objc_exceptions, true)) {
@@ -2785,6 +2792,7 @@ static void addExceptionArgs(const ArgList &Args, types::ID InputType,
 
     EH |= shouldUseExceptionTablesForObjCExceptions(objcRuntime, Triple);
   }
+#endif
 
   if (types::isCXX(InputType)) {
     // Disable C++ EH by default on XCore and PS4.
@@ -5465,12 +5473,20 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   // -fblocks=0 is default.
   if (Args.hasFlag(options::OPT_fblocks, options::OPT_fno_blocks,
                    getToolChain().IsBlocksDefault()) ||
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume both false
       (Args.hasArg(options::OPT_fgnu_runtime) &&
        Args.hasArg(options::OPT_fobjc_nonfragile_abi) &&
+#else
+      (false &&
+#endif
        !Args.hasArg(options::OPT_fno_blocks))) {
     CmdArgs.push_back("-fblocks");
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false
     if (!Args.hasArg(options::OPT_fgnu_runtime) &&
+#else
+    if (!false &&
+#endif
         !getToolChain().hasBlocksRuntime())
       CmdArgs.push_back("-fblocks-runtime-optional");
   }
@@ -5764,12 +5780,15 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
                                        options::OPT_fno_inline_functions))
     InlineArg->render(Args, CmdArgs);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   ObjCRuntime objcRuntime = AddObjCRuntimeArgs(Args, CmdArgs, rewriteKind);
+#endif
 
   // -fobjc-dispatch-method is only relevant with the nonfragile-abi, and
   // legacy is the default. Except for deployment taget of 10.5,
   // next runtime is always legacy dispatch and -fno-objc-legacy-dispatch
   // gets ignored silently.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (objcRuntime.isNonFragile()) {
     if (!Args.hasFlag(options::OPT_fobjc_legacy_dispatch,
                       options::OPT_fno_objc_legacy_dispatch,
@@ -5781,10 +5800,12 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
         CmdArgs.push_back("-fobjc-dispatch-method=non-legacy");
     }
   }
+#endif
 
   // When ObjectiveC legacy runtime is in effect on MacOSX,
   // turn on the option to do Array/Dictionary subscripting
   // by default.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (getToolChain().getArch() == llvm::Triple::x86 &&
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
       getToolChain().getTriple().isMacOSX() &&
@@ -5795,6 +5816,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       objcRuntime.getKind() == ObjCRuntime::FragileMacOSX &&
       objcRuntime.isNeXTFamily())
     CmdArgs.push_back("-fobjc-subscripting-legacy-runtime");
+#endif
 
   // -fencode-extended-block-signature=1 is default.
   if (getToolChain().IsEncodeExtendedBlockSignatureDefault()) {
@@ -5857,6 +5879,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 
   // Pass down -fobjc-weak or -fno-objc-weak if present.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (types::isObjC(InputType)) {
     auto WeakArg = Args.getLastArg(options::OPT_fobjc_weak,
                                    options::OPT_fno_objc_weak);
@@ -5872,6 +5895,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       WeakArg->render(Args, CmdArgs);
     }
   }
+#endif
 
   if (Args.hasFlag(options::OPT_fapplication_extension,
                    options::OPT_fno_application_extension, false))
@@ -5881,7 +5905,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false
   if (!C.getDriver().IsCLMode())
 #endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     addExceptionArgs(Args, InputType, getToolChain(), KernelOrKext, objcRuntime,
+#else
+    addExceptionArgs(Args, InputType, getToolChain(), KernelOrKext,
+#endif
                      CmdArgs);
 
   if (Args.hasArg(options::OPT_fsjlj_exceptions) ||
@@ -6335,6 +6363,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 /// Add options related to the Objective-C runtime/ABI.
 ///
 /// Returns true if the runtime is non-fragile.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 ObjCRuntime Clang::AddObjCRuntimeArgs(const ArgList &args,
                                       ArgStringList &cmdArgs,
                                       RewriteKind rewriteKind) const {
@@ -6456,11 +6485,11 @@ ObjCRuntime Clang::AddObjCRuntimeArgs(const ArgList &args,
       runtime = ObjCRuntime(ObjCRuntime::GCC, VersionTuple());
   }
 
-// zrj: XXX aha the culprit is here, later thou now CL.EXE
   cmdArgs.push_back(
       args.MakeArgString("-fobjc-runtime=" + runtime.getAsString()));
   return runtime;
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__
 static bool maybeConsumeDash(const std::string &EH, size_t &I) {

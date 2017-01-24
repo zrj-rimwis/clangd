@@ -1076,16 +1076,25 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       // Otherwise, check whether ARC __weak is enabled and works with
       // the property type.
       } else {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ //assume !false
         if (!getLangOpts().ObjCWeak) {
+#else
+        if (!false) {
+#endif
           // Only complain here when synthesizing an ivar.
           if (!Ivar) {
             Diag(PropertyDiagLoc,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
                  getLangOpts().ObjCWeakRuntime
                    ? diag::err_synthesizing_arc_weak_property_disabled
                    : diag::err_synthesizing_arc_weak_property_no_runtime);
+#else
+                 diag::err_synthesizing_arc_weak_property_no_runtime);
+#endif
             Diag(property->getLocation(), diag::note_property_declare);
           }
           CompleteTypeErr = true; // suppress later diagnostics about the ivar
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
         } else {
           isARCWeak = true;
           if (const ObjCObjectPointerType *ObjT =
@@ -1099,6 +1108,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
                 << ClassImpDecl->getName();
             }
           }
+#endif
         }
       }
     }
@@ -1167,11 +1177,14 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       ClassImpDecl->addDecl(Ivar);
       IDecl->makeDeclVisibleInContext(Ivar);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
       if (getLangOpts().ObjCRuntime.isFragile())
         Diag(PropertyDiagLoc, diag::error_missing_property_ivar_decl)
             << PropertyId;
+#endif
       // Note! I deliberately want it to fall thru so, we have a
       // a property implementation and to avoid future warnings.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     } else if (getLangOpts().ObjCRuntime.isNonFragile() &&
                !declaresSameEntity(ClassDeclared, IDecl)) {
       Diag(PropertyDiagLoc, diag::error_ivar_in_superclass_use)
@@ -1179,6 +1192,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       << ClassDeclared->getDeclName();
       Diag(Ivar->getLocation(), diag::note_previous_access_declaration)
       << Ivar << Ivar->getName();
+#endif
       // Note! I deliberately want it to fall thru so more errors are caught.
     }
     property->setPropertyIvarDecl(Ivar);
@@ -1382,6 +1396,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       return nullptr;
     }
     IC->addPropertyImplementation(PIDecl);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (getLangOpts().ObjCDefaultSynthProperties &&
         getLangOpts().ObjCRuntime.isNonFragile() &&
         !IDecl->isObjCRequiresPropertyDefs()) {
@@ -1404,6 +1419,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
         Ivar->setInvalidDecl();
       }
     }
+#endif
   } else {
     if (Synthesize)
       if (ObjCPropertyImplDecl *PPIDecl =
@@ -1776,7 +1792,11 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
 }
 
 void Sema::DefaultSynthesizeProperties(Scope *S, Decl *D) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !smth || false
   if (!LangOpts.ObjCDefaultSynthProperties || LangOpts.ObjCRuntime.isFragile())
+#else
+  if (!LangOpts.ObjCDefaultSynthProperties || false)
+#endif
     return;
   ObjCImplementationDecl *IC=dyn_cast_or_null<ObjCImplementationDecl>(D);
   if (!IC)
@@ -1816,11 +1836,13 @@ static void DiagnoseUnimplementedAccessor(
                    : diag::warn_setter_getter_impl_required);
     S.Diag(IMPDecl->getLocation(), diag) << Prop->getDeclName() << Method;
     S.Diag(Prop->getLocation(), diag::note_property_declare);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (S.LangOpts.ObjCDefaultSynthProperties &&
         S.LangOpts.ObjCRuntime.isNonFragile())
       if (ObjCInterfaceDecl *ID = dyn_cast<ObjCInterfaceDecl>(CDecl))
         if (const ObjCInterfaceDecl *RID = ID->isObjCRequiresPropertyDefs())
           S.Diag(RID->getLocation(), diag::note_suppressed_class_declare);
+#endif
   }
 }
 

@@ -1754,11 +1754,13 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 #endif
 
   if (Opts.ObjC1) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (Arg *arg = Args.getLastArg(OPT_fobjc_runtime_EQ)) {
       StringRef value = arg->getValue();
       if (Opts.ObjCRuntime.tryParse(value))
         Diags.Report(diag::err_drv_unknown_objc_runtime) << value;
     }
+#endif
 
     if (Args.hasArg(OPT_fobjc_gc_only))
       Opts.setGC(LangOptions::GCOnly);
@@ -1776,13 +1778,16 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
     // whether the feature is actually enabled.  This is predominantly
     // determined by -fobjc-runtime, but we allow it to be overridden
     // from the command line for testing purposes.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (Args.hasArg(OPT_fobjc_runtime_has_weak))
       Opts.ObjCWeakRuntime = 1;
     else
       Opts.ObjCWeakRuntime = Opts.ObjCRuntime.allowsWeak();
+#endif
 
     // ObjCWeak determines whether __weak is actually enabled.
     // Note that we allow -fno-objc-weak to disable this even in ARC mode.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (auto weakArg = Args.getLastArg(OPT_fobjc_weak, OPT_fno_objc_weak)) {
       if (!weakArg->getOption().matches(OPT_fobjc_weak)) {
         assert(!Opts.ObjCWeak);
@@ -1798,13 +1803,17 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
       Opts.ObjCWeak = Opts.ObjCWeakRuntime;
 #endif
     }
+#endif
 
+
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (Args.hasArg(OPT_fno_objc_infer_related_result_type))
       Opts.ObjCInferRelatedResultType = 0;
 
     if (Args.hasArg(OPT_fobjc_subscripting_legacy_runtime))
       Opts.ObjCSubscriptingLegacyRuntime =
         (Opts.ObjCRuntime.getKind() == ObjCRuntime::FragileMacOSX);
+#endif
   }
 
   if (Args.hasArg(OPT_fgnu89_inline)) {

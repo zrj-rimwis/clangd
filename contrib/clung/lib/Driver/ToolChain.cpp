@@ -8,7 +8,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "Tools.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // even before config.h???
 #include "clang/Basic/ObjCRuntime.h"
+#endif
 #include "clang/Config/config.h"
 #include "clang/Driver/Action.h"
 #include "clang/Driver/Driver.h"
@@ -419,10 +421,12 @@ bool ToolChain::isCrossCompiling() const {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 ObjCRuntime ToolChain::getDefaultObjCRuntime(bool isNonFragile) const {
   return ObjCRuntime(isNonFragile ? ObjCRuntime::GNUstep : ObjCRuntime::GCC,
                      VersionTuple());
 }
+#endif
 
 bool ToolChain::isThreadModelSupported(const StringRef Model) const {
   if (Model == "single") {

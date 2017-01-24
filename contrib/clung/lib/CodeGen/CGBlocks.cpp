@@ -13,7 +13,9 @@
 
 #include "CGBlocks.h"
 #include "CGDebugInfo.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
 #include "clang/AST/DeclObjC.h"
@@ -114,6 +116,7 @@ static llvm::Constant *buildBlockDescriptor(CodeGenModule &CGM,
     CGM.GetAddrOfConstantCString(typeAtEncoding).getPointer(), i8p));
   
   // GC layout.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // XXX uch that is something..
   if (C.getLangOpts().ObjC1) {
     if (CGM.getLangOpts().getGC() != LangOptions::NonGC)
       elements.push_back(CGM.getObjCRuntime().BuildGCBlockLayout(CGM, blockInfo));
@@ -121,6 +124,7 @@ static llvm::Constant *buildBlockDescriptor(CodeGenModule &CGM,
       elements.push_back(CGM.getObjCRuntime().BuildRCBlockLayout(CGM, blockInfo));
   }
   else
+#endif
     elements.push_back(llvm::Constant::getNullValue(i8p));
 
   llvm::Constant *init = llvm::ConstantStruct::getAnon(elements);
@@ -837,7 +841,9 @@ llvm::Value *CodeGenFunction::EmitBlockLiteral(const CGBlockInfo &blockInfo) {
         AggValueSlot Slot =
             AggValueSlot::forAddr(blockField, Qualifiers(),
                                   AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                   AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                   AggValueSlot::IsNotAliased);
         EmitAggExpr(copyExpr, Slot);
       } else {
@@ -2259,10 +2265,12 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
                      "byref.disposeHelper");
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (ByRefHasLifetime && HasByrefExtendedLayout) {
     auto layoutInfo = CGM.getObjCRuntime().BuildByrefLayout(CGM, type);
     storeHeaderField(layoutInfo, getPointerSize(), "byref.layout");
   }
+#endif
 }
 
 void CodeGenFunction::BuildBlockRelease(llvm::Value *V, BlockFieldFlags flags) {

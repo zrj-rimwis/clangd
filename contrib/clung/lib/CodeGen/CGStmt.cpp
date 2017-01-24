@@ -160,6 +160,7 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
     EmitCapturedStmt(*CS, CS->getCapturedRegionKind());
     }
     break;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Stmt::ObjCAtTryStmtClass:
     EmitObjCAtTryStmt(cast<ObjCAtTryStmt>(*S));
     break;
@@ -181,6 +182,7 @@ void CodeGenFunction::EmitStmt(const Stmt *S) {
   case Stmt::ObjCAutoreleasePoolStmtClass:
     EmitObjCAutoreleasePoolStmt(cast<ObjCAutoreleasePoolStmt>(*S));
     break;
+#endif
 
   case Stmt::CXXTryStmtClass:
     EmitCXXTryStmt(cast<CXXTryStmt>(*S));
@@ -1052,7 +1054,9 @@ void CodeGenFunction::EmitReturnStmt(const ReturnStmt &S) {
       EmitAggExpr(RV, AggValueSlot::forAddr(ReturnValue,
                                             Qualifiers(),
                                             AggValueSlot::IsDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                             AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                             AggValueSlot::IsNotAliased));
       break;
     }

@@ -32,7 +32,9 @@ namespace opt {
 }
 
 namespace clang {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 class ObjCRuntime;
+#endif
 namespace vfs {
 class FileSystem;
 }
@@ -352,7 +354,9 @@ public:
   /// for this platform.
   ///
   /// FIXME: this really belongs on some sort of DeploymentTarget abstraction
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   virtual ObjCRuntime getDefaultObjCRuntime(bool isNonFragile) const;
+#endif
 
   /// hasBlocksRuntime - Given that the user is compiling with
   /// -fblocks, does this tool chain guarantee the existence of a

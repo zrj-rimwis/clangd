@@ -537,7 +537,9 @@ public:
                 const char *BoundArch) const override;
 
   CXXStdlibType GetDefaultCXXStdlibType() const override;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   ObjCRuntime getDefaultObjCRuntime(bool isNonFragile) const override;
+#endif
   bool hasBlocksRuntime() const override;
 
   bool UseObjCMixedDispatch() const override {

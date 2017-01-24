@@ -12,7 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "CGDebugInfo.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
 #include "TargetInfo.h"
@@ -31,9 +33,11 @@ using namespace CodeGen;
 typedef llvm::PointerIntPair<llvm::Value*,1,bool> TryEmitResult;
 static TryEmitResult
 tryEmitARCRetainScalarExpr(CodeGenFunction &CGF, const Expr *e);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static RValue AdjustObjCObjectType(CodeGenFunction &CGF,
                                    QualType ET,
                                    RValue Result);
+#endif
 
 /// Given the address of a variable of pointer type, find the correct
 /// null to store into it.
@@ -43,6 +47,7 @@ static llvm::Constant *getNullForVariable(Address addr) {
 }
 
 /// Emits an instance of NSConstantString representing the object.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitObjCStringLiteral(const ObjCStringLiteral *E)
 {
   llvm::Constant *C = 
@@ -50,12 +55,14 @@ llvm::Value *CodeGenFunction::EmitObjCStringLiteral(const ObjCStringLiteral *E)
   // FIXME: This bitcast should just be made an invariant on the Runtime.
   return llvm::ConstantExpr::getBitCast(C, ConvertType(E->getType()));
 }
+#endif
 
 /// EmitObjCBoxedExpr - This routine generates code to call
 /// the appropriate expression boxing method. This will either be
 /// one of +[NSNumber numberWith<Type>:], or +[NSString stringWithUTF8String:],
 /// or [NSValue valueWithBytes:objCType:].
 ///
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *
 CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   // Generate the correct selector for this literal's concrete type.
@@ -109,7 +116,9 @@ CodeGenFunction::EmitObjCBoxedExpr(const ObjCBoxedExpr *E) {
   return Builder.CreateBitCast(result.getScalarVal(), 
                                ConvertType(E->getType()));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 llvm::Value *CodeGenFunction::EmitObjCCollectionLiteral(const Expr *E,
                                     const ObjCMethodDecl *MethodWithObjects) {
   ASTContext &Context = CGM.getContext();
@@ -229,17 +238,23 @@ llvm::Value *CodeGenFunction::EmitObjCCollectionLiteral(const Expr *E,
   return Builder.CreateBitCast(result.getScalarVal(), 
                                ConvertType(E->getType()));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 llvm::Value *CodeGenFunction::EmitObjCArrayLiteral(const ObjCArrayLiteral *E) {
   return EmitObjCCollectionLiteral(E, E->getArrayWithObjectsMethod());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 llvm::Value *CodeGenFunction::EmitObjCDictionaryLiteral(
                                             const ObjCDictionaryLiteral *E) {
   return EmitObjCCollectionLiteral(E, E->getDictWithObjectsMethod());
 }
+#endif
 
 /// Emit a selector.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 llvm::Value *CodeGenFunction::EmitObjCSelectorExpr(const ObjCSelectorExpr *E) {
   // Untyped selector.
   // Note that this implementation allows for non-constant strings to be passed
@@ -247,15 +262,19 @@ llvm::Value *CodeGenFunction::EmitObjCSelectorExpr(const ObjCSelectorExpr *E) {
   // behaviour is the type checking in the front end.
   return CGM.getObjCRuntime().GetSelector(*this, E->getSelector());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 llvm::Value *CodeGenFunction::EmitObjCProtocolExpr(const ObjCProtocolExpr *E) {
   // FIXME: This should pass the Decl not the name.
   return CGM.getObjCRuntime().GenerateProtocolRef(*this, E->getProtocol());
 }
+#endif
 
 /// \brief Adjust the type of an Objective-C object that doesn't match up due
 /// to type erasure at various points, e.g., related result types or the use
 /// of parameterized classes.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static RValue AdjustObjCObjectType(CodeGenFunction &CGF, QualType ExpT,
                                    RValue Result) {
   if (!ExpT->isObjCRetainableType())
@@ -270,9 +289,11 @@ static RValue AdjustObjCObjectType(CodeGenFunction &CGF, QualType ExpT,
   return RValue::get(CGF.Builder.CreateBitCast(Result.getScalarVal(),
                                                ExpLLVMTy));
 }
+#endif
 
 /// Decide whether to extend the lifetime of the receiver of a
 /// returns-inner-pointer message.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static bool
 shouldExtendReceiverForInnerPointerMessage(const ObjCMessageExpr *message) {
   switch (message->getReceiverKind()) {
@@ -330,9 +351,11 @@ shouldExtendReceiverForInnerPointerMessage(const ObjCMessageExpr *message) {
 
   llvm_unreachable("invalid receiver kind");
 }
+#endif
 
 /// Given an expression of ObjC pointer type, check whether it was
 /// immediately loaded from an ARC __weak l-value.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static const Expr *findWeakLValue(const Expr *E) {
   assert(E->getType()->isObjCRetainableType());
   E = E->IgnoreParens();
@@ -345,7 +368,9 @@ static const Expr *findWeakLValue(const Expr *E) {
 
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 RValue CodeGenFunction::EmitObjCMessageExpr(const ObjCMessageExpr *E,
                                             ReturnValueSlot Return) {
   // Only the lookup mechanism and first two arguments of the method
@@ -506,7 +531,9 @@ RValue CodeGenFunction::EmitObjCMessageExpr(const ObjCMessageExpr *E,
 
   return AdjustObjCObjectType(*this, E->getType(), result);
 }
+#endif
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed, uch
 namespace {
 struct FinishARCDealloc final : EHScopeStack::Cleanup {
   void Emit(CodeGenFunction &CGF, Flags flags) override {
@@ -534,10 +561,12 @@ struct FinishARCDealloc final : EHScopeStack::Cleanup {
   }
 };
 }
+#endif
 
 /// StartObjCMethod - Begin emission of an ObjCMethod. This generates
 /// the LLVM function and sets the other context used by
 /// CodeGenFunction.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::StartObjCMethod(const ObjCMethodDecl *OMD,
                                       const ObjCContainerDecl *CD) {
   SourceLocation StartLoc = OMD->getLocStart();
@@ -574,12 +603,16 @@ void CodeGenFunction::StartObjCMethod(const ObjCMethodDecl *OMD,
   }
 #endif
 }
+#endif
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static llvm::Value *emitARCRetainLoadOfScalar(CodeGenFunction &CGF,
                                               LValue lvalue, QualType type);
+#endif
 
 /// Generate an Objective-C method.  An Objective-C method is a C function with
 /// its pointer, name, and types registered in the class struture.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::GenerateObjCMethod(const ObjCMethodDecl *OMD) {
   StartObjCMethod(OMD, OMD->getClassInterface());
   PGO.assignRegionCounters(GlobalDecl(OMD), CurFn);
@@ -588,9 +621,11 @@ void CodeGenFunction::GenerateObjCMethod(const ObjCMethodDecl *OMD) {
   EmitCompoundStmtWithoutScope(*cast<CompoundStmt>(OMD->getBody()));
   FinishFunction(OMD->getBodyRBrace());
 }
+#endif
 
 /// emitStructGetterCall - Call the runtime function to load a property
 /// into the return value slot.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static void emitStructGetterCall(CodeGenFunction &CGF, ObjCIvarDecl *ivar, 
                                  bool isAtomic, bool hasStrong) {
   ASTContext &Context = CGF.getContext();
@@ -618,18 +653,22 @@ static void emitStructGetterCall(CodeGenFunction &CGF, ObjCIvarDecl *ivar,
   CGF.EmitCall(CGF.getTypes().arrangeBuiltinFunctionCall(Context.VoidTy, args),
                fn, ReturnValueSlot(), args);
 }
+#endif
 
 /// Determine whether the given architecture supports unaligned atomic
 /// accesses.  They don't have to be fast, just faster than a function
 /// call and a mutex.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // srsly????
 static bool hasUnalignedAtomics(llvm::Triple::ArchType arch) {
   // FIXME: Allow unaligned atomic load/store on x86.  (It is not
   // currently supported by the backend.)
   return 0;
 }
+#endif
 
 /// Return the maximum size that permits atomic accesses for the given
 /// architecture.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static CharUnits getMaxAtomicAccessSize(CodeGenModule &CGM,
                                         llvm::Triple::ArchType arch) {
   // ARM has 8-byte atomic accesses, but it's not clear whether we
@@ -639,7 +678,9 @@ static CharUnits getMaxAtomicAccessSize(CodeGenModule &CGM,
   // fine given adequate alignment.
   return CharUnits::fromQuantity(CGM.PointerSizeInBytes);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 namespace {
   class PropertyImplStrategy {
   public:
@@ -685,8 +726,10 @@ namespace {
     CharUnits IvarAlignment;
   };
 }
+#endif
 
 /// Pick an implementation strategy for the given property synthesis.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 PropertyImplStrategy::PropertyImplStrategy(CodeGenModule &CGM,
                                      const ObjCPropertyImplDecl *propImpl) {
   const ObjCPropertyDecl *prop = propImpl->getPropertyDecl();
@@ -799,7 +842,11 @@ PropertyImplStrategy::PropertyImplStrategy(CodeGenModule &CGM,
   // Most architectures require memory to fit within a single cache
   // line, so the alignment has to be at least the size of the access.
   // Otherwise we have to grab a lock.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // always returns 0, so !0
   if (IvarAlignment < IvarSize && !hasUnalignedAtomics(arch)) {
+#else
+  if (IvarAlignment < IvarSize && !0) {
+#endif
     Kind = CopyStruct;
     return;
   }
@@ -814,11 +861,13 @@ PropertyImplStrategy::PropertyImplStrategy(CodeGenModule &CGM,
   // Otherwise, we can use native loads and stores.
   Kind = Native;
 }
+#endif
 
 /// \brief Generate an Objective-C property getter function.
 ///
 /// The given Decl must be an ObjCImplementationDecl. \@synthesize
 /// is illegal within a category.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::GenerateObjCGetter(ObjCImplementationDecl *IMP,
                                          const ObjCPropertyImplDecl *PID) {
   llvm::Constant *AtomicHelperFn =
@@ -832,6 +881,7 @@ void CodeGenFunction::GenerateObjCGetter(ObjCImplementationDecl *IMP,
 
   FinishFunction();
 }
+#endif
 
 static bool hasTrivialGetExpr(const ObjCPropertyImplDecl *propImpl) {
   const Expr *getter = propImpl->getGetterCXXConstructor();
@@ -858,6 +908,7 @@ static bool hasTrivialGetExpr(const ObjCPropertyImplDecl *propImpl) {
 
 /// emitCPPObjectAtomicGetterCall - Call the runtime function to 
 /// copy the ivar into the resturn slot.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static void emitCPPObjectAtomicGetterCall(CodeGenFunction &CGF, 
                                           llvm::Value *returnAddr,
                                           ObjCIvarDecl *ivar,
@@ -885,7 +936,9 @@ static void emitCPPObjectAtomicGetterCall(CodeGenFunction &CGF,
       CGF.getTypes().arrangeBuiltinFunctionCall(CGF.getContext().VoidTy, args),
                copyCppAtomicObjectFn, ReturnValueSlot(), args);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void
 CodeGenFunction::generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
                                         const ObjCPropertyImplDecl *propImpl,
@@ -1070,9 +1123,11 @@ CodeGenFunction::generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
   }
   llvm_unreachable("bad @property implementation strategy!");
 }
+#endif
 
 /// emitStructSetterCall - Call the runtime function to store the value
 /// from the first formal parameter into the given ivar.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static void emitStructSetterCall(CodeGenFunction &CGF, ObjCMethodDecl *OMD,
                                  ObjCIvarDecl *ivar) {
   // objc_copyStruct (&structIvar, &Arg, 
@@ -1111,10 +1166,12 @@ static void emitStructSetterCall(CodeGenFunction &CGF, ObjCMethodDecl *OMD,
       CGF.getTypes().arrangeBuiltinFunctionCall(CGF.getContext().VoidTy, args),
                copyStructFn, ReturnValueSlot(), args);
 }
+#endif
 
 /// emitCPPObjectAtomicSetterCall - Call the runtime function to store 
 /// the value from the first formal parameter into the given ivar, using 
 /// the Cpp API for atomic Cpp objects with non-trivial copy assignment.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static void emitCPPObjectAtomicSetterCall(CodeGenFunction &CGF, 
                                           ObjCMethodDecl *OMD,
                                           ObjCIvarDecl *ivar,
@@ -1147,6 +1204,7 @@ static void emitCPPObjectAtomicSetterCall(CodeGenFunction &CGF,
       CGF.getTypes().arrangeBuiltinFunctionCall(CGF.getContext().VoidTy, args),
                copyCppAtomicObjectFn, ReturnValueSlot(), args);
 }
+#endif
 
 
 static bool hasTrivialSetExpr(const ObjCPropertyImplDecl *PID) {
@@ -1173,12 +1231,15 @@ static bool hasTrivialSetExpr(const ObjCPropertyImplDecl *PID) {
   return false;
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool UseOptimizedSetter(CodeGenModule &CGM) {
   if (CGM.getLangOpts().getGC() != LangOptions::NonGC)
     return false;
   return CGM.getLangOpts().ObjCRuntime.hasOptimizedSetter();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void
 CodeGenFunction::generateObjCSetterBody(const ObjCImplementationDecl *classImpl,
                                         const ObjCPropertyImplDecl *propImpl,
@@ -1351,11 +1412,13 @@ CodeGenFunction::generateObjCSetterBody(const ObjCImplementationDecl *classImpl,
                         SourceLocation(), false);
   EmitStmt(&assign);
 }
+#endif
 
 /// \brief Generate an Objective-C property setter function.
 ///
 /// The given Decl must be an ObjCImplementationDecl. \@synthesize
 /// is illegal within a category.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::GenerateObjCSetter(ObjCImplementationDecl *IMP,
                                          const ObjCPropertyImplDecl *PID) {
   llvm::Constant *AtomicHelperFn =
@@ -1369,6 +1432,7 @@ void CodeGenFunction::GenerateObjCSetter(ObjCImplementationDecl *IMP,
 
   FinishFunction();
 }
+#endif
 
 namespace {
   struct DestroyIvar final : EHScopeStack::Cleanup {
@@ -1437,6 +1501,7 @@ static void emitCXXDestructMethod(CodeGenFunction &CGF,
   assert(scope.requiresCleanups() && "nothing to do in .cxx_destruct?");
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::GenerateObjCCtorDtorMethod(ObjCImplementationDecl *IMP,
                                                  ObjCMethodDecl *MD,
                                                  bool ctor) {
@@ -1473,6 +1538,7 @@ void CodeGenFunction::GenerateObjCCtorDtorMethod(ObjCImplementationDecl *IMP,
   }
   FinishFunction();
 }
+#endif
 
 llvm::Value *CodeGenFunction::LoadObjCSelf() {
   VarDecl *Self = cast<ObjCMethodDecl>(CurFuncDecl)->getSelfDecl();
@@ -1489,6 +1555,7 @@ QualType CodeGenFunction::TypeOfSelfObject() {
   return PTy->getPointeeType();
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCForCollectionStmt(const ObjCForCollectionStmt &S){
   llvm::Constant *EnumerationMutationFn =
     CGM.getObjCRuntime().EnumerationMutationFunction();
@@ -1782,19 +1849,26 @@ void CodeGenFunction::EmitObjCForCollectionStmt(const ObjCForCollectionStmt &S){
   ForScope.ForceCleanup();
   EmitBlock(LoopEnd.getBlock());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCAtTryStmt(const ObjCAtTryStmt &S) {
   CGM.getObjCRuntime().EmitTryStmt(*this, S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCAtThrowStmt(const ObjCAtThrowStmt &S) {
   CGM.getObjCRuntime().EmitThrowStmt(*this, S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCAtSynchronizedStmt(
                                               const ObjCAtSynchronizedStmt &S) {
   CGM.getObjCRuntime().EmitSynchronizedStmt(*this, S);
 }
+#endif
 
 namespace {
   struct CallObjCRelease final : EHScopeStack::Cleanup {
@@ -1848,12 +1922,18 @@ static llvm::Constant *createARCRuntimeFunction(CodeGenModule &CGM,
     // If the target runtime doesn't naturally support ARC, emit weak
     // references to the runtime support library.  We don't really
     // permit this to fail, but we need a particular relocation style.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false
     if (!CGM.getLangOpts().ObjCRuntime.hasNativeARC()) {
+#else
+    if (!false) {
+#endif
       f->setLinkage(llvm::Function::ExternalWeakLinkage);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // not needed
     } else if (fnName == "objc_retain" || fnName  == "objc_release") {
       // If we have Native ARC, set nonlazybind attribute for these APIs for
       // performance.
       f->addFnAttr(llvm::Attribute::NonLazyBind);
+#endif
     }
   }
 
@@ -2079,6 +2159,7 @@ CodeGenFunction::EmitARCRetainAutoreleasedReturnValue(llvm::Value *value) {
 /// __unsafe_unretained variable.
 ///
 ///   call i8* \@objc_unsafeClaimAutoreleasedReturnValue(i8* %value)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *
 CodeGenFunction::EmitARCUnsafeClaimAutoreleasedReturnValue(llvm::Value *value) {
   emitAutoreleasedReturnValueMarker(*this);
@@ -2086,6 +2167,7 @@ CodeGenFunction::EmitARCUnsafeClaimAutoreleasedReturnValue(llvm::Value *value) {
               CGM.getObjCEntrypoints().objc_unsafeClaimAutoreleasedReturnValue,
                                "objc_unsafeClaimAutoreleasedReturnValue");
 }
+#endif
 
 /// Release the given object.
 ///   call void \@objc_release(i8* %value)
@@ -2331,6 +2413,7 @@ void CodeGenFunction::EmitARCCopyWeak(Address dst, Address src) {
 
 /// Produce the code to do a objc_autoreleasepool_push.
 ///   call i8* \@objc_autoreleasePoolPush(void)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitObjCAutoreleasePoolPush() {
   llvm::Constant *&fn = CGM.getObjCEntrypoints().objc_autoreleasePoolPush;
   if (!fn) {
@@ -2341,9 +2424,11 @@ llvm::Value *CodeGenFunction::EmitObjCAutoreleasePoolPush() {
 
   return EmitNounwindRuntimeCall(fn);
 }
+#endif
 
 /// Produce the code to do a primitive release.
 ///   call void \@objc_autoreleasePoolPop(i8* %ptr)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assumenot needed, hmmm ^^^
 void CodeGenFunction::EmitObjCAutoreleasePoolPop(llvm::Value *value) {
   assert(value->getType() == Int8PtrTy);
 
@@ -2360,12 +2445,14 @@ void CodeGenFunction::EmitObjCAutoreleasePoolPop(llvm::Value *value) {
   // objc_autoreleasePoolPop can throw.
   EmitRuntimeCallOrInvoke(fn, value);
 }
+#endif
 
 /// Produce the code to do an MRR version objc_autoreleasepool_push.
 /// Which is: [[NSAutoreleasePool alloc] init];
 /// Where alloc is declared as: + (id) alloc; in NSAutoreleasePool class.
 /// init is declared as: - (id) init; in its NSObject super class.
 ///
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitObjCMRRAutoreleasePoolPush() {
   CGObjCRuntime &Runtime = CGM.getObjCRuntime();
   llvm::Value *Receiver = Runtime.EmitNSAutoreleasePoolClassRef(*this);
@@ -2388,9 +2475,11 @@ llvm::Value *CodeGenFunction::EmitObjCMRRAutoreleasePoolPush() {
                                 InitSel, Receiver, Args); 
   return InitRV.getScalarVal();
 }
+#endif
 
 /// Produce the code to do a primitive release.
 /// [tmp drain];
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCMRRAutoreleasePoolPop(llvm::Value *Arg) {
   IdentifierInfo *II = &CGM.getContext().Idents.get("drain");
   Selector DrainSel = getContext().Selectors.getSelector(0, &II);
@@ -2398,6 +2487,7 @@ void CodeGenFunction::EmitObjCMRRAutoreleasePoolPop(llvm::Value *Arg) {
   CGM.getObjCRuntime().GenerateMessageSend(*this, ReturnValueSlot(),
                               getContext().VoidTy, DrainSel, Arg, Args); 
 }
+#endif
 
 void CodeGenFunction::destroyARCStrongPrecise(CodeGenFunction &CGF,
                                               Address addr,
@@ -2417,7 +2507,9 @@ void CodeGenFunction::destroyARCWeak(CodeGenFunction &CGF,
   CGF.EmitARCDestroyWeak(addr);
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 namespace {
+
   struct CallObjCAutoreleasePoolObject final : EHScopeStack::Cleanup {
     llvm::Value *Token;
 
@@ -2437,7 +2529,9 @@ namespace {
     }
   };
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCAutoreleasePoolCleanup(llvm::Value *Ptr) {
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (CGM.getLangOpts().ObjCAutoRefCount)
@@ -2446,6 +2540,7 @@ void CodeGenFunction::EmitObjCAutoreleasePoolCleanup(llvm::Value *Ptr) {
 #endif
     EHStack.pushCleanup<CallObjCMRRAutoreleasePoolObject>(NormalCleanup, Ptr);
 }
+#endif
 
 static TryEmitResult tryEmitARCRetainLoadOfScalar(CodeGenFunction &CGF,
                                                   LValue lvalue,
@@ -2566,6 +2661,7 @@ static llvm::Value *emitARCRetainCallResult(CodeGenFunction &CGF,
 
 /// Given that the given expression is some sort of call (which does
 /// not return retained), perform an unsafeClaim following it.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static llvm::Value *emitARCUnsafeClaimCallResult(CodeGenFunction &CGF,
                                                  const Expr *e) {
   llvm::Value *value = CGF.EmitScalarExpr(e);
@@ -2577,12 +2673,18 @@ static llvm::Value *emitARCUnsafeClaimCallResult(CodeGenFunction &CGF,
              return value;
            });
 }
+#endif
 
 llvm::Value *CodeGenFunction::EmitARCReclaimReturnedObject(const Expr *E,
                                                       bool allowUnsafeClaim) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not allow
   if (allowUnsafeClaim &&
       CGM.getLangOpts().ObjCRuntime.hasARCUnsafeClaimAutoreleasedReturnValue()) {
     return emitARCUnsafeClaimCallResult(*this, E);
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else {
     llvm::Value *value = emitARCRetainCallResult(*this, E);
     return EmitObjCConsumeObject(E->getType(), value);
@@ -2950,6 +3052,7 @@ tryEmitARCRetainScalarExpr(CodeGenFunction &CGF, const Expr *e) {
   return ARCRetainExprEmitter(CGF).visit(e);
 }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static llvm::Value *emitARCRetainLoadOfScalar(CodeGenFunction &CGF,
                                                 LValue lvalue,
                                                 QualType type) {
@@ -2959,6 +3062,7 @@ static llvm::Value *emitARCRetainLoadOfScalar(CodeGenFunction &CGF,
     value = CGF.EmitARCRetain(type, value);
   return value;
 }
+#endif
 
 /// EmitARCRetainScalarExpr - Semantically equivalent to
 /// EmitARCRetainObject(e->getType(), EmitScalarExpr(e)), but making a
@@ -3164,6 +3268,7 @@ CodeGenFunction::EmitARCStoreAutoreleasing(const BinaryOperator *e) {
   return std::pair<LValue,llvm::Value*>(lvalue, value);
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCAutoreleasePoolStmt(
                                           const ObjCAutoreleasePoolStmt &ARPS) {
   const Stmt *subStmt = ARPS.getSubStmt();
@@ -3189,6 +3294,7 @@ void CodeGenFunction::EmitObjCAutoreleasePoolStmt(
   if (DI)
     DI->EmitLexicalBlockEnd(Builder, S.getRBracLoc());
 }
+#endif
 
 /// EmitExtendGCLifetime - Given a pointer to an Objective-C object,
 /// make sure it survives garbage collection until this point.
@@ -3210,6 +3316,7 @@ void CodeGenFunction::EmitExtendGCLifetime(llvm::Value *object) {
 /// non-trivial copy assignment function, produce following helper function.
 /// static void copyHelper(Ty *dest, const Ty *source) { *dest = *source; }
 ///
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume nullptr
 llvm::Constant *
 CodeGenFunction::GenerateObjCAtomicSetterCopyHelperFunction(
                                         const ObjCPropertyImplDecl *PID) {
@@ -3288,7 +3395,9 @@ CodeGenFunction::GenerateObjCAtomicSetterCopyHelperFunction(
   CGM.setAtomicSetterHelperFnMap(Ty, HelperFn);
   return HelperFn;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume nullptr
 llvm::Constant *
 CodeGenFunction::GenerateObjCAtomicGetterCopyHelperFunction(
                                             const ObjCPropertyImplDecl *PID) {
@@ -3389,7 +3498,9 @@ CodeGenFunction::GenerateObjCAtomicGetterCopyHelperFunction(
   CGM.setAtomicGetterHelperFnMap(Ty, HelperFn);
   return HelperFn;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 llvm::Value *
 CodeGenFunction::EmitBlockCopyAndAutorelease(llvm::Value *Block, QualType Ty) {
   // Get selectors for retain/autorelease.
@@ -3414,6 +3525,9 @@ CodeGenFunction::EmitBlockCopyAndAutorelease(llvm::Value *Block, QualType Ty) {
   Val = Result.getScalarVal();
   return Val;
 }
+#endif
 
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // wow wow wow wow
 CGObjCRuntime::~CGObjCRuntime() {}
+#endif

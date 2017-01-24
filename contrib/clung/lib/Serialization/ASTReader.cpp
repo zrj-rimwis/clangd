@@ -232,12 +232,14 @@ static bool checkLanguageOptions(const LangOptions &LangOpts,
     return true;
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (ExistingLangOpts.ObjCRuntime != LangOpts.ObjCRuntime) {
     if (Diags)
       Diags->Report(diag::err_pch_langopt_value_mismatch)
       << "target Objective-C runtime";
     return true;
   }
+#endif
 
   if (ExistingLangOpts.CommentOpts.BlockCommandNames !=
       LangOpts.CommentOpts.BlockCommandNames) {
@@ -4708,9 +4710,11 @@ bool ASTReader::ParseLanguageOptions(const RecordData &Record,
   for (unsigned N = Record[Idx++]; N; --N)
     LangOpts.ModuleFeatures.push_back(ReadString(Record, Idx));
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   ObjCRuntime::Kind runtimeKind = (ObjCRuntime::Kind) Record[Idx++];
   VersionTuple runtimeVersion = ReadVersionTuple(Record, Idx);
   LangOpts.ObjCRuntime = ObjCRuntime(runtimeKind, runtimeVersion);
+#endif
 
   LangOpts.CurrentModule = ReadString(Record, Idx);
 

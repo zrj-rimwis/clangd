@@ -6389,9 +6389,11 @@ static void DoEmitAvailabilityWarning(Sema &S, Sema::AvailabilityDiagnostic K,
           break;
 
         case UnavailableAttr::IR_ForbiddenWeak:
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
           if (S.getLangOpts().ObjCWeakRuntime)
             diag_available_here = diag::note_arc_weak_disabled;
           else
+#endif
             diag_available_here = diag::note_arc_weak_no_runtime;
           break;
 

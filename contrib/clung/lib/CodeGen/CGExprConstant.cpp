@@ -13,7 +13,9 @@
 
 #include "CodeGenFunction.h"
 #include "CGCXXABI.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CGRecordLayout.h"
 #include "CodeGenModule.h"
 #include "clang/AST/APValue.h"
@@ -1041,12 +1043,14 @@ public:
       return CGM.GetAddrOfConstantStringFromLiteral(cast<StringLiteral>(E));
     case Expr::ObjCEncodeExprClass:
       return CGM.GetAddrOfConstantStringFromObjCEncode(cast<ObjCEncodeExpr>(E));
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed, short-circuit
     case Expr::ObjCStringLiteralClass: {
       ObjCStringLiteral* SL = cast<ObjCStringLiteral>(E);
       ConstantAddress C =
           CGM.getObjCRuntime().GenerateConstantString(SL->getString());
       return C.getElementBitCast(ConvertType(E->getType()));
     }
+#endif
     case Expr::PredefinedExprClass: {
       unsigned Type = cast<PredefinedExpr>(E)->getIdentType();
       if (CGF) {
@@ -1070,15 +1074,21 @@ public:
       unsigned builtin = CE->getBuiltinCallee();
       if (builtin !=
             Builtin::BI__builtin___CFStringMakeConstantString &&
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false, strange
           builtin !=
             Builtin::BI__builtin___NSStringMakeConstantString)
+#else
+          !false)
+#endif
         break;
       const Expr *Arg = CE->getArg(0)->IgnoreParenCasts();
       const StringLiteral *Literal = cast<StringLiteral>(Arg);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
       if (builtin ==
             Builtin::BI__builtin___NSStringMakeConstantString) {
         return CGM.getObjCRuntime().GenerateConstantString(Literal);
       }
+#endif
       // FIXME: need to deal with UCN conversion issues.
       return CGM.GetAddrOfConstantCFString(Literal);
     }

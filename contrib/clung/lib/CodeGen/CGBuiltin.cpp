@@ -13,7 +13,9 @@
 
 #include "CodeGenFunction.h"
 #include "CGCXXABI.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CodeGenModule.h"
 #include "TargetInfo.h"
 #include "clang/AST/ASTContext.h"
@@ -480,7 +482,9 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
   switch (BuiltinID) {
   default: break;  // Handle intrinsics and libm functions below.
   case Builtin::BI__builtin___CFStringMakeConstantString:
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   case Builtin::BI__builtin___NSStringMakeConstantString:
+#endif
     return RValue::get(CGM.EmitConstantExpr(E, E->getType(), nullptr));
   case Builtin::BI__builtin_stdarg_start:
   case Builtin::BI__builtin_va_start:
@@ -1015,6 +1019,7 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
     return RValue::get(Dest.getPointer());
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Builtin::BI__builtin_objc_memmove_collectable: {
     Address DestAddr = EmitPointerWithAlignment(E->getArg(0));
     Address SrcAddr = EmitPointerWithAlignment(E->getArg(1));
@@ -1023,6 +1028,7 @@ RValue CodeGenFunction::EmitBuiltinExpr(const FunctionDecl *FD,
                                                   DestAddr, SrcAddr, SizeVal);
     return RValue::get(DestAddr.getPointer());
   }
+#endif
 
   case Builtin::BI__builtin___memmove_chk: {
     // fold __builtin_memmove_chk(x, y, cst1, cst2) to memmove iff cst1<=cst2.

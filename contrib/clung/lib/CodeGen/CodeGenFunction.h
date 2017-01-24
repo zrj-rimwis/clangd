@@ -1415,11 +1415,16 @@ public:
   //                                  Objective-C
   //===--------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void GenerateObjCMethod(const ObjCMethodDecl *OMD);
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void StartObjCMethod(const ObjCMethodDecl *MD, const ObjCContainerDecl *CD);
+#endif
 
   /// GenerateObjCGetter - Synthesize an Objective-C property getter function.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void GenerateObjCGetter(ObjCImplementationDecl *IMP,
                           const ObjCPropertyImplDecl *PID);
   void generateObjCGetterBody(const ObjCImplementationDecl *classImpl,
@@ -1429,14 +1434,17 @@ public:
 
   void GenerateObjCCtorDtorMethod(ObjCImplementationDecl *IMP,
                                   ObjCMethodDecl *MD, bool ctor);
+#endif
 
   /// GenerateObjCSetter - Synthesize an Objective-C property setter function
   /// for the given property.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void GenerateObjCSetter(ObjCImplementationDecl *IMP,
                           const ObjCPropertyImplDecl *PID);
   void generateObjCSetterBody(const ObjCImplementationDecl *classImpl,
                               const ObjCPropertyImplDecl *propImpl,
                               llvm::Constant *AtomicHelperFn);
+#endif
 
   //===--------------------------------------------------------------------===//
   //                                  Block Bits
@@ -1453,11 +1461,15 @@ public:
 
   llvm::Constant *GenerateCopyHelperFunction(const CGBlockInfo &blockInfo);
   llvm::Constant *GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume both return nullptr
   llvm::Constant *GenerateObjCAtomicSetterCopyHelperFunction(
                                              const ObjCPropertyImplDecl *PID);
   llvm::Constant *GenerateObjCAtomicGetterCopyHelperFunction(
                                              const ObjCPropertyImplDecl *PID);
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed, XXX not marked as OBJC
   llvm::Value *EmitBlockCopyAndAutorelease(llvm::Value *Block, QualType Ty);
+#endif
 
   void BuildBlockRelease(llvm::Value *DeclPtr, BlockFieldFlags flags);
 
@@ -1840,7 +1852,9 @@ public:
     return AggValueSlot::forAddr(CreateMemTemp(T, Name),
                                  T.getQualifiers(),
                                  AggValueSlot::IsNotDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                  AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                  AggValueSlot::IsNotAliased);
   }
 
@@ -2398,11 +2412,13 @@ public:
   void EmitCaseStmtRange(const CaseStmt &S);
   void EmitAsmStmt(const AsmStmt &S);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void EmitObjCForCollectionStmt(const ObjCForCollectionStmt &S);
   void EmitObjCAtTryStmt(const ObjCAtTryStmt &S);
   void EmitObjCAtThrowStmt(const ObjCAtThrowStmt &S);
   void EmitObjCAtSynchronizedStmt(const ObjCAtSynchronizedStmt &S);
   void EmitObjCAutoreleasePoolStmt(const ObjCAutoreleasePoolStmt &S);
+#endif
 
   void EnterCXXTryStmt(const CXXTryStmt &S, bool IsFnTryBlock = false);
   void ExitCXXTryStmt(const CXXTryStmt &S, bool IsFnTryBlock = false);
@@ -2899,8 +2915,10 @@ public:
                                 AggValueSlot slot = AggValueSlot::ignored());
   LValue EmitPseudoObjectLValue(const PseudoObjectExpr *e);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   llvm::Value *EmitIvarOffset(const ObjCInterfaceDecl *Interface,
                               const ObjCIvarDecl *Ivar);
+#endif
   LValue EmitLValueForField(LValue Base, const FieldDecl* Field);
   LValue EmitLValueForLambdaField(const FieldDecl *Field);
 
@@ -2922,11 +2940,15 @@ public:
   LValue EmitCXXUuidofLValue(const CXXUuidofExpr *E);
 #endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   LValue EmitObjCMessageExprLValue(const ObjCMessageExpr *E);
   LValue EmitObjCIvarRefLValue(const ObjCIvarRefExpr *E);
+#endif
   LValue EmitStmtExprLValue(const StmtExpr *E);
   LValue EmitPointerToDataMemberBinaryExpr(const BinaryOperator *E);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   LValue EmitObjCSelectorLValue(const ObjCSelectorExpr *E);
+#endif
   void   EmitDeclRefExprDbgValue(const DeclRefExpr *E, llvm::Constant *Init);
 
   //===--------------------------------------------------------------------===//
@@ -3065,6 +3087,7 @@ public:
   llvm::Value *EmitWebAssemblyBuiltinExpr(unsigned BuiltinID,
                                           const CallExpr *E);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   llvm::Value *EmitObjCProtocolExpr(const ObjCProtocolExpr *E);
   llvm::Value *EmitObjCStringLiteral(const ObjCStringLiteral *E);
   llvm::Value *EmitObjCBoxedExpr(const ObjCBoxedExpr *E);
@@ -3075,6 +3098,7 @@ public:
   llvm::Value *EmitObjCSelectorExpr(const ObjCSelectorExpr *E);
   RValue EmitObjCMessageExpr(const ObjCMessageExpr *E,
                              ReturnValueSlot Return = ReturnValueSlot());
+#endif
 
   /// Retrieves the default cleanup kind for an ARC cleanup.
   /// Except under -fobjc-arc-eh, ARC cleanups are normal-only.
@@ -3110,7 +3134,9 @@ public:
   llvm::Value *EmitARCAutoreleaseReturnValue(llvm::Value *value);
   llvm::Value *EmitARCRetainAutoreleaseReturnValue(llvm::Value *value);
   llvm::Value *EmitARCRetainAutoreleasedReturnValue(llvm::Value *value);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   llvm::Value *EmitARCUnsafeClaimAutoreleasedReturnValue(llvm::Value *value);
+#endif
 
   std::pair<LValue,llvm::Value*>
   EmitARCStoreAutoreleasing(const BinaryOperator *e);
@@ -3136,11 +3162,13 @@ public:
   static Destroyer destroyARCStrongPrecise;
   static Destroyer destroyARCWeak;
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void EmitObjCAutoreleasePoolPop(llvm::Value *Ptr); 
   llvm::Value *EmitObjCAutoreleasePoolPush();
   llvm::Value *EmitObjCMRRAutoreleasePoolPush();
   void EmitObjCAutoreleasePoolCleanup(llvm::Value *Ptr);
   void EmitObjCMRRAutoreleasePoolPop(llvm::Value *Ptr); 
+#endif
 
   /// \brief Emits a reference binding to the passed in expression.
   RValue EmitReferenceBindingToExpr(const Expr *E);

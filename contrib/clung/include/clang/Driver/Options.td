@@ -755,8 +755,6 @@ def fgnu_keywords : Flag<["-"], "fgnu-keywords">, Group<f_Group>, Flags<[CC1Opti
 def fgnu89_inline : Flag<["-"], "fgnu89-inline">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Use the gnu89 inline semantics">;
 def fno_gnu89_inline : Flag<["-"], "fno-gnu89-inline">, Group<f_Group>;
-def fgnu_runtime : Flag<["-"], "fgnu-runtime">, Group<f_Group>,
-  HelpText<"Generate output compatible with the standard GNU Objective-C runtime">;
 def fheinous_gnu_extensions : Flag<["-"], "fheinous-gnu-extensions">, Flags<[CC1Option]>;
 def filelist : Separate<["-"], "filelist">, Flags<[LinkerInput]>;
 def : Flag<["-"], "findirect-virtual-calls">, Alias<fapple_kext>;
@@ -879,7 +877,6 @@ def fretain_comments_from_system_headers : Flag<["-"], "fretain-comments-from-sy
 def fmudflapth : Flag<["-"], "fmudflapth">, Group<f_Group>;
 def fmudflap : Flag<["-"], "fmudflap">, Group<f_Group>;
 def fnested_functions : Flag<["-"], "fnested-functions">, Group<f_Group>;
-def fnext_runtime : Flag<["-"], "fnext-runtime">, Group<f_Group>;
 def fno_access_control : Flag<["-"], "fno-access-control">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Disable C++ access control">;
 def fno_apple_pragma_pack : Flag<["-"], "fno-apple-pragma-pack">, Group<f_Group>;
@@ -1009,12 +1006,8 @@ def fno_objc_infer_related_result_type : Flag<["-"],
   HelpText<
     "do not infer Objective-C related result type based on method family">,
   Flags<[CC1Option]>;
-def fobjc_weak : Flag<["-"], "fobjc-weak">, Group<f_Group>, Flags<[CC1Option]>,
-  HelpText<"Enable ARC-style weak references in Objective-C">;
 
 // Objective-C ABI options.
-def fobjc_runtime_EQ : Joined<["-"], "fobjc-runtime=">, Group<f_Group>, Flags<[CC1Option]>,
-  HelpText<"Specify the target Objective-C runtime kind and version">;
 def fobjc_abi_version_EQ : Joined<["-"], "fobjc-abi-version=">, Group<f_Group>;
 def fobjc_nonfragile_abi_version_EQ : Joined<["-"], "fobjc-nonfragile-abi-version=">, Group<f_Group>;
 def fobjc_nonfragile_abi : Flag<["-"], "fobjc-nonfragile-abi">, Group<f_Group>;

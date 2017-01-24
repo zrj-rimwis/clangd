@@ -15,7 +15,9 @@
 #include "CGBlocks.h"
 #include "CGRecordLayout.h"
 #include "CGCXXABI.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CodeGenFunction.h"
 #include "CodeGenModule.h"
 #include "clang/AST/ASTContext.h"
@@ -447,8 +449,10 @@ void CGDebugInfo::CreateCompileUnit() {
 
   // Figure out which version of the ObjC runtime we have.
   unsigned RuntimeVers = 0;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (LO.ObjC1)
     RuntimeVers = LO.ObjCRuntime.isNonFragile() ? 2 : 1;
+#endif
 
   llvm::DICompileUnit::DebugEmissionKind EmissionKind;
   switch (DebugKind) {
@@ -2014,6 +2018,7 @@ llvm::DIType *CGDebugInfo::CreateTypeDefinition(const ObjCInterfaceType *Ty,
     }
 
     uint64_t FieldOffset;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (CGM.getLangOpts().ObjCRuntime.isNonFragile()) {
       // We don't know the runtime offset of an ivar if we're using the
       // non-fragile ABI.  For bitfields, use the bit offset into the first
@@ -2025,6 +2030,10 @@ llvm::DIType *CGDebugInfo::CreateTypeDefinition(const ObjCInterfaceType *Ty,
       } else {
         FieldOffset = 0;
       }
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       FieldOffset = RL.getFieldOffset(FieldNo);
     }

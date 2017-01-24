@@ -1325,7 +1325,11 @@ static int64_t getExtValue(const APSInt &Value) {
 static bool IsStringLiteralCall(const CallExpr *E) {
   unsigned Builtin = E->getBuiltinCallee();
   return (Builtin == Builtin::BI__builtin___CFStringMakeConstantString ||
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
           Builtin == Builtin::BI__builtin___NSStringMakeConstantString);
+#else
+          false);
+#endif
 }
 
 static bool IsGlobalLValue(APValue::LValueBase B) {

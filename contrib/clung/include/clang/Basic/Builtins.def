@@ -419,7 +419,9 @@ BUILTIN(__builtin_bitreverse64, "ULLiULLi", "nc")
 BUILTIN(__builtin_constant_p, "i.", "nctu")
 BUILTIN(__builtin_classify_type, "i.", "nctu")
 BUILTIN(__builtin___CFStringMakeConstantString, "FC*cC*", "nc")
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 BUILTIN(__builtin___NSStringMakeConstantString, "FC*cC*", "nc")
+#endif
 BUILTIN(__builtin_va_start, "vA.", "nt")
 BUILTIN(__builtin_va_end, "vA", "n")
 BUILTIN(__builtin_va_copy, "vAA", "n")
@@ -889,9 +891,11 @@ LIBBUILTIN(objc_sync_exit, "iG", "f", "objc/objc-sync.h", OBJC_LANG)
 BUILTIN(__builtin_objc_memmove_collectable, "v*v*vC*z", "nF")
 
 // void NSLog(NSString *fmt, ...)
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 LIBBUILTIN(NSLog, "vG.", "fp:0:", "Foundation/NSObjCRuntime.h", OBJC_LANG)
 // void NSLogv(NSString *fmt, va_list args)
 LIBBUILTIN(NSLogv, "vGa", "fP:0:", "Foundation/NSObjCRuntime.h", OBJC_LANG)
+#endif
 
 // Builtin math library functions
 LIBBUILTIN(atan2, "ddd", "fne", "math.h", ALL_LANGUAGES)

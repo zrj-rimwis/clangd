@@ -1791,10 +1791,12 @@ Sema::BuildDeclRefExpr(ValueDecl *D, QualType Ty, ExprValueKind VK,
 
   MarkDeclRefReferenced(E);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (getLangOpts().ObjCWeak && isa<VarDecl>(D) &&
       Ty.getObjCLifetime() == Qualifiers::OCL_Weak &&
       !Diags.isIgnored(diag::warn_arc_repeated_use_of_weak, E->getLocStart()))
       recordUseOfEvaluatedWeak(E);
+#endif
 
   if (FieldDecl *FD = dyn_cast<FieldDecl>(D)) {
     UnusedPrivateFields.remove(FD);
@@ -3617,6 +3619,7 @@ static bool CheckExtensionTraitOperandType(Sema &S, QualType T,
   return true;
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool CheckObjCTraitOperandConstraints(Sema &S, QualType T,
                                              SourceLocation Loc,
                                              SourceRange ArgRange,
@@ -3632,6 +3635,7 @@ static bool CheckObjCTraitOperandConstraints(Sema &S, QualType T,
 
   return false;
 }
+#endif
 
 /// \brief Check whether E is a pointer from a decayed array type (the decayed
 /// pointer type is equal to T) and emit a warning if it is.
@@ -3704,9 +3708,11 @@ bool Sema::CheckUnaryExprOrTypeTraitOperand(Expr *E,
       ActiveTemplateInstantiations.empty() && E->HasSideEffects(Context, false))
     Diag(E->getExprLoc(), diag::warn_side_effects_unevaluated_context);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false. confusing
   if (CheckObjCTraitOperandConstraints(*this, ExprTy, E->getExprLoc(),
                                        E->getSourceRange(), ExprKind))
     return true;
+#endif
 
   if (ExprKind == UETT_SizeOf) {
     if (DeclRefExpr *DeclRef = dyn_cast<DeclRefExpr>(E->IgnoreParens())) {
@@ -3791,9 +3797,11 @@ bool Sema::CheckUnaryExprOrTypeTraitOperand(QualType ExprType,
     return true;
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false, confusing
   if (CheckObjCTraitOperandConstraints(*this, ExprType, OpLoc, ExprRange,
                                        ExprKind))
     return true;
+#endif
 
   return false;
 }
@@ -4152,6 +4160,7 @@ Sema::ActOnPostfixUnaryOp(Scope *S, SourceLocation OpLoc,
 /// \brief Diagnose if arithmetic on the given ObjC pointer is illegal.
 ///
 /// \return true on error
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume true?
 static bool checkArithmeticOnObjCPointer(Sema &S,
                                          SourceLocation opLoc,
                                          Expr *op) {
@@ -4165,6 +4174,7 @@ static bool checkArithmeticOnObjCPointer(Sema &S,
     << op->getSourceRange();
   return true;
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static bool isMSPropertySubscriptExpr(Sema &S, Expr *Base) {
@@ -4444,7 +4454,11 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
 
     // Use custom logic if this should be the pseudo-object subscript
     // expression.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false
     if (!LangOpts.isSubscriptPointerArithmetic())
+#else
+    if (!false)
+#endif
       return BuildObjCSubscriptExpression(RLoc, BaseExpr, IndexExpr, nullptr,
                                           nullptr);
 
@@ -4460,7 +4474,11 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
     BaseExpr = RHSExp;
     IndexExpr = LHSExp;
     ResultType = PTy->getPointeeType();
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false
     if (!LangOpts.isSubscriptPointerArithmetic()) {
+#else
+    if (!false) {
+#endif
       Diag(LLoc, diag::err_subscript_nonfragile_interface)
         << ResultType << BaseExpr->getSourceRange();
       return ExprError();
@@ -8482,8 +8500,10 @@ QualType Sema::CheckAdditionOperands(ExprResult &LHS, ExprResult &RHS,
   if (!checkArithmeticOpPointerOperand(*this, Loc, PExp))
     return QualType();
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (isObjCPointer && checkArithmeticOnObjCPointer(*this, Loc, PExp))
     return QualType();
+#endif
 
   // Check array bounds for pointer arithemtic
   CheckArrayAccess(PExp, IExp);
@@ -8534,9 +8554,11 @@ QualType Sema::CheckSubtractionOperands(ExprResult &LHS, ExprResult &RHS,
     QualType lpointee = LHS.get()->getType()->getPointeeType();
 
     // Diagnose bad cases where we step over interface counts.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (LHS.get()->getType()->isObjCObjectPointerType() &&
         checkArithmeticOnObjCPointer(*this, Loc, LHS.get()))
       return QualType();
+#endif
 
     // The result type of a pointer-int computation is the pointer type.
     if (RHS.get()->getType()->isIntegerType()) {
@@ -10296,7 +10318,11 @@ static QualType CheckIncrementDecrementOperand(Sema &S, Expr *Op,
     // On modern runtimes, ObjC pointer arithmetic is forbidden.
     // Otherwise, we just need a complete type.
     if (checkArithmeticIncompletePointerType(S, OpLoc, Op) ||
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false?
         checkArithmeticOnObjCPointer(S, OpLoc, Op))
+#else
+        false)
+#endif
       return QualType();    
   } else if (ResType->isAnyComplexType()) {
     // C99 does not support ++/-- on complex types, we allow as an extension.

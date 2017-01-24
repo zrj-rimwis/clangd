@@ -19,7 +19,9 @@
 #include "CGCXXABI.h"
 #include "CGCall.h"
 #include "CGDebugInfo.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CGOpenCLRuntime.h"
 #include "CGOpenMPRuntime.h"
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
@@ -118,8 +120,10 @@ CodeGenModule::CodeGenModule(ASTContext &C, const HeaderSearchOptions &HSO,
   RuntimeCC = getTargetCodeGenInfo().getABIInfo().getRuntimeCC();
   BuiltinCC = getTargetCodeGenInfo().getABIInfo().getBuiltinCC();
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not
   if (LangOpts.ObjC1)
     createObjCRuntime();
+#endif
   if (LangOpts.OpenCL)
     createOpenCLRuntime();
   if (LangOpts.OpenMP)
@@ -168,6 +172,7 @@ CodeGenModule::CodeGenModule(ASTContext &C, const HeaderSearchOptions &HSO,
 
 CodeGenModule::~CodeGenModule() {}
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenModule::createObjCRuntime() {
   // This is just isGNUFamily(), but we want to force implementors of
   // new ABIs to decide how best to do this.
@@ -189,6 +194,7 @@ void CodeGenModule::createObjCRuntime() {
   }
   llvm_unreachable("bad runtime kind");
 }
+#endif
 
 void CodeGenModule::createOpenCLRuntime() {
   OpenCLRuntime.reset(new CGOpenCLRuntime(*this));
@@ -392,9 +398,11 @@ void CodeGenModule::Release() {
   EmitCXXGlobalInitFunc();
   EmitCXXGlobalDtorFunc();
   EmitCXXThreadLocalInitFunc();
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (ObjCRuntime)
     if (llvm::Function *ObjCInitFunction = ObjCRuntime->ModuleInitFunction())
       AddGlobalCtor(ObjCInitFunction);
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   if (Context.getLangOpts().CUDA && !Context.getLangOpts().CUDAIsDevice &&
       CUDARuntime) {
@@ -865,9 +873,11 @@ static bool hasUnwindExceptions(const LangOptions &LangOpts) {
   if (LangOpts.CXXExceptions) return true;
 
   // If ObjC exceptions are enabled, this depends on the ABI.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed and stupid
   if (LangOpts.ObjCExceptions) {
     return LangOpts.ObjCRuntime.hasUnwindExceptions();
   }
+#endif
 
   return true;
 }
@@ -3346,6 +3356,7 @@ CodeGenModule::GetAddrOfConstantString(const StringLiteral *Literal) {
     std::string StringClass(getLangOpts().ObjCConstantStringClass);
     llvm::Type *Ty = getTypes().ConvertType(getContext().IntTy);
     llvm::Constant *GV;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false?
     if (LangOpts.ObjCRuntime.isNonFragile()) {
       std::string str = 
         StringClass.empty() ? "OBJC_CLASS_$_NSConstantString" 
@@ -3355,6 +3366,10 @@ CodeGenModule::GetAddrOfConstantString(const StringLiteral *Literal) {
       llvm::Type *PTy = llvm::PointerType::getUnqual(Ty);
       V = llvm::ConstantExpr::getBitCast(GV, PTy);
       ConstantStringClassRef = V;
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       std::string str =
         StringClass.empty() ? "_NSConstantStringClassReference"
@@ -3439,9 +3454,13 @@ CodeGenModule::GetAddrOfConstantString(const StringLiteral *Literal) {
   const char *NSStringNonFragileABISection =
       "__DATA,__objc_stringobj,regular,no_dead_strip";
   // FIXME. Fix section.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false? confusing
   GV->setSection(LangOpts.ObjCRuntime.isNonFragile()
                      ? NSStringNonFragileABISection
                      : NSStringSection);
+#else
+  GV->setSection(NSStringSection);
+#endif
   Entry.second = GV;
 
   return ConstantAddress(GV, Alignment);
@@ -3725,6 +3744,7 @@ ConstantAddress CodeGenModule::GetAddrOfGlobalTemporary(
 
 /// EmitObjCPropertyImplementations - Emit information for synthesized
 /// properties for an implementation.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenModule::EmitObjCPropertyImplementations(const
                                                     ObjCImplementationDecl *D) {
   for (const auto *PID : D->property_impls()) {
@@ -3747,7 +3767,9 @@ void CodeGenModule::EmitObjCPropertyImplementations(const
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool needsDestructMethod(ObjCImplementationDecl *impl) {
   const ObjCInterfaceDecl *iface = impl->getClassInterface();
   for (const ObjCIvarDecl *ivar = iface->all_declared_ivar_begin();
@@ -3757,7 +3779,9 @@ static bool needsDestructMethod(ObjCImplementationDecl *impl) {
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool AllTrivialInitializers(CodeGenModule &CGM,
                                    ObjCImplementationDecl *D) {
   CodeGenFunction CGF(CGM);
@@ -3770,9 +3794,11 @@ static bool AllTrivialInitializers(CodeGenModule &CGM,
   }
   return true;
 }
+#endif
 
 /// EmitObjCIvarInitializations - Emit information for ivar initialization
 /// for an implementation.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenModule::EmitObjCIvarInitializations(ObjCImplementationDecl *D) {
   // We might need a .cxx_destruct even if we don't have any ivar initializers.
   if (needsDestructMethod(D)) {
@@ -3813,6 +3839,7 @@ void CodeGenModule::EmitObjCIvarInitializations(ObjCImplementationDecl *D) {
   CodeGenFunction(*this).GenerateObjCCtorDtorMethod(D, CTORMethod, true);
   D->setHasNonZeroConstructors(true);
 }
+#endif
 
 /// EmitNamespace - Emit all declarations in a namespace.
 void CodeGenModule::EmitNamespace(const NamespaceDecl *ND) {
@@ -3935,19 +3962,24 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
   case Decl::ObjCCategory:
     break;
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Decl::ObjCProtocol: {
     auto *Proto = cast<ObjCProtocolDecl>(D);
     if (Proto->isThisDeclarationADefinition())
       ObjCRuntime->GenerateProtocol(Proto);
     break;
   }
+#endif
       
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Decl::ObjCCategoryImpl:
     // Categories have properties but don't support synthesize so we
     // can ignore them here.
     ObjCRuntime->GenerateCategory(cast<ObjCCategoryImplDecl>(D));
     break;
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Decl::ObjCImplementation: {
     auto *OMD = cast<ObjCImplementationDecl>(D);
     EmitObjCPropertyImplementations(OMD);
@@ -3960,6 +3992,8 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
             OMD->getClassInterface()), OMD->getLocation());
     break;
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Decl::ObjCMethod: {
     auto *OMD = cast<ObjCMethodDecl>(D);
     // If this is not a prototype, emit the body.
@@ -3967,9 +4001,12 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
       CodeGenFunction(*this).GenerateObjCMethod(OMD);
     break;
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Decl::ObjCCompatibleAlias:
     ObjCRuntime->RegisterAlias(cast<ObjCCompatibleAliasDecl>(D));
     break;
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Decl::PragmaComment: {
@@ -4317,9 +4354,11 @@ llvm::Constant *CodeGenModule::GetAddrOfRTTIDescriptor(QualType Ty,
   if (!ForEH && !getLangOpts().RTTI)
     return llvm::Constant::getNullValue(Int8PtrTy);
   
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (ForEH && Ty->isObjCObjectPointerType() &&
       LangOpts.ObjCRuntime.isGNUFamily())
     return ObjCRuntime->GetEHType(Ty);
+#endif
 
   return getCXXABI().getAddrOfRTTIDescriptor(Ty);
 }

@@ -2071,9 +2071,11 @@ AnalysisBasedWarnings::IssueWarnings(sema::AnalysisBasedWarnings::Policy P,
     DiagnoseSwitchLabelsFallthrough(S, AC, !FallThroughDiagFull);
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   if (S.getLangOpts().ObjCWeak &&
       !Diags.isIgnored(diag::warn_arc_repeated_use_of_weak, D->getLocStart()))
     diagnoseRepeatedUseOfWeak(S, fscope, D, AC.getParentMap());
+#endif
 
 
   // Check for infinite self-recursion in functions

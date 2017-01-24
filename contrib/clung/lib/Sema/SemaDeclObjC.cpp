@@ -2051,6 +2051,7 @@ void Sema::CheckImplementationIvars(ObjCImplementationDecl *ImpDecl,
     return;
 
   assert(ivars && "missing @implementation ivars");
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (LangOpts.ObjCRuntime.isNonFragile()) {
     if (ImpDecl->getSuperClass())
       Diag(ImpDecl->getLocation(), diag::warn_on_superclass_use);
@@ -2078,6 +2079,7 @@ void Sema::CheckImplementationIvars(ObjCImplementationDecl *ImpDecl,
     }
     return;
   }
+#endif
   // Check interface's Ivar list against those in the implementation.
   // names and types must match.
   //
@@ -2639,6 +2641,7 @@ static void CheckProtocolMethodDefs(Sema &S,
     Super = nullptr;
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCRuntime.isNeXTFamily()) {
     // check to see if class implements forwardInvocation method and objects
     // of this class are derived from 'NSProxy' so that to forward requests
@@ -2654,6 +2657,7 @@ static void CheckProtocolMethodDefs(Sema &S,
       // need be implemented in the implementation.
       NSIDecl = IDecl->lookupInheritedClass(&S.Context.Idents.get("NSProxy"));
   }
+#endif
 
   // If this is a forward protocol declaration, get its definition.
   if (!PDecl->isThisDeclarationADefinition() &&
@@ -2903,9 +2907,13 @@ void Sema::ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
   // an implementation or 2) there is a @synthesize/@dynamic implementation
   // of the property in the @implementation.
   if (const ObjCInterfaceDecl *IDecl = dyn_cast<ObjCInterfaceDecl>(CDecl)) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume smth && false && !smth
     bool SynthesizeProperties = LangOpts.ObjCDefaultSynthProperties &&
                                 LangOpts.ObjCRuntime.isNonFragile() &&
                                 !IDecl->isObjCRequiresPropertyDefs();
+#else
+    bool SynthesizeProperties = false;
+#endif
     DiagnoseUnimplementedProperties(S, IMPDecl, CDecl, SynthesizeProperties);
   }
 
@@ -3681,14 +3689,21 @@ void Sema::DiagnoseDuplicateIvars(ObjCInterfaceDecl *ID,
 
 /// Diagnose attempts to define ARC-__weak ivars when __weak is disabled.
 static void DiagnoseWeakIvars(Sema &S, ObjCImplementationDecl *ID) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCWeak) return;
+#endif
 
   for (auto ivar = ID->getClassInterface()->all_declared_ivar_begin();
          ivar; ivar = ivar->getNextIvar()) {
     if (ivar->isInvalidDecl()) continue;
     if (ivar->getType().getObjCLifetime() == Qualifiers::OCL_Weak) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
       if (S.getLangOpts().ObjCWeakRuntime) {
         S.Diag(ivar->getLocation(), diag::err_arc_weak_disabled);
+#else
+      if (false) {
+        /* dummy */
+#endif
       } else {
         S.Diag(ivar->getLocation(), diag::err_arc_weak_no_runtime);
       }
@@ -3880,12 +3895,14 @@ Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
         Diag(IDecl->getLocation(), diag::err_objc_root_class_subclass);
       }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
       if (LangOpts.ObjCRuntime.isNonFragile()) {
         while (IDecl->getSuperClass()) {
           DiagnoseDuplicateIvars(IDecl, IDecl->getSuperClass());
           IDecl = IDecl->getSuperClass();
         }
       }
+#endif
     }
     SetIvarInitializers(IC);
   } else if (ObjCCategoryImplDecl* CatImplClass =
@@ -4556,10 +4573,12 @@ void Sema::ActOnDefs(Scope *S, Decl *TagD, SourceLocation DeclStart,
     Diag(DeclStart, diag::err_undef_interface) << ClassName;
     return;
   }
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   if (LangOpts.ObjCRuntime.isNonFragile()) {
     Diag(DeclStart, diag::err_atdef_nonfragile_interface);
     return;
   }
+#endif
 
   // Collect the instance variables
   SmallVector<const ObjCIvarDecl*, 32> Ivars;

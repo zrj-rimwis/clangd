@@ -17,7 +17,11 @@
 
 #include "clang/Basic/CommentOptions.h"
 #include "clang/Basic/LLVM.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // nice even includes are borked
 #include "clang/Basic/ObjCRuntime.h"
+#else
+#include "llvm/ADT/Triple.h" // for std::vector<llvm::Triple> OMPTargetTriples
+#endif
 #include "clang/Basic/Sanitizers.h"
 #include "clang/Basic/Visibility.h"
 #include <string>
@@ -94,7 +98,9 @@ public:
   /// (files, functions, variables) should not be instrumented.
   std::vector<std::string> SanitizerBlacklistFiles;
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   clang::ObjCRuntime ObjCRuntime;
+#endif
 
   std::string ObjCConstantStringClass;
   
@@ -143,10 +149,12 @@ public:
     return getSignedOverflowBehavior() == SOB_Defined;
   }
   
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   bool isSubscriptPointerArithmetic() const {
     return ObjCRuntime.isSubscriptPointerArithmetic() &&
            !ObjCSubscriptingLegacyRuntime;
   }
+#endif
 
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume true a.k.a latest
   bool isCompatibleWithMSVC(MSVCMajorVersion MajorVersion) const {

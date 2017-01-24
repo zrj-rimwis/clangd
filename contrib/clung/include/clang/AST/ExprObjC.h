@@ -17,6 +17,9 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/SelectorLocationsKind.h"
+#ifndef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // fix missing header
+#include "clang/Basic/VersionTuple.h" // for VersionTuple VersionToCheck
+#endif
 #include "clang/Basic/IdentifierTable.h"
 #include "llvm/Support/Compiler.h"
 

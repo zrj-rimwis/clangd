@@ -560,11 +560,13 @@ bool Decl::canBeWeakImported(bool &IsDefinition) const {
     return true;
 
   // Objective-C classes, if this is the non-fragile runtime.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume smth && false
   } else if (isa<ObjCInterfaceDecl>(this) &&
              getASTContext().getLangOpts().ObjCRuntime.hasWeakClassImport()) {
     return true;
 
   // Nothing else.
+#endif
   } else {
     return false;
   }

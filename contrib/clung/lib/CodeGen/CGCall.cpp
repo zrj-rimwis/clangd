@@ -2907,7 +2907,9 @@ static AggValueSlot createPlaceholderSlot(CodeGenFunction &CGF,
   return AggValueSlot::forAddr(Address(Placeholder, Align),
                                Ty.getQualifiers(),
                                AggValueSlot::IsNotDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                AggValueSlot::IsNotAliased);
 }
 

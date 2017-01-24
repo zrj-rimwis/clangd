@@ -4939,7 +4939,11 @@ void Sema::CodeCompleteObjCPropertyFlags(Scope *S, ObjCDeclSpec &ODS) {
     Results.AddResult(CodeCompletionResult("atomic"));
 
   // Only suggest "weak" if we're compiling for ARC-with-weak-references or GC.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // this is silly
   if (getLangOpts().ObjCWeak || getLangOpts().getGC() != LangOptions::NonGC)
+#else
+  if (false || getLangOpts().getGC() != LangOptions::NonGC)
+#endif
     if (!ObjCPropertyFlagConflicts(Attributes, ObjCDeclSpec::DQ_PR_weak))
       Results.AddResult(CodeCompletionResult("weak"));
 

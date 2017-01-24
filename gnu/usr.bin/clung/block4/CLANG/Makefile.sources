@@ -90,7 +90,6 @@ SRCS+=	Attributes.cpp \
 	IdentifierTable.cpp \
 	LangOptions.cpp \
 	zCB_Module.cpp \
-	ObjCRuntime.cpp \
 	OpenMPKinds.cpp \
 	OperatorPrecedence.cpp \
 	SanitizerBlacklist.cpp \
@@ -128,8 +127,6 @@ SRCS+=	BackendUtil.cpp \
 	CGExprScalar.cpp \
 	CGLoopInfo.cpp \
 	CGObjC.cpp \
-	CGObjCGNU.cpp \
-	CGObjCRuntime.cpp \
 	CGOpenCLRuntime.cpp \
 	CGOpenMPRuntime.cpp \
 	CGRecordLayoutBuilder.cpp \

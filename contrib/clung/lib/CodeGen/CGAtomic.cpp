@@ -1845,7 +1845,9 @@ void CodeGenFunction::EmitAtomicInit(Expr *init, LValue dest) {
     // Evaluate the expression directly into the destination.
     AggValueSlot slot = AggValueSlot::forLValue(dest,
                                         AggValueSlot::IsNotDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                         AggValueSlot::DoesNotNeedGCBarriers,
+#endif
                                         AggValueSlot::IsNotAliased,
                                         Zeroed ? AggValueSlot::IsZeroed :
                                                  AggValueSlot::IsNotZeroed);

@@ -779,7 +779,9 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                         Expr *IndexExpr,
                                         ObjCMethodDecl *getterMethod,
                                         ObjCMethodDecl *setterMethod) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !false, thus no assert
   assert(!LangOpts.isSubscriptPointerArithmetic());
+#endif
 
   // We can't get dependent types here; our callers should have
   // filtered them out.

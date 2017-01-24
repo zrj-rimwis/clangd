@@ -531,8 +531,6 @@ def fno_wchar : Flag<["-"], "fno-wchar">,
 def fconstant_string_class : Separate<["-"], "fconstant-string-class">,
   MetaVarName<"<class name>">,
   HelpText<"Specify the class to use for constant Objective-C string objects.">;
-def fobjc_runtime_has_weak : Flag<["-"], "fobjc-runtime-has-weak">,
-  HelpText<"The target Objective-C runtime supports ARC weak operations">;
 def fobjc_dispatch_method_EQ : Joined<["-"], "fobjc-dispatch-method=">,
   HelpText<"Objective-C dispatch method to use">;
 def disable_objc_default_synthesize_properties : Flag<["-"], "disable-objc-default-synthesize-properties">,
@@ -591,8 +589,6 @@ def fdeprecated_macro : Flag<["-"], "fdeprecated-macro">,
   HelpText<"Defines the __DEPRECATED macro">;
 def fno_deprecated_macro : Flag<["-"], "fno-deprecated-macro">,
   HelpText<"Undefines the __DEPRECATED macro">;
-def fobjc_subscripting_legacy_runtime : Flag<["-"], "fobjc-subscripting-legacy-runtime">,
-  HelpText<"Allow Objective-C array and dictionary subscripting in legacy runtime">;
 def fno_rtti_data : Flag<["-"], "fno-rtti-data">,
   HelpText<"Control emission of RTTI data">;
 def fnative_half_type: Flag<["-"], "fnative-half-type">,

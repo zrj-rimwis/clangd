@@ -14,7 +14,9 @@
 #include "CodeGenFunction.h"
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 #include "CGObjCRuntime.h"
+#endif
 #include "CodeGenModule.h"
 #include "TargetInfo.h"
 #include "clang/AST/ASTContext.h"
@@ -277,21 +279,27 @@ public:
     return EmitLoadOfLValue(E);
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   Value *VisitObjCSelectorExpr(ObjCSelectorExpr *E) {
     return CGF.EmitObjCSelectorExpr(E);
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   Value *VisitObjCProtocolExpr(ObjCProtocolExpr *E) {
     return CGF.EmitObjCProtocolExpr(E);
   }
+#endif
   Value *VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     return EmitLoadOfLValue(E);
   }
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   Value *VisitObjCMessageExpr(ObjCMessageExpr *E) {
     if (E->getMethodDecl() &&
         E->getMethodDecl()->getReturnType()->isReferenceType())
       return EmitLoadOfLValue(E);
     return CGF.EmitObjCMessageExpr(E).getScalarVal();
   }
+#endif
 
   Value *VisitObjCIsaExpr(ObjCIsaExpr *E) {
     LValue LV = CGF.EmitObjCIsaExpr(E);
@@ -552,18 +560,26 @@ public:
   Value *VisitAbstractConditionalOperator(const AbstractConditionalOperator *);
   Value *VisitChooseExpr(ChooseExpr *CE);
   Value *VisitVAArgExpr(VAArgExpr *VE);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   Value *VisitObjCStringLiteral(const ObjCStringLiteral *E) {
     return CGF.EmitObjCStringLiteral(E);
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   Value *VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
     return CGF.EmitObjCBoxedExpr(E);
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   Value *VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
     return CGF.EmitObjCArrayLiteral(E);
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   Value *VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
     return CGF.EmitObjCDictionaryLiteral(E);
   }
+#endif
   Value *VisitAsTypeExpr(AsTypeExpr *CE);
   Value *VisitAtomicExpr(AtomicExpr *AE);
 };
@@ -1487,8 +1503,10 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
   case CK_ARCExtendBlockObject:
     return CGF.EmitARCExtendBlockObject(E);
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case CK_CopyAndAutoreleaseBlockObject:
     return CGF.EmitBlockCopyAndAutorelease(Visit(E), E->getType());
+#endif
 
   case CK_FloatingRealToComplex:
   case CK_FloatingComplexCast:

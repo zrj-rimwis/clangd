@@ -285,12 +285,16 @@ public:
   bool isNontemporal() const { return Nontemporal; }
   void setNontemporal(bool Value) { Nontemporal = Value; }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   bool isObjCWeak() const {
     return Quals.getObjCGCAttr() == Qualifiers::Weak;
   }
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   bool isObjCStrong() const {
     return Quals.getObjCGCAttr() == Qualifiers::Strong;
   }
+#endif
 
   bool isVolatile() const {
     return Quals.hasVolatile();
@@ -455,7 +459,9 @@ class AggValueSlot {
   /// ObjCGCFlag - This is set to true if writing to the memory in the
   /// slot might require calling an appropriate Objective-C GC
   /// barrier.  The exact interaction here is unnecessarily mysterious.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   bool ObjCGCFlag : 1;
+#endif
   
   /// ZeroedFlag - This is set to true if the memory in the slot is
   /// known to be zero before the assignment into it.  This means that
@@ -480,13 +486,19 @@ public:
   enum IsAliased_t { IsNotAliased, IsAliased };
   enum IsDestructed_t { IsNotDestructed, IsDestructed };
   enum IsZeroed_t { IsNotZeroed, IsZeroed };
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume OBJC only
   enum NeedsGCBarriers_t { DoesNotNeedGCBarriers, NeedsGCBarriers };
+#endif
 
   /// ignored - Returns an aggregate value slot indicating that the
   /// aggregate value is being ignored.
   static AggValueSlot ignored() {
     return forAddr(Address::invalid(), Qualifiers(), IsNotDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                    DoesNotNeedGCBarriers, IsNotAliased);
+#else
+                   IsNotAliased);
+#endif
   }
 
   /// forAddr - Make a slot for an aggregate value.
@@ -502,7 +514,9 @@ public:
   static AggValueSlot forAddr(Address addr,
                               Qualifiers quals,
                               IsDestructed_t isDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                               NeedsGCBarriers_t needsGC,
+#endif
                               IsAliased_t isAliased,
                               IsZeroed_t isZeroed = IsNotZeroed) {
     AggValueSlot AV;
@@ -515,7 +529,9 @@ public:
     }
     AV.Quals = quals;
     AV.DestructedFlag = isDestructed;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     AV.ObjCGCFlag = needsGC;
+#endif
     AV.ZeroedFlag = isZeroed;
     AV.AliasedFlag = isAliased;
     return AV;
@@ -523,11 +539,17 @@ public:
 
   static AggValueSlot forLValue(const LValue &LV,
                                 IsDestructed_t isDestructed,
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                                 NeedsGCBarriers_t needsGC,
+#endif
                                 IsAliased_t isAliased,
                                 IsZeroed_t isZeroed = IsNotZeroed) {
     return forAddr(LV.getAddress(),
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
                    LV.getQuals(), isDestructed, needsGC, isAliased, isZeroed);
+#else
+                   LV.getQuals(), isDestructed, isAliased, isZeroed);
+#endif
   }
 
   IsDestructed_t isExternallyDestructed() const {
@@ -551,9 +573,11 @@ public:
     return Quals.getObjCLifetime();
   }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   NeedsGCBarriers_t requiresGCollection() const {
     return NeedsGCBarriers_t(ObjCGCFlag);
   }
+#endif
 
   llvm::Value *getPointer() const {
     return Addr;

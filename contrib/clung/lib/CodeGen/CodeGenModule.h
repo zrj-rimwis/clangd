@@ -85,7 +85,9 @@ class CodeGenFunction;
 class CodeGenTBAA;
 class CGCXXABI;
 class CGDebugInfo;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
 class CGObjCRuntime;
+#endif
 class CGOpenCLRuntime;
 class CGOpenMPRuntime;
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
@@ -287,7 +289,9 @@ private:
   /// Holds information about C++ vtables.
   CodeGenVTables VTables;
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   std::unique_ptr<CGObjCRuntime> ObjCRuntime;
+#endif
   std::unique_ptr<CGOpenCLRuntime> OpenCLRuntime;
   std::unique_ptr<CGOpenMPRuntime> OpenMPRuntime;
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
@@ -450,7 +454,9 @@ private:
   /// @}
 
   /// Lazily create the Objective-C runtime
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // actively do not
   void createObjCRuntime();
+#endif
 
   void createOpenCLRuntime();
   void createOpenMPRuntime();
@@ -511,13 +517,17 @@ public:
   void Release();
 
   /// Return a reference to the configured Objective-C runtime.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   CGObjCRuntime &getObjCRuntime() {
     if (!ObjCRuntime) createObjCRuntime();
     return *ObjCRuntime;
   }
+#endif
 
   /// Return true iff an Objective-C runtime has been configured.
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   bool hasObjCRuntime() { return !!ObjCRuntime; }
+#endif
 
   /// Return a reference to the configured OpenCL runtime.
   CGOpenCLRuntime &getOpenCLRuntime() {
@@ -1186,8 +1196,10 @@ private:
   void EmitGlobalVarDefinition(const VarDecl *D, bool IsTentative = false);
   void EmitAliasDefinition(GlobalDecl GD);
   void emitIFuncDefinition(GlobalDecl GD);
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void EmitObjCPropertyImplementations(const ObjCImplementationDecl *D);
   void EmitObjCIvarInitializations(ObjCImplementationDecl *D);
+#endif
   
   // C++ related functions.
 
