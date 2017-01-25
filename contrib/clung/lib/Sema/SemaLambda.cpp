@@ -1330,6 +1330,7 @@ static void addFunctionPointerConversion(Sema &S,
 }
 
 /// \brief Add a lambda's conversion to block pointer.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void addBlockPointerConversion(Sema &S, 
                                       SourceRange IntroducerRange,
                                       CXXRecordDecl *Class,
@@ -1373,6 +1374,7 @@ static void addBlockPointerConversion(Sema &S,
   Conversion->setImplicit(true);
   Class->addDecl(Conversion);
 }
+#endif
 
 static ExprResult performLambdaVarCaptureInitialization(
     Sema &S, LambdaScopeInfo::Capture &Capture,
@@ -1583,9 +1585,11 @@ ExprResult Sema::BuildLambdaExpr(SourceLocation StartLoc, SourceLocation EndLoc,
     //   same parameter and return types as the closure type's function call
     //   operator.
     // FIXME: Fix generic lambda to block conversions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && false && !smth
     if (getLangOpts().Blocks && getLangOpts().ObjC1 && 
                                               !Class->isGenericLambda())
       addBlockPointerConversion(*this, IntroducerRange, Class, CallOperator);
+#endif
     
     // Finalize the lambda class.
     SmallVector<Decl*, 4> Fields(Class->fields());

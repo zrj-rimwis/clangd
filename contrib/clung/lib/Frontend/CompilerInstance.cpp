@@ -911,8 +911,10 @@ static InputKind getSourceInputKindFromOptions(const LangOptions &LangOpts) {
   if (LangOpts.CUDA)
     return IK_CUDA;
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC1)
     return LangOpts.CPlusPlus? IK_ObjCXX : IK_ObjC;
+#endif
   return LangOpts.CPlusPlus? IK_CXX : IK_C;
 }
 

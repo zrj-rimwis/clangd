@@ -326,10 +326,15 @@ void PrintPPOutputPPCallbacks::InclusionDirective(SourceLocation HashLoc,
   if (Imported) {
     startNewLineIfNeeded();
     MoveToLine(HashLoc);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, why ObjC had a priority??
     if (PP.getLangOpts().ObjC2) {
       OS << "@import " << Imported->getFullModuleName() << ";"
          << " /* clang -E: implicit import for \"" << File->getName()
          << "\" */";
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       // FIXME: Preseve whether this was a
       // #include/#include_next/#include_macros/#import.

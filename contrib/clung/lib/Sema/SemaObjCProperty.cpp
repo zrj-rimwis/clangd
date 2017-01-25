@@ -537,8 +537,12 @@ Sema::HandlePropertyInClassExtension(Scope *S,
     QualType ClassExtPropertyT = Context.getCanonicalType(PDecl->getType());
     if (!isa<ObjCObjectPointerType>(PrimaryClassPropertyT) ||
         !isa<ObjCObjectPointerType>(ClassExtPropertyT) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and returns false
         (!isObjCPointerConversion(ClassExtPropertyT, PrimaryClassPropertyT,
                                   ConvertedType, IncompatibleObjC))
+#else
+        (!false)
+#endif
         || IncompatibleObjC) {
       Diag(AtLoc, 
           diag::err_type_mismatch_continuation_class) << PDecl->getType();
@@ -690,10 +694,12 @@ ObjCPropertyDecl *Sema::CreatePropertyDecl(Scope *S,
   if (isAssign)
     PDecl->setPropertyAttributes(ObjCPropertyDecl::OBJC_PR_unsafe_unretained);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (MethodImplKind == tok::objc_required)
     PDecl->setPropertyImplementation(ObjCPropertyDecl::Required);
   else if (MethodImplKind == tok::objc_optional)
     PDecl->setPropertyImplementation(ObjCPropertyDecl::Optional);
+#endif
 
   if (Attributes & ObjCDeclSpec::DQ_PR_nullability)
     PDecl->setPropertyAttributes(ObjCPropertyDecl::OBJC_PR_nullability);
@@ -846,8 +852,12 @@ DiagnosePropertyMismatchDeclInProtocols(Sema &S, SourceLocation AtLoc,
     if (!S.Context.propertyTypesAreCompatible(LHSType, RHSType)) {
       bool IncompatibleObjC = false;
       QualType ConvertedType;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
       if (!S.isObjCPointerConversion(RHSType, LHSType, ConvertedType, IncompatibleObjC)
           || IncompatibleObjC) {
+#else
+      if (!false || IncompatibleObjC) {
+#endif
         if (FirsTime) {
           S.Diag(Property->getLocation(), diag::warn_protocol_property_mismatch)
             << Property->getType();
@@ -1514,9 +1524,13 @@ Sema::DiagnosePropertyMismatch(ObjCPropertyDecl *Property,
     // FIXME. For future support of covariant property types, revisit this.
     bool IncompatibleObjC = false;
     QualType ConvertedType;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
     if (!isObjCPointerConversion(RHSType, LHSType, 
                                  ConvertedType, IncompatibleObjC) ||
         IncompatibleObjC) {
+#else
+    if (!false || IncompatibleObjC) {
+#endif
         Diag(Property->getLocation(), diag::warn_property_types_are_incompatible)
         << Property->getType() << SuperProperty->getType() << inheritedName;
       Diag(SuperProperty->getLocation(), diag::note_property_declare);
@@ -1703,6 +1717,7 @@ static bool SuperClassImplementsProperty(ObjCInterfaceDecl *IDecl,
 
 /// \brief Default synthesizes all properties which must be synthesized
 /// in class's \@implementation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ //assume not needed
 void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
                                        ObjCInterfaceDecl *IDecl) {
   ObjCInterfaceDecl::PropertyMap PropMap;
@@ -1790,7 +1805,9 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
 void Sema::DefaultSynthesizeProperties(Scope *S, Decl *D) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume !smth || false
   if (!LangOpts.ObjCDefaultSynthProperties || LangOpts.ObjCRuntime.isFragile())
@@ -1805,6 +1822,7 @@ void Sema::DefaultSynthesizeProperties(Scope *S, Decl *D) {
     if (!IDecl->isObjCRequiresPropertyDefs())
       DefaultSynthesizeProperties(S, IC, IDecl);
 }
+#endif
 
 static void DiagnoseUnimplementedAccessor(
     Sema &S, ObjCInterfaceDecl *PrimaryClass, Selector Method,

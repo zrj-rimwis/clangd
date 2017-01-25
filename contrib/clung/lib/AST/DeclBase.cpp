@@ -412,11 +412,13 @@ static AvailabilityResult CheckAvailability(ASTContext &Context,
   // the suffix for matching with the actual platform.
   StringRef ActualPlatform = A->getPlatform()->getName();
   StringRef RealizedPlatform = ActualPlatform;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, XXX unmarked as OBJC
   if (Context.getLangOpts().AppExt) {
     size_t suffix = RealizedPlatform.rfind("_app_extension");
     if (suffix != StringRef::npos)
       RealizedPlatform = RealizedPlatform.slice(0, suffix);
   }
+#endif
 
   StringRef TargetPlatform = Context.getTargetInfo().getPlatformName();
 

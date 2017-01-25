@@ -705,7 +705,9 @@ public:
 
   /// isOBJCGCCandidate - Return true if this expression may be used in a read/
   /// write barrier.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, only for OBJC
   bool isOBJCGCCandidate(ASTContext &Ctx) const;
+#endif
 
   /// \brief Returns true if this expression is a bound member function.
   bool isBoundMemberFunction(ASTContext &Ctx) const;

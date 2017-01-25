@@ -2771,8 +2771,10 @@ static void addExceptionArgs(const ArgList &Args, types::ID InputType,
     // arguments now to avoid warnings about unused arguments.
     Args.ClaimAllArgs(options::OPT_fexceptions);
     Args.ClaimAllArgs(options::OPT_fno_exceptions);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     Args.ClaimAllArgs(options::OPT_fobjc_exceptions);
     Args.ClaimAllArgs(options::OPT_fno_objc_exceptions);
+#endif
     Args.ClaimAllArgs(options::OPT_fcxx_exceptions);
     Args.ClaimAllArgs(options::OPT_fno_cxx_exceptions);
     return;
@@ -4691,7 +4693,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
                                                : "-");
   }
   Args.AddLastArg(CmdArgs, options::OPT_P);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   Args.AddLastArg(CmdArgs, options::OPT_print_ivar_layout);
+#endif
 
   if (D.CCLogDiagnostics && !D.CCGenDiagnostics) {
     CmdArgs.push_back("-diagnostic-log-file");
@@ -5897,9 +5901,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   if (Args.hasFlag(options::OPT_fapplication_extension,
                    options::OPT_fno_application_extension, false))
     CmdArgs.push_back("-fapplication-extension");
+#endif
 
   // Handle GCC-style exception args.
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume !false

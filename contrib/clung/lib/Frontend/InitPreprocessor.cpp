@@ -415,8 +415,10 @@ static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
   Builder.defineMacro("__STDC_UTF_16__", "1");
   Builder.defineMacro("__STDC_UTF_32__", "1");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC1)
     Builder.defineMacro("__OBJC__");
+#endif
 
   // OpenCL v1.0/1.1 s6.9, v1.2/2.0 s6.10: Preprocessor Directives and Macros.
   if (LangOpts.OpenCL) {
@@ -580,6 +582,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
 #endif
     Builder.defineMacro("__GXX_EXPERIMENTAL_CXX0X__");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and good riddance
   if (LangOpts.ObjC1) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
     if (LangOpts.ObjCRuntime.isNonFragile()) {
@@ -623,6 +626,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("IBInspectable", "");
     Builder.defineMacro("IB_DESIGNABLE", "");
   }
+#endif
 
   if (LangOpts.CPlusPlus)
     InitializeCPlusPlusFeatureTestMacros(LangOpts, Builder);
@@ -632,8 +636,10 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   if (!LangOpts.NoConstantCFStrings)
       Builder.defineMacro("__CONSTANT_CFSTRINGS__");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC2)
     Builder.defineMacro("OBJC_NEW_PROPERTIES");
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   if (LangOpts.PascalStrings)
@@ -948,6 +954,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
   if (LangOpts.FastRelaxedMath)
     Builder.defineMacro("__FAST_RELAXED_MATH__");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume all logic is not needed
   if (FEOpts.ProgramAction == frontend::RewriteObjC ||
       LangOpts.getGC() != LangOptions::NonGC) {
     Builder.defineMacro("__weak", "__attribute__((objc_gc(weak)))");
@@ -962,6 +969,7 @@ static void InitializePredefinedMacros(const TargetInfo &TI,
     Builder.defineMacro("__unsafe_unretained",
                         "__attribute__((objc_ownership(none)))");
   }
+#endif
 
   // On Darwin, there are __double_underscored variants of the type
   // nullability qualifiers.

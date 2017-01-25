@@ -190,6 +190,7 @@ void Sema::Initialize() {
 
 
   // Initialize predefined Objective-C types:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1) {
     // If 'SEL' does not yet refer to any declarations, make it refer to the
     // predefined 'SEL'.
@@ -213,6 +214,7 @@ void Sema::Initialize() {
     if (IdResolver.begin(Protocol) == IdResolver.end())
       PushOnScopeChains(Context.getObjCProtocolDecl(), TUScope);
   }
+#endif
 
   // Create the internal type for the *StringMakeConstantString builtins.
   DeclarationName ConstantString = &Context.Idents.get("__NSConstantString");

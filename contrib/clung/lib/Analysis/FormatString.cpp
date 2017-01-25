@@ -875,7 +875,11 @@ bool FormatSpecifier::hasStandardConversionSpecifier(
       return true;
     case ConversionSpecifier::CArg:
     case ConversionSpecifier::SArg:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume both false
       return LangOpt.ObjC1 || LangOpt.ObjC2;
+#else
+      return false;
+#endif
     case ConversionSpecifier::InvalidSpecifier:
     case ConversionSpecifier::FreeBSDbArg:
     case ConversionSpecifier::FreeBSDDArg:

@@ -6083,7 +6083,9 @@ Sema::ActOnCastExpr(Scope *S, SourceLocation LParenLoc,
       !getSourceManager().isInSystemMacro(LParenLoc))
     Diag(LParenLoc, diag::warn_old_style_cast) << CastExpr->getSourceRange();
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
   CheckTollFreeBridgeCast(castType, CastExpr);
+#endif
   
   CheckObjCBridgeRelatedCast(castType, CastExpr);
   
@@ -7578,10 +7580,12 @@ Sema::CheckAssignmentConstraints(QualType LHSType, ExprResult &RHS,
     }
 
     // id -> T^
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && RHSType->isObjCIdType()) {
       Kind = CK_AnyPointerToBlockPointerCast;
       return Compatible;
     }
+#endif
 
     // void* -> T^
     if (const PointerType *RHSPT = RHSType->getAs<PointerType>())
@@ -7889,6 +7893,7 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &CallerRHS,
         return Incompatible;
     }
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (smth || smth)
     if (getLangOpts().ObjC1 &&
         (CheckObjCBridgeRelatedConversions(E->getLocStart(), LHSType,
                                            E->getType(), E, Diagnose) ||
@@ -7900,6 +7905,7 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &CallerRHS,
       RHS = E;
       return Compatible;
     }
+#endif
     
     if (ConvertRHS)
       RHS = ImpCastExprToType(E, Ty, Kind);
@@ -10834,6 +10840,7 @@ static void DiagnoseSelfAssignment(Sema &S, Expr *LHSExpr, Expr *RHSExpr,
 
 /// Check if a bitwise-& is performed on an Objective-C pointer.  This
 /// is usually indicative of introspection within the Objective-C pointer.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC and just returns
 static void checkObjCPointerIntrospection(Sema &S, ExprResult &L, ExprResult &R,
                                           SourceLocation OpLoc) {
   if (!S.getLangOpts().ObjC1)
@@ -10874,6 +10881,7 @@ static void checkObjCPointerIntrospection(Sema &S, ExprResult &L, ExprResult &R,
       << ObjCPointerExpr->getSourceRange();
   }
 }
+#endif
 
 static NamedDecl *getDeclFromExpr(Expr *E) {
   if (!E)
@@ -11008,7 +11016,9 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
     ResultTy = CheckCompareOperands(LHS, RHS, OpLoc, Opc, false);
     break;
   case BO_And:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     checkObjCPointerIntrospection(*this, LHS, RHS, OpLoc);
+#endif
   case BO_Xor:
   case BO_Or:
     ResultTy = CheckBitwiseOperands(LHS, RHS, OpLoc);
@@ -12459,6 +12469,7 @@ ExprResult Sema::ActOnGNUNullExpr(SourceLocation TokenLoc) {
   return new (Context) GNUNullExpr(Ty, TokenLoc);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC and just returns
 bool Sema::ConversionToObjCStringLiteralCheck(QualType DstType, Expr *&Exp,
                                               bool Diagnose) {
   if (!getLangOpts().ObjC1)
@@ -12493,6 +12504,7 @@ bool Sema::ConversionToObjCStringLiteralCheck(QualType DstType, Expr *&Exp,
   }
   return true;
 }
+#endif
 
 static bool maybeDiagnoseAssignmentToFunction(Sema &S, QualType DstType,
                                               const Expr *SrcExpr) {

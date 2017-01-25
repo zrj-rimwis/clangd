@@ -3433,7 +3433,11 @@ Sema::ActOnObjCAtFinallyStmt(SourceLocation AtLoc, Stmt *Body) {
 StmtResult
 Sema::ActOnObjCAtTryStmt(SourceLocation AtLoc, Stmt *Try,
                          MultiStmtArg CatchStmts, Stmt *Finally) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!getLangOpts().ObjCExceptions)
+#else
+  if (!false)
+#endif
     Diag(AtLoc, diag::err_objc_exceptions_disabled) << "@try";
 
   getCurFunction()->setHasBranchProtectedScope();
@@ -3470,7 +3474,11 @@ StmtResult Sema::BuildObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw) {
 StmtResult
 Sema::ActOnObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw,
                            Scope *CurScope) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!getLangOpts().ObjCExceptions)
+#else
+  if (!false)
+#endif
     Diag(AtLoc, diag::err_objc_exceptions_disabled) << "@throw";
 
   if (!Throw) {

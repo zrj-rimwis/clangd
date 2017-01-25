@@ -688,8 +688,10 @@ Preprocessor::getModuleHeaderToIncludeForDiagnostics(SourceLocation IncLoc,
                                                      SourceLocation Loc) {
   // If we have a module import syntax, we shouldn't include a header to
   // make a particular module visible.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC2)
     return nullptr;
+#endif
 
   // Figure out which module we'd want to import.
   Module *M = getModuleContainingLocation(Loc);
@@ -1605,6 +1607,7 @@ static void EnterAnnotationToken(Preprocessor &PP,
 
 /// \brief Produce a diagnostic informing the user that a #include or similar
 /// was implicitly treated as a module import.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume should not be used assert(ObjC2)
 static void diagnoseAutoModuleImport(
     Preprocessor &PP, SourceLocation HashLoc, Token &IncludeTok,
     ArrayRef<std::pair<IdentifierInfo *, SourceLocation>> Path,
@@ -1647,6 +1650,7 @@ static void diagnoseAutoModuleImport(
       << FixItHint::CreateReplacement(ReplaceRange,
                                       ("@import " + PathString + ";").str());
 }
+#endif
 
 // Given a vector of path components and a string containing the real
 // path to the file, build a properly-cased replacement in the vector,
@@ -1909,8 +1913,10 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
 
     // Warn that we're replacing the include/import with a module import.
     // We only do this in Objective-C, where we have a module-import syntax.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC2)
       diagnoseAutoModuleImport(*this, HashLoc, IncludeTok, Path, CharEnd);
+#endif
 
     // Load the module to import its macros. We'll make the declarations
     // visible when the parser gets here.
@@ -2115,7 +2121,11 @@ void Preprocessor::HandleMicrosoftImportDirective(Token &Tok) {
 ///
 void Preprocessor::HandleImportDirective(SourceLocation HashLoc,
                                          Token &ImportTok) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false, uch the logic
   if (!LangOpts.ObjC1) {  // #import is standard for ObjC.
+#else
+  if (!false) {
+#endif
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__
     if (LangOpts.MSVCCompat)
       return HandleMicrosoftImportDirective(ImportTok);
@@ -2513,6 +2523,7 @@ void Preprocessor::HandleDefineDirective(Token &DefineTok,
              II->isStr("__unsafe_unretained") ||
              II->isStr("__autoreleasing");
     };
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && stmh && smth, but source indentation is borked
    if (getLangOpts().ObjC1 &&
         SourceMgr.getFileID(OtherMI->getDefinitionLoc())
           == getPredefinesFileID() &&
@@ -2531,6 +2542,7 @@ void Preprocessor::HandleDefineDirective(Token &DefineTok,
       assert(!OtherMI->isWarnIfUnused());
       return;
     }
+#endif
 
     // It is very common for system headers to have tons of macro redefinitions
     // and for warnings to be disabled in system headers.  If this is the case,

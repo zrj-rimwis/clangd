@@ -339,6 +339,7 @@ static bool PersonalityHasOnlyCXXUses(llvm::Constant *Fn) {
 /// can cause some incompatibilities with gcc, which is more
 /// aggressive about only using the ObjC++ personality in a function
 /// when it really needs it.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, this is stupid just assume not
 void CodeGenModule::SimplifyPersonality() {
   // If we're not in ObjC++ -fexceptions, there's nothing to do.
   if (!LangOpts.CPlusPlus || !LangOpts.ObjC1 || !LangOpts.Exceptions)
@@ -380,6 +381,7 @@ void CodeGenModule::SimplifyPersonality() {
   return;
 #endif
 }
+#endif
 
 /// Returns the value to inject into a selector to indicate the
 /// presence of a catch-all.

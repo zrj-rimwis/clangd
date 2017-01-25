@@ -4992,6 +4992,7 @@ void InitializationSequence::InitializeFrom(Sema &S,
   Expr *Initializer = nullptr;
   if (Args.size() == 1) {
     Initializer = Args[0];
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (S.getLangOpts().ObjC1) {
       if (S.CheckObjCBridgeRelatedConversions(Initializer->getLocStart(),
                                               DestType, Initializer->getType(),
@@ -4999,6 +5000,7 @@ void InitializationSequence::InitializeFrom(Sema &S,
           S.ConversionToObjCStringLiteralCheck(DestType, Initializer))
         Args[0] = Initializer;
     }
+#endif
     if (!isa<InitListExpr>(Initializer))
       SourceType = Initializer->getType();
   }

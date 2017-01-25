@@ -94,6 +94,7 @@ LANGOPT(CPlusPlus         , 1, 0, "C++")
 LANGOPT(CPlusPlus11       , 1, 0, "C++11")
 LANGOPT(CPlusPlus14       , 1, 0, "C++14")
 LANGOPT(CPlusPlus1z       , 1, 0, "C++1z")
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 LANGOPT(ObjC1             , 1, 0, "Objective-C 1")
 LANGOPT(ObjC2             , 1, 0, "Objective-C 2")
 BENIGN_LANGOPT(ObjCDefaultSynthProperties , 1, 0,
@@ -103,6 +104,7 @@ BENIGN_LANGOPT(EncodeExtendedBlockSig , 1, 0,
 BENIGN_LANGOPT(ObjCInferRelatedResultType , 1, 1,
                "Objective-C related result type inference")
 LANGOPT(AppExt , 1, 0, "Objective-C App Extension")
+#endif
 LANGOPT(Trigraphs         , 1, 0,"trigraphs")
 LANGOPT(LineComment       , 1, 0, "'//' comments")
 LANGOPT(Bool              , 1, 0, "bool, true, and false keywords")
@@ -129,7 +131,9 @@ LANGOPT(LaxVectorConversions , 1, 1, "lax vector conversions")
 LANGOPT(AltiVec           , 1, 0, "AltiVec-style vector initializers")
 LANGOPT(ZVector           , 1, 0, "System z vector extensions")
 LANGOPT(Exceptions        , 1, 0, "exception handling")
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 LANGOPT(ObjCExceptions    , 1, 0, "Objective-C exceptions")
+#endif
 LANGOPT(CXXExceptions     , 1, 0, "C++ exceptions")
 LANGOPT(SjLjExceptions    , 1, 0, "setjmp-longjump exception handling")
 LANGOPT(ExternCNoUnwind   , 1, 0, "Assume extern C functions don't unwind")
@@ -176,7 +180,9 @@ COMPATIBLE_LANGOPT(FastMath          , 1, 0, "fast FP math optimizations, and __
 COMPATIBLE_LANGOPT(FiniteMathOnly    , 1, 0, "__FINITE_MATH_ONLY__ predefined macro")
 COMPATIBLE_LANGOPT(UnsafeFPMath      , 1, 0, "Unsafe Floating Point Math")
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 BENIGN_LANGOPT(ObjCGCBitmapPrint , 1, 0, "printing of GC's bitmap layout for __weak/__strong ivars")
+#endif
 
 BENIGN_LANGOPT(AccessControl     , 1, 1, "C++ access control")
 LANGOPT(CharIsSigned      , 1, 1, "signed char")
@@ -237,7 +243,9 @@ LANGOPT(ObjCAutoRefCount , 1, 0, "Objective-C automated reference counting")
 LANGOPT(ObjCWeakRuntime     , 1, 0, "__weak support in the ARC runtime")
 LANGOPT(ObjCWeak            , 1, 0, "Objective-C __weak in ARC and MRC files")
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 LANGOPT(ObjCSubscriptingLegacyRuntime         , 1, 0, "Subscripting support in legacy ObjectiveC runtime")
+#endif
 LANGOPT(FakeAddressSpaceMap , 1, 0, "OpenCL fake address space map")
 ENUM_LANGOPT(AddressSpaceMapMangling , AddrSpaceMapMangling, 2, ASMM_Target, "OpenCL address space map mangling mode")
 LANGOPT(IncludeDefaultHeader, 1, 0, "Include default header file for OpenCL")

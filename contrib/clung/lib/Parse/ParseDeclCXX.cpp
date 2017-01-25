@@ -213,7 +213,11 @@ void Parser::ParseInnerNamespace(std::vector<SourceLocation> &IdentLoc,
                                  ParsedAttributes &attrs,
                                  BalancedDelimiterTracker &Tracker) {
   if (index == Ident.size()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
     while (!tryParseMisplacedModuleImport() && Tok.isNot(tok::r_brace) &&
+#else
+    while (!false && Tok.isNot(tok::r_brace) &&
+#endif
            Tok.isNot(tok::eof)) {
       ParsedAttributesWithRange attrs(AttrFactory);
       MaybeParseCXX11Attributes(attrs);
@@ -2295,9 +2299,11 @@ Parser::ParseCXXClassMemberDeclaration(AccessSpecifier AS,
                                        const ParsedTemplateInfo &TemplateInfo,
                                        ParsingDeclRAIIObject *TemplateDiags) {
   if (Tok.is(tok::at)) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && NextToken().isObjCAtKeyword(tok::objc_defs))
       Diag(Tok, diag::err_at_defs_cxx);
     else
+#endif
       Diag(Tok, diag::err_at_in_class);
 
     ConsumeToken();
@@ -3159,7 +3165,11 @@ void Parser::ParseCXXMemberSpecification(SourceLocation RecordLoc,
 
   if (TagDecl) {
     // While we still have something to read, read the member-declarations.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
     while (!tryParseMisplacedModuleImport() && Tok.isNot(tok::r_brace) &&
+#else
+    while (!false && Tok.isNot(tok::r_brace) &&
+#endif
            Tok.isNot(tok::eof)) {
       // Each iteration of this loop reads one member-declaration.
       ParseCXXClassMemberDeclarationWithPragmas(

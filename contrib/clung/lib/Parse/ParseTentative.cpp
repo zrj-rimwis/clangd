@@ -215,8 +215,10 @@ Parser::TPResult Parser::TryConsumeDeclarationSpecifier() {
   default:
     ConsumeToken();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && Tok.is(tok::less))
       return TryParseProtocolQualifiers();
+#endif
     break;
   }
 
@@ -305,7 +307,11 @@ Parser::TPResult Parser::TryParseInitDeclaratorList() {
       // A left-brace here is sufficient to disambiguate the parse; an
       // expression can never be followed directly by a braced-init-list.
       return TPResult::True;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (Tok.is(tok::equal) || isTokIdentifier_in()) {
+#else
+    } else if (Tok.is(tok::equal) || false) {
+#endif
       // MSVC and g++ won't examine the rest of declarators if '=' is
       // encountered; they just conclude that we have a declaration.
       // EDG parses the initializer completely, which is the proper behavior
@@ -583,7 +589,11 @@ Parser::isCXX11AttributeSpecifier(bool Disambiguate,
     return CAK_NotAttributeSpecifier;
 
   // No tentative parsing if we don't need to look for ']]' or a lambda.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth && !false
   if (!Disambiguate && !getLangOpts().ObjC1)
+#else
+  if (!Disambiguate && !false)
+#endif
     return CAK_AttributeSpecifier;
 
   RevertingTentativeParsingAction PA(*this);
@@ -592,7 +602,11 @@ Parser::isCXX11AttributeSpecifier(bool Disambiguate,
   ConsumeBracket();
 
   // Outside Obj-C++11, treat anything with a matching ']]' as an attribute.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!getLangOpts().ObjC1) {
+#else
+  if (!false) {
+#endif
     ConsumeBracket();
 
     bool IsAttribute = SkipUntil(tok::r_square);
@@ -1226,7 +1240,11 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
 
     const Token &Next = NextToken();
     // In 'foo bar', 'foo' is always a type name outside of Objective-C.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
     if (!getLangOpts().ObjC1 && Next.is(tok::identifier))
+#else
+    if (!false && Next.is(tok::identifier))
+#endif
       return TPResult::True;
 
     if (Next.isNot(tok::coloncolon) && Next.isNot(tok::less)) {
@@ -1479,6 +1497,7 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
   case tok::annot_typename:
   case_typename:
     // In Objective-C, we might have a protocol-qualified type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && NextToken().is(tok::less)) {
       // Tentatively parse the protocol qualifiers.
       RevertingTentativeParsingAction PA(*this);
@@ -1499,6 +1518,7 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
       
       return TPResult::True;
     }
+#endif
       
   case tok::kw_char:
   case tok::kw_wchar_t:
@@ -1532,8 +1552,10 @@ Parser::isCXXDeclarationSpecifier(Parser::TPResult BracedCastResult,
     if (getLangOpts().CPlusPlus11 && NextToken().is(tok::l_brace))
       return BracedCastResult;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (isStartOfObjCClassMessageMissingOpenBracket())
       return TPResult::False;
+#endif
       
     return TPResult::True;
 

@@ -147,8 +147,10 @@ CodeGenModule::CodeGenModule(ASTContext &C, const HeaderSearchOptions &HSO,
 
   Block.GlobalUniqueCount = 0;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (C.getLangOpts().ObjC1)
     ObjCData.reset(new ObjCEntrypoints());
+#endif
 
   if (CodeGenOpts.hasProfileClangUse()) {
     auto ReaderOrErr = llvm::IndexedInstrProfReader::create(
@@ -512,7 +514,9 @@ void CodeGenModule::Release() {
       getModule().setPIELevel(static_cast<llvm::PIELevel::Level>(PLevel));
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, cause always  returns
   SimplifyPersonality();
+#endif
 
   if (getCodeGenOpts().EmitDeclMetadata)
     EmitDeclMetadata();

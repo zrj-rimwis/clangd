@@ -1375,9 +1375,11 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
     = getLangOpts().ObjCAutoRefCount && 
       (Action == AA_Passing || Action == AA_Sending);
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1)
     CheckObjCBridgeRelatedConversions(From->getLocStart(),
                                       ToType, From->getType(), From);
+#endif
   ICS = ::TryImplicitConversion(*this, From, ToType,
                                 /*SuppressUserConversions=*/false,
                                 AllowExplicit,
@@ -2117,9 +2119,11 @@ bool Sema::IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
                                QualType& ConvertedType,
                                bool &IncompatibleObjC) {
   IncompatibleObjC = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (isObjCPointerConversion(FromType, ToType, ConvertedType,
                               IncompatibleObjC))
     return true;
+#endif
 
   // Conversion from a null pointer constant to any Objective-C pointer type.
   if (ToType->isObjCObjectPointerType() &&
@@ -2270,6 +2274,7 @@ static QualType AdoptQualifiers(ASTContext &Context, QualType T, Qualifiers Qs){
 /// isObjCPointerConversion - Determines whether this is an
 /// Objective-C pointer conversion. Subroutine of IsPointerConversion,
 /// with the same arguments and return values.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
 bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
                                    QualType& ConvertedType,
                                    bool &IncompatibleObjC) {
@@ -2354,6 +2359,7 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
 
   // If we have pointers to pointers, recursively check whether this
   // is an Objective-C conversion.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && smth && false
   if (FromPointeeType->isPointerType() && ToPointeeType->isPointerType() &&
       isObjCPointerConversion(FromPointeeType, ToPointeeType, ConvertedType,
                               IncompatibleObjC)) {
@@ -2363,8 +2369,10 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
     ConvertedType = AdoptQualifiers(Context, ConvertedType, FromQualifiers);
     return true;
   }
+#endif
   // Allow conversion of pointee being objective-c pointer to another one;
   // as in I* to id.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && smth && false
   if (FromPointeeType->getAs<ObjCObjectPointerType>() &&
       ToPointeeType->getAs<ObjCObjectPointerType>() &&
       isObjCPointerConversion(FromPointeeType, ToPointeeType, ConvertedType,
@@ -2374,6 +2382,7 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
     ConvertedType = AdoptQualifiers(Context, ConvertedType, FromQualifiers);
     return true;
   }
+#endif
 
   // If we have pointers to functions or blocks, check whether the only
   // differences in the argument and result types are in Objective-C
@@ -2401,11 +2410,13 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
     if (Context.getCanonicalType(FromFunctionType->getReturnType()) ==
         Context.getCanonicalType(ToFunctionType->getReturnType())) {
       // Okay, the types match exactly. Nothing to do.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (isObjCPointerConversion(FromFunctionType->getReturnType(),
                                        ToFunctionType->getReturnType(),
                                        ConvertedType, IncompatibleObjC)) {
       // Okay, we have an Objective-C pointer conversion.
       HasObjCConversion = true;
+#endif
     } else {
       // Function types are too different. Abort.
       return false;
@@ -2419,10 +2430,12 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
       if (Context.getCanonicalType(FromArgType)
             == Context.getCanonicalType(ToArgType)) {
         // Okay, the types match exactly. Nothing to do.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       } else if (isObjCPointerConversion(FromArgType, ToArgType,
                                          ConvertedType, IncompatibleObjC)) {
         // Okay, we have an Objective-C pointer conversion.
         HasObjCConversion = true;
+#endif
       } else {
         // Argument types are too different. Abort.
         return false;
@@ -2440,6 +2453,7 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
 
   return false;
 }
+#endif
 
 /// \brief Determine whether this is an Objective-C writeback conversion,
 /// used for parameter passing when performing automatic reference counting.
@@ -2566,11 +2580,14 @@ bool Sema::IsBlockPointerConversion(QualType FromType, QualType ToType,
 
      if (Context.hasSameType(RHS,LHS)) {
        // OK exact match.
+
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, nice identation 10points!
      } else if (isObjCPointerConversion(RHS, LHS,
                                         ConvertedType, IncompatibleObjC)) {
      if (IncompatibleObjC)
        return false;
      // Okay, we have an Objective-C pointer conversion.
+#endif
      }
      else
        return false;
@@ -2584,11 +2601,13 @@ bool Sema::IsBlockPointerConversion(QualType FromType, QualType ToType,
      QualType ToArgType = ToFunctionType->getParamType(ArgIdx);
      if (Context.hasSameType(FromArgType, ToArgType)) {
        // Okay, the types match exactly. Nothing to do.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
      } else if (isObjCPointerConversion(ToArgType, FromArgType,
                                         ConvertedType, IncompatibleObjC)) {
        if (IncompatibleObjC)
          return false;
        // Okay, we have an Objective-C pointer conversion.
+#endif
      } else
        // Argument types are too different. Abort.
        return false;
@@ -3376,7 +3395,11 @@ Sema::DiagnoseMultipleUserDefinedConversion(Expr *From, QualType ToType) {
 static ImplicitConversionSequence::CompareKind
 compareConversionFunctions(Sema &S, FunctionDecl *Function1,
                            FunctionDecl *Function2) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false thus return
   if (!S.getLangOpts().ObjC1 || !S.getLangOpts().CPlusPlus11)
+#else
+  if (!false || !S.getLangOpts().CPlusPlus11)
+#endif
     return ImplicitConversionSequence::Indistinguishable;
 
   // Objective-C++:
@@ -3385,6 +3408,7 @@ compareConversionFunctions(Sema &S, FunctionDecl *Function1,
   //   respectively, always prefer the conversion to a function pointer,
   //   because the function pointer is more lightweight and is more likely
   //   to keep code working.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed ^^^
   CXXConversionDecl *Conv1 = dyn_cast_or_null<CXXConversionDecl>(Function1);
   if (!Conv1)
     return ImplicitConversionSequence::Indistinguishable;
@@ -3402,6 +3426,7 @@ compareConversionFunctions(Sema &S, FunctionDecl *Function1,
   }
 
   return ImplicitConversionSequence::Indistinguishable;
+#endif
 }
 
 static bool hasDeprecatedStringLiteralToCharPtrConversion(
@@ -6419,10 +6444,14 @@ static bool isAllowableExplicitConversion(Sema &S,
     return false;
 
   // Is this an Objective-C pointer conversion?
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool IncompatibleObjC = false;
   QualType ConvertedType;
   return S.isObjCPointerConversion(ConvType, ToNonRefType, ConvertedType,
                                    IncompatibleObjC);
+#else
+  return false;
+#endif
 }
                                           
 /// AddConversionCandidate - Add a C++ conversion function as a

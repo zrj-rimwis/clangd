@@ -95,10 +95,12 @@ CreateFrontendBaseAction(CompilerInstance &CI) {
 
   case RewriteMacros:          return llvm::make_unique<RewriteMacrosAction>();
   case RewriteTest:            return llvm::make_unique<RewriteTestAction>();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC_REWRITER
   case RewriteObjC:            return llvm::make_unique<RewriteObjCAction>();
 #else
   case RewriteObjC:            Action = "RewriteObjC"; break;
+#endif
 #endif
 #ifdef CLANG_ENABLE_ARCMT
   case MigrateSource:

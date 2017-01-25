@@ -632,11 +632,20 @@ void InitHeaderSearch::Realize(const LangOptions &Lang) {
 
   for (auto &Include : IncludePath)
     if (Include.first == System || Include.first == ExternCSystem ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
         (!Lang.ObjC1 && !Lang.CPlusPlus && Include.first == CSystem) ||
+#else
+        (!false && !Lang.CPlusPlus && Include.first == CSystem) ||
+#endif
         (/*FIXME !Lang.ObjC1 && */ Lang.CPlusPlus &&
          Include.first == CXXSystem) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, very confusing
         (Lang.ObjC1 && !Lang.CPlusPlus && Include.first == ObjCSystem) ||
         (Lang.ObjC1 && Lang.CPlusPlus && Include.first == ObjCXXSystem))
+#else
+        (false && !Lang.CPlusPlus && Include.first == ObjCSystem) ||
+        (false && Lang.CPlusPlus && Include.first == ObjCXXSystem))
+#endif
       SearchList.push_back(Include.second);
 
   for (auto &Include : IncludePath)

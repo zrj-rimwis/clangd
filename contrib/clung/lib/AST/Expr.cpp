@@ -2227,6 +2227,7 @@ bool Expr::isUnusedResultAWarning(const Expr *&WarnE, SourceLocation &Loc,
 
 /// isOBJCGCCandidate - Check if an expression is objc gc'able.
 /// returns true, if it is; false otherwise.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 bool Expr::isOBJCGCCandidate(ASTContext &Ctx) const {
   const Expr *E = IgnoreParens();
   switch (E->getStmtClass()) {
@@ -2265,6 +2266,7 @@ bool Expr::isOBJCGCCandidate(ASTContext &Ctx) const {
     return cast<ArraySubscriptExpr>(E)->getBase()->isOBJCGCCandidate(Ctx);
   }
 }
+#endif
 
 bool Expr::isBoundMemberFunction(ASTContext &Ctx) const {
   if (isTypeDependent())

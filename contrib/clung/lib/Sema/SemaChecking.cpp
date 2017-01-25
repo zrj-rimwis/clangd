@@ -2351,8 +2351,10 @@ bool Sema::CheckFunctionCall(FunctionDecl *FDecl, CallExpr *TheCall,
     return false;
 
   CheckAbsoluteValueFunction(TheCall, FDecl, FnInfo);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1)
     DiagnoseCStringFormatDirectiveInCFAPI(*this, FDecl, Args, NumArgs);
+#endif
 
   unsigned CMId = FDecl->getMemoryFunctionKind();
   if (CMId == 0)

@@ -127,11 +127,13 @@ ExprResult Parser::ParseExpression(TypeCastState isTypeCast) {
 /// routine is necessary to disambiguate \@try-statement from,
 /// for example, \@encode-expression.
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 Parser::ParseExpressionWithLeadingAt(SourceLocation AtLoc) {
   ExprResult LHS(ParseObjCAtExpression(AtLoc));
   return ParseRHSOfBinaryExpression(LHS, prec::Comma);
 }
+#endif
 
 /// This routine is called when a leading '__extension__' is seen and
 /// consumed.  This is necessary because the token gets consumed in the
@@ -895,6 +897,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
     SourceLocation ILoc = ConsumeToken();
 
     // Support 'Class.property' and 'super.property' notation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (smth || smth)
     if (getLangOpts().ObjC1 && Tok.is(tok::period) &&
         (Actions.getTypeName(II, ILoc, getCurScope()) ||
          // Allow the base to be 'super' if in an objc-method.
@@ -914,11 +917,13 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
                                               ILoc, PropertyLoc);
       break;
     }
+#endif
 
     // In an Objective-C method, if we have "super" followed by an identifier,
     // the token sequence is ill-formed. However, if there's a ':' or ']' after
     // that identifier, this is probably a message send with a missing open
     // bracket. Treat it as such. 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (smth || stmh)
     if (getLangOpts().ObjC1 && &II == Ident_super && !InMessageExpression &&
         getCurScope()->isInObjcMethodScope() &&
         ((Tok.is(tok::identifier) &&
@@ -928,12 +933,14 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
                                            nullptr);
       break;
     }
+#endif
     
     // If we have an Objective-C class name followed by an identifier
     // and either ':' or ']', this is an Objective-C class message
     // send that's missing the opening '['. Recovery
     // appropriately. Also take this path if we're performing code
     // completion after an Objective-C class name.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && 
         ((Tok.is(tok::identifier) && !InMessageExpression) || 
          Tok.is(tok::code_completion))) {
@@ -963,6 +970,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
             break;
           }
     }
+#endif
     
     // Make sure to pass down the right value for isAddressOfOperand.
     if (isAddressOfOperand && isPostfixExpressionSuffixStart())
@@ -1150,6 +1158,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
     break;
 
   case tok::annot_typename:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (isStartOfObjCClassMessageMissingOpenBracket()) {
       ParsedType Type = getTypeAnnotation(Tok);
 
@@ -1174,6 +1183,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
                                            Ty.get(), nullptr);
       break;
     }
+#endif
     // Fall through
 
   case tok::annot_decltype:
@@ -1346,10 +1356,12 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
   case tok::kw___is_rvalue_expr:
     return ParseExpressionTrait();
       
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case tok::at: {
     SourceLocation AtLoc = ConsumeToken();
     return ParseObjCAtExpression(AtLoc);
   }
+#endif
   case tok::caret:
     Res = ParseBlockLiteralExpression();
     break;
@@ -1360,6 +1372,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
   }
   case tok::l_square:
     if (getLangOpts().CPlusPlus11) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (getLangOpts().ObjC1) {
         // C++11 lambda expressions and Objective-C message sends both start with a
         // square bracket.  There are three possibilities here:
@@ -1371,13 +1384,16 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           Res = ParseObjCMessageExpression();
         break;
       }
+#endif
       Res = ParseLambdaExpression();
       break;
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1) {
       Res = ParseObjCMessageExpression();
       break;
     }
+#endif
     // FALL THROUGH.
   default:
     NotCastExpr = true;
@@ -1442,12 +1458,14 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
       // If we see identifier: after an expression, and we're not already in a
       // message send, then this is probably a message send with a missing
       // opening bracket '['.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && !smth && (stmh || smth)
       if (getLangOpts().ObjC1 && !InMessageExpression && 
           (NextToken().is(tok::colon) || NextToken().is(tok::r_square))) {
         LHS = ParseObjCMessageExpressionBody(SourceLocation(), SourceLocation(),
                                              nullptr, LHS.get());
         break;
       }
+#endif
         
       // Fall through; this isn't a message send.
                 
@@ -1460,9 +1478,11 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
       // actually another message send.  In this case, do some look-ahead to see
       // if the contents of the square brackets are obviously not a valid
       // expression and recover by pretending there is no suffix.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (getLangOpts().ObjC1 && Tok.isAtStartOfLine() &&
           isSimpleObjCMessageExpression())
         return LHS;
+#endif
 
       // Reject array indices starting with a lambda-expression. '[[' is
       // reserved for attributes.
@@ -1698,6 +1718,7 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
       // FIXME: Add support for explicit call of template constructor.
       SourceLocation TemplateKWLoc;
       UnqualifiedId Name;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (getLangOpts().ObjC2 && OpKind == tok::period &&
           Tok.is(tok::kw_class)) {
         // Objective-C++:
@@ -1710,6 +1731,10 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
         IdentifierInfo *Id = Tok.getIdentifierInfo();
         SourceLocation Loc = ConsumeToken();
         Name.setIdentifier(Id, Loc);
+#else
+     if (false) {
+       /* dummy */
+#endif
       } else if (ParseUnqualifiedId(SS, 
                                     /*EnteringContext=*/false, 
                                     /*AllowDestructorName=*/true,
@@ -1727,8 +1752,12 @@ Parser::ParsePostfixExpressionSuffix(ExprResult LHS) {
       if (!LHS.isInvalid())
         LHS = Actions.ActOnMemberAccessExpr(getCurScope(), LHS.get(), OpLoc, 
                                             OpKind, SS, TemplateKWLoc, Name,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                  CurParsedObjCImpl ? CurParsedObjCImpl->Dcl
                                                    : nullptr);
+#else
+                                            nullptr);
+#endif
       break;
     }
     case tok::plusplus:    // postfix-expression: postfix-expression '++'
@@ -2240,6 +2269,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
   }
 
   // Diagnose use of bridge casts in non-arc mode.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
   bool BridgeCast = (getLangOpts().ObjC2 &&
                      Tok.isOneOf(tok::kw___bridge,
                                  tok::kw___bridge_transfer,
@@ -2260,6 +2290,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
     }
     BridgeCast = false;
   }
+#endif
   
   // None of these cases should fall through with an invalid Result
   // unless they've already reported an error.
@@ -2292,6 +2323,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
         Actions.ActOnStmtExprError();
       }
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume BridgeCast is ObjC2 only
   } else if (ExprType >= CompoundLiteral && BridgeCast) {
     tok::TokenKind tokenKind = Tok.getKind();
     SourceLocation BridgeKeywordLoc = ConsumeToken();
@@ -2327,6 +2359,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
     return Actions.ActOnObjCBridgedCast(getCurScope(), OpenLoc, Kind,
                                         BridgeKeywordLoc, Ty.get(),
                                         RParenLoc, SubExpr.get());
+#endif
   } else if (ExprType >= CompoundLiteral &&
              isTypeIdInParens(isAmbiguousTypeId)) {
 
@@ -2353,6 +2386,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
     // If our type is followed by an identifier and either ':' or ']', then 
     // this is probably an Objective-C message send where the leading '[' is
     // missing. Recover as if that were the case.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume (smth) && !smth && false && (smth || smth)
     if (!DeclaratorInfo.isInvalidType() && Tok.is(tok::identifier) &&
         !InMessageExpression && getLangOpts().ObjC1 &&
         (NextToken().is(tok::colon) || NextToken().is(tok::r_square))) {
@@ -2364,6 +2398,10 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
       Result = ParseObjCMessageExpressionBody(SourceLocation(), 
                                               SourceLocation(), 
                                               Ty.get(), nullptr);
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {          
       // Match the ')'.
       T.consumeClose();
@@ -2398,6 +2436,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
         }
 
         // Reject the cast of super idiom in ObjC.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
         if (Tok.is(tok::identifier) && getLangOpts().ObjC1 &&
             Tok.getIdentifierInfo() == Ident_super && 
             getCurScope()->isInObjcMethodScope() &&
@@ -2406,6 +2445,7 @@ Parser::ParseParenExpression(ParenParseOption &ExprType, bool stopIfCastExpr,
             << SourceRange(OpenLoc, RParenLoc);
           return ExprError();
         }
+#endif
 
         // Parse the cast-expression that follows it next.
         // TODO: For cast expression with CastTy.
@@ -2988,7 +3028,11 @@ Optional<AvailabilitySpec> Parser::ParseAvailabilitySpec() {
 
 ExprResult Parser::ParseAvailabilityCheckExpr(SourceLocation BeginLoc) {
   assert(Tok.is(tok::kw___builtin_available) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
          Tok.isObjCAtKeyword(tok::objc_available));
+#else
+         false);
+#endif
 
   // Eat the available or __builtin_available.
   ConsumeToken();

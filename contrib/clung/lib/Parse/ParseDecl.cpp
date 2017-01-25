@@ -710,7 +710,11 @@ void Parser::ParseNullabilityTypeSpecifiers(ParsedAttributes &attrs) {
     case tok::kw__Null_unspecified: {
       IdentifierInfo *AttrName = Tok.getIdentifierInfo();
       SourceLocation AttrNameLoc = ConsumeToken();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
       if (!getLangOpts().ObjC1)
+#else
+      if (!false)
+#endif
         Diag(AttrNameLoc, diag::ext_nullability)
           << AttrName;
       attrs.addNew(AttrName, AttrNameLoc, nullptr, AttrNameLoc, nullptr, 0, 
@@ -1696,7 +1700,11 @@ void Parser::SkipMalformedDecl() {
       // a good place to pick back up parsing, except in an Objective-C
       // @interface context.
       if (Tok.isAtStartOfLine() && NextToken().is(tok::kw_namespace) &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth || false
           (!ParsingInObjCContainer || CurParsedObjCImpl))
+#else
+          (!ParsingInObjCContainer || false))
+#endif
         return;
       break;
 
@@ -1705,15 +1713,21 @@ void Parser::SkipMalformedDecl() {
       // place to pick back up parsing, except in an Objective-C
       // @interface context.
       if (Tok.isAtStartOfLine() &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth || false
           (!ParsingInObjCContainer || CurParsedObjCImpl))
+#else
+          (!ParsingInObjCContainer || false))
+#endif
         return;
       break;
 
     case tok::at:
       // @end is very much like } in Objective-C contexts.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (NextToken().isObjCAtKeyword(tok::objc_end) &&
           ParsingInObjCContainer)
         return;
+#endif
       break;
 
     case tok::minus:
@@ -1836,7 +1850,11 @@ Parser::DeclGroupPtrTy Parser::ParseDeclGroup(ParsingDeclSpec &DS,
   //
   // Handle the Objective-C for-in loop variable similarly, although we
   // don't need to parse the container in advance.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth || false
   if (FRI && (Tok.is(tok::colon) || isTokIdentifier_in())) {
+#else
+  if (FRI && (Tok.is(tok::colon) || false)) {
+#endif
     bool IsForRangeLoop = false;
     if (TryConsumeToken(tok::colon, FRI->ColonLoc)) {
       IsForRangeLoop = true;
@@ -2144,7 +2162,11 @@ Decl *Parser::ParseDeclarationAfterDeclaratorAndAttributes(
                                    /*DirectInit=*/true, TypeContainsAuto);
     }
   } else if (getLangOpts().CPlusPlus11 && Tok.is(tok::l_brace) &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false || !smth
              (!CurParsedObjCImpl || !D.isFunctionDeclarator())) {
+#else
+             (!false)) {
+#endif
     // Parse C++0x braced-init-list.
     Diag(Tok, diag::warn_cxx98_compat_generalized_initializer_lists);
 
@@ -2791,8 +2813,10 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                     : Sema::PCC_Template;
       else if (DSContext == DSC_class)
         CCC = Sema::PCC_Class;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       else if (CurParsedObjCImpl)
         CCC = Sema::PCC_ObjCImplementation;
+#endif
 
       Actions.CodeCompleteOrdinaryName(getCurScope(), CCC);
       return cutOffParsing();
@@ -3019,6 +3043,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       if (DS.isTypeAltiVecVector())
         goto DoneWithDeclSpec;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (DSContext == DSC_objc_method_result && isObjCInstancetype()) {
         ParsedType TypeRep = Actions.ActOnObjCInstanceType(Loc);
         assert(TypeRep);
@@ -3031,6 +3056,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
         ConsumeToken();
         continue;
       }
+#endif
 
       ParsedType TypeRep =
         Actions.getTypeName(*Tok.getIdentifierInfo(),
@@ -3068,6 +3094,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       // Objective-C supports type arguments and protocol references
       // following an Objective-C object or object pointer
       // type. Handle either one of them.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (Tok.is(tok::less) && getLangOpts().ObjC1) {
         SourceLocation NewEndLoc;
         TypeResult NewTypeRep = parseObjCTypeArgsAndProtocolQualifiers(
@@ -3078,6 +3105,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
           DS.SetRangeEnd(NewEndLoc);
         }
       }
+#endif
 
       // Need to support trailing type qualifiers (e.g. "id<p> const").
       // If a type specifier follows, it will be diagnosed elsewhere.
@@ -3558,9 +3586,14 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       // GCC ObjC supports types like "<SomeProtocol>" as a synonym for
       // "id<SomeProtocol>".  This is hopelessly old fashioned and dangerous,
       // but we support it.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth || !false
       if (DS.hasTypeSpecifier() || !getLangOpts().ObjC1)
+#else
+      if (!false)
+#endif
         goto DoneWithDeclSpec;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed cause of ^^^
       SourceLocation StartLoc = Tok.getLocation();
       SourceLocation EndLoc;
       TypeResult Type = parseObjCProtocolQualifierType(EndLoc);
@@ -3578,6 +3611,7 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
       // Need to support trailing type qualifiers (e.g. "id<p> const").
       // If a type specifier follows, it will be diagnosed elsewhere.
       continue;
+#endif
     }
     // If the specifier wasn't legal, issue a diagnostic.
     if (isInvalid) {
@@ -3716,7 +3750,11 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
   SmallVector<Decl *, 32> FieldDecls;
 
   // While we still have something to read, read the declarations in the struct.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false, someone was naughty
   while (!tryParseMisplacedModuleImport() && Tok.isNot(tok::r_brace) &&
+#else
+  while (!false && Tok.isNot(tok::r_brace) &&
+#endif
          Tok.isNot(tok::eof)) {
     // Each iteration of this loop reads one struct-declaration.
 
@@ -3767,7 +3805,11 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
       ParseStructDeclaration(DS, CFieldCallback);
     } else { // Handle @defs
       ConsumeToken();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
       if (!Tok.isObjCAtKeyword(tok::objc_defs)) {
+#else
+      if (!false) {
+#endif
         Diag(Tok, diag::err_unexpected_at);
         SkipUntil(tok::semi);
         continue;
@@ -3902,7 +3944,11 @@ void Parser::ParseEnumSpecifier(SourceLocation StartLoc, DeclSpec &DS,
 #else
     (getLangOpts().CPlusPlus11 ||
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
      getLangOpts().ObjC2);
+#else
+     false);
+#endif
 
   CXXScopeSpec &SS = DS.getTypeSpecScope();
   if (getLangOpts().CPlusPlus) {
@@ -4025,7 +4071,11 @@ void Parser::ParseEnumSpecifier(SourceLocation StartLoc, DeclSpec &DS,
 
       if (getLangOpts().CPlusPlus11) {
         Diag(StartLoc, diag::warn_cxx98_compat_enum_fixed_underlying_type);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
       } else if (!getLangOpts().ObjC2) {
+#else
+      } else if (!false) {
+#endif
         if (getLangOpts().CPlusPlus)
           Diag(StartLoc, diag::ext_cxx11_enum_fixed_underlying_type) << Range;
         else
@@ -4480,7 +4530,11 @@ bool Parser::isTypeSpecifierQualifier() {
 
     // GNU ObjC bizarre protocol extension: <proto1,proto2> with implicit 'id'.
   case tok::less:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     return getLangOpts().ObjC1;
+#else
+    return false;
+#endif
 
   case tok::kw___cdecl:
   case tok::kw___stdcall:
@@ -4532,8 +4586,10 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
 
   case tok::identifier:   // foo::bar
     // Unfortunate hack to support "Class.factoryMethod" notation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && NextToken().is(tok::period))
       return false;
+#endif
     if (TryAltiVecVectorToken())
       return true;
     // Fall through.
@@ -4551,9 +4607,11 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
     // expression is permitted, then this is probably a class message send
     // missing the initial '['. In this case, we won't consider this to be
     // the start of a declaration.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && false
     if (DisambiguatingWithExpression &&
         isStartOfObjCClassMessageMissingOpenBracket())
       return false;
+#endif
 
     return isDeclarationSpecifier();
 
@@ -4664,12 +4722,20 @@ bool Parser::isDeclarationSpecifier(bool DisambiguatingWithExpression) {
 
     // GNU ObjC bizarre protocol extension: <proto1,proto2> with implicit 'id'.
   case tok::less:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     return getLangOpts().ObjC1;
+#else
+    return false;
+#endif
 
     // typedef-name
   case tok::annot_typename:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth || !false
     return !DisambiguatingWithExpression ||
            !isStartOfObjCClassMessageMissingOpenBracket();
+#else
+    return !false;
+#endif
 
   case tok::kw___declspec:
   case tok::kw___cdecl:

@@ -25,6 +25,7 @@
 using namespace clang;
 
 /// Skips attributes after an Objective-C @ directive. Emits a diagnostic.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Parser::MaybeSkipAttributes(tok::ObjCKeywordKind Kind) {
   ParsedAttributes attrs(AttrFactory);
   if (Tok.is(tok::kw___attribute)) {
@@ -36,6 +37,7 @@ void Parser::MaybeSkipAttributes(tok::ObjCKeywordKind Kind) {
     ParseGNUAttributes(attrs);
   }
 }
+#endif
 
 /// ParseObjCAtDirectives - Handle parts of the external-declaration production:
 ///       external-declaration: [C99 6.9]
@@ -45,6 +47,7 @@ void Parser::MaybeSkipAttributes(tok::ObjCKeywordKind Kind) {
 /// [OBJC]  objc-protocol-definition
 /// [OBJC]  objc-method-definition
 /// [OBJC]  '@' 'end'
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Parser::DeclGroupPtrTy Parser::ParseObjCAtDirectives() {
   SourceLocation AtLoc = ConsumeToken(); // the "@"
 
@@ -94,6 +97,7 @@ Parser::DeclGroupPtrTy Parser::ParseObjCAtDirectives() {
   }
   return Actions.ConvertDeclToDeclGroup(SingleDecl);
 }
+#endif
 
 /// Class to handle popping type parameters when leaving the scope.
 class Parser::ObjCTypeParamListScope {
@@ -136,7 +140,9 @@ Parser::ParseObjCAtClassDeclaration(SourceLocation atLoc) {
   SmallVector<ObjCTypeParamList *, 8> ClassTypeParams;
 
   while (1) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     MaybeSkipAttributes(tok::objc_class);
+#endif
     if (Tok.isNot(tok::identifier)) {
       Diag(Tok, diag::err_expected) << tok::identifier;
       SkipUntil(tok::semi);
@@ -172,8 +178,13 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
     return;
 
   Decl *Decl = Actions.getObjCDeclContext();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (CurParsedObjCImpl) {
     CurParsedObjCImpl->finish(AtLoc);
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     Actions.ActOnAtEnd(getCurScope(), AtLoc);
   }
@@ -213,6 +224,7 @@ void Parser::CheckNestedObjCContexts(SourceLocation AtLoc)
 ///     __attribute__((objc_exception)) - used by NSException on 64-bit
 ///     __attribute__((objc_root_class))
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
                                               ParsedAttributes &attrs) {
   assert(Tok.isObjCAtKeyword(tok::objc_interface) &&
@@ -387,6 +399,7 @@ Decl *Parser::ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
 
   return ClsType;
 }
+#endif
 
 /// Add an attribute for a context-sensitive type nullability to the given
 /// declarator.
@@ -616,6 +629,7 @@ ObjCTypeParamList *Parser::parseObjCTypeParamList() {
 ///     @required
 ///     @optional
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Parser::ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey, 
                                         Decl *CDecl) {
   SmallVector<Decl *, 32> allMethods;
@@ -810,6 +824,7 @@ void Parser::ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
   // This passes in an invalid SourceLocation for AtEndLoc when EOF is hit.
   Actions.ActOnAtEnd(getCurScope(), AtEnd, allMethods, allTUVariables);
 }
+#endif
 
 /// Diagnose redundant or conflicting nullability information.
 static void diagnoseRedundantPropertyNullability(Parser &P,
@@ -995,6 +1010,7 @@ void Parser::ParseObjCPropertyAttribute(ObjCDeclSpec &DS) {
 ///   objc-method-attributes:         [OBJC2]
 ///     __attribute__((deprecated))
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCMethodPrototype(tok::ObjCKeywordKind MethodImplKind,
                                        bool MethodDefinition) {
   assert(Tok.isOneOf(tok::minus, tok::plus) && "expected +/-");
@@ -1007,6 +1023,7 @@ Decl *Parser::ParseObjCMethodPrototype(tok::ObjCKeywordKind MethodImplKind,
   // the caller is (optionally) responsible for consuming the ';'.
   return MDecl;
 }
+#endif
 
 ///   objc-selector:
 ///     identifier
@@ -1120,6 +1137,7 @@ IdentifierInfo *Parser::ParseObjCSelectorPiece(SourceLocation &SelectorLoc) {
 
 ///  objc-for-collection-in: 'in'
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, just silly
 bool Parser::isTokIdentifier_in() const {
   // FIXME: May have to do additional look-ahead to only allow for
   // valid tokens following an 'in'; such as an identifier, unary operators,
@@ -1127,6 +1145,7 @@ bool Parser::isTokIdentifier_in() const {
   return (getLangOpts().ObjC2 && Tok.is(tok::identifier) &&
           Tok.getIdentifierInfo() == ObjCTypeQuals[objc_in]);
 }
+#endif
 
 /// ParseObjCTypeQualifierList - This routine parses the objective-c's type
 /// qualifier list and builds their bitmask representation in the input
@@ -1269,7 +1288,11 @@ ParsedType Parser::ParseObjCTypeName(ObjCDeclSpec &DS,
   ParseObjCTypeQualifierList(DS, context);
 
   ParsedType Ty;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (isTypeSpecifierQualifier() || isObjCInstancetype()) {
+#else
+  if (isTypeSpecifierQualifier() || false) {
+#endif
     // Parse an abstract declarator.
     DeclSpec declSpec(AttrFactory);
     declSpec.setObjCQualifiers(&DS);
@@ -1343,6 +1366,7 @@ ParsedType Parser::ParseObjCTypeName(ObjCDeclSpec &DS,
 ///   objc-keyword-attributes:         [OBJC2]
 ///     __attribute__((unused))
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCMethodDecl(SourceLocation mLoc,
                                   tok::TokenKind mType,
                                   tok::ObjCKeywordKind MethodImplKind,
@@ -1536,6 +1560,7 @@ Decl *Parser::ParseObjCMethodDecl(SourceLocation mLoc,
   PD.complete(Result);
   return Result;
 }
+#endif
 
 ///   objc-protocol-refs:
 ///     '<' identifier-list '>'
@@ -1584,6 +1609,7 @@ ParseObjCProtocolReferences(SmallVectorImpl<Decl *> &Protocols,
   return false;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 TypeResult Parser::parseObjCProtocolQualifierType(SourceLocation &rAngleLoc) {
   assert(Tok.is(tok::less) && "Protocol qualifiers start with '<'");
   assert(getLangOpts().ObjC1 && "Protocol qualifiers only exist in Objective-C");
@@ -1606,6 +1632,7 @@ TypeResult Parser::parseObjCProtocolQualifierType(SourceLocation &rAngleLoc) {
 
   return result;
 }
+#endif
 
 /// Parse Objective-C type arguments or protocol qualifiers.
 ///
@@ -1889,7 +1916,9 @@ void Parser::HelperActionsForIvarDeclarations(Decl *interfaceDecl, SourceLocatio
     T.consumeClose();
   
   Actions.ActOnObjCContainerStartDefinition(interfaceDecl);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Actions.ActOnLastBitfield(T.getCloseLocation(), AllIvarDecls);
+#endif
   Actions.ActOnObjCContainerFinishDefinition();
   // Call ActOnFields() even if we don't have any decls. This is useful
   // for code rewriting tools that need to be aware of the empty list.
@@ -1918,6 +1947,7 @@ void Parser::HelperActionsForIvarDeclarations(Decl *interfaceDecl, SourceLocatio
 ///   objc-instance-variable-decl:
 ///     struct-declaration
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Parser::ParseObjCClassInstanceVariables(Decl *interfaceDecl,
                                              tok::ObjCKeywordKind visibility,
                                              SourceLocation atLoc) {
@@ -2005,6 +2035,7 @@ void Parser::ParseObjCClassInstanceVariables(Decl *interfaceDecl,
   HelperActionsForIvarDeclarations(interfaceDecl, atLoc,
                                    T, AllIvarDecls, false);
 }
+#endif
 
 ///   objc-protocol-declaration:
 ///     objc-protocol-definition
@@ -2022,6 +2053,7 @@ void Parser::ParseObjCClassInstanceVariables(Decl *interfaceDecl,
 ///   "\@protocol identifier ;" should be resolved as "\@protocol
 ///   identifier-list ;": objc-interface-decl-list may not start with a
 ///   semicolon in the first alternative if objc-protocol-refs are omitted.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Parser::DeclGroupPtrTy 
 Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
                                        ParsedAttributes &attrs) {
@@ -2101,6 +2133,7 @@ Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
   ParseObjCInterfaceDeclList(tok::objc_protocol, ProtoType);
   return Actions.ConvertDeclToDeclGroup(ProtoType);
 }
+#endif
 
 ///   objc-implementation:
 ///     objc-class-implementation-prologue
@@ -2112,6 +2145,7 @@ Parser::ParseObjCAtProtocolDeclaration(SourceLocation AtLoc,
 ///
 ///   objc-category-implementation-prologue:
 ///     @implementation identifier ( identifier )
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Parser::DeclGroupPtrTy
 Parser::ParseObjCAtImplementationDeclaration(SourceLocation AtLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_implementation) &&
@@ -2248,7 +2282,9 @@ Parser::ParseObjCAtImplementationDeclaration(SourceLocation AtLoc) {
 
   return Actions.ActOnFinishObjCImplementation(ObjCImpDecl, DeclsInGroup);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Parser::DeclGroupPtrTy
 Parser::ParseObjCAtEndDeclaration(SourceRange atEnd) {
   assert(Tok.isObjCAtKeyword(tok::objc_end) &&
@@ -2261,7 +2297,9 @@ Parser::ParseObjCAtEndDeclaration(SourceRange atEnd) {
     Diag(atEnd.getBegin(), diag::err_expected_objc_container);
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Parser::ObjCImplParsingDataRAII::~ObjCImplParsingDataRAII() {
   if (!Finished) {
     finish(P.Tok.getLocation());
@@ -2275,7 +2313,9 @@ Parser::ObjCImplParsingDataRAII::~ObjCImplParsingDataRAII() {
   P.CurParsedObjCImpl = nullptr;
   assert(LateParsedObjCMethods.empty());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Parser::ObjCImplParsingDataRAII::finish(SourceRange AtEnd) {
   assert(!Finished);
   P.Actions.DefaultSynthesizeProperties(P.getCurScope(), Dcl);
@@ -2299,10 +2339,12 @@ void Parser::ObjCImplParsingDataRAII::finish(SourceRange AtEnd) {
 
   Finished = true;
 }
+#endif
 
 ///   compatibility-alias-decl:
 ///     @compatibility_alias alias-name  class-name ';'
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCAtAliasDeclaration(SourceLocation atLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_compatibility_alias) &&
          "ParseObjCAtAliasDeclaration(): Expected @compatibility_alias");
@@ -2323,6 +2365,7 @@ Decl *Parser::ParseObjCAtAliasDeclaration(SourceLocation atLoc) {
   return Actions.ActOnCompatibilityAlias(atLoc, aliasId, aliasLoc,
                                          classId, classLoc);
 }
+#endif
 
 ///   property-synthesis:
 ///     @synthesize property-ivar-list ';'
@@ -2335,6 +2378,7 @@ Decl *Parser::ParseObjCAtAliasDeclaration(SourceLocation atLoc) {
 ///     identifier
 ///     identifier '=' identifier
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCPropertySynthesize(SourceLocation atLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_synthesize) &&
          "ParseObjCPropertySynthesize(): Expected '@synthesize'");
@@ -2383,6 +2427,7 @@ Decl *Parser::ParseObjCPropertySynthesize(SourceLocation atLoc) {
   ExpectAndConsume(tok::semi, diag::err_expected_after, "@synthesize");
   return nullptr;
 }
+#endif
 
 ///   property-dynamic:
 ///     @dynamic  property-list
@@ -2391,6 +2436,7 @@ Decl *Parser::ParseObjCPropertySynthesize(SourceLocation atLoc) {
 ///     identifier
 ///     property-list ',' identifier
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCPropertyDynamic(SourceLocation atLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_dynamic) &&
          "ParseObjCPropertyDynamic(): Expected '@dynamic'");
@@ -2448,6 +2494,7 @@ Decl *Parser::ParseObjCPropertyDynamic(SourceLocation atLoc) {
   ExpectAndConsume(tok::semi, diag::err_expected_after, "@dynamic");
   return nullptr;
 }
+#endif
 
 ///  objc-throw-statement:
 ///    throw expression[opt];
@@ -2530,6 +2577,7 @@ Parser::ParseObjCSynchronizedStmt(SourceLocation atLoc) {
 ///     parameter-declaration
 ///     '...' [OBJC2]
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult Parser::ParseObjCTryStmt(SourceLocation atLoc) {
   bool catch_or_finally_seen = false;
 
@@ -2629,6 +2677,7 @@ StmtResult Parser::ParseObjCTryStmt(SourceLocation atLoc) {
                                     CatchStmts,
                                     FinallyStmt.get());
 }
+#endif
 
 /// objc-autoreleasepool-statement:
 ///   @autoreleasepool compound-statement
@@ -2655,6 +2704,7 @@ Parser::ParseObjCAutoreleasePoolStmt(SourceLocation atLoc) {
 
 /// StashAwayMethodOrFunctionBodyTokens -  Consume the tokens and store them 
 /// for later parsing.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Parser::StashAwayMethodOrFunctionBodyTokens(Decl *MDecl) {
   if (SkipFunctionBodies && (!MDecl || Actions.canSkipFunctionBody(MDecl)) &&
       trySkippingFunctionBody()) {
@@ -2696,9 +2746,11 @@ void Parser::StashAwayMethodOrFunctionBodyTokens(Decl *MDecl) {
     ConsumeAndStoreUntil(tok::r_brace, Toks, /*StopAtSemi=*/false);
   }
 }
+#endif
 
 ///   objc-method-def: objc-method-proto ';'[opt] '{' body '}'
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Parser::ParseObjCMethodDefinition() {
   Decl *MDecl = ParseObjCMethodPrototype();
 
@@ -2740,7 +2792,9 @@ Decl *Parser::ParseObjCMethodDefinition() {
   StashAwayMethodOrFunctionBodyTokens(MDecl);
   return MDecl;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult Parser::ParseObjCAtStatement(SourceLocation AtLoc) {
   if (Tok.is(tok::code_completion)) {
     Actions.CodeCompleteObjCAtStatement(getCurScope());
@@ -2779,7 +2833,9 @@ StmtResult Parser::ParseObjCAtStatement(SourceLocation AtLoc) {
   ExpectAndConsumeSemi(diag::err_expected_semi_after_expr);
   return Actions.ActOnExprStmt(Res);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Parser::ParseObjCAtExpression(SourceLocation AtLoc) {
   switch (Tok.getKind()) {
   case tok::code_completion:
@@ -2880,6 +2936,7 @@ ExprResult Parser::ParseObjCAtExpression(SourceLocation AtLoc) {
     }
   }
 }
+#endif
 
 /// \brief Parse the receiver of an Objective-C++ message send.
 ///
@@ -2976,13 +3033,16 @@ bool Parser::ParseObjCXXMessageReceiver(bool &IsExpr, void *&TypeOrExpr) {
 ///
 /// This routine will only return true for a subset of valid message-send
 /// expressions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool Parser::isSimpleObjCMessageExpression() {
   assert(Tok.is(tok::l_square) && getLangOpts().ObjC1 &&
          "Incorrect start for isSimpleObjCMessageExpression");
   return GetLookAheadToken(1).is(tok::identifier) &&
          GetLookAheadToken(2).is(tok::identifier);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 bool Parser::isStartOfObjCClassMessageMissingOpenBracket() {
   if (!getLangOpts().ObjC1 || !NextToken().is(tok::identifier) || 
       InMessageExpression)
@@ -3010,6 +3070,7 @@ bool Parser::isStartOfObjCClassMessageMissingOpenBracket() {
 
   return false;
 }
+#endif
 
 ///   objc-message-expr:
 ///     '[' objc-receiver objc-message-args ']'
@@ -3503,6 +3564,7 @@ ExprResult Parser::ParseObjCDictionaryLiteral(SourceLocation AtLoc) {
 
 ///    objc-encode-expression:
 ///      \@encode ( type-name )
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 Parser::ParseObjCEncodeExpression(SourceLocation AtLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_encode) && "Not an @encode expression!");
@@ -3525,6 +3587,7 @@ Parser::ParseObjCEncodeExpression(SourceLocation AtLoc) {
   return Actions.ParseObjCEncodeExpression(AtLoc, EncLoc, T.getOpenLocation(),
                                            Ty.get(), T.getCloseLocation());
 }
+#endif
 
 ///     objc-protocol-expression
 ///       \@protocol ( protocol-name )

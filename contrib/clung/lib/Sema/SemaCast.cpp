@@ -494,7 +494,11 @@ CastsAwayConstness(Sema &Self, QualType SrcType, QualType DestType,
   // If the only checking we care about is for Objective-C lifetime qualifiers,
   // and we're not in ObjC mode, there's nothing to check.
   if (!CheckCVR && CheckObjCLifetime && 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume !false
       !Self.Context.getLangOpts().ObjC1)
+#else
+      !false)
+#endif
     return false;
     
   // Casting away constness is defined in C++ 5.2.11p8 with reference to
@@ -1122,9 +1126,11 @@ static TryCastResult TryStaticCast(Sema &Self, ExprResult &SrcExpr,
   }
   // Allow ns-pointer to cf-pointer conversion in either direction
   // with static casts.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth && false
   if (!CStyle &&
       Self.CheckTollFreeBridgeStaticCast(DestType, SrcExpr.get(), Kind))
     return TC_Success;
+#endif
 
   // See if it looks like the user is trying to convert between
   // related record types, and select a better diagnostic if so.

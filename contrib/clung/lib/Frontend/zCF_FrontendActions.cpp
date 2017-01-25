@@ -164,9 +164,11 @@ static void addHeaderInclude(StringRef HeaderName,
                              bool IsExternC) {
   if (IsExternC && LangOpts.CPlusPlus)
     Includes += "extern \"C\" {\n";
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and good riddance
   if (LangOpts.ObjC1)
     Includes += "#import \"";
   else
+#endif
     Includes += "#include \"";
 
   Includes += HeaderName;
@@ -730,19 +732,27 @@ void PrintPreambleAction::ExecuteAction() {
   switch (getCurrentFileKind()) {
   case IK_C:
   case IK_CXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   case IK_ObjC:
   case IK_ObjCXX:
+#endif
   case IK_OpenCL:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case IK_CUDA:
+#endif
     break;
       
   case IK_None:
   case IK_Asm:
   case IK_PreprocessedC:
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case IK_PreprocessedCuda:
+#endif
   case IK_PreprocessedCXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   case IK_PreprocessedObjC:
   case IK_PreprocessedObjCXX:
+#endif
   case IK_AST:
   case IK_LLVM_IR:
   case IK_RenderScript:

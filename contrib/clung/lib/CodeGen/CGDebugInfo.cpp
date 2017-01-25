@@ -431,12 +431,16 @@ void CGDebugInfo::CreateCompileUnit() {
   llvm::dwarf::SourceLanguage LangTag;
   const LangOptions &LO = CGM.getLangOpts();
   if (LO.CPlusPlus) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (LO.ObjC1)
       LangTag = llvm::dwarf::DW_LANG_ObjC_plus_plus;
     else
+#endif
       LangTag = llvm::dwarf::DW_LANG_C_plus_plus;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (LO.ObjC1) {
     LangTag = llvm::dwarf::DW_LANG_ObjC;
+#endif
   } else if (LO.RenderScript) {
     LangTag = llvm::dwarf::DW_LANG_GOOGLE_RenderScript;
   } else if (LO.C99) {
@@ -3107,6 +3111,7 @@ llvm::DIType *CGDebugInfo::EmitTypeForVarWithBlocksAttr(const VarDecl *VD,
         CreateMemberType(Unit, FType, "__destroy_helper", &FieldOffset));
   }
   bool HasByrefExtendedLayout;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   Qualifiers::ObjCLifetime Lifetime;
   if (CGM.getContext().getByrefLifetime(Type, Lifetime,
                                         HasByrefExtendedLayout) &&
@@ -3115,6 +3120,7 @@ llvm::DIType *CGDebugInfo::EmitTypeForVarWithBlocksAttr(const VarDecl *VD,
     EltTys.push_back(
         CreateMemberType(Unit, FType, "__byref_variable_layout", &FieldOffset));
   }
+#endif
 
   CharUnits Align = CGM.getContext().getDeclAlign(VD);
   if (Align > CGM.getContext().toCharUnitsFromBits(

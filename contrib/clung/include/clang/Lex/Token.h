@@ -273,10 +273,14 @@ public:
   bool isExpandDisabled() const { return getFlag(DisableExpand); }
 
   /// \brief Return true if we have an ObjC keyword identifier.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isObjCAtKeyword(tok::ObjCKeywordKind objcKey) const;
+#endif
 
   /// \brief Return the ObjC keyword kind.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume should not be used
   tok::ObjCKeywordKind getObjCKeywordID() const;
+#endif
 
   /// \brief Return true if this token has trigraphs or escaped newlines in it.
   bool needsCleaning() const { return getFlag(NeedsCleaning); }

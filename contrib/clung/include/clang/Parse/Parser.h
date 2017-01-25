@@ -664,6 +664,7 @@ private:
   /// Returns true if the current token is the identifier 'instancetype'.
   ///
   /// Should only be used in Objective-C language modes.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume should not be used
   bool isObjCInstancetype() {
     assert(getLangOpts().ObjC1);
     if (Tok.isAnnotation())
@@ -672,6 +673,7 @@ private:
       Ident_instancetype = PP.getIdentifierInfo("instancetype");
     return Tok.getIdentifierInfo() == Ident_instancetype;
   }
+#endif
 
   /// TryKeywordIdentFallback - For compatibility with system headers using
   /// keywords as identifiers, attempt to convert the current token to an
@@ -1289,11 +1291,17 @@ private:
   ExprResult ParseAsmStringLiteral();
 
   // Objective-C External Declarations
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX missing objc prefix
   void MaybeSkipAttributes(tok::ObjCKeywordKind Kind);
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclGroupPtrTy ParseObjCAtDirectives();
+#endif
   DeclGroupPtrTy ParseObjCAtClassDeclaration(SourceLocation atLoc);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
                                         ParsedAttributes &prefixAttrs);
+#endif
   class ObjCTypeParamListScope;
   ObjCTypeParamList *parseObjCTypeParamList();
   ObjCTypeParamList *parseObjCTypeParamListOrProtocolRefs(
@@ -1305,9 +1313,11 @@ private:
                                         BalancedDelimiterTracker &T,
                                         SmallVectorImpl<Decl *> &AllIvarDecls,
                                         bool RBraceMissing);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ParseObjCClassInstanceVariables(Decl *interfaceDecl,
                                        tok::ObjCKeywordKind visibility,
                                        SourceLocation atLoc);
+#endif
   bool ParseObjCProtocolReferences(SmallVectorImpl<Decl *> &P,
                                    SmallVectorImpl<SourceLocation> &PLocs,
                                    bool WarnOnDeclarations,
@@ -1346,7 +1356,9 @@ private:
 
   /// Parse a protocol qualifier type such as '<NSCopying>', which is
   /// an anachronistic way of writing 'id<NSCopying>'.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   TypeResult parseObjCProtocolQualifierType(SourceLocation &rAngleLoc);
+#endif
 
   /// Parse Objective-C type arguments and protocol qualifiers, extending the
   /// current type with the parsed result.
@@ -1355,11 +1367,14 @@ private:
                                                     bool consumeLastToken,
                                                     SourceLocation &endLoc);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
                                   Decl *CDecl);
   DeclGroupPtrTy ParseObjCAtProtocolDeclaration(SourceLocation atLoc,
                                                 ParsedAttributes &prefixAttrs);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   struct ObjCImplParsingDataRAII {
     Parser &P;
     Decl *Dcl;
@@ -1380,14 +1395,19 @@ private:
   private:
     bool Finished;
   };
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   ObjCImplParsingDataRAII *CurParsedObjCImpl;
   void StashAwayMethodOrFunctionBodyTokens(Decl *MDecl);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclGroupPtrTy ParseObjCAtImplementationDeclaration(SourceLocation AtLoc);
   DeclGroupPtrTy ParseObjCAtEndDeclaration(SourceRange atEnd);
   Decl *ParseObjCAtAliasDeclaration(SourceLocation atLoc);
   Decl *ParseObjCPropertySynthesize(SourceLocation atLoc);
   Decl *ParseObjCPropertyDynamic(SourceLocation atLoc);
+#endif
 
   IdentifierInfo *ParseObjCSelectorPiece(SourceLocation &MethodLocation);
   // Definitions for Objective-c context sensitive keywords recognition.
@@ -1398,20 +1418,26 @@ private:
   };
   IdentifierInfo *ObjCTypeQuals[objc_NumQuals];
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isTokIdentifier_in() const;
+#endif
 
   ParsedType ParseObjCTypeName(ObjCDeclSpec &DS, Declarator::TheContext Ctx,
                                ParsedAttributes *ParamAttrs);
   void ParseObjCMethodRequirement();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume should not be used
   Decl *ParseObjCMethodPrototype(
             tok::ObjCKeywordKind MethodImplKind = tok::objc_not_keyword,
             bool MethodDefinition = true);
   Decl *ParseObjCMethodDecl(SourceLocation mLoc, tok::TokenKind mType,
             tok::ObjCKeywordKind MethodImplKind = tok::objc_not_keyword,
             bool MethodDefinition=true);
+#endif
   void ParseObjCPropertyAttribute(ObjCDeclSpec &DS);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ParseObjCMethodDefinition();
+#endif
 
 public:
   //===--------------------------------------------------------------------===//
@@ -1436,7 +1462,9 @@ public:
                                   bool IsUnevaluated);
 
 private:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseExpressionWithLeadingAt(SourceLocation AtLoc);
+#endif
 
   ExprResult ParseExpressionWithLeadingExtension(SourceLocation ExtLoc);
 
@@ -1651,7 +1679,9 @@ private:
 
   //===--------------------------------------------------------------------===//
   // Objective-C Expressions
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCAtExpression(SourceLocation AtLocation);
+#endif
   ExprResult ParseObjCStringLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCCharacterLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCNumericLiteral(SourceLocation AtLoc);
@@ -1659,10 +1689,14 @@ private:
   ExprResult ParseObjCArrayLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCDictionaryLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCBoxedExpr(SourceLocation AtLoc);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCEncodeExpression(SourceLocation AtLoc);
+#endif
   ExprResult ParseObjCSelectorExpression(SourceLocation AtLoc);
   ExprResult ParseObjCProtocolExpression(SourceLocation AtLoc);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool isSimpleObjCMessageExpression();
+#endif
   ExprResult ParseObjCMessageExpression();
   ExprResult ParseObjCMessageExpressionBody(SourceLocation LBracloc,
                                             SourceLocation SuperLoc,
@@ -1803,8 +1837,10 @@ private:
   //===--------------------------------------------------------------------===//
   // Objective-C Statements
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult ParseObjCAtStatement(SourceLocation atLoc);
   StmtResult ParseObjCTryStmt(SourceLocation atLoc);
+#endif
   StmtResult ParseObjCThrowStmt(SourceLocation atLoc);
   StmtResult ParseObjCSynchronizedStmt(SourceLocation atLoc);
   StmtResult ParseObjCAutoreleasePoolStmt(SourceLocation atLoc);
@@ -1956,7 +1992,9 @@ private:
 
   /// \brief Determine whether we are currently at the start of an Objective-C
   /// class message that appears to be missing the open bracket '['.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isStartOfObjCClassMessageMissingOpenBracket();
+#endif
 
   /// \brief Starting with a scope specifier, identifier, or
   /// template-id that refers to the current class, determine whether
@@ -2687,7 +2725,10 @@ private:
 
   //===--------------------------------------------------------------------===//
   // Modules
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, assert(objc_import)
   DeclGroupPtrTy ParseModuleImport(SourceLocation AtLoc);
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume these are not needed too
   bool parseMisplacedModuleImport();
   bool tryParseMisplacedModuleImport() {
     tok::TokenKind Kind = Tok.getKind();
@@ -2696,6 +2737,7 @@ private:
       return parseMisplacedModuleImport();
     return false;
   }
+#endif
 
   //===--------------------------------------------------------------------===//
   // C++11/G++: Type Traits [Type-Traits.html in the GCC manual]

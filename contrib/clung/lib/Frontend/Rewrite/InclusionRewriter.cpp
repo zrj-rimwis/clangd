@@ -450,9 +450,13 @@ bool InclusionRewriter::Process(FileID FileId,
               WriteLineInfo(FileName, Line - 1, FileType, "");
             StringRef LineInfoExtra;
             SourceLocation Loc = HashToken.getLocation();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
             if (const Module *Mod = PP.getLangOpts().ObjC2
                                         ? FindModuleAtLocation(Loc)
                                         : nullptr)
+#else
+            if (const Module *Mod = nullptr)
+#endif
               WriteImplicitModuleImport(Mod);
             else if (const IncludedFile *Inc = FindIncludeAtLocation(Loc)) {
               // include and recursively process the file

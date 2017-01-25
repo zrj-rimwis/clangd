@@ -83,7 +83,9 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
   Actions.CurScope = nullptr;
   NumCachedScopes = 0;
   ParenCount = BracketCount = BraceCount = 0;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   CurParsedObjCImpl = nullptr;
+#endif
 
   // Add #pragma handlers. These are removed and destroyed in the
   // destructor.
@@ -461,6 +463,7 @@ void Parser::Initialize() {
 
   // Initialization for Objective-C context sensitive keywords recognition.
   // Referenced in Parser::ParseObjCTypeQualifierList.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1) {
     ObjCTypeQuals[objc_in] = &PP.getIdentifierTable().get("in");
     ObjCTypeQuals[objc_out] = &PP.getIdentifierTable().get("out");
@@ -473,6 +476,7 @@ void Parser::Initialize() {
     ObjCTypeQuals[objc_null_unspecified]
       = &PP.getIdentifierTable().get("null_unspecified");
   }
+#endif
 
   Ident_instancetype = nullptr;
   Ident_final = nullptr;
@@ -736,21 +740,33 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
     SingleDecl = Actions.ActOnFileScopeAsmDecl(Result.get(), StartLoc, EndLoc);
     break;
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case tok::at:
     return ParseObjCAtDirectives();
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case tok::minus:
   case tok::plus:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
     if (!getLangOpts().ObjC1) {
+#else
+    if (!false) {
+#endif
       Diag(Tok, diag::err_expected_external_declaration);
       ConsumeToken();
       return nullptr;
     }
     SingleDecl = ParseObjCMethodDefinition();
     break;
+#endif
   case tok::code_completion:
       Actions.CodeCompleteOrdinaryName(getCurScope(), 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                              CurParsedObjCImpl? Sema::PCC_ObjCImplementation
                                               : Sema::PCC_Namespace);
+#else
+                                       Sema::PCC_Namespace);
+#endif
     cutOffParsing();
     return nullptr;
   case tok::kw_using:
@@ -921,6 +937,7 @@ Parser::ParseDeclOrFunctionDefInternal(ParsedAttributesWithRange &attrs,
   // ObjC2 allows prefix attributes on class interfaces and protocols.
   // FIXME: This still needs better diagnostics. We should only accept
   // attributes here, no types, etc.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC2 && Tok.is(tok::at)) {
     SourceLocation AtLoc = ConsumeToken(); // the "@"
     if (!Tok.isObjCAtKeyword(tok::objc_interface) &&
@@ -944,6 +961,7 @@ Parser::ParseDeclOrFunctionDefInternal(ParsedAttributesWithRange &attrs,
     return Actions.ConvertDeclToDeclGroup(
             ParseObjCAtInterfaceDeclaration(AtLoc, DS.getAttributes()));
   }
+#endif
 
   // If the declspec consisted only of 'extern' and we have a string
   // literal following it, this must be a C++ linkage specifier like
@@ -1080,6 +1098,7 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
     }
     return DP;
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   else if (CurParsedObjCImpl && 
            !TemplateInfo.TemplateParams &&
            (Tok.is(tok::l_brace) || Tok.is(tok::kw_try) ||
@@ -1101,6 +1120,7 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
     }
     // FIXME: Should we really fall through here?
   }
+#endif
 
   // Enter a scope for the function body.
   ParseScope BodyScope(this, Scope::FnScope|Scope::DeclScope);
@@ -1503,6 +1523,7 @@ Parser::TryAnnotateName(bool IsAddressOfOperand,
     /// An Objective-C object type followed by '<' is a specialization of
     /// a parameterized class type or a protocol-qualified type.
     ParsedType Ty = Classification.getType();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (stmh || smth)
     if (getLangOpts().ObjC1 && NextToken().is(tok::less) &&
         (Ty.get()->isObjCObjectType() ||
          Ty.get()->isObjCObjectPointerType())) {
@@ -1516,6 +1537,7 @@ Parser::TryAnnotateName(bool IsAddressOfOperand,
       if (NewType.isUsable())
         Ty = NewType.get();
     }
+#endif
 
     Tok.setKind(tok::annot_typename);
     setTypeAnnotation(Tok, Ty);
@@ -1742,6 +1764,7 @@ bool Parser::TryAnnotateTypeOrScopeTokenAfterScopeSpec(bool EnteringContext,
 
       /// An Objective-C object type followed by '<' is a specialization of
       /// a parameterized class type or a protocol-qualified type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (smth || smth)
       if (getLangOpts().ObjC1 && NextToken().is(tok::less) &&
           (Ty.get()->isObjCObjectType() ||
            Ty.get()->isObjCObjectPointerType())) {
@@ -1755,6 +1778,7 @@ bool Parser::TryAnnotateTypeOrScopeTokenAfterScopeSpec(bool EnteringContext,
         if (NewType.isUsable())
           Ty = NewType.get();
       }
+#endif
 
       // This is a typename. Replace the current token in-place with an
       // annotation type token.
@@ -2032,6 +2056,7 @@ void Parser::ParseMicrosoftIfExistsExternalDeclaration() {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, assert(objc_import)
 Parser::DeclGroupPtrTy Parser::ParseModuleImport(SourceLocation AtLoc) {
   assert(Tok.isObjCAtKeyword(tok::objc_import) && 
          "Improper start to module import");
@@ -2078,11 +2103,13 @@ Parser::DeclGroupPtrTy Parser::ParseModuleImport(SourceLocation AtLoc) {
 
   return Actions.ConvertDeclToDeclGroup(Import.get());
 }
+#endif
 
 /// \brief Try recover parser when module annotation appears where it must not
 /// be found.
 /// \returns false if the recover was successful and parsing may be continued, or
 /// true if parser must bail out to top level and handle the token there.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool Parser::parseMisplacedModuleImport() {
   while (true) {
     switch (Tok.getKind()) {
@@ -2109,6 +2136,7 @@ bool Parser::parseMisplacedModuleImport() {
   }
   return false;
 }
+#endif
 
 bool BalancedDelimiterTracker::diagnoseOverflow() {
   P.Diag(P.Tok, diag::err_bracket_depth_exceeded)

@@ -64,7 +64,9 @@ static bool hasFeature(StringRef Feature, const LangOptions &LangOpts,
                         .Case("blocks", LangOpts.Blocks)
                         .Case("cplusplus", LangOpts.CPlusPlus)
                         .Case("cplusplus11", LangOpts.CPlusPlus11)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
                         .Case("objc", LangOpts.ObjC1)
+#endif
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__
                         .Case("objc_arc", LangOpts.ObjCAutoRefCount)
 #endif

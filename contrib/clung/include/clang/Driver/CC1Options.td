@@ -533,10 +533,6 @@ def fconstant_string_class : Separate<["-"], "fconstant-string-class">,
   HelpText<"Specify the class to use for constant Objective-C string objects.">;
 def fobjc_dispatch_method_EQ : Joined<["-"], "fobjc-dispatch-method=">,
   HelpText<"Objective-C dispatch method to use">;
-def disable_objc_default_synthesize_properties : Flag<["-"], "disable-objc-default-synthesize-properties">,
-  HelpText<"disable the default synthesis of Objective-C properties">;
-def fencode_extended_block_signature : Flag<["-"], "fencode-extended-block-signature">,
-  HelpText<"enable extended encoding of block type signature">;
 def pic_level : Separate<["-"], "pic-level">,
   HelpText<"Value for __PIC__">;
 def pic_is_pie : Flag<["-"], "pic-is-pie">,

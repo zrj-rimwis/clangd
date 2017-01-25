@@ -819,8 +819,12 @@ Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro,
         // send. In that case, fail here and let the ObjC message
         // expression parser perform the completion.
         if (Tok.is(tok::code_completion) &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
             !(getLangOpts().ObjC1 && Intro.Default == LCD_None &&
               !Intro.Captures.empty())) {
+#else
+            !(false)) {
+#endif
           Actions.CodeCompleteLambdaIntroducer(getCurScope(), Intro, 
                                                /*AfterAmpersand=*/false);
           cutOffParsing();
@@ -835,9 +839,11 @@ Optional<unsigned> Parser::ParseLambdaIntroducer(LambdaIntroducer &Intro,
     if (Tok.is(tok::code_completion)) {
       // If we're in Objective-C++ and we have a bare '[', then this is more
       // likely to be a message receiver.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (getLangOpts().ObjC1 && first)
         Actions.CodeCompleteObjCMessageReceiver(getCurScope());
       else
+#endif
         Actions.CodeCompleteLambdaIntroducer(getCurScope(), Intro, 
                                              /*AfterAmpersand=*/false);
       cutOffParsing();

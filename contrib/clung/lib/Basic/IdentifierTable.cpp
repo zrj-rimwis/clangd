@@ -156,9 +156,13 @@ static KeywordStatus getKeywordStatus(const LangOptions &LangOpts,
   if (LangOpts.C11 && (Flags & KEYC11)) return KS_Enabled;
   // We treat bridge casts as objective-C keywords so we can warn on them
   // in non-arc mode.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC2 && (Flags & KEYARC)) return KS_Enabled;
+#endif
   if (LangOpts.ConceptsTS && (Flags & KEYCONCEPTS)) return KS_Enabled;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC2 && (Flags & KEYOBJC2)) return KS_Enabled;
+#endif
   if (LangOpts.Coroutines && (Flags & KEYCOROUTINES)) return KS_Enabled;
   if (LangOpts.CPlusPlus && (Flags & KEYCXX11)) return KS_Future;
   return KS_Disabled;
@@ -203,11 +207,13 @@ static void AddCXXOperatorKeyword(StringRef Keyword,
 
 /// AddObjCKeyword - Register an Objective-C \@keyword like "class" "selector"
 /// or "property".
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void AddObjCKeyword(StringRef Name,
                            tok::ObjCKeywordKind ObjCID,
                            IdentifierTable &Table) {
   Table.get(Name).setObjCKeywordID(ObjCID);
 }
+#endif
 
 /// AddKeywords - Add all keywords to the symbol table.
 ///

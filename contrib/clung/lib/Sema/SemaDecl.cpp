@@ -1962,6 +1962,7 @@ void Sema::MergeTypedefNameDecl(Scope *S, TypedefNameDecl *New,
 
   // Allow multiple definitions for ObjC built-in typedefs.
   // FIXME: Verify the underlying types are equivalent!
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1) {
     const IdentifierInfo *TypeID = New->getIdentifier();
     switch (TypeID->getLength()) {
@@ -2000,6 +2001,7 @@ void Sema::MergeTypedefNameDecl(Scope *S, TypedefNameDecl *New,
     }
     // Fall through - the typedef name was not a builtin type.
   }
+#endif
 
   // Verify the old decl was also a type.
   TypeDecl *Old = OldDecls.getAsSingle<TypeDecl>();
@@ -10428,6 +10430,7 @@ void Sema::CheckCompleteVariableDeclaration(VarDecl *var) {
 
   // In Objective-C, don't allow jumps past the implicit initialization of a
   // local retaining variable.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1 &&
       var->hasLocalStorage()) {
     switch (var->getType().getObjCLifetime()) {
@@ -10442,6 +10445,7 @@ void Sema::CheckCompleteVariableDeclaration(VarDecl *var) {
       break;
     }
   }
+#endif
 
   // Warn about externally-visible variables being defined without a
   // prior declaration.  We only want to do this for global
@@ -13074,7 +13078,11 @@ CreateNewDecl:
     // If this is an undefined enum, warn.
     if (TUK != TUK_Definition && !Invalid) {
       TagDecl *Def;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume (smth || false) && smth
       if ((getLangOpts().CPlusPlus11 || getLangOpts().ObjC2) &&
+#else
+      if ((getLangOpts().CPlusPlus11 || false) &&
+#endif
           cast<EnumDecl>(New)->isFixed()) {
         // C++0x: 7.2p2: opaque-enum-declaration.
         // Conflicts are diagnosed above. Do nothing.
@@ -13881,6 +13889,7 @@ bool Sema::CheckNontrivialField(FieldDecl *FD) {
 
 /// TranslateIvarVisibility - Translate visibility from a token ID to an
 ///  AST enum value.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static ObjCIvarDecl::AccessControl
 TranslateIvarVisibility(tok::ObjCKeywordKind ivarVisibility) {
   switch (ivarVisibility) {
@@ -13891,9 +13900,11 @@ TranslateIvarVisibility(tok::ObjCKeywordKind ivarVisibility) {
   case tok::objc_package: return ObjCIvarDecl::Package;
   }
 }
+#endif
 
 /// ActOnIvar - Each ivar field of an objective-c class is passed into this
 /// in order to create an IvarDecl object for it.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX why this one is even here and not in ParseObjc.cpp??
 Decl *Sema::ActOnIvar(Scope *S,
                                 SourceLocation DeclStart,
                                 Declarator &D, Expr *BitfieldWidth,
@@ -14013,11 +14024,13 @@ Decl *Sema::ActOnIvar(Scope *S,
 
   return NewID;
 }
+#endif
 
 /// ActOnLastBitfield - This routine handles synthesized bitfields rules for
 /// class and class extensions. For every class \@interface and class
 /// extension \@interface, if the last ivar is a bitfield of any type,
 /// then add an implicit `char :0` ivar to the end of that interface.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::ActOnLastBitfield(SourceLocation DeclLoc,
                              SmallVectorImpl<Decl *> &AllIvarDecls) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false || smth
@@ -14055,6 +14068,7 @@ void Sema::ActOnLastBitfield(SourceLocation DeclLoc,
                               true);
   AllIvarDecls.push_back(Ivar);
 }
+#endif
 
 void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
                        ArrayRef<Decl *> Fields, SourceLocation LBrac,
@@ -14269,6 +14283,7 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
         ARCErrReported = true;
       }
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && smth
     } else if (getLangOpts().ObjC1 &&
                getLangOpts().getGC() != LangOptions::NonGC &&
                Record && !Record->hasObjectMember()) {
@@ -14284,6 +14299,7 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
                  BaseType.isObjCGCStrong())
                Record->setHasObjectMember(true);
       }
+#endif
     }
     if (Record && FD->getType().isVolatileQualified())
       Record->setHasVolatileMember(true);

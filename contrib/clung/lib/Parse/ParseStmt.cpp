@@ -165,12 +165,14 @@ Retry:
   tok::TokenKind Kind  = Tok.getKind();
   SourceLocation AtLoc;
   switch (Kind) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case tok::at: // May be a @try or @throw statement
     {
       ProhibitAttributes(Attrs); // TODO: is it correct?
       AtLoc = ConsumeToken();  // consume @
       return ParseObjCAtStatement(AtLoc);
     }
+#endif
 
   case tok::code_completion:
     Actions.CodeCompleteOrdinaryName(getCurScope(), Sema::PCC_Statement);
@@ -1009,7 +1011,11 @@ StmtResult Parser::ParseCompoundStatementBody(bool isStmtExpr) {
       Stmts.push_back(R.get());
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   while (!tryParseMisplacedModuleImport() && Tok.isNot(tok::r_brace) &&
+#else
+  while (!false && Tok.isNot(tok::r_brace) &&
+#endif
          Tok.isNot(tok::eof)) {
     if (Tok.is(tok::annot_pragma_unused)) {
       HandlePragmaUnused();
@@ -1561,7 +1567,11 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
   }
 
   bool C99orCXXorObjC = getLangOpts().C99 || getLangOpts().CPlusPlus ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     getLangOpts().ObjC1;
+#else
+    false;
+#endif
 
   // C99 6.8.5p5 - In C99, the for statement is a block.  This is not
   // the case for C90.  Start the loop scope.
@@ -1589,7 +1599,11 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
 
   ExprResult Value;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume always false
   bool ForEach = false, ForRange = false;
+#else
+  bool ForRange = false;
+#endif
   StmtResult FirstPart;
   Sema::ConditionResult SecondPart;
   ExprResult Collection;
@@ -1654,6 +1668,7 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
       ForRange = true;
     } else if (Tok.is(tok::semi)) {  // for (int x = 4;
       ConsumeToken();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false thus not needed
     } else if ((ForEach = isTokIdentifier_in())) {
       Actions.ActOnForEachDeclStmt(DG);
       // ObjC: for (id x in expr)
@@ -1665,6 +1680,7 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
         return StmtError();
       }
       Collection = ParseExpression();
+#endif
     } else {
       Diag(Tok, diag::err_expected_semi_for);
     }
@@ -1672,18 +1688,23 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
     ProhibitAttributes(attrs);
     Value = Actions.CorrectDelayedTyposInExpr(ParseExpression());
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     ForEach = isTokIdentifier_in();
+#endif
 
     // Turn the expression into a stmt.
     if (!Value.isInvalid()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (ForEach)
         FirstPart = Actions.ActOnForEachLValueExpr(Value.get());
       else
+#endif
         FirstPart = Actions.ActOnExprStmt(Value);
     }
 
     if (Tok.is(tok::semi)) {
       ConsumeToken();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (ForEach) {
       ConsumeToken(); // consume 'in'
 
@@ -1693,6 +1714,7 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
         return StmtError();
       }
       Collection = ParseExpression();
+#endif
     } else if (getLangOpts().CPlusPlus11 && Tok.is(tok::colon) && FirstPart.get()) {
       // User tried to write the reasonable, but ill-formed, for-range-statement
       //   for (expr : expr) { ... }
@@ -1714,7 +1736,11 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
 
   // Parse the second part of the for specifier.
   getCurScope()->AddFlags(Scope::BreakScope | Scope::ContinueScope);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!ForEach && !ForRange && !SecondPart.isInvalid()) {
+#else
+  if (!false && !ForRange && !SecondPart.isInvalid()) {
+#endif
     // Parse the second part of the for specifier.
     if (Tok.is(tok::semi)) {  // for (...;;
       // no second part.
@@ -1781,11 +1807,13 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
 
   // Similarly, we need to do the semantic analysis for a for-range
   // statement immediately in order to close over temporaries correctly.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (ForEach) {
     ForEachStmt = Actions.ActOnObjCForCollectionStmt(ForLoc,
                                                      FirstPart.get(),
                                                      Collection.get(),
                                                      T.getCloseLocation());
+#endif
   } else {
     // In OpenMP loop region loop control variable must be captured and be
     // private. Perform analysis of first part (if any).
@@ -1827,9 +1855,11 @@ StmtResult Parser::ParseForStatement(SourceLocation *TrailingElseLoc) {
   if (Body.isInvalid())
     return StmtError();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, this was silly silly!
   if (ForEach)
    return Actions.FinishObjCForCollectionStmt(ForEachStmt.get(),
                                               Body.get());
+#endif
 
   if (ForRange)
     return Actions.FinishCXXForRangeStmt(ForRangeStmt.get(), Body.get());

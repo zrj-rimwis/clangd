@@ -341,9 +341,11 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
     info.CanBeGlobal = true;
     return;
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   else if (C.getLangOpts().ObjC1 &&
            CGM.getLangOpts().getGC() == LangOptions::NonGC)
     info.HasCapturedVariableLayout = true;
+#endif
   
   // Collect the layout chunks.
   SmallVector<BlockLayoutChunk, 16> layout;
@@ -2119,6 +2121,7 @@ const BlockByrefInfo &CodeGenFunction::getBlockByrefInfo(const VarDecl *D) {
   }
 
   bool HasByrefExtendedLayout = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   Qualifiers::ObjCLifetime Lifetime;
   if (getContext().getByrefLifetime(Ty, Lifetime, HasByrefExtendedLayout) &&
       HasByrefExtendedLayout) {
@@ -2126,6 +2129,7 @@ const BlockByrefInfo &CodeGenFunction::getBlockByrefInfo(const VarDecl *D) {
     types.push_back(Int8PtrTy);
     size += CharUnits::fromQuantity(PointerSizeInBytes);
   }
+#endif
 
   // T x;
   llvm::Type *varTy = ConvertTypeForMem(Ty);
@@ -2192,8 +2196,10 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
 
   bool HasByrefExtendedLayout;
   Qualifiers::ObjCLifetime ByrefLifetime;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
   bool ByRefHasLifetime =
     getContext().getByrefLifetime(type, ByrefLifetime, HasByrefExtendedLayout);
+#endif
 
   llvm::Value *V;
 
@@ -2212,6 +2218,7 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
   //      needed or BLOCK_BYREF_HAS_COPY_DISPOSE if they are,
   BlockFlags flags;
   if (helpers) flags |= BLOCK_BYREF_HAS_COPY_DISPOSE;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, btw nice indentation style :D
   if (ByRefHasLifetime) {
     if (HasByrefExtendedLayout) flags |= BLOCK_BYREF_LAYOUT_EXTENDED;
       else switch (ByrefLifetime) {
@@ -2251,6 +2258,7 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
       printf("\n");
     }
   }
+#endif
   storeHeaderField(llvm::ConstantInt::get(IntTy, flags.getBitMask()),
                    getIntSize(), "byref.flags");
 

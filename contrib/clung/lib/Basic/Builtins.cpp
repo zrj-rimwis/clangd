@@ -72,7 +72,11 @@ bool Builtin::Context::builtinIsSupported(const Builtin::Info &BuiltinInfo,
 #else
   bool MSModeUnsupported = false;
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   bool ObjCUnsupported = !LangOpts.ObjC1 && BuiltinInfo.Langs == OBJC_LANG;
+#else
+  bool ObjCUnsupported = !false && BuiltinInfo.Langs == OBJC_LANG;
+#endif
   bool OclCUnsupported = LangOpts.OpenCLVersion != 200 &&
                          BuiltinInfo.Langs == OCLC20_LANG;
   return !BuiltinsUnsupported && !MathBuiltinsUnsupported && !OclCUnsupported &&

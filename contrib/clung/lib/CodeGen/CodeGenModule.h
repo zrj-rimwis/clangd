@@ -1290,7 +1290,9 @@ private:
 
   /// Check whether we can use a "simpler", more core exceptions personality
   /// function.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, because returns
   void SimplifyPersonality();
+#endif
 };
 }  // end namespace CodeGen
 }  // end namespace clang

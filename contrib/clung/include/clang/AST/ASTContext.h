@@ -1113,9 +1113,11 @@ public:
   /// Returns true, if given type has a known lifetime. HasByrefExtendedLayout is set
   /// to false in this case. If HasByrefExtendedLayout returns true, byref variable
   /// has extended lifetime. 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, only for OBJC
   bool getByrefLifetime(QualType Ty,
                         Qualifiers::ObjCLifetime &Lifetime,
                         bool &HasByrefExtendedLayout) const;
+#endif
   
   /// \brief Return the uniqued reference to the type for an lvalue reference
   /// to the specified type.
@@ -1783,7 +1785,9 @@ private:
 public:
   /// \brief Return one of the GCNone, Weak or Strong Objective-C garbage
   /// collection attributes.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, assert(ObjC1)
   Qualifiers::GC getObjCGCAttrKind(QualType Ty) const;
+#endif
 
   /// \brief Return true if the given vector types are of the same unqualified
   /// type or if they are equivalent to the same GCC vector type.

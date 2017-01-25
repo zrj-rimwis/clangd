@@ -4319,6 +4319,7 @@ static void mergeInterfaceMethodToImpl(Sema &S,
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Sema::ActOnMethodDeclaration(
     Scope *S,
     SourceLocation MethodLoc, SourceLocation EndLoc,
@@ -4544,6 +4545,7 @@ Decl *Sema::ActOnMethodDeclaration(
 
   return ObjCMethod;
 }
+#endif
 
 bool Sema::CheckObjCDeclScope(Decl *D) {
   // Following is also an error. But it is caused by a missing @end

@@ -12313,6 +12313,7 @@ VarDecl *Sema::BuildExceptionDeclaration(Scope *S,
 
   // Only the non-fragile NeXT runtime currently supports C++ catches
   // of ObjC types, and no runtime supports catching ObjC types by value.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth && false
   if (!Invalid && getLangOpts().ObjC1) {
     QualType T = ExDeclType;
     if (const ReferenceType *RT = T->getAs<ReferenceType>())
@@ -12329,6 +12330,7 @@ VarDecl *Sema::BuildExceptionDeclaration(Scope *S,
 #endif
     }
   }
+#endif
 
   VarDecl *ExDecl = VarDecl::Create(Context, CurContext, StartLoc, Loc, Name,
                                     ExDeclType, TInfo, SC_None);

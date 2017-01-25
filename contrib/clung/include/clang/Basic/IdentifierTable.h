@@ -183,6 +183,7 @@ public:
   /// \brief Return the Objective-C keyword ID for the this identifier.
   ///
   /// For example, 'class' will return tok::objc_class if ObjC is enabled.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   tok::ObjCKeywordKind getObjCKeywordID() const {
     if (ObjCOrBuiltinID < tok::NUM_OBJC_KEYWORDS)
       return tok::ObjCKeywordKind(ObjCOrBuiltinID);
@@ -190,6 +191,7 @@ public:
       return tok::objc_not_keyword;
   }
   void setObjCKeywordID(tok::ObjCKeywordKind ID) { ObjCOrBuiltinID = ID; }
+#endif
 
   /// \brief True if setNotBuiltin() was called.
   bool hasRevertedBuiltin() const {

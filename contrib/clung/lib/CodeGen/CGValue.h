@@ -377,7 +377,9 @@ public:
                          AlignmentSource alignSource,
                          llvm::MDNode *TBAAInfo = nullptr) {
     Qualifiers qs = type.getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     qs.setObjCGCAttr(Context.getObjCGCAttrKind(type));
+#endif
 
     LValue R;
     R.LVType = Simple;

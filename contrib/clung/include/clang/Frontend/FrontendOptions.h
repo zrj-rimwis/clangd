@@ -36,6 +36,8 @@ namespace frontend {
     EmitBC,                 ///< Emit a .bc file.
 #ifdef CLANG_ENABLE_HTML // __DragonFly__
     EmitHTML,               ///< Translate input source into HTML.
+#else
+    EmitHTML_disabled,
 #endif
     EmitLLVM,               ///< Emit a .ll file.
     EmitLLVMOnly,           ///< Generate LLVM IR, but do not emit anything.
@@ -54,7 +56,11 @@ namespace frontend {
     PrintPreamble,          ///< Print the "preamble" of the input file
     PrintPreprocessedInput, ///< -E mode.
     RewriteMacros,          ///< Expand macros but not \#includes.
+#ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__ // chedaaa aha!
     RewriteObjC,            ///< ObjC->C Rewriter.
+#else
+    RewriteObjC_disabled,
+#endif
     RewriteTest,            ///< Rewriter playground
     RunAnalysis,            ///< Run one or more source code analyses.
     MigrateSource,          ///< Run migrator.
@@ -67,15 +73,30 @@ enum InputKind {
   IK_Asm,
   IK_C,
   IK_CXX,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   IK_ObjC,
   IK_ObjCXX,
+#else
+  IK_ObjC_disabled,
+  IK_ObjCXX_disabled,
+#endif
   IK_PreprocessedC,
   IK_PreprocessedCXX,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   IK_PreprocessedObjC,
   IK_PreprocessedObjCXX,
+#else
+  IK_PreprocessedObjC_disabled,
+  IK_PreprocessedObjCXX_disabled,
+#endif
   IK_OpenCL,
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   IK_CUDA,
   IK_PreprocessedCuda,
+#else
+  IK_CUDA_disabled,
+  IK_PreprocessedCuda_disabled,
+#endif
   IK_RenderScript,
   IK_AST,
   IK_LLVM_IR

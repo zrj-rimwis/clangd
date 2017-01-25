@@ -210,6 +210,7 @@ ExprResult Parser::ParseInitializerWithPotentialDesignator() {
     // send) or send to 'super', parse this as a message send
     // expression.  We handle C++ and C separately, since C++ requires
     // much more complicated parsing.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false all if, nice riddance
     if  (getLangOpts().ObjC1 && getLangOpts().CPlusPlus) {
       // Send to 'super'.
       if (Tok.is(tok::identifier) && Tok.getIdentifierInfo() == Ident_super &&
@@ -293,6 +294,7 @@ ExprResult Parser::ParseInitializerWithPotentialDesignator() {
         break;
       }
     }
+#endif
 
     // Parse the index expression, if we haven't already gotten one
     // above (which can only happen in Objective-C++).
@@ -313,12 +315,14 @@ ExprResult Parser::ParseInitializerWithPotentialDesignator() {
     // tokens are '...' or ']' or an objc message send.  If this is an objc
     // message send, handle it now.  An objc-message send is the start of
     // an assignment-expression production.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().ObjC1 && Tok.isNot(tok::ellipsis) &&
         Tok.isNot(tok::r_square)) {
       CheckArrayDesignatorSyntax(*this, Tok.getLocation(), Desig);
       return ParseAssignmentExprWithObjCMessageExprStart(
           StartLoc, SourceLocation(), nullptr, Idx.get());
     }
+#endif
 
     // If this is a normal array designator, remember it.
     if (Tok.isNot(tok::ellipsis)) {

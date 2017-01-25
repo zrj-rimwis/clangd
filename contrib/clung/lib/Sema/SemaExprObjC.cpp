@@ -1131,6 +1131,7 @@ ExprResult Sema::BuildObjCEncodeExpression(SourceLocation AtLoc,
   return new (Context) ObjCEncodeExpr(StrTy, EncodedTypeInfo, AtLoc, RParenLoc);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ParseObjCEncodeExpression(SourceLocation AtLoc,
                                            SourceLocation EncodeLoc,
                                            SourceLocation LParenLoc,
@@ -1145,6 +1146,7 @@ ExprResult Sema::ParseObjCEncodeExpression(SourceLocation AtLoc,
 
   return BuildObjCEncodeExpression(AtLoc, TInfo, RParenLoc);
 }
+#endif
 
 static bool HelperToDiagnoseMismatchedMethodsInGlobalPool(Sema &S,
                                                SourceLocation AtLoc,
@@ -3855,6 +3857,7 @@ static bool CheckObjCBridgeCFCast(Sema &S, QualType castType, Expr *castExpr,
   return true;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
 void Sema::CheckTollFreeBridgeCast(QualType castType, Expr *castExpr) {
   if (!getLangOpts().ObjC1)
     return;
@@ -3904,6 +3907,7 @@ void Sema::CheckTollFreeBridgeCast(QualType castType, Expr *castExpr) {
                                                    HasObjCBridgeMutableAttr, true);
   }
 }
+#endif
 
 void Sema::CheckObjCBridgeRelatedCast(QualType castType, Expr *castExpr) {
   QualType SrcType = castExpr->getType();
@@ -3926,6 +3930,7 @@ void Sema::CheckObjCBridgeRelatedCast(QualType castType, Expr *castExpr) {
                                     castType, SrcType, castExpr);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
 bool Sema::CheckTollFreeBridgeStaticCast(QualType castType, Expr *castExpr,
                                          CastKind &Kind) {
   if (!getLangOpts().ObjC1)
@@ -3942,6 +3947,7 @@ bool Sema::CheckTollFreeBridgeStaticCast(QualType castType, Expr *castExpr,
   }
   return false;
 }
+#endif
 
 bool Sema::checkObjCBridgeRelatedComponents(SourceLocation Loc,
                                             QualType DestType, QualType SrcType,
@@ -4445,6 +4451,7 @@ ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,
   return Result;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnObjCBridgedCast(Scope *S,
                                       SourceLocation LParenLoc,
                                       ObjCBridgeCastKind Kind,
@@ -4461,3 +4468,4 @@ ExprResult Sema::ActOnObjCBridgedCast(Scope *S,
   return BuildObjCBridgedCast(LParenLoc, Kind, BridgeKeywordLoc, TSInfo, 
                               SubExpr);
 }
+#endif

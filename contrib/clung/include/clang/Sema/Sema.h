@@ -2050,11 +2050,13 @@ public:
   bool SpecialMemberIsTrivial(CXXMethodDecl *MD, CXXSpecialMember CSM,
                               bool Diagnose = false);
   CXXSpecialMember getSpecialMember(const CXXMethodDecl *MD);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ActOnLastBitfield(SourceLocation DeclStart,
                          SmallVectorImpl<Decl *> &AllIvarDecls);
   Decl *ActOnIvar(Scope *S, SourceLocation DeclStart,
                   Declarator &D, Expr *BitfieldWidth,
                   tok::ObjCKeywordKind visibility);
+#endif
 
   // This is used for both record definitions and ObjC interface declarations.
   void ActOnFields(Scope* S, SourceLocation RecLoc, Decl *TagDecl,
@@ -2321,8 +2323,10 @@ public:
   bool IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
                            bool InOverloadResolution,
                            QualType& ConvertedType, bool &IncompatibleObjC);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
   bool isObjCPointerConversion(QualType FromType, QualType ToType,
                                QualType& ConvertedType, bool &IncompatibleObjC);
+#endif
   bool isObjCWritebackConversion(QualType FromType, QualType ToType,
                                  QualType &ConvertedType);
   bool IsBlockPointerConversion(QualType FromType, QualType ToType,
@@ -3154,9 +3158,11 @@ public:
 
   /// DefaultSynthesizeProperties - This routine default synthesizes all
   /// properties which must be synthesized in the class's \@implementation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
   void DefaultSynthesizeProperties (Scope *S, ObjCImplDecl* IMPDecl,
                                     ObjCInterfaceDecl *IDecl);
   void DefaultSynthesizeProperties(Scope *S, Decl *D);
+#endif
 
   /// IvarBacksCurrentMethodAccessor - This routine returns 'true' if 'IV' is
   /// an ivar synthesized for 'Method' and 'Method' is a property accessor
@@ -5308,11 +5314,13 @@ public:
                                     CXXConversionDecl *Method,
                                     bool HadMultipleCandidates);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCEncodeExpression(SourceLocation AtLoc,
                                        SourceLocation EncodeLoc,
                                        SourceLocation LParenLoc,
                                        ParsedType Ty,
                                        SourceLocation RParenLoc);
+#endif
 
   /// ParseObjCSelectorExpression - Build selector expression for \@selector
   ExprResult ParseObjCSelectorExpression(Selector Sel,
@@ -7618,6 +7626,7 @@ public:
     AttributeList *ArgAttrs;
   };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnMethodDeclaration(
     Scope *S,
     SourceLocation BeginLoc, // location of the + or -.
@@ -7631,6 +7640,7 @@ public:
     DeclaratorChunk::ParamInfo *CParamInfo, unsigned CNumArgs, // c-style args
     AttributeList *AttrList, tok::ObjCKeywordKind MethodImplKind,
     bool isVariadic, bool MethodDefinition);
+#endif
 
   ObjCMethodDecl *LookupMethodInQualifiedType(Selector Sel,
                                               const ObjCObjectPointerType *OPT,
@@ -7744,6 +7754,7 @@ public:
                                   TypeSourceInfo *TSInfo,
                                   Expr *SubExpr);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ActOnObjCBridgedCast(Scope *S,
                                   SourceLocation LParenLoc,
                                   ObjCBridgeCastKind Kind,
@@ -7751,13 +7762,18 @@ public:
                                   ParsedType Type,
                                   SourceLocation RParenLoc,
                                   Expr *SubExpr);
+#endif
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
   void CheckTollFreeBridgeCast(QualType castType, Expr *castExpr);
+#endif
   
   void CheckObjCBridgeRelatedCast(QualType castType, Expr *castExpr);
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
   bool CheckTollFreeBridgeStaticCast(QualType castType, Expr *castExpr,
                                      CastKind &Kind);
+#endif
   
   bool checkObjCBridgeRelatedComponents(SourceLocation Loc,
                                         QualType DestType, QualType SrcType,
@@ -7771,8 +7787,10 @@ public:
                                          QualType DestType, QualType SrcType,
                                          Expr *&SrcExpr, bool Diagnose = true);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC and just returns
   bool ConversionToObjCStringLiteralCheck(QualType DstType, Expr *&SrcExpr,
                                           bool Diagnose = true);
+#endif
 
   bool checkInitMethod(ObjCMethodDecl *method, QualType receiverTypeIfCall);
 

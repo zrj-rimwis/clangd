@@ -3013,11 +3013,13 @@ LValue CodeGenFunction::EmitArraySubscriptExpr(const ArraySubscriptExpr *E,
 
   // TODO: Preserve/extend path TBAA metadata?
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and not needed
   if (getLangOpts().ObjC1 &&
       getLangOpts().getGC() != LangOptions::NonGC) {
     LV.setNonGC(!E->isOBJCGCCandidate(getContext()));
     setObjCGCLValueClass(getContext(), E, LV);
   }
+#endif
   return LV;
 }
 

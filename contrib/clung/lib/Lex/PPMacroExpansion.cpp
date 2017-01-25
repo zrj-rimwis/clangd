@@ -1108,11 +1108,13 @@ static bool HasFeature(const Preprocessor &PP, StringRef Feature) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_arc_weak", LangOpts.ObjCWeak)
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       .Case("objc_default_synthesize_properties", LangOpts.ObjC2)
       .Case("objc_fixed_enum", LangOpts.ObjC2)
       .Case("objc_instancetype", LangOpts.ObjC2)
       .Case("objc_kindof", LangOpts.ObjC2)
       .Case("objc_modules", LangOpts.ObjC2 && LangOpts.Modules)
+#endif
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_nonfragile_abi", LangOpts.ObjCRuntime.isNonFragile())
 #endif
@@ -1129,16 +1131,20 @@ static bool HasFeature(const Preprocessor &PP, StringRef Feature) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
       .Case("objc_subscripting", LangOpts.ObjCRuntime.isNonFragile())
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       .Case("objc_array_literals", LangOpts.ObjC2)
       .Case("objc_dictionary_literals", LangOpts.ObjC2)
       .Case("objc_boxed_expressions", LangOpts.ObjC2)
       .Case("objc_boxed_nsvalue_expressions", LangOpts.ObjC2)
+#endif
       .Case("arc_cf_code_audited", true)
       .Case("objc_bridge_id", true)
       .Case("objc_bridge_id_on_typedefs", true)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX wth with ^^^, why true??
       .Case("objc_generics", LangOpts.ObjC2)
       .Case("objc_generics_variance", LangOpts.ObjC2)
       .Case("objc_class_property", LangOpts.ObjC2)
+#endif
       // C11 features
       .Case("c_alignas", LangOpts.C11)
       .Case("c_alignof", LangOpts.C11)

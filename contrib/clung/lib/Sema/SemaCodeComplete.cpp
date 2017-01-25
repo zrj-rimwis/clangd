@@ -1058,10 +1058,12 @@ bool ResultBuilder::IsOrdinaryName(const NamedDecl *ND) const {
   unsigned IDNS = Decl::IDNS_Ordinary | Decl::IDNS_LocalExtern;
   if (SemaRef.getLangOpts().CPlusPlus)
     IDNS |= Decl::IDNS_Tag | Decl::IDNS_Namespace | Decl::IDNS_Member;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   else if (SemaRef.getLangOpts().ObjC1) {
     if (isa<ObjCIvarDecl>(ND))
       return true;
   }
+#endif
   
   return ND->getIdentifierNamespace() & IDNS;
 }
@@ -1076,10 +1078,12 @@ bool ResultBuilder::IsOrdinaryNonTypeName(const NamedDecl *ND) const {
   unsigned IDNS = Decl::IDNS_Ordinary | Decl::IDNS_LocalExtern;
   if (SemaRef.getLangOpts().CPlusPlus)
     IDNS |= Decl::IDNS_Tag | Decl::IDNS_Namespace | Decl::IDNS_Member;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   else if (SemaRef.getLangOpts().ObjC1) {
     if (isa<ObjCIvarDecl>(ND))
       return true;
   }
+#endif
  
   return ND->getIdentifierNamespace() & IDNS;
 }
@@ -1311,7 +1315,11 @@ static void AddTypeSpecifierResults(const LangOptions &LangOpts,
   if (LangOpts.CPlusPlus) {
     // C++-specific
     Results.AddResult(Result("bool", CCP_Type + 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume false
                              (LangOpts.ObjC1? CCD_bool_in_ObjC : 0)));
+#else
+                             0));
+#endif
     Results.AddResult(Result("class", CCP_Type));
     Results.AddResult(Result("wchar_t", CCP_Type));
     
@@ -1456,7 +1464,11 @@ static bool WantTypesInContext(Sema::ParserCompletionContext CCC,
     return false;
     
   case Sema::PCC_ForInit:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     return LangOpts.CPlusPlus || LangOpts.ObjC1 || LangOpts.C99;
+#else
+    return LangOpts.CPlusPlus || false || LangOpts.C99;
+#endif
   }
 
   llvm_unreachable("Invalid ParserCompletionContext!");
@@ -1583,8 +1595,10 @@ static void AddOrdinaryNameResults(Sema::ParserCompletionContext CCC,
       }
     }
       
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (SemaRef.getLangOpts().ObjC1)
       AddObjCTopLevelResults(Results, true);
+#endif
       
     AddTypedefResult(Results);
     // Fall through
@@ -1687,8 +1701,10 @@ static void AddOrdinaryNameResults(Sema::ParserCompletionContext CCC,
       Builder.AddChunk(CodeCompletionString::CK_RightBrace);
       Results.AddResult(Result(Builder.TakeString()));
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (SemaRef.getLangOpts().ObjC1)
       AddObjCStatementResults(Results, true);
+#endif
     
     if (Results.includeCodePatterns()) {
       // if (condition) { statements }
@@ -2011,6 +2027,7 @@ static void AddOrdinaryNameResults(Sema::ParserCompletionContext CCC,
       }
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (SemaRef.getLangOpts().ObjC1) {
       // Add "super", if we're in an Objective-C class with a superclass.
       if (ObjCMethodDecl *Method = SemaRef.getCurMethodDecl()) {
@@ -2030,6 +2047,7 @@ static void AddOrdinaryNameResults(Sema::ParserCompletionContext CCC,
 
       AddObjCExpressionResults(Results, true);
     }
+#endif
 
     if (SemaRef.getLangOpts().C11) {
       // _Alignof
@@ -2120,8 +2138,14 @@ static void MaybeAddSentinel(Preprocessor &PP,
                              CodeCompletionBuilder &Result) {
   if (SentinelAttr *Sentinel = FunctionOrMethod->getAttr<SentinelAttr>())
     if (Sentinel->getSentinel() == 0) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && smth
       if (PP.getLangOpts().ObjC1 && PP.isMacroDefined("nil"))
         Result.AddTextChunk(", nil");
+#else
+      if (false) {
+        /* dummy */
+      }
+#endif
       else if (PP.isMacroDefined("NULL"))
         Result.AddTextChunk(", NULL");
       else
@@ -3016,7 +3040,11 @@ unsigned clang::getMacroUsagePriority(StringRef MacroName,
     Priority = CCP_Constant;
   // Treat "bool" as a type.
   else if (MacroName.equals("bool"))
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     Priority = CCP_Type + (LangOpts.ObjC1? CCD_bool_in_ObjC : 0);
+#else
+    Priority = CCP_Type + 0;
+#endif
     
   
   return Priority;
@@ -3180,7 +3208,11 @@ static enum CodeCompletionContext::Kind mapCodeCompletionContext(Sema &S,
 
   case Sema::PCC_ForInit:
     if (S.getLangOpts().CPlusPlus || S.getLangOpts().C99 ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
         S.getLangOpts().ObjC1)
+#else
+        false)
+#endif
       return CodeCompletionContext::CCC_ParenthesizedExpression;
     else
       return CodeCompletionContext::CCC_Expression;
@@ -3549,8 +3581,10 @@ void Sema::CodeCompleteExpression(Scope *S,
 void Sema::CodeCompletePostfixExpression(Scope *S, ExprResult E) {
   if (E.isInvalid())
     CodeCompleteOrdinaryName(S, PCC_RecoveryInFunction);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   else if (getLangOpts().ObjC1)
     CodeCompleteObjCInstanceMessage(S, E.get(), None, false);
+#endif
 }
 
 /// \brief The set of properties that have already been added, referenced by
@@ -4614,6 +4648,7 @@ static void AddObjCImplementationResults(const LangOptions &LangOpts,
   
   CodeCompletionBuilder Builder(Results.getAllocator(),
                                 Results.getCodeCompletionTUInfo());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC2) {
     // @dynamic
     Builder.AddTypedTextChunk(OBJC_AT_KEYWORD_NAME(NeedAt,"dynamic"));
@@ -4627,6 +4662,7 @@ static void AddObjCImplementationResults(const LangOptions &LangOpts,
     Builder.AddPlaceholderChunk("property");
     Results.AddResult(Result(Builder.TakeString()));
   }  
+#endif
 }
 
 static void AddObjCInterfaceResults(const LangOptions &LangOpts,
@@ -4637,6 +4673,7 @@ static void AddObjCInterfaceResults(const LangOptions &LangOpts,
   // Since we have an interface or protocol, we can end it.
   Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"end")));
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC2) {
     // @property
     Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"property")));
@@ -4647,6 +4684,7 @@ static void AddObjCInterfaceResults(const LangOptions &LangOpts,
     // @optional
     Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"optional")));
   }
+#endif
 }
 
 static void AddObjCTopLevelResults(ResultBuilder &Results, bool NeedAt) {
@@ -4834,8 +4872,10 @@ static void AddObjCVisibilityResults(const LangOptions &LangOpts,
   Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"private")));
   Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"protected")));
   Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"public")));
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LangOpts.ObjC2)
     Results.AddResult(Result(OBJC_AT_KEYWORD_NAME(NeedAt,"package")));
+#endif
 }
 
 void Sema::CodeCompleteObjCAtVisibility(Scope *S) {
@@ -7190,6 +7230,7 @@ void Sema::CodeCompleteObjCMethodDecl(Scope *S,
 
   // Add Key-Value-Coding and Key-Value-Observing accessor methods for all of 
   // the properties in this class and its categories.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (Context.getLangOpts().ObjC2) {
     SmallVector<ObjCContainerDecl *, 4> Containers;
     Containers.push_back(SearchDecl);
@@ -7215,6 +7256,7 @@ void Sema::CodeCompleteObjCMethodDecl(Scope *S,
         AddObjCKeyValueCompletions(P, IsInstanceMethod, ReturnType, Context, 
                                    KnownSelectors, Results);
   }
+#endif
   
   Results.ExitScope();
   
@@ -7402,6 +7444,7 @@ void Sema::CodeCompletePreprocessorDirective(bool InConditional) {
   Builder.AddPlaceholderChunk("arguments");
   Results.AddResult(Builder.TakeString());
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1) {
     // #import "header"
     Builder.AddTypedTextChunk("import");
@@ -7419,6 +7462,7 @@ void Sema::CodeCompletePreprocessorDirective(bool InConditional) {
     Builder.AddTextChunk(">");
     Results.AddResult(Builder.TakeString());
   }
+#endif
   
   // #include_next "header"
   Builder.AddTypedTextChunk("include_next");

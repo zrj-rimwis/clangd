@@ -33,17 +33,21 @@ using namespace clang;
 //===----------------------------------------------------------------------===//
 
 /// isObjCAtKeyword - Return true if we have an ObjC keyword identifier.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 bool Token::isObjCAtKeyword(tok::ObjCKeywordKind objcKey) const {
   if (IdentifierInfo *II = getIdentifierInfo())
     return II->getObjCKeywordID() == objcKey;
   return false;
 }
+#endif
 
 /// getObjCKeywordID - Return the ObjC keyword kind.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume should not be used
 tok::ObjCKeywordKind Token::getObjCKeywordID() const {
   IdentifierInfo *specId = getIdentifierInfo();
   return specId ? specId->getObjCKeywordID() : tok::objc_not_keyword;
 }
+#endif
 
 
 //===----------------------------------------------------------------------===//
@@ -3603,9 +3607,11 @@ LexNextToken:
 
   case '@':
     // Objective C support.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // wth is that??
     if (CurPtr[-1] == '@' && LangOpts.ObjC1)
       Kind = tok::at;
     else
+#endif
       Kind = tok::unknown;
     break;
 

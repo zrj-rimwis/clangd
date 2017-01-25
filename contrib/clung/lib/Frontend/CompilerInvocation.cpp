@@ -1150,8 +1150,10 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
       Opts.ProgramAction = frontend::PrintPreprocessedInput; break;
     case OPT_rewrite_macros:
       Opts.ProgramAction = frontend::RewriteMacros; break;
+#ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__
     case OPT_rewrite_objc:
       Opts.ProgramAction = frontend::RewriteObjC; break;
+#endif
     case OPT_rewrite_test:
       Opts.ProgramAction = frontend::RewriteTest; break;
     case OPT_analyze:
@@ -1311,21 +1313,31 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
       .Case("cuda", IK_CUDA)
 #endif
       .Case("c++", IK_CXX)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       .Case("objective-c", IK_ObjC)
       .Case("objective-c++", IK_ObjCXX)
+#endif
       .Case("cpp-output", IK_PreprocessedC)
       .Case("assembler-with-cpp", IK_Asm)
       .Case("c++-cpp-output", IK_PreprocessedCXX)
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       .Case("cuda-cpp-output", IK_PreprocessedCuda)
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       .Case("objective-c-cpp-output", IK_PreprocessedObjC)
       .Case("objc-cpp-output", IK_PreprocessedObjC)
       .Case("objective-c++-cpp-output", IK_PreprocessedObjCXX)
       .Case("objc++-cpp-output", IK_PreprocessedObjCXX)
+#endif
       .Case("c-header", IK_C)
       .Case("cl-header", IK_OpenCL)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       .Case("objective-c-header", IK_ObjC)
+#endif
       .Case("c++-header", IK_CXX)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       .Case("objective-c++-header", IK_ObjCXX)
+#endif
       .Cases("ast", "pcm", IK_AST)
       .Case("ir", IK_LLVM_IR)
       .Case("renderscript", IK_RenderScript)
@@ -1502,11 +1514,13 @@ void CompilerInvocation::setLangDefaults(LangOptions &Opts, InputKind IK,
   // input kind + language standard.
   if (IK == IK_Asm) {
     Opts.AsmPreprocessor = 1;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (IK == IK_ObjC ||
              IK == IK_ObjCXX ||
              IK == IK_PreprocessedObjC ||
              IK == IK_PreprocessedObjCXX) {
     Opts.ObjC1 = Opts.ObjC2 = 1;
+#endif
   }
 
   if (LangStd == LangStandard::lang_unspecified) {
@@ -1528,8 +1542,10 @@ void CompilerInvocation::setLangDefaults(LangOptions &Opts, InputKind IK,
     case IK_Asm:
     case IK_C:
     case IK_PreprocessedC:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     case IK_ObjC:
     case IK_PreprocessedObjC:
+#endif
       // The PS4 uses C99 as the default C standard.
       if (T.isPS4())
         LangStd = LangStandard::lang_gnu99;
@@ -1538,8 +1554,10 @@ void CompilerInvocation::setLangDefaults(LangOptions &Opts, InputKind IK,
       break;
     case IK_CXX:
     case IK_PreprocessedCXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     case IK_ObjCXX:
     case IK_PreprocessedObjCXX:
+#endif
       LangStd = LangStandard::lang_gnucxx98;
       break;
     case IK_RenderScript:
@@ -1655,20 +1673,36 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
       const LangStandard &Std = LangStandard::getLangStandardForKind(LangStd);
       switch (IK) {
       case IK_C:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       case IK_ObjC:
+#endif
       case IK_PreprocessedC:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       case IK_PreprocessedObjC:
+#endif
         if (!(Std.isC89() || Std.isC99()))
           Diags.Report(diag::err_drv_argument_not_allowed_with)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
             << A->getAsString(Args) << "C/ObjC";
+#else
+            << A->getAsString(Args) << "C";
+#endif
         break;
       case IK_CXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       case IK_ObjCXX:
+#endif
       case IK_PreprocessedCXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
       case IK_PreprocessedObjCXX:
+#endif
         if (!Std.isCPlusPlus())
           Diags.Report(diag::err_drv_argument_not_allowed_with)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
             << A->getAsString(Args) << "C++/ObjC++";
+#else
+            << A->getAsString(Args) << "C++";
+#endif
         break;
       case IK_OpenCL:
         if (!isOpenCL(LangStd))
@@ -1753,6 +1787,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
     Opts.CUDADeviceApproxTranscendentals = 1;
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, yay!!1
   if (Opts.ObjC1) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
     if (Arg *arg = Args.getLastArg(OPT_fobjc_runtime_EQ)) {
@@ -1815,11 +1850,16 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
         (Opts.ObjCRuntime.getKind() == ObjCRuntime::FragileMacOSX);
 #endif
   }
+#endif
 
   if (Args.hasArg(OPT_fgnu89_inline)) {
     if (Opts.CPlusPlus)
       Diags.Report(diag::err_drv_argument_not_allowed_with) << "-fgnu89-inline"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
                                                             << "C++/ObjC++";
+#else
+                                                            << "C++";
+#endif
     else
       Opts.GNUInline = 1;
   }
@@ -1831,8 +1871,10 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
       Opts.AppleKext = 1;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   if (Args.hasArg(OPT_print_ivar_layout))
     Opts.ObjCGCBitmapPrint = 1;
+#endif
   if (Args.hasArg(OPT_fno_constant_cfstrings))
     Opts.NoConstantCFStrings = 1;
 
@@ -1922,7 +1964,9 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   if (Args.hasArg(OPT_fno_threadsafe_statics))
     Opts.ThreadsafeStatics = 0;
   Opts.Exceptions = Args.hasArg(OPT_fexceptions);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   Opts.ObjCExceptions = Args.hasArg(OPT_fobjc_exceptions);
+#endif
   Opts.CXXExceptions = Args.hasArg(OPT_fcxx_exceptions);
   Opts.SjLjExceptions = Args.hasArg(OPT_fsjlj_exceptions);
   Opts.ExternCNoUnwind = Args.hasArg(OPT_fexternc_nounwind);
@@ -1977,10 +2021,14 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 #endif
   Opts.ObjCConstantStringClass =
     Args.getLastArgValue(OPT_fconstant_string_class);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume none
   Opts.ObjCDefaultSynthProperties =
     !Args.hasArg(OPT_disable_objc_default_synthesize_properties);
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   Opts.EncodeExtendedBlockSig =
     Args.hasArg(OPT_fencode_extended_block_signature);
+#endif
   Opts.EmitAllDecls = Args.hasArg(OPT_femit_all_decls);
   Opts.PackStruct = getLastArgIntValue(Args, OPT_fpack_struct_EQ, 0, Diags);
   Opts.MaxTypeAlign = getLastArgIntValue(Args, OPT_fmax_type_align_EQ, 0, Diags);
@@ -2006,7 +2054,9 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
 #endif
   Opts.ApplePragmaPack = Args.hasArg(OPT_fapple_pragma_pack);
   Opts.CurrentModule = Args.getLastArgValue(OPT_fmodule_name_EQ);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   Opts.AppExt = Args.hasArg(OPT_fapplication_extension);
+#endif
   Opts.ModuleFeatures = Args.getAllArgValues(OPT_fmodule_feature);
   std::sort(Opts.ModuleFeatures.begin(), Opts.ModuleFeatures.end());
   Opts.NativeHalfType |= Args.hasArg(OPT_fnative_half_type);
@@ -2334,7 +2384,9 @@ static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
   case frontend::VerifyPCH:
   case frontend::PluginAction:
   case frontend::PrintDeclContext:
+#ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__
   case frontend::RewriteObjC:
+#endif
   case frontend::RewriteTest:
   case frontend::RunAnalysis:
   case frontend::MigrateSource:
@@ -2448,8 +2500,10 @@ bool CompilerInvocation::CreateFromArgs(CompilerInvocation &Res,
     // Other LangOpts are only initialzed when the input is not AST or LLVM IR.
     ParseLangArgs(LangOpts, Args, DashX, Res.getTargetOpts(),
       Res.getPreprocessorOpts(), Diags);
+#ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__
     if (Res.getFrontendOpts().ProgramAction == frontend::RewriteObjC)
       LangOpts.ObjCExceptions = 1;
+#endif
   }
 
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__

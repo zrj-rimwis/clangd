@@ -3870,12 +3870,14 @@ static TypeSourceInfo *GetFullTypeForDeclarator(TypeProcessingState &state,
       inferPointerNullability(SimplePointerKind::Pointer, DeclType.Loc,
                               DeclType.getAttrListRef());
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (LangOpts.ObjC1 && T->getAs<ObjCObjectType>()) {
         T = Context.getObjCObjectPointerType(T);
         if (DeclType.Ptr.TypeQuals)
           T = S.BuildQualifiedType(T, DeclType.Loc, DeclType.Ptr.TypeQuals);
         break;
       }
+#endif
 
       // OpenCL v2.0 s6.9b - Pointer to image/sampler cannot be used.
       // OpenCL v2.0 s6.13.16.1 - Pointer to pipe cannot be used.
@@ -4729,11 +4731,13 @@ TypeSourceInfo *Sema::GetTypeForDeclaratorCast(Declarator &D, QualType FromTy) {
   TypeSourceInfo *ReturnTypeInfo = nullptr;
   QualType declSpecTy = GetDeclSpecTypeForDeclarator(state, ReturnTypeInfo);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().ObjC1) {
     Qualifiers::ObjCLifetime ownership = Context.getInnerObjCOwnership(FromTy);
     if (ownership != Qualifiers::OCL_None)
       transferARCOwnership(state, declSpecTy, ownership);
   }
+#endif
 
   return GetFullTypeForDeclarator(state, declSpecTy, ReturnTypeInfo);
 }

@@ -4283,6 +4283,7 @@ bool ASTContext::UnwrapSimilarPointerTypes(QualType &T1, QualType &T2) {
     return true;
   }
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   if (getLangOpts().ObjC1) {
     const ObjCObjectPointerType *T1OPType = T1->getAs<ObjCObjectPointerType>(),
                                 *T2OPType = T2->getAs<ObjCObjectPointerType>();
@@ -4292,8 +4293,11 @@ bool ASTContext::UnwrapSimilarPointerTypes(QualType &T1, QualType &T2) {
       return true;
     }
   }
+#endif
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // for future reference
   // FIXME: Block pointers, too?
+#endif
   
   return false;
 }
@@ -5089,6 +5093,7 @@ bool ASTContext::BlockRequiresCopying(QualType Ty,
           Ty->isObjCObjectPointerType());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, only for OBJC
 bool ASTContext::getByrefLifetime(QualType Ty,
                               Qualifiers::ObjCLifetime &LifeTime,
                               bool &HasByrefExtendedLayout) const {
@@ -5111,6 +5116,7 @@ bool ASTContext::getByrefLifetime(QualType Ty,
   }
   return true;
 }
+#endif
 
 TypedefDecl *ASTContext::getObjCInstanceTypeDecl() {
   if (!ObjCInstanceTypeDecl)
@@ -5190,11 +5196,13 @@ std::string ASTContext::getObjCEncodingForBlock(const BlockExpr *Expr) const {
   QualType BlockTy =
       Expr->getType()->getAs<BlockPointerType>()->getPointeeType();
   // Encode result type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getLangOpts().EncodeExtendedBlockSig)
     getObjCEncodingForMethodParameter(
         Decl::OBJC_TQ_None, BlockTy->getAs<FunctionType>()->getReturnType(), S,
         true /*Extended*/);
   else
+#endif
     getObjCEncodingForType(BlockTy->getAs<FunctionType>()->getReturnType(), S);
   // Compute size of all parameters.
   // Start with computing size of a pointer in number of bytes.
@@ -5227,10 +5235,12 @@ std::string ASTContext::getObjCEncodingForBlock(const BlockExpr *Expr) const {
         PType = PVDecl->getType();
     } else if (PType->isFunctionType())
       PType = PVDecl->getType();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (getLangOpts().EncodeExtendedBlockSig)
       getObjCEncodingForMethodParameter(Decl::OBJC_TQ_None, PType,
                                       S, true /*Extended*/);
     else
+#endif
       getObjCEncodingForType(PType, S);
     S += charUnitsToString(ParmOffset);
     ParmOffset += getObjCEncodingTypeSize(PType);
@@ -6733,6 +6743,7 @@ CanQualType ASTContext::getFromTargetType(unsigned Type) const {
 /// getObjCGCAttr - Returns one of GCNone, Weak or Strong objc's
 /// garbage collection attribute.
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, assert(ObjC1)
 Qualifiers::GC ASTContext::getObjCGCAttrKind(QualType Ty) const {
   if (getLangOpts().getGC() == LangOptions::NonGC)
     return Qualifiers::GCNone;
@@ -6760,6 +6771,7 @@ Qualifiers::GC ASTContext::getObjCGCAttrKind(QualType Ty) const {
   }
   return GCAttrs;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 //                        Type Compatibility Testing

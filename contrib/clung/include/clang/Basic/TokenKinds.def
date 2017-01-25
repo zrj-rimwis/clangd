@@ -657,6 +657,7 @@ TESTING_KEYWORD(__unknown_anytype , KEYALL)
 // These have meaning after an '@' in Objective-C mode. These define enums in
 // the tok::objc_* namespace.
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 OBJC1_AT_KEYWORD(not_keyword)
 OBJC1_AT_KEYWORD(class)
 OBJC1_AT_KEYWORD(compatibility_alias)
@@ -676,7 +677,9 @@ OBJC1_AT_KEYWORD(catch)
 OBJC1_AT_KEYWORD(finally)
 OBJC1_AT_KEYWORD(synchronized)
 OBJC1_AT_KEYWORD(autoreleasepool)
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 OBJC2_AT_KEYWORD(property)
 OBJC2_AT_KEYWORD(package)
 OBJC2_AT_KEYWORD(required)
@@ -685,6 +688,7 @@ OBJC2_AT_KEYWORD(synthesize)
 OBJC2_AT_KEYWORD(dynamic)
 OBJC2_AT_KEYWORD(import)
 OBJC2_AT_KEYWORD(available)
+#endif
 
 // TODO: What to do about context-sensitive keywords like:
 //       bycopy/byref/in/inout/oneway/out?
