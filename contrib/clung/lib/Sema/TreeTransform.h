@@ -2834,19 +2834,23 @@ public:
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
   ExprResult RebuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
     return getSema().BuildObjCBoxedExpr(SR, ValueExpr);
   }
+#endif
 
   /// \brief Build a new Objective-C array literal.
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCArrayLiteral(SourceRange Range,
                                      Expr **Elements, unsigned NumElements) {
     return getSema().BuildObjCArrayLiteral(Range,
                                            MultiExprArg(Elements, NumElements));
   }
+#endif
 
   ExprResult RebuildObjCSubscriptRefExpr(SourceLocation RB,
                                          Expr *Base, Expr *Key,
@@ -2860,10 +2864,12 @@ public:
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCDictionaryLiteral(SourceRange Range,
                               MutableArrayRef<ObjCDictionaryElement> Elements) {
     return getSema().BuildObjCDictionaryLiteral(Range, Elements);
   }
+#endif
 
   /// \brief Build a new Objective-C \@encode expression.
   ///
@@ -10937,6 +10943,7 @@ TreeTransform<Derived>::TransformObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
   return E;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCBoxedExpr(ObjCBoxedExpr *E) {
@@ -10950,7 +10957,9 @@ TreeTransform<Derived>::TransformObjCBoxedExpr(ObjCBoxedExpr *E) {
 
   return getDerived().RebuildObjCBoxedExpr(E->getSourceRange(), SubExpr.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCArrayLiteral(ObjCArrayLiteral *E) {
@@ -10968,7 +10977,9 @@ TreeTransform<Derived>::TransformObjCArrayLiteral(ObjCArrayLiteral *E) {
                                               Elements.data(),
                                               Elements.size());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCDictionaryLiteral(
@@ -11092,6 +11103,7 @@ TreeTransform<Derived>::TransformObjCDictionaryLiteral(
   return getDerived().RebuildObjCDictionaryLiteral(E->getSourceRange(),
                                                    Elements);
 }
+#endif
 
 template<typename Derived>
 ExprResult
@@ -11120,6 +11132,7 @@ TransformObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   return getDerived().TransformExpr(E->getSubExpr());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult TreeTransform<Derived>::
 TransformObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
@@ -11141,12 +11154,15 @@ TransformObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
                                       E->getBridgeKeywordLoc(), TSInfo,
                                       Result.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Derived>
 ExprResult TreeTransform<Derived>::TransformObjCAvailabilityCheckExpr(
     ObjCAvailabilityCheckExpr *E) {
   return E;
 }
+#endif
 
 template<typename Derived>
 ExprResult

@@ -626,6 +626,7 @@ VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   Code = serialization::EXPR_OBJC_INDIRECT_COPY_RESTORE;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
   VisitExplicitCastExpr(E);
   Record.AddSourceLocation(E->getLParenLoc());
@@ -633,6 +634,7 @@ void ASTStmtWriter::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
   Record.push_back(E->getBridgeKind()); // FIXME: Stable encoding
   Code = serialization::EXPR_OBJC_BRIDGED_CAST;
 }
+#endif
 
 void ASTStmtWriter::VisitCastExpr(CastExpr *E) {
   VisitExpr(E);
@@ -927,6 +929,7 @@ void ASTStmtWriter::VisitObjCStringLiteral(ObjCStringLiteral *E) {
   Code = serialization::EXPR_OBJC_STRING_LITERAL;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   VisitExpr(E);
   Record.AddStmt(E->getSubExpr());
@@ -934,7 +937,9 @@ void ASTStmtWriter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   Record.AddSourceRange(E->getSourceRange());
   Code = serialization::EXPR_OBJC_BOXED_EXPRESSION;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   VisitExpr(E);
   Record.push_back(E->getNumElements());
@@ -944,7 +949,9 @@ void ASTStmtWriter::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   Record.AddSourceRange(E->getSourceRange());
   Code = serialization::EXPR_OBJC_ARRAY_LITERAL;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
   VisitExpr(E);
   Record.push_back(E->getNumElements());
@@ -966,6 +973,7 @@ void ASTStmtWriter::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
   Record.AddSourceRange(E->getSourceRange());
   Code = serialization::EXPR_OBJC_DICTIONARY_LITERAL;
 }
+#endif
 
 void ASTStmtWriter::VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
   VisitExpr(E);
@@ -1148,12 +1156,14 @@ void ASTStmtWriter::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
   Code = serialization::EXPR_OBJC_BOOL_LITERAL;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAvailabilityCheckExpr(ObjCAvailabilityCheckExpr *E) {
   VisitExpr(E);
   Record.AddSourceRange(E->getSourceRange());
   Record.AddVersionTuple(E->getVersion());
   Code = serialization::EXPR_OBJC_AVAILABILITY_CHECK;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // C++ Expressions and Statements.

@@ -3248,12 +3248,16 @@ recurse:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCSelectorExprClass:
   case Expr::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
+#endif
   case Expr::ObjCSubscriptRefExprClass:
   case Expr::ObjCIndirectCopyRestoreExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
+#endif
   case Expr::OffsetOfExprClass:
   case Expr::PredefinedExprClass:
   case Expr::ShuffleVectorExprClass:
@@ -3678,12 +3682,14 @@ recurse:
     goto recurse;
   }
       
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass: {
     // Mangle ownership casts as a vendor extended operator __bridge, 
     // __bridge_transfer, or __bridge_retain.
     StringRef Kind = cast<ObjCBridgedCastExpr>(E)->getBridgeKindName();
     Out << "v1U" << Kind.size() << Kind;
   }
+#endif
   // Fall through to mangle the cast itself.
       
   case Expr::CStyleCastExprClass:

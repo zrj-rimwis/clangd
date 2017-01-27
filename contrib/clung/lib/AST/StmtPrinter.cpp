@@ -503,10 +503,12 @@ void StmtPrinter::VisitObjCAtThrowStmt(ObjCAtThrowStmt *Node) {
   OS << ";\n";
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAvailabilityCheckExpr(
     ObjCAvailabilityCheckExpr *Node) {
   OS << "@available(...)";
 }
+#endif
 
 void StmtPrinter::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *Node) {
   Indent() << "@synchronized (";
@@ -2439,11 +2441,14 @@ void StmtPrinter::VisitObjCStringLiteral(ObjCStringLiteral *Node) {
   VisitStringLiteral(Node->getString());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   OS << "@";
   Visit(E->getSubExpr());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   OS << "@[ ";
   ObjCArrayLiteral::child_range Ch = E->children();
@@ -2454,7 +2459,9 @@ void StmtPrinter::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   }
   OS << " ]";
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
   OS << "@{ ";
   for (unsigned I = 0, N = E->getNumElements(); I != N; ++I) {
@@ -2470,6 +2477,7 @@ void StmtPrinter::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
   }
   OS << " }";
 }
+#endif
 
 void StmtPrinter::VisitObjCEncodeExpr(ObjCEncodeExpr *Node) {
   OS << "@encode(";
@@ -2534,6 +2542,7 @@ StmtPrinter::VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   PrintExpr(E->getSubExpr());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void
 StmtPrinter::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
   OS << '(' << E->getBridgeKindName();
@@ -2541,6 +2550,7 @@ StmtPrinter::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
   OS << ')';
   PrintExpr(E->getSubExpr());
 }
+#endif
 
 void StmtPrinter::VisitBlockExpr(BlockExpr *Node) {
   BlockDecl *BD = Node->getBlockDecl();

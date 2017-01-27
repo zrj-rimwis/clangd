@@ -183,6 +183,7 @@ ExprResult Parser::ParseAssignmentExpression(TypeCastState isTypeCast) {
 ///
 /// Since this handles full assignment-expression's, it handles postfix
 /// expressions and other binary operators for these expressions as well.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 Parser::ParseAssignmentExprWithObjCMessageExprStart(SourceLocation LBracLoc,
                                                     SourceLocation SuperLoc,
@@ -194,6 +195,7 @@ Parser::ParseAssignmentExprWithObjCMessageExprStart(SourceLocation LBracLoc,
   R = ParsePostfixExpressionSuffix(R);
   return ParseRHSOfBinaryExpression(R, prec::Assignment);
 }
+#endif
 
 
 ExprResult Parser::ParseConstantExpression(TypeCastState isTypeCast) {
@@ -754,9 +756,11 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
   case tok::kw_false:
     return ParseCXXBoolLiteral();
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case tok::kw___objc_yes:
   case tok::kw___objc_no:
       return ParseObjCBoolLiteral();
+#endif
 
   case tok::kw_nullptr:
     Diag(Tok, diag::warn_cxx98_compat_nullptr);
@@ -1034,8 +1038,10 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
   case tok::kw__Generic:   // primary-expression: generic-selection [C11 6.5.1]
     Res = ParseGenericSelectionExpression();
     break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   case tok::kw___builtin_available:
     return ParseAvailabilityCheckExpr(Tok.getLocation());
+#endif
   case tok::kw___builtin_va_arg:
   case tok::kw___builtin_offsetof:
   case tok::kw___builtin_choose_expr:
@@ -2945,13 +2951,16 @@ ExprResult Parser::ParseBlockLiteralExpression() {
 ///
 ///         '__objc_yes'
 ///         '__objc_no'
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Parser::ParseObjCBoolLiteral() {
   tok::TokenKind Kind = Tok.getKind();
   return Actions.ActOnObjCBoolLiteral(ConsumeToken(), Kind);
 }
+#endif
 
 /// Validate availability spec list, emitting diagnostics if necessary. Returns
 /// true if invalid.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool CheckAvailabilitySpecList(Parser &P,
                                       ArrayRef<AvailabilitySpec> AvailSpecs) {
   llvm::SmallSet<StringRef, 4> Platforms;
@@ -2989,12 +2998,14 @@ static bool CheckAvailabilitySpecList(Parser &P,
 
   return !Valid;
 }
+#endif
 
 /// Parse availability query specification.
 ///
 ///  availability-spec:
 ///     '*'
 ///     identifier version-tuple
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Optional<AvailabilitySpec> Parser::ParseAvailabilitySpec() {
   if (Tok.is(tok::star)) {
     return AvailabilitySpec(ConsumeToken());
@@ -3025,14 +3036,12 @@ Optional<AvailabilitySpec> Parser::ParseAvailabilitySpec() {
                             VersionRange.getEnd());
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Parser::ParseAvailabilityCheckExpr(SourceLocation BeginLoc) {
   assert(Tok.is(tok::kw___builtin_available) ||
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
          Tok.isObjCAtKeyword(tok::objc_available));
-#else
-         false);
-#endif
 
   // Eat the available or __builtin_available.
   ConsumeToken();
@@ -3067,3 +3076,4 @@ ExprResult Parser::ParseAvailabilityCheckExpr(SourceLocation BeginLoc) {
   return Actions.ActOnObjCAvailabilityCheckExpr(AvailSpecs, BeginLoc,
                                                 Parens.getCloseLocation());
 }
+#endif

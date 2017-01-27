@@ -16,7 +16,9 @@
 #define LLVM_CLANG_SEMA_SEMA_H
 
 #include "clang/AST/Attr.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/Availability.h"
+#endif
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
@@ -4809,11 +4811,15 @@ public:
 
 
   /// ActOnObjCBoolLiteral - Parse {__objc_yes,__objc_no} literals.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ActOnObjCBoolLiteral(SourceLocation OpLoc, tok::TokenKind Kind);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult
   ActOnObjCAvailabilityCheckExpr(llvm::ArrayRef<AvailabilitySpec> AvailSpecs,
                                  SourceLocation AtLoc, SourceLocation RParen);
+#endif
 
   /// ActOnCXXNullPtrLiteral - Parse 'nullptr'.
   ExprResult ActOnCXXNullPtrLiteral(SourceLocation Loc);
@@ -5279,33 +5285,41 @@ public:
                                            Expr *Src);
 
   // ParseObjCStringLiteral - Parse Objective-C string literals.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCStringLiteral(SourceLocation *AtLocs,
                                     ArrayRef<Expr *> Strings);
+#endif
 
   ExprResult BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S);
 
   /// BuildObjCNumericLiteral - builds an ObjCBoxedExpr AST node for the
   /// numeric literal expression. Type of the expression will be "NSNumber *"
   /// or "id" if NSNumber is unavailable.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number);
   ExprResult ActOnObjCBoolLiteral(SourceLocation AtLoc, SourceLocation ValueLoc,
                                   bool Value);
   ExprResult BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements);
+#endif
 
   /// BuildObjCBoxedExpr - builds an ObjCBoxedExpr AST node for the
   /// '@' prefixed parenthesized expression. The type of the expression will
   /// either be "NSNumber *", "NSString *" or "NSValue *" depending on the type
   /// of ValueType, which is allowed to be a built-in numeric type, "char *",
   /// "const char *" or C structure with attribute 'objc_boxable'.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr);
+#endif
 
   ExprResult BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                           Expr *IndexExpr,
                                           ObjCMethodDecl *getterMethod,
                                           ObjCMethodDecl *setterMethod);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCDictionaryLiteral(SourceRange SR,
                                MutableArrayRef<ObjCDictionaryElement> Elements);
+#endif
 
   ExprResult BuildObjCEncodeExpression(SourceLocation AtLoc,
                                   TypeSourceInfo *EncodedTypeInfo,
@@ -5323,20 +5337,24 @@ public:
 #endif
 
   /// ParseObjCSelectorExpression - Build selector expression for \@selector
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCSelectorExpression(Selector Sel,
                                          SourceLocation AtLoc,
                                          SourceLocation SelLoc,
                                          SourceLocation LParenLoc,
                                          SourceLocation RParenLoc,
                                          bool WarnMultipleSelectors);
+#endif
 
   /// ParseObjCProtocolExpression - Build protocol expression for \@protocol
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCProtocolExpression(IdentifierInfo * ProtocolName,
                                          SourceLocation AtLoc,
                                          SourceLocation ProtoLoc,
                                          SourceLocation LParenLoc,
                                          SourceLocation ProtoIdLoc,
                                          SourceLocation RParenLoc);
+#endif
 
   //===--------------------------------------------------------------------===//
   // C++ Declarations
@@ -7748,11 +7766,13 @@ public:
                                   SourceLocation RBracLoc,
                                   MultiExprArg Args);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCBridgedCast(SourceLocation LParenLoc,
                                   ObjCBridgeCastKind Kind,
                                   SourceLocation BridgeKeywordLoc,
                                   TypeSourceInfo *TSInfo,
                                   Expr *SubExpr);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ActOnObjCBridgedCast(Scope *S,

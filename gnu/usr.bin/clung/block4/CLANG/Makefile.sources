@@ -243,7 +243,6 @@ SRCS+=	ParseAST.cpp \
 	ParseExpr.cpp \
 	ParseExprCXX.cpp \
 	ParseInit.cpp \
-	ParseObjc.cpp \
 	ParseOpenMP.cpp \
 	ParsePragma.cpp \
 	ParseStmt.cpp \

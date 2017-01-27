@@ -176,11 +176,15 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::ObjCSelectorExprClass:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
+#endif
   case Expr::ObjCBoolLiteralExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
+#endif
   case Expr::ParenListExprClass:
   case Expr::SizeOfPackExprClass:
   case Expr::SubstNonTypeTemplateParmPackExprClass:
@@ -331,7 +335,9 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::CXXDynamicCastExprClass:
   case Expr::CXXReinterpretCastExprClass:
   case Expr::CXXConstCastExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass:
+#endif
     // Only in C++ can casts be interesting at all.
     if (!Lang.CPlusPlus) return Cl::CL_PRValue;
     return ClassifyUnnamed(Ctx, cast<ExplicitCastExpr>(E)->getTypeAsWritten());

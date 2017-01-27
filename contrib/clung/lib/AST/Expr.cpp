@@ -2742,7 +2742,9 @@ bool Expr::isConstantInitializer(ASTContext &Ctx, bool IsForRef,
   case CXXStaticCastExprClass:
   case ImplicitCastExprClass:
   case CStyleCastExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCBridgedCastExprClass:
+#endif
   case CXXDynamicCastExprClass:
   case CXXReinterpretCastExprClass:
   case CXXConstCastExprClass: {
@@ -2862,7 +2864,9 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case ObjCStringLiteralClass:
   case ObjCEncodeExprClass:
   case ObjCBoolLiteralExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCAvailabilityCheckExprClass:
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CXXUuidofExprClass:
 #endif
@@ -3055,15 +3059,19 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
     return false;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // ssume not needed
   case ObjCBoxedExprClass:
   case ObjCArrayLiteralClass:
   case ObjCDictionaryLiteralClass:
+#endif
   case ObjCSelectorExprClass:
   case ObjCProtocolExprClass:
   case ObjCIsaExprClass:
   case ObjCIndirectCopyRestoreExprClass:
   case ObjCSubscriptRefExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCBridgedCastExprClass:
+#endif
   case ObjCMessageExprClass:
   case ObjCPropertyRefExprClass:
   // FIXME: Classify these cases better.

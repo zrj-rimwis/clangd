@@ -346,14 +346,21 @@ void Parser::ParseGNUAttributeArgs(IdentifierInfo *AttrName,
   AttributeList::Kind AttrKind =
       AttributeList::getKind(AttrName, ScopeName, Syntax);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   if (AttrKind == AttributeList::AT_Availability) {
     ParseAvailabilityAttribute(*AttrName, AttrNameLoc, Attrs, EndLoc, ScopeName,
                                ScopeLoc, Syntax);
     return;
+#else
+  if (false) {
+    /* dummy */
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   } else if (AttrKind == AttributeList::AT_ObjCBridgeRelated) {
     ParseObjCBridgeRelatedAttribute(*AttrName, AttrNameLoc, Attrs, EndLoc,
                                     ScopeName, ScopeLoc, Syntax);
     return;
+#endif
   } else if (AttrKind == AttributeList::AT_TypeTagForDatatype) {
     ParseTypeTagForDatatypeAttribute(*AttrName, AttrNameLoc, Attrs, EndLoc,
                                      ScopeName, ScopeLoc, Syntax);
@@ -727,9 +734,11 @@ void Parser::ParseNullabilityTypeSpecifiers(ParsedAttributes &attrs) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
 static bool VersionNumberSeparator(const char Separator) {
   return (Separator == '.' || Separator == '_');
 }
+#endif
 
 /// \brief Parse a version number.
 ///
@@ -737,6 +746,7 @@ static bool VersionNumberSeparator(const char Separator) {
 ///   simple-integer
 ///   simple-integer ',' simple-integer
 ///   simple-integer ',' simple-integer ',' simple-integer
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
 VersionTuple Parser::ParseVersionTuple(SourceRange &Range) {
   Range = SourceRange(Tok.getLocation(), Tok.getEndLoc());
 
@@ -847,7 +857,9 @@ VersionTuple Parser::ParseVersionTuple(SourceRange &Range) {
   ConsumeToken();
   return VersionTuple(Major, Minor, Subminor, (AfterMajorSeparator == '_'));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 /// \brief Parse the contents of the "availability" attribute.
 ///
 /// availability-attribute:
@@ -873,6 +885,8 @@ VersionTuple Parser::ParseVersionTuple(SourceRange &Range) {
 ///   'replacement' '=' <string>
 /// opt-message:
 ///   'message' '=' <string>
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
 void Parser::ParseAvailabilityAttribute(IdentifierInfo &Availability,
                                         SourceLocation AvailabilityLoc,
                                         ParsedAttributes &attrs,
@@ -1074,6 +1088,7 @@ void Parser::ParseAvailabilityAttribute(IdentifierInfo &Availability,
                UnavailableLoc, MessageExpr.get(),
                Syntax, StrictLoc, ReplacementExpr.get());
 }
+#endif
 
 /// \brief Parse the contents of the "objc_bridge_related" attribute.
 /// objc_bridge_related '(' related_class ',' opt-class_method ',' opt-instance_method ')'
@@ -1086,6 +1101,7 @@ void Parser::ParseAvailabilityAttribute(IdentifierInfo &Availability,
 /// opt-instance_method:
 ///     Identifier | <empty>
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Parser::ParseObjCBridgeRelatedAttribute(IdentifierInfo &ObjCBridgeRelated,
                                 SourceLocation ObjCBridgeRelatedLoc,
                                 ParsedAttributes &attrs,
@@ -1157,6 +1173,7 @@ void Parser::ParseObjCBridgeRelatedAttribute(IdentifierInfo &ObjCBridgeRelated,
                InstanceMethod,
                Syntax);
 }
+#endif
 
 // Late Parsed Attributes:
 // See other examples of late parsing in lib/Parse/ParseCXXInlineMethods

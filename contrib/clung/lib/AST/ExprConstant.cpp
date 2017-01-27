@@ -5043,8 +5043,10 @@ public:
   bool VisitUnaryAddrOf(const UnaryOperator *E);
   bool VisitObjCStringLiteral(const ObjCStringLiteral *E)
       { return Success(E); }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool VisitObjCBoxedExpr(const ObjCBoxedExpr *E)
       { return Success(E); }
+#endif
   bool VisitAddrLabelExpr(const AddrLabelExpr *E)
       { return Success(E); }
   bool VisitCallExpr(const CallExpr *E);
@@ -9399,9 +9401,11 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::CXXDependentScopeMemberExprClass:
   case Expr::UnresolvedMemberExprClass:
   case Expr::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
+#endif
   case Expr::ObjCEncodeExprClass:
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCSelectorExprClass:
@@ -9410,7 +9414,9 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::ObjCPropertyRefExprClass:
   case Expr::ObjCSubscriptRefExprClass:
   case Expr::ObjCIsaExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
+#endif
   case Expr::ShuffleVectorExprClass:
   case Expr::ConvertVectorExprClass:
   case Expr::BlockExprClass:
@@ -9638,7 +9644,11 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::CXXStaticCastExprClass:
   case Expr::CXXReinterpretCastExprClass:
   case Expr::CXXConstCastExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass: {
+#else
+  {
+#endif
     const Expr *SubExpr = cast<CastExpr>(E)->getSubExpr();
     if (isa<ExplicitCastExpr>(E)) {
       if (const FloatingLiteral *FL

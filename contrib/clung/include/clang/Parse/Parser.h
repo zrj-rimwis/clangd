@@ -14,7 +14,9 @@
 #ifndef LLVM_CLANG_PARSE_PARSER_H
 #define LLVM_CLANG_PARSE_PARSER_H
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/Availability.h"
+#endif
 #include "clang/Basic/OpenMPKinds.h"
 #include "clang/Basic/OperatorPrecedence.h"
 #include "clang/Basic/Specifiers.h"
@@ -876,7 +878,9 @@ public:
 private:
   void SuggestParentheses(SourceLocation Loc, unsigned DK,
                           SourceRange ParenRange);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asssume not needed
   void CheckNestedObjCContexts(SourceLocation AtLoc);
+#endif
 
 public:
 
@@ -1244,7 +1248,9 @@ private:
   void ParseLexedMethodDef(LexedMethod &LM);
   void ParseLexedMemberInitializers(ParsingClass &Class);
   void ParseLexedMemberInitializer(LateParsedMemberInitializer &MI);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, why this one is so hidden?
   void ParseLexedObjCMethodDefs(LexedMethod &LM, bool parseMethod);
+#endif
   bool ConsumeAndStoreFunctionPrologue(CachedTokens &Toks);
   bool ConsumeAndStoreInitializer(CachedTokens &Toks, CachedInitKind CIK);
   bool ConsumeAndStoreConditional(CachedTokens &Toks);
@@ -1296,28 +1302,29 @@ private:
 #endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclGroupPtrTy ParseObjCAtDirectives();
-#endif
   DeclGroupPtrTy ParseObjCAtClassDeclaration(SourceLocation atLoc);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ParseObjCAtInterfaceDeclaration(SourceLocation AtLoc,
                                         ParsedAttributes &prefixAttrs);
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   class ObjCTypeParamListScope;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCTypeParamList *parseObjCTypeParamList();
   ObjCTypeParamList *parseObjCTypeParamListOrProtocolRefs(
       ObjCTypeParamListScope &Scope, SourceLocation &lAngleLoc,
       SmallVectorImpl<IdentifierLocPair> &protocolIdents,
       SourceLocation &rAngleLoc, bool mayBeProtocolList = true);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   void HelperActionsForIvarDeclarations(Decl *interfaceDecl, SourceLocation atLoc,
                                         BalancedDelimiterTracker &T,
                                         SmallVectorImpl<Decl *> &AllIvarDecls,
                                         bool RBraceMissing);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ParseObjCClassInstanceVariables(Decl *interfaceDecl,
                                        tok::ObjCKeywordKind visibility,
                                        SourceLocation atLoc);
-#endif
   bool ParseObjCProtocolReferences(SmallVectorImpl<Decl *> &P,
                                    SmallVectorImpl<SourceLocation> &PLocs,
                                    bool WarnOnDeclarations,
@@ -1325,10 +1332,12 @@ private:
                                    SourceLocation &LAngleLoc,
                                    SourceLocation &EndProtoLoc,
                                    bool consumeLastToken);
+#endif
 
   /// Parse the first angle-bracket-delimited clause for an
   /// Objective-C object or object pointer type, which may be either
   /// type arguments or protocol qualifiers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void parseObjCTypeArgsOrProtocolQualifiers(
          ParsedType baseType,
          SourceLocation &typeArgsLAngleLoc,
@@ -1340,9 +1349,11 @@ private:
          SourceLocation &protocolRAngleLoc,
          bool consumeLastToken,
          bool warnOnIncompleteProtocols);
+#endif
 
   /// Parse either Objective-C type arguments or protocol qualifiers; if the
   /// former, also parse protocol qualifiers afterward.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void parseObjCTypeArgsAndProtocolQualifiers(
          ParsedType baseType,
          SourceLocation &typeArgsLAngleLoc,
@@ -1353,6 +1364,7 @@ private:
          SmallVectorImpl<SourceLocation> &protocolLocs,
          SourceLocation &protocolRAngleLoc,
          bool consumeLastToken);
+#endif
 
   /// Parse a protocol qualifier type such as '<NSCopying>', which is
   /// an anachronistic way of writing 'id<NSCopying>'.
@@ -1362,10 +1374,12 @@ private:
 
   /// Parse Objective-C type arguments and protocol qualifiers, extending the
   /// current type with the parsed result.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   TypeResult parseObjCTypeArgsAndProtocolQualifiers(SourceLocation loc,
                                                     ParsedType type,
                                                     bool consumeLastToken,
                                                     SourceLocation &endLoc);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ParseObjCInterfaceDeclList(tok::ObjCKeywordKind contextKey,
@@ -1409,31 +1423,35 @@ private:
   Decl *ParseObjCPropertyDynamic(SourceLocation atLoc);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   IdentifierInfo *ParseObjCSelectorPiece(SourceLocation &MethodLocation);
+#endif
   // Definitions for Objective-c context sensitive keywords recognition.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum ObjCTypeQual {
     objc_in=0, objc_out, objc_inout, objc_oneway, objc_bycopy, objc_byref,
     objc_nonnull, objc_nullable, objc_null_unspecified,
     objc_NumQuals
   };
   IdentifierInfo *ObjCTypeQuals[objc_NumQuals];
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isTokIdentifier_in() const;
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   ParsedType ParseObjCTypeName(ObjCDeclSpec &DS, Declarator::TheContext Ctx,
                                ParsedAttributes *ParamAttrs);
   void ParseObjCMethodRequirement();
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume should not be used
   Decl *ParseObjCMethodPrototype(
             tok::ObjCKeywordKind MethodImplKind = tok::objc_not_keyword,
             bool MethodDefinition = true);
   Decl *ParseObjCMethodDecl(SourceLocation mLoc, tok::TokenKind mType,
             tok::ObjCKeywordKind MethodImplKind = tok::objc_not_keyword,
             bool MethodDefinition=true);
-#endif
   void ParseObjCPropertyAttribute(ObjCDeclSpec &DS);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ParseObjCMethodDefinition();
@@ -1537,7 +1555,9 @@ private:
 
   ExprResult ParseGenericSelectionExpression();
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, why so misplaced?
   ExprResult ParseObjCBoolLiteral();
+#endif
 
   ExprResult ParseFoldExpression(ExprResult LHS, BalancedDelimiterTracker &T);
 
@@ -1681,7 +1701,6 @@ private:
   // Objective-C Expressions
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCAtExpression(SourceLocation AtLocation);
-#endif
   ExprResult ParseObjCStringLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCCharacterLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCNumericLiteral(SourceLocation AtLoc);
@@ -1689,15 +1708,13 @@ private:
   ExprResult ParseObjCArrayLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCDictionaryLiteral(SourceLocation AtLoc);
   ExprResult ParseObjCBoxedExpr(SourceLocation AtLoc);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCEncodeExpression(SourceLocation AtLoc);
-#endif
   ExprResult ParseObjCSelectorExpression(SourceLocation AtLoc);
   ExprResult ParseObjCProtocolExpression(SourceLocation AtLoc);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool isSimpleObjCMessageExpression();
-#endif
   ExprResult ParseObjCMessageExpression();
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCMessageExpressionBody(SourceLocation LBracloc,
                                             SourceLocation SuperLoc,
                                             ParsedType ReceiverType,
@@ -1706,6 +1723,7 @@ private:
       SourceLocation LBracloc, SourceLocation SuperLoc,
       ParsedType ReceiverType, Expr *ReceiverExpr);
   bool ParseObjCXXMessageReceiver(bool &IsExpr, void *&TypeOrExpr);
+#endif
     
   //===--------------------------------------------------------------------===//
   // C99 6.8: Statements and Blocks.
@@ -1840,10 +1858,10 @@ private:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult ParseObjCAtStatement(SourceLocation atLoc);
   StmtResult ParseObjCTryStmt(SourceLocation atLoc);
-#endif
   StmtResult ParseObjCThrowStmt(SourceLocation atLoc);
   StmtResult ParseObjCSynchronizedStmt(SourceLocation atLoc);
   StmtResult ParseObjCAutoreleasePoolStmt(SourceLocation atLoc);
+#endif
 
 
   //===--------------------------------------------------------------------===//
@@ -1937,8 +1955,10 @@ private:
   void ParseSpecifierQualifierList(DeclSpec &DS, AccessSpecifier AS = AS_none,
                                    DeclSpecContext DSC = DSC_normal);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, why so hidden?
   void ParseObjCTypeQualifierList(ObjCDeclSpec &DS,
                                   Declarator::TheContext Context);
+#endif
 
   void ParseEnumSpecifier(SourceLocation TagLoc, DeclSpec &DS,
                           const ParsedTemplateInfo &TemplateInfo,
@@ -2312,6 +2332,7 @@ private:
   bool ParseOpenCLUnrollHintAttribute(ParsedAttributes &Attrs);
   void ParseNullabilityTypeSpecifiers(ParsedAttributes &attrs);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   VersionTuple ParseVersionTuple(SourceRange &Range);
   void ParseAvailabilityAttribute(IdentifierInfo &Availability,
                                   SourceLocation AvailabilityLoc,
@@ -2320,10 +2341,14 @@ private:
                                   IdentifierInfo *ScopeName,
                                   SourceLocation ScopeLoc,
                                   AttributeList::Syntax Syntax);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Optional<AvailabilitySpec> ParseAvailabilitySpec();
   ExprResult ParseAvailabilityCheckExpr(SourceLocation StartLoc);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ParseObjCBridgeRelatedAttribute(IdentifierInfo &ObjCBridgeRelated,
                                        SourceLocation ObjCBridgeRelatedLoc,
                                        ParsedAttributes &attrs,
@@ -2331,6 +2356,7 @@ private:
                                        IdentifierInfo *ScopeName,
                                        SourceLocation ScopeLoc,
                                        AttributeList::Syntax Syntax);
+#endif
 
   void ParseTypeTagForDatatypeAttribute(IdentifierInfo &AttrName,
                                         SourceLocation AttrNameLoc,

@@ -2361,10 +2361,12 @@ DEF_TRAVERSE_STMT(ObjCSubscriptRefExpr, {})
 DEF_TRAVERSE_STMT(ObjCProtocolExpr, {})
 DEF_TRAVERSE_STMT(ObjCSelectorExpr, {})
 DEF_TRAVERSE_STMT(ObjCIndirectCopyRestoreExpr, {})
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 DEF_TRAVERSE_STMT(ObjCBridgedCastExpr, {
   TRY_TO(TraverseTypeLoc(S->getTypeInfoAsWritten()->getTypeLoc()));
 })
 DEF_TRAVERSE_STMT(ObjCAvailabilityCheckExpr, {})
+#endif
 DEF_TRAVERSE_STMT(ParenExpr, {})
 DEF_TRAVERSE_STMT(ParenListExpr, {})
 DEF_TRAVERSE_STMT(PredefinedExpr, {})
@@ -2454,9 +2456,11 @@ DEF_TRAVERSE_STMT(FloatingLiteral, {})
 DEF_TRAVERSE_STMT(ImaginaryLiteral, {})
 DEF_TRAVERSE_STMT(StringLiteral, {})
 DEF_TRAVERSE_STMT(ObjCStringLiteral, {})
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
 DEF_TRAVERSE_STMT(ObjCBoxedExpr, {})
 DEF_TRAVERSE_STMT(ObjCArrayLiteral, {})
 DEF_TRAVERSE_STMT(ObjCDictionaryLiteral, {})
+#endif
 
 // Traverse OpenCL: AsType, Convert.
 DEF_TRAVERSE_STMT(AsTypeExpr, {})

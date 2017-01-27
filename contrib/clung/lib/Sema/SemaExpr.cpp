@@ -8941,10 +8941,14 @@ static void diagnoseFunctionPointerToVoidComparison(Sema &S, SourceLocation Loc,
 
 static bool isObjCObjectLiteral(ExprResult &E) {
   switch (E.get()->IgnoreParenImpCasts()->getStmtClass()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assum not available
   case Stmt::ObjCArrayLiteralClass:
   case Stmt::ObjCDictionaryLiteralClass:
+#endif
   case Stmt::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCBoxedExprClass:
+#endif
     return true;
   default:
     // Note that ObjCBoolLiteral is NOT an object literal!
@@ -9010,14 +9014,19 @@ Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {
     case Stmt::ObjCStringLiteralClass:
       // "string literal"
       return LK_String;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not avaiable
     case Stmt::ObjCArrayLiteralClass:
       // "array literal"
       return LK_Array;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case Stmt::ObjCDictionaryLiteralClass:
       // "dictionary literal"
       return LK_Dictionary;
+#endif
     case Stmt::BlockExprClass:
       return LK_Block;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case Stmt::ObjCBoxedExprClass: {
       Expr *Inner = cast<ObjCBoxedExpr>(FromE)->getSubExpr()->IgnoreParens();
       switch (Inner->getStmtClass()) {
@@ -9040,6 +9049,7 @@ Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {
       }
       return LK_Boxed;
     }
+#endif
   }
   return LK_None;
 }
@@ -15212,6 +15222,7 @@ bool Sema::CheckCaseExpression(Expr *E) {
 }
 
 /// ActOnObjCBoolLiteral - Parse {__objc_yes,__objc_no} literals.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 Sema::ActOnObjCBoolLiteral(SourceLocation OpLoc, tok::TokenKind Kind) {
   assert((Kind == tok::kw___objc_yes || Kind == tok::kw___objc_no) &&
@@ -15231,7 +15242,9 @@ Sema::ActOnObjCBoolLiteral(SourceLocation OpLoc, tok::TokenKind Kind) {
   return new (Context)
       ObjCBoolLiteralExpr(Kind == tok::kw___objc_yes, BoolT, OpLoc);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnObjCAvailabilityCheckExpr(
     llvm::ArrayRef<AvailabilitySpec> AvailSpecs, SourceLocation AtLoc,
     SourceLocation RParen) {
@@ -15255,3 +15268,4 @@ ExprResult Sema::ActOnObjCAvailabilityCheckExpr(
   return new (Context)
       ObjCAvailabilityCheckExpr(Version, AtLoc, RParen, Context.BoolTy);
 }
+#endif

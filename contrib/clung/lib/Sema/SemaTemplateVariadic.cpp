@@ -90,6 +90,7 @@ namespace {
 
     /// \brief Suppress traversal into Objective-C container literal
     /// elements that are pack expansions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     bool TraverseObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
       if (!E->containsUnexpandedParameterPack())
         return true;
@@ -104,6 +105,7 @@ namespace {
       }
       return true;
     }
+#endif
     //------------------------------------------------------------------------
     // Pruning the search for unexpanded parameter packs.
     //------------------------------------------------------------------------

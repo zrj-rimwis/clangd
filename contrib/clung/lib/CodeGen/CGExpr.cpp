@@ -1085,7 +1085,9 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
   case Expr::CXXDynamicCastExprClass:
   case Expr::CXXReinterpretCastExprClass:
   case Expr::CXXConstCastExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass:
+#endif
     return EmitCastLValue(cast<CastExpr>(E));
 
   case Expr::MaterializeTemporaryExprClass:
@@ -1934,10 +1936,12 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     return;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (const auto *Exp = dyn_cast<ObjCBridgedCastExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getSubExpr(), LV, IsMemberAccess);
     return;
   }
+#endif
 
   if (const auto *Exp = dyn_cast<ArraySubscriptExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getBase(), LV);

@@ -1081,10 +1081,12 @@ CanThrowResult Sema::canThrow(const Expr *E) {
     // All the ObjC literals that are implemented as calls are
     // potentially throwing unless we decide to close off that
     // possibility.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not used
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
   case Expr::ObjCBoxedExprClass:
     return CT_Can;
+#endif
 
     // Many other things have subexpressions, so we have to test those.
     // Some are simple:
@@ -1159,11 +1161,15 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::CUDAKernelCallExprClass:
 #endif
   case Expr::DeclRefExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass:
+#endif
   case Expr::ObjCIndirectCopyRestoreExprClass:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCSelectorExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
+#endif
   case Expr::OffsetOfExprClass:
   case Expr::PackExpansionExprClass:
   case Expr::PseudoObjectExprClass:

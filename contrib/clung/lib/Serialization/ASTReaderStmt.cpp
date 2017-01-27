@@ -659,12 +659,14 @@ VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   E->setShouldCopy(Record[Idx++]);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
   VisitExplicitCastExpr(E);
   E->LParenLoc = ReadSourceLocation(Record, Idx);
   E->BridgeKeywordLoc = ReadSourceLocation(Record, Idx);
   E->Kind = Record[Idx++];
 }
+#endif
 
 void ASTStmtReader::VisitCastExpr(CastExpr *E) {
   VisitExpr(E);
@@ -967,6 +969,7 @@ void ASTStmtReader::VisitObjCStringLiteral(ObjCStringLiteral *E) {
   E->setAtLoc(ReadSourceLocation(Record, Idx));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   VisitExpr(E);
   // could be one of several IntegerLiteral, FloatLiteral, etc.
@@ -974,7 +977,9 @@ void ASTStmtReader::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
   E->BoxingMethod = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
   E->Range = ReadSourceRange(Record, Idx);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   VisitExpr(E);
   unsigned NumElements = Record[Idx++];
@@ -985,7 +990,9 @@ void ASTStmtReader::VisitObjCArrayLiteral(ObjCArrayLiteral *E) {
   E->ArrayWithObjectsMethod = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
   E->Range = ReadSourceRange(Record, Idx);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
   VisitExpr(E);
   unsigned NumElements = Record[Idx++];
@@ -1007,6 +1014,7 @@ void ASTStmtReader::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
   E->DictWithObjectsMethod = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
   E->Range = ReadSourceRange(Record, Idx);
 }
+#endif
 
 void ASTStmtReader::VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
   VisitExpr(E);
@@ -1184,6 +1192,7 @@ void ASTStmtReader::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
   E->setLocation(ReadSourceLocation(Record, Idx));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAvailabilityCheckExpr(ObjCAvailabilityCheckExpr *E) {
   VisitExpr(E);
   SourceRange R = Reader.ReadSourceRange(F, Record, Idx);
@@ -1191,6 +1200,7 @@ void ASTStmtReader::VisitObjCAvailabilityCheckExpr(ObjCAvailabilityCheckExpr *E)
   E->RParen = R.getEnd();
   E->VersionToCheck = Reader.ReadVersionTuple(Record, Idx);
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // C++ Expressions and Statements
@@ -3179,6 +3189,7 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_STRING_LITERAL:
       S = new (Context) ObjCStringLiteral(Empty);
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case EXPR_OBJC_BOXED_EXPRESSION:
       S = new (Context) ObjCBoxedExpr(Empty);
       break;
@@ -3191,6 +3202,7 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
             Record[ASTStmtReader::NumExprFields],
             Record[ASTStmtReader::NumExprFields + 1]);
       break;
+#endif
     case EXPR_OBJC_ENCODE:
       S = new (Context) ObjCEncodeExpr(Empty);
       break;
@@ -3222,9 +3234,11 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_INDIRECT_COPY_RESTORE:
       S = new (Context) ObjCIndirectCopyRestoreExpr(Empty);
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case EXPR_OBJC_BRIDGED_CAST:
       S = new (Context) ObjCBridgedCastExpr(Empty);
       break;
+#endif
     case STMT_OBJC_FOR_COLLECTION:
       S = new (Context) ObjCForCollectionStmt(Empty);
       break;
@@ -3251,9 +3265,11 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_BOOL_LITERAL:
       S = new (Context) ObjCBoolLiteralExpr(Empty);
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case EXPR_OBJC_AVAILABILITY_CHECK:
       S = new (Context) ObjCAvailabilityCheckExpr(Empty);
       break;
+#endif
 #ifdef CLANG_ENABLE_MSSEH // __DragonFly__
     case STMT_SEH_LEAVE:
       S = new (Context) SEHLeaveStmt(Empty);

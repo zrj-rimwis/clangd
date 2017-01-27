@@ -113,8 +113,10 @@ protected:
     friend class CallExpr; // ctor
     friend class OffsetOfExpr; // ctor
     friend class ObjCMessageExpr; // ctor
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     friend class ObjCArrayLiteral; // ctor
     friend class ObjCDictionaryLiteral; // ctor
+#endif
     friend class ShuffleVectorExpr; // ctor
     friend class ParenListExpr; // ctor
     friend class CXXUnresolvedConstructExpr; // ctor

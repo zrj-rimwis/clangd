@@ -550,7 +550,9 @@ namespace  {
     void VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node);
     void VisitObjCEncodeExpr(const ObjCEncodeExpr *Node);
     void VisitObjCMessageExpr(const ObjCMessageExpr *Node);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCBoxedExpr(const ObjCBoxedExpr *Node);
+#endif
     void VisitObjCSelectorExpr(const ObjCSelectorExpr *Node);
     void VisitObjCProtocolExpr(const ObjCProtocolExpr *Node);
     void VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node);
@@ -2215,6 +2217,7 @@ void ASTDumper::VisitObjCMessageExpr(const ObjCMessageExpr *Node) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCBoxedExpr(const ObjCBoxedExpr *Node) {
   VisitExpr(Node);
   if (auto *BoxingMethod = Node->getBoxingMethod()) {
@@ -2222,6 +2225,7 @@ void ASTDumper::VisitObjCBoxedExpr(const ObjCBoxedExpr *Node) {
     BoxingMethod->getSelector().print(OS);
   }
 }
+#endif
 
 void ASTDumper::VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node) {
   VisitStmt(Node);

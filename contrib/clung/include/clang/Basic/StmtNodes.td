@@ -151,9 +151,6 @@ def CoyieldExpr : DStmt<CoroutineSuspendExpr>;
 
 // Obj-C Expressions.
 def ObjCStringLiteral : DStmt<Expr>;
-def ObjCBoxedExpr : DStmt<Expr>;
-def ObjCArrayLiteral : DStmt<Expr>;
-def ObjCDictionaryLiteral : DStmt<Expr>;
 def ObjCEncodeExpr : DStmt<Expr>;
 def ObjCMessageExpr : DStmt<Expr>;
 def ObjCSelectorExpr : DStmt<Expr>;
@@ -164,10 +161,8 @@ def ObjCIsaExpr : DStmt<Expr>;
 def ObjCIndirectCopyRestoreExpr : DStmt<Expr>;
 def ObjCBoolLiteralExpr : DStmt<Expr>;
 def ObjCSubscriptRefExpr : DStmt<Expr>;
-def ObjCAvailabilityCheckExpr : DStmt<Expr>;
 
 // Obj-C ARC Expressions.
-def ObjCBridgedCastExpr : DStmt<ExplicitCastExpr>;
 
 // CUDA Expressions.
 

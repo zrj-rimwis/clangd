@@ -5254,10 +5254,14 @@ static bool requiresParensToAddCast(const Expr *E) {
   case Stmt::FloatingLiteralClass:
   case Stmt::IntegerLiteralClass:
   case Stmt::MemberExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCArrayLiteralClass:
+#endif
   case Stmt::ObjCBoolLiteralExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCBoxedExprClass:
   case Stmt::ObjCDictionaryLiteralClass:
+#endif
   case Stmt::ObjCEncodeExprClass:
   case Stmt::ObjCIvarRefExprClass:
   case Stmt::ObjCMessageExprClass:
@@ -6935,7 +6939,9 @@ static const Expr *EvalAddr(const Expr *E,
   case Stmt::ImplicitCastExprClass:
   case Stmt::CStyleCastExprClass:
   case Stmt::CXXFunctionalCastExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCBridgedCastExprClass:
+#endif
   case Stmt::CXXStaticCastExprClass:
   case Stmt::CXXDynamicCastExprClass:
   case Stmt::CXXConstCastExprClass:
@@ -8432,8 +8438,16 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
       // prevented by a check in AnalyzeImplicitConversions().
       return DiagnoseImpCast(S, E, T, CC,
                              diag::warn_impcast_string_literal_to_bool);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not
     if (isa<ObjCStringLiteral>(E) || isa<ObjCArrayLiteral>(E) ||
+#else
+    if (isa<ObjCStringLiteral>(E) || false ||
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         isa<ObjCDictionaryLiteral>(E) || isa<ObjCBoxedExpr>(E)) {
+#else
+        false || false) {
+#endif
       // This covers the literal expressions that evaluate to Objective-C
       // objects.
       return DiagnoseImpCast(S, E, T, CC,

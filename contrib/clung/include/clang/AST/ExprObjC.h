@@ -94,6 +94,7 @@ public:
 /// as in: @(strdup("hello world")), @(random()) or @(view.frame)
 /// Also used for boxing non-parenthesized numeric literals;
 /// as in: @42 or \@true (c++/objc++) or \@__yes (c/objc).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCBoxedExpr : public Expr {
   Stmt *SubExpr;
   ObjCMethodDecl *BoxingMethod;
@@ -141,9 +142,11 @@ public:
   
   friend class ASTStmtReader;
 };
+#endif
 
 /// ObjCArrayLiteral - used for objective-c array containers; as in:
 /// @[@"Hello", NSApp, [NSNumber numberWithInt:42]];
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
 class ObjCArrayLiteral final
     : public Expr,
       private llvm::TrailingObjects<ObjCArrayLiteral, Expr *> {
@@ -209,9 +212,11 @@ public:
   friend TrailingObjects;
   friend class ASTStmtReader;
 };
+#endif
 
 /// \brief An element in an Objective-C dictionary literal.
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 struct ObjCDictionaryElement {
   /// \brief The key for the dictionary element.
   Expr *Key;
@@ -229,22 +234,28 @@ struct ObjCDictionaryElement {
   /// \brief Determines whether this dictionary element is a pack expansion.
   bool isPackExpansion() const { return EllipsisLoc.isValid(); }
 };
+#endif
 } // end namespace clang
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 namespace llvm {
 template <> struct isPodLike<clang::ObjCDictionaryElement> : std::true_type {};
 }
+#endif
 
 namespace clang {
 /// \brief Internal struct for storing Key/value pair.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
 struct ObjCDictionaryLiteral_KeyValuePair {
   Expr *Key;
   Expr *Value;
 };
+#endif
 
 /// \brief Internal struct to describes an element that is a pack
 /// expansion, used if any of the elements in the dictionary literal
 /// are pack expansions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 struct ObjCDictionaryLiteral_ExpansionData {
   /// \brief The location of the ellipsis, if this element is a pack
   /// expansion.
@@ -254,9 +265,11 @@ struct ObjCDictionaryLiteral_ExpansionData {
   /// expansion will expand to (+1).
   unsigned NumExpansionsPlusOne;
 };
+#endif
 
 /// ObjCDictionaryLiteral - AST node to represent objective-c dictionary
 /// literals; as in:  @{@"name" : NSUserName(), @"date" : [NSDate date] };
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCDictionaryLiteral final
     : public Expr,
       private llvm::TrailingObjects<ObjCDictionaryLiteral,
@@ -350,6 +363,7 @@ public:
   friend class ASTStmtWriter;
   friend TrailingObjects;
 };
+#endif
 
 
 /// ObjCEncodeExpr, used for \@encode in Objective-C.  \@encode has the same
@@ -1519,6 +1533,7 @@ public:
 /// \code
 /// NSString *str = (__bridge_transfer NSString *)CFCreateString();
 /// \endcode
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCBridgedCastExpr final
     : public ExplicitCastExpr,
       private llvm::TrailingObjects<ObjCBridgedCastExpr, CXXBaseSpecifier *> {
@@ -1565,6 +1580,7 @@ public:
     return T->getStmtClass() == ObjCBridgedCastExprClass;
   }
 };
+#endif
 
 /// \brief A runtime availability query.
 ///
@@ -1579,6 +1595,7 @@ public:
 /// be used in the condition of an \c if, but it is also usable as top level
 /// expressions.
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCAvailabilityCheckExpr : public Expr {
   VersionTuple VersionToCheck;
   SourceLocation AtLoc, RParen;
@@ -1610,6 +1627,7 @@ public:
     return T->getStmtClass() == ObjCAvailabilityCheckExprClass;
   }
 };
+#endif
 
 }  // end namespace clang
 

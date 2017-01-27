@@ -17,6 +17,7 @@
 
 using namespace clang;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCArrayLiteral::ObjCArrayLiteral(ArrayRef<Expr *> Elements, QualType T,
                                    ObjCMethodDecl *Method, SourceRange SR)
     : Expr(ObjCArrayLiteralClass, T, VK_RValue, OK_Ordinary, false, false,
@@ -49,7 +50,9 @@ ObjCArrayLiteral *ObjCArrayLiteral::CreateEmpty(const ASTContext &C,
   void *Mem = C.Allocate(totalSizeToAlloc<Expr *>(NumElements));
   return new (Mem) ObjCArrayLiteral(EmptyShell(), NumElements);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 ObjCDictionaryLiteral::ObjCDictionaryLiteral(ArrayRef<ObjCDictionaryElement> VK,
                                              bool HasPackExpansions, QualType T,
                                              ObjCMethodDecl *method,
@@ -103,6 +106,7 @@ ObjCDictionaryLiteral::CreateEmpty(const ASTContext &C, unsigned NumElements,
   return new (Mem)
       ObjCDictionaryLiteral(EmptyShell(), NumElements, HasPackExpansions);
 }
+#endif
 
 QualType ObjCPropertyRefExpr::getReceiverType(const ASTContext &ctx) const {
   if (isClassReceiver())
@@ -346,6 +350,7 @@ Stmt::child_range ObjCMessageExpr::children() {
                      reinterpret_cast<Stmt **>(getArgs() + getNumArgs()));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StringRef ObjCBridgedCastExpr::getBridgeKindName() const {
   switch (getBridgeKind()) {
   case OBC_Bridge:
@@ -358,3 +363,4 @@ StringRef ObjCBridgedCastExpr::getBridgeKindName() const {
 
   llvm_unreachable("Invalid BridgeKind!");
 }
+#endif

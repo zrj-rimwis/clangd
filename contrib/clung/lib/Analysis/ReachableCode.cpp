@@ -555,11 +555,13 @@ static SourceLocation GetUnreachableLoc(const Stmt *S,
     case Stmt::CXXTryStmtClass: {
       return cast<CXXTryStmt>(S)->getHandler(0)->getCatchLoc();
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Expr::ObjCBridgedCastExprClass: {
       const ObjCBridgedCastExpr *CSC = cast<ObjCBridgedCastExpr>(S);
       R1 = CSC->getSubExpr()->getSourceRange();
       return CSC->getLParenLoc();
     }
+#endif
     default: ;
   }
   R1 = S->getSourceRange();

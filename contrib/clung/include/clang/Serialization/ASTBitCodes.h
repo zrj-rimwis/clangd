@@ -1330,9 +1330,15 @@ namespace clang {
       /// \brief An ObjCStringLiteral record.
       EXPR_OBJC_STRING_LITERAL,
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_BOXED_EXPRESSION,
       EXPR_OBJC_ARRAY_LITERAL,
       EXPR_OBJC_DICTIONARY_LITERAL,
+#else
+      EXPR_OBJC_BOXED_EXPRESSION_disabled,
+      EXPR_OBJC_ARRAY_LITERAL_disabled,
+      EXPR_OBJC_DICTIONARY_LITERAL_disabled,
+#endif
 
     
       /// \brief An ObjCEncodeExpr record.
@@ -1373,7 +1379,11 @@ namespace clang {
       /// \brief An ObjCBoolLiteralExpr record.
       EXPR_OBJC_BOOL_LITERAL,
       /// \brief An ObjCAvailabilityCheckExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_AVAILABILITY_CHECK,
+#else
+      EXPR_OBJC_AVAILABILITY_CHECK_disabled,
+#endif
 
       // C++
       
@@ -1450,7 +1460,7 @@ namespace clang {
 
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       // CUDA
-      EXPR_CUDA_KERNEL_CALL,       // CUDAKernelCallExpr
+      EXPR_CUDA_KERNEL_CALL,       // CUDAKernelCallExpr      
 #else
       EXPR_CUDA_KERNEL_CALL_disabled,
 #endif
@@ -1526,7 +1536,11 @@ namespace clang {
       EXPR_OMP_ARRAY_SECTION,
 
       // ARC
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
       EXPR_OBJC_BRIDGED_CAST,     // ObjCBridgedCastExpr
+#else
+      EXPR_OBJC_BRIDGED_CAST_disabled,
+#endif
       
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       STMT_MS_DEPENDENT_EXISTS,   // MSDependentExistsStmt

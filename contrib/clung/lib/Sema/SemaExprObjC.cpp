@@ -35,6 +35,7 @@ using namespace clang;
 using namespace sema;
 using llvm::makeArrayRef;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ParseObjCStringLiteral(SourceLocation *AtLocs,
                                         ArrayRef<Expr *> Strings) {
   // Most ObjC strings are formed out of a single piece.  However, we *can*
@@ -80,6 +81,7 @@ ExprResult Sema::ParseObjCStringLiteral(SourceLocation *AtLocs,
   
   return BuildObjCStringLiteral(AtLocs[0], S);
 }
+#endif
 
 ExprResult Sema::BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S){
   // Verify that this composite string is acceptable for ObjC strings.
@@ -335,6 +337,7 @@ static ObjCMethodDecl *getNSNumberFactoryMethod(Sema &S, SourceLocation Loc,
 
 /// BuildObjCNumericLiteral - builds an ObjCBoxedExpr AST node for the
 /// numeric literal expression. Type of the expression will be "NSNumber *".
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
   // Determine the type of the literal.
   QualType NumberType = Number->getType();
@@ -391,7 +394,9 @@ ExprResult Sema::BuildObjCNumericLiteral(SourceLocation AtLoc, Expr *Number) {
                                        SourceRange(AtLoc, NR.getEnd())));
 #endif
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnObjCBoolLiteral(SourceLocation AtLoc, 
                                       SourceLocation ValueLoc,
                                       bool Value) {
@@ -408,6 +413,7 @@ ExprResult Sema::ActOnObjCBoolLiteral(SourceLocation AtLoc,
   
   return BuildObjCNumericLiteral(AtLoc, Inner.get());
 }
+#endif
 
 /// \brief Check that the given expression is a valid element of an Objective-C
 /// collection literal.
@@ -528,6 +534,7 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
            Element->getLocStart(), Element);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   if (ValueExpr->isTypeDependent()) {
     ObjCBoxedExpr *BoxedExpr = 
@@ -772,6 +779,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
   return MaybeBindToTemporary(BoxedExpr);
 #endif
 }
+#endif
 
 /// Build an ObjC subscript pseudo-object expression, given that
 /// that's supported by the runtime.
@@ -807,6 +815,7 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
       getterMethod, setterMethod, RB);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed and return err
   SourceLocation Loc = SR.getBegin();
@@ -914,7 +923,9 @@ ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
   return ExprError();
 #endif
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
                               MutableArrayRef<ObjCDictionaryElement> Elements) {
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed and return err
@@ -1095,6 +1106,7 @@ ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
   return ExprError();
 #endif
 }
+#endif
 
 ExprResult Sema::BuildObjCEncodeExpression(SourceLocation AtLoc,
                                       TypeSourceInfo *EncodedTypeInfo,
@@ -1204,6 +1216,7 @@ static void DiagnoseMismatchedSelectors(Sema &S, SourceLocation AtLoc,
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ParseObjCSelectorExpression(Selector Sel,
                                              SourceLocation AtLoc,
                                              SourceLocation SelLoc,
@@ -1266,7 +1279,9 @@ ExprResult Sema::ParseObjCSelectorExpression(Selector Sel,
   QualType Ty = Context.getObjCSelType();
   return new (Context) ObjCSelectorExpr(Ty, Sel, AtLoc, RParenLoc);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ParseObjCProtocolExpression(IdentifierInfo *ProtocolId,
                                              SourceLocation AtLoc,
                                              SourceLocation ProtoLoc,
@@ -1287,6 +1302,7 @@ ExprResult Sema::ParseObjCProtocolExpression(IdentifierInfo *ProtocolId,
   Ty = Context.getObjCObjectPointerType(Ty);
   return new (Context) ObjCProtocolExpr(Ty, PDecl, AtLoc, ProtoIdLoc, RParenLoc);
 }
+#endif
 
 /// Try to capture an implicit reference to 'self'.
 ObjCMethodDecl *Sema::tryCaptureObjCSelf(SourceLocation Loc) {
@@ -4336,6 +4352,7 @@ static Expr *maybeUndoReclaimObject(Expr *e) {
   return e;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,
                                       ObjCBridgeCastKind Kind,
                                       SourceLocation BridgeKeywordLoc,
@@ -4450,6 +4467,7 @@ ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,
   
   return Result;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnObjCBridgedCast(Scope *S,
