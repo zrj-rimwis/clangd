@@ -1094,6 +1094,7 @@ void ASTStmtWriter::VisitObjCMessageExpr(ObjCMessageExpr *E) {
   Code = serialization::EXPR_OBJC_MESSAGE_EXPR;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   VisitStmt(S);
   Record.AddStmt(S->getElement());
@@ -1103,7 +1104,9 @@ void ASTStmtWriter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   Record.AddSourceLocation(S->getRParenLoc());
   Code = serialization::STMT_OBJC_FOR_COLLECTION;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
   Record.AddStmt(S->getCatchBody());
   Record.AddDeclRef(S->getCatchParamDecl());
@@ -1111,19 +1114,25 @@ void ASTStmtWriter::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
   Record.AddSourceLocation(S->getRParenLoc());
   Code = serialization::STMT_OBJC_CATCH;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *S) {
   Record.AddStmt(S->getFinallyBody());
   Record.AddSourceLocation(S->getAtFinallyLoc());
   Code = serialization::STMT_OBJC_FINALLY;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAutoreleasePoolStmt(ObjCAutoreleasePoolStmt *S) {
   Record.AddStmt(S->getSubStmt());
   Record.AddSourceLocation(S->getAtLoc());
   Code = serialization::STMT_OBJC_AUTORELEASE_POOL;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
   Record.push_back(S->getNumCatchStmts());
   Record.push_back(S->getFinallyStmt() != nullptr);
@@ -1135,26 +1144,33 @@ void ASTStmtWriter::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
   Record.AddSourceLocation(S->getAtTryLoc());
   Code = serialization::STMT_OBJC_AT_TRY;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *S) {
   Record.AddStmt(S->getSynchExpr());
   Record.AddStmt(S->getSynchBody());
   Record.AddSourceLocation(S->getAtSynchronizedLoc());
   Code = serialization::STMT_OBJC_AT_SYNCHRONIZED;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAtThrowStmt(ObjCAtThrowStmt *S) {
   Record.AddStmt(S->getThrowExpr());
   Record.AddSourceLocation(S->getThrowLoc());
   Code = serialization::STMT_OBJC_AT_THROW;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
   VisitExpr(E);
   Record.push_back(E->getValue());
   Record.AddSourceLocation(E->getLocation());
   Code = serialization::EXPR_OBJC_BOOL_LITERAL;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCAvailabilityCheckExpr(ObjCAvailabilityCheckExpr *E) {

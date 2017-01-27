@@ -3480,12 +3480,14 @@ public:
                           FullExprArg Third,
                           SourceLocation RParenLoc,
                           Stmt *Body);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult CheckObjCForCollectionOperand(SourceLocation forLoc,
                                            Expr *collection);
   StmtResult ActOnObjCForCollectionStmt(SourceLocation ForColLoc,
                                         Stmt *First, Expr *collection,
                                         SourceLocation RParenLoc);
   StmtResult FinishObjCForCollectionStmt(Stmt *ForCollection, Stmt *Body);
+#endif
 
   enum BuildForRangeKind {
     /// Initial building of a for-range statement.
@@ -3582,6 +3584,7 @@ public:
 
   Decl *ActOnObjCExceptionDecl(Scope *S, Declarator &D);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult ActOnObjCAtCatchStmt(SourceLocation AtLoc, SourceLocation RParen,
                                   Decl *Parm, Stmt *Body);
 
@@ -3589,17 +3592,24 @@ public:
 
   StmtResult ActOnObjCAtTryStmt(SourceLocation AtLoc, Stmt *Try,
                                 MultiStmtArg Catch, Stmt *Finally);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult BuildObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw);
   StmtResult ActOnObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw,
                                   Scope *CurScope);
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ActOnObjCAtSynchronizedOperand(SourceLocation atLoc,
                                             Expr *operand);
   StmtResult ActOnObjCAtSynchronizedStmt(SourceLocation AtLoc,
                                          Expr *SynchExpr,
                                          Stmt *SynchBody);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult ActOnObjCAutoreleasePoolStmt(SourceLocation AtLoc, Stmt *Body);
+#endif
 
   VarDecl *BuildExceptionDeclaration(Scope *S, TypeSourceInfo *TInfo,
                                      SourceLocation StartLoc,
@@ -9415,8 +9425,10 @@ public:
                                        ArrayRef<IdentifierInfo *> SelIdents,
                                        bool AtArgumentExpression,
                                        ObjCInterfaceDecl *Super = nullptr);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CodeCompleteObjCForCollection(Scope *S,
                                      DeclGroupPtrTy IterationVar);
+#endif
   void CodeCompleteObjCSelector(Scope *S,
                                 ArrayRef<IdentifierInfo *> SelIdents);
   void CodeCompleteObjCProtocolReferences(

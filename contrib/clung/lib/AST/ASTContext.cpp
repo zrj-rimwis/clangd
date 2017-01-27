@@ -737,7 +737,11 @@ ASTContext::ASTContext(LangOptions &LOpts, SourceManager &SM,
       GlobalNestedNameSpecifier(nullptr), Int128Decl(nullptr),
       UInt128Decl(nullptr), BuiltinVaListDecl(nullptr),
       BuiltinMSVaListDecl(nullptr), ObjCIdDecl(nullptr), ObjCSelDecl(nullptr),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       ObjCClassDecl(nullptr), ObjCProtocolClassDecl(nullptr), BOOLDecl(nullptr),
+#else
+      ObjCClassDecl(nullptr), ObjCProtocolClassDecl(nullptr),
+#endif
       CFConstantStringTagDecl(nullptr), CFConstantStringTypeDecl(nullptr),
       ObjCInstanceTypeDecl(nullptr), FILEDecl(nullptr), jmp_bufDecl(nullptr),
       sigjmp_bufDecl(nullptr), ucontext_tDecl(nullptr),
@@ -1112,8 +1116,10 @@ void ASTContext::InitBuiltinTypes(const TargetInfo &Target,
   }
   
   // Builtin type for __objc_yes and __objc_no
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   ObjCBuiltinBoolTy = (Target.useSignedCharForObjCBool() ?
                        SignedCharTy : BoolTy);
+#endif
   
   ObjCConstantStringType = QualType();
   

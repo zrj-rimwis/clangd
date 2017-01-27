@@ -235,7 +235,9 @@ class ASTContext : public RefCountedBase<ASTContext> {
   mutable ObjCInterfaceDecl *ObjCProtocolClassDecl;
   
   /// \brief The typedef for the predefined 'BOOL' type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   mutable TypedefDecl *BOOLDecl;
+#endif
 
   // Typedefs which may be provided defining the structure of Objective-C
   // pseudo-builtins
@@ -912,7 +914,9 @@ public:
   CanQualType BuiltinFnTy;
   CanQualType PseudoObjectTy, ARCUnbridgedCastTy;
   CanQualType ObjCBuiltinIdTy, ObjCBuiltinClassTy, ObjCBuiltinSelTy;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   CanQualType ObjCBuiltinBoolTy;
+#endif
 #define IMAGE_TYPE(ImgType, Id, SingletonId, Access, Suffix) \
   CanQualType SingletonId;
 #include "clang/Basic/OpenCLImageTypes.def"
@@ -1647,19 +1651,25 @@ public:
   ObjCInterfaceDecl *getObjCProtocolDecl() const;
 
   /// \brief Retrieve declaration of 'BOOL' typedef
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   TypedefDecl *getBOOLDecl() const {
     return BOOLDecl;
   }
+#endif
 
   /// \brief Save declaration of 'BOOL' typedef
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   void setBOOLDecl(TypedefDecl *TD) {
     BOOLDecl = TD;
   }
+#endif
 
   /// \brief type of 'BOOL' type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for MACOS
   QualType getBOOLType() const {
     return getTypeDeclType(getBOOLDecl());
   }
+#endif
   
   /// \brief Retrieve the type of the Objective-C \c Protocol class.
   QualType getObjCProtoType() const {

@@ -69,11 +69,13 @@ class ObjCImplementationDecl;
 class ObjCPropertyImplDecl;
 class TargetInfo;
 class VarDecl;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCForCollectionStmt;
 class ObjCAtTryStmt;
 class ObjCAtThrowStmt;
 class ObjCAtSynchronizedStmt;
 class ObjCAutoreleasePoolStmt;
+#endif
 
 namespace CodeGen {
 class CodeGenTypes;

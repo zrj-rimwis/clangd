@@ -24,7 +24,9 @@
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/AST/StmtOpenMP.h"
 #include "clang/Sema/Designator.h"
 #include "clang/Sema/Lookup.h"
@@ -1331,6 +1333,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult RebuildObjCAtTryStmt(SourceLocation AtLoc,
                                         Stmt *TryBody,
                                         MultiStmtArg CatchStmts,
@@ -1338,6 +1341,7 @@ public:
     return getSema().ActOnObjCAtTryStmt(AtLoc, TryBody, CatchStmts,
                                         Finally);
   }
+#endif
 
   /// \brief Rebuild an Objective-C exception declaration.
   ///
@@ -1355,6 +1359,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
   StmtResult RebuildObjCAtCatchStmt(SourceLocation AtLoc,
                                           SourceLocation RParenLoc,
                                           VarDecl *Var,
@@ -1362,24 +1367,29 @@ public:
     return getSema().ActOnObjCAtCatchStmt(AtLoc, RParenLoc,
                                           Var, Body);
   }
+#endif
 
   /// \brief Build a new Objective-C \@finally statement.
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult RebuildObjCAtFinallyStmt(SourceLocation AtLoc,
                                             Stmt *Body) {
     return getSema().ActOnObjCAtFinallyStmt(AtLoc, Body);
   }
+#endif
 
   /// \brief Build a new Objective-C \@throw statement.
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult RebuildObjCAtThrowStmt(SourceLocation AtLoc,
                                           Expr *Operand) {
     return getSema().BuildObjCAtThrowStmt(AtLoc, Operand);
   }
+#endif
 
   /// \brief Build a new OpenMP executable directive.
   ///
@@ -1813,33 +1823,40 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCAtSynchronizedOperand(SourceLocation atLoc,
                                               Expr *object) {
     return getSema().ActOnObjCAtSynchronizedOperand(atLoc, object);
   }
+#endif
 
   /// \brief Build a new Objective-C \@synchronized statement.
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult RebuildObjCAtSynchronizedStmt(SourceLocation AtLoc,
                                            Expr *Object, Stmt *Body) {
     return getSema().ActOnObjCAtSynchronizedStmt(AtLoc, Object, Body);
   }
+#endif
 
   /// \brief Build a new Objective-C \@autoreleasepool statement.
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult RebuildObjCAutoreleasePoolStmt(SourceLocation AtLoc,
                                             Stmt *Body) {
     return getSema().ActOnObjCAutoreleasePoolStmt(AtLoc, Body);
   }
+#endif
 
   /// \brief Build a new Objective-C fast enumeration statement.
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult RebuildObjCForCollectionStmt(SourceLocation ForLoc,
                                           Stmt *Element,
                                           Expr *Collection,
@@ -1854,6 +1871,7 @@ public:
 
     return getSema().FinishObjCForCollectionStmt(ForEachStmt.get(), Body);
   }
+#endif
 
   /// \brief Build a new C++ exception declaration.
   ///
@@ -1911,10 +1929,12 @@ public:
             return StmtError();
 
           Expr *RangeExpr = RangeVar->getInit();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
           if (!RangeExpr->isTypeDependent() &&
               RangeExpr->getType()->isObjCObjectPointerType())
             return getSema().ActOnObjCForCollectionStmt(ForLoc, LoopVar, RangeExpr,
                                                         RParenLoc);
+#endif
         }
       }
     }
@@ -6681,6 +6701,7 @@ TreeTransform<Derived>::TransformCoyieldExpr(CoyieldExpr *E) {
 
 // Objective-C Statements.
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCAtTryStmt(ObjCAtTryStmt *S) {
@@ -6720,7 +6741,9 @@ TreeTransform<Derived>::TransformObjCAtTryStmt(ObjCAtTryStmt *S) {
   return getDerived().RebuildObjCAtTryStmt(S->getAtTryLoc(), TryBody.get(),
                                            CatchStmts, Finally.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCAtCatchStmt(ObjCAtCatchStmt *S) {
@@ -6756,7 +6779,9 @@ TreeTransform<Derived>::TransformObjCAtCatchStmt(ObjCAtCatchStmt *S) {
                                              S->getRParenLoc(),
                                              Var, Body.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCAtFinallyStmt(ObjCAtFinallyStmt *S) {
@@ -6774,7 +6799,9 @@ TreeTransform<Derived>::TransformObjCAtFinallyStmt(ObjCAtFinallyStmt *S) {
   return getDerived().RebuildObjCAtFinallyStmt(S->getAtFinallyLoc(),
                                                Body.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCAtThrowStmt(ObjCAtThrowStmt *S) {
@@ -6791,7 +6818,9 @@ TreeTransform<Derived>::TransformObjCAtThrowStmt(ObjCAtThrowStmt *S) {
 
   return getDerived().RebuildObjCAtThrowStmt(S->getThrowLoc(), Operand.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCAtSynchronizedStmt(
@@ -6821,7 +6850,9 @@ TreeTransform<Derived>::TransformObjCAtSynchronizedStmt(
   return getDerived().RebuildObjCAtSynchronizedStmt(S->getAtSynchronizedLoc(),
                                                     Object.get(), Body.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCAutoreleasePoolStmt(
@@ -6840,7 +6871,9 @@ TreeTransform<Derived>::TransformObjCAutoreleasePoolStmt(
   return getDerived().RebuildObjCAutoreleasePoolStmt(
                         S->getAtLoc(), Body.get());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformObjCForCollectionStmt(
@@ -6874,6 +6907,7 @@ TreeTransform<Derived>::TransformObjCForCollectionStmt(
                                                    S->getRParenLoc(),
                                                    Body.get());
 }
+#endif
 
 template <typename Derived>
 StmtResult TreeTransform<Derived>::TransformCXXCatchStmt(CXXCatchStmt *S) {
@@ -10937,11 +10971,13 @@ TreeTransform<Derived>::TransformObjCStringLiteral(ObjCStringLiteral *E) {
   return SemaRef.MaybeBindToTemporary(E);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
   return E;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>

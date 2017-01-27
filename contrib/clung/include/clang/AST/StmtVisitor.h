@@ -18,7 +18,9 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/AST/StmtOpenMP.h"
 
 namespace clang {

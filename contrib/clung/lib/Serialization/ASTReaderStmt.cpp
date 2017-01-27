@@ -1130,6 +1130,7 @@ void ASTStmtReader::VisitObjCMessageExpr(ObjCMessageExpr *E) {
     Locs[I] = ReadSourceLocation(Record, Idx);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   VisitStmt(S);
   S->setElement(Reader.ReadSubStmt());
@@ -1138,7 +1139,9 @@ void ASTStmtReader::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   S->setForLoc(ReadSourceLocation(Record, Idx));
   S->setRParenLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
   VisitStmt(S);
   S->setCatchBody(Reader.ReadSubStmt());
@@ -1146,19 +1149,25 @@ void ASTStmtReader::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
   S->setAtCatchLoc(ReadSourceLocation(Record, Idx));
   S->setRParenLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *S) {
   VisitStmt(S);
   S->setFinallyBody(Reader.ReadSubStmt());
   S->setAtFinallyLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAutoreleasePoolStmt(ObjCAutoreleasePoolStmt *S) {
   VisitStmt(S);
   S->setSubStmt(Reader.ReadSubStmt());
   S->setAtLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
   VisitStmt(S);
   assert(Record[Idx] == S->getNumCatchStmts());
@@ -1172,25 +1181,32 @@ void ASTStmtReader::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
     S->setFinallyStmt(Reader.ReadSubStmt());
   S->setAtTryLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *S) {
   VisitStmt(S);
   S->setSynchExpr(Reader.ReadSubStmt());
   S->setSynchBody(Reader.ReadSubStmt());
   S->setAtSynchronizedLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAtThrowStmt(ObjCAtThrowStmt *S) {
   VisitStmt(S);
   S->setThrowExpr(Reader.ReadSubStmt());
   S->setThrowLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *E) {
   VisitExpr(E);
   E->setValue(Record[Idx++]);
   E->setLocation(ReadSourceLocation(Record, Idx));
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCAvailabilityCheckExpr(ObjCAvailabilityCheckExpr *E) {
@@ -3238,7 +3254,6 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_BRIDGED_CAST:
       S = new (Context) ObjCBridgedCastExpr(Empty);
       break;
-#endif
     case STMT_OBJC_FOR_COLLECTION:
       S = new (Context) ObjCForCollectionStmt(Empty);
       break;
@@ -3248,11 +3263,15 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case STMT_OBJC_FINALLY:
       S = new (Context) ObjCAtFinallyStmt(Empty);
       break;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case STMT_OBJC_AT_TRY:
       S = ObjCAtTryStmt::CreateEmpty(Context, 
                                      Record[ASTStmtReader::NumStmtFields],
                                      Record[ASTStmtReader::NumStmtFields + 1]);
       break;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case STMT_OBJC_AT_SYNCHRONIZED:
       S = new (Context) ObjCAtSynchronizedStmt(Empty);
       break;
@@ -3265,7 +3284,6 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_BOOL_LITERAL:
       S = new (Context) ObjCBoolLiteralExpr(Empty);
       break;
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case EXPR_OBJC_AVAILABILITY_CHECK:
       S = new (Context) ObjCAvailabilityCheckExpr(Empty);
       break;

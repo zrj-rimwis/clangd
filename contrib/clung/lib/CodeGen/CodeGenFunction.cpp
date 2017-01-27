@@ -27,7 +27,9 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/CodeGen/CGFunctionInfo.h"
@@ -1184,7 +1186,11 @@ bool CodeGenFunction::mightAddDeclToScope(const Stmt *S) {
   if (isa<IfStmt>(S) || isa<SwitchStmt>(S) || isa<WhileStmt>(S) ||
       isa<DoStmt>(S) || isa<ForStmt>(S) || isa<CompoundStmt>(S) ||
       isa<CXXForRangeStmt>(S) || isa<CXXTryStmt>(S) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       isa<ObjCForCollectionStmt>(S) || isa<ObjCAtTryStmt>(S))
+#else
+      false || false)
+#endif
     return false;
 
   if (isa<DeclStmt>(S))

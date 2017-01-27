@@ -17,7 +17,9 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "llvm/ADT/BitVector.h"
 using namespace clang;
 
@@ -424,6 +426,7 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
     return;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCAtTryStmtClass: {
     // Disallow jumps into any part of an @try statement by pushing a scope and
     // walking all sub-stmts in that scope.
@@ -463,7 +466,9 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
 
     return;
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCAtSynchronizedStmtClass: {
     // Disallow jumps into the protected statement of an @synchronized, but
     // allow jumps into the object expression it protects.
@@ -482,7 +487,9 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
     BuildScopeInformation(AS->getSynchBody(), NewParentScope);
     return;
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCAutoreleasePoolStmtClass: {
     // Disallow jumps into the protected statement of an @autoreleasepool.
     ObjCAutoreleasePoolStmt *AS = cast<ObjCAutoreleasePoolStmt>(S);
@@ -496,6 +503,7 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
     BuildScopeInformation(AS->getSubStmt(), NewParentScope);
     return;
   }
+#endif
 
   case Stmt::ExprWithCleanupsClass: {
     // Disallow jumps past full-expressions that use blocks with

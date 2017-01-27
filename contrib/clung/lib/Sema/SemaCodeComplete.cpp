@@ -5905,6 +5905,7 @@ void Sema::CodeCompleteObjCInstanceMessage(Scope *S, Expr *Receiver,
                             Results.data(),Results.size());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::CodeCompleteObjCForCollection(Scope *S, 
                                          DeclGroupPtrTy IterationVar) {
   CodeCompleteExpressionData Data;
@@ -5920,6 +5921,7 @@ void Sema::CodeCompleteObjCForCollection(Scope *S,
   
   CodeCompleteExpression(S, Data);
 }
+#endif
 
 void Sema::CodeCompleteObjCSelector(Scope *S,
                                     ArrayRef<IdentifierInfo *> SelIdents) {

@@ -60,6 +60,7 @@ public:
 
 /// ObjCBoolLiteralExpr - Objective-C Boolean Literal.
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCBoolLiteralExpr : public Expr {
   bool Value;
   SourceLocation Loc;
@@ -89,6 +90,7 @@ public:
     return child_range(child_iterator(), child_iterator());
   }
 };
+#endif
 
 /// ObjCBoxedExpr - used for generalized expression boxing.
 /// as in: @(strdup("hello world")), @(random()) or @(view.frame)

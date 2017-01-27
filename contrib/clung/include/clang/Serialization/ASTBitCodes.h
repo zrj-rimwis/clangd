@@ -1363,21 +1363,53 @@ namespace clang {
       EXPR_OBJC_INDIRECT_COPY_RESTORE,
 
       /// \brief An ObjCForCollectionStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_FOR_COLLECTION,
+#else
+      STMT_OBJC_FOR_COLLECTION_disabled,
+#endif
       /// \brief An ObjCAtCatchStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_CATCH,
+#else
+      STMT_OBJC_CATCH_disabled,
+#endif
       /// \brief An ObjCAtFinallyStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_FINALLY,
+#else
+      STMT_OBJC_FINALLY_disabled,
+#endif
       /// \brief An ObjCAtTryStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_AT_TRY,
+#else
+      STMT_OBJC_AT_TRY_disabled,
+#endif
       /// \brief An ObjCAtSynchronizedStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_AT_SYNCHRONIZED,
+#else
+      STMT_OBJC_AT_SYNCHRONIZED_disabled,
+#endif
       /// \brief An ObjCAtThrowStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_AT_THROW,
+#else
+      STMT_OBJC_AT_THROW_disabled,
+#endif
       /// \brief An ObjCAutoreleasePoolStmt record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       STMT_OBJC_AUTORELEASE_POOL,
+#else
+      STMT_OBJC_AUTORELEASE_POOL_disabled,
+#endif
       /// \brief An ObjCBoolLiteralExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_BOOL_LITERAL,
+#else
+      EXPR_OBJC_BOOL_LITERAL_disabled,
+#endif
       /// \brief An ObjCAvailabilityCheckExpr record.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_AVAILABILITY_CHECK,

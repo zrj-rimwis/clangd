@@ -230,38 +230,52 @@ void StmtProfiler::VisitCapturedStmt(const CapturedStmt *S) {
   VisitStmt(S);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S) {
   VisitStmt(S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCAtCatchStmt(const ObjCAtCatchStmt *S) {
   VisitStmt(S);
   ID.AddBoolean(S->hasEllipsis());
   if (S->getCatchParamDecl())
     VisitType(S->getCatchParamDecl()->getType());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCAtFinallyStmt(const ObjCAtFinallyStmt *S) {
   VisitStmt(S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCAtTryStmt(const ObjCAtTryStmt *S) {
   VisitStmt(S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void
 StmtProfiler::VisitObjCAtSynchronizedStmt(const ObjCAtSynchronizedStmt *S) {
   VisitStmt(S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCAtThrowStmt(const ObjCAtThrowStmt *S) {
   VisitStmt(S);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void
 StmtProfiler::VisitObjCAutoreleasePoolStmt(const ObjCAutoreleasePoolStmt *S) {
   VisitStmt(S);
 }
+#endif
 
 namespace {
 class OMPClauseProfiler : public ConstOMPClauseVisitor<OMPClauseProfiler> {
@@ -1636,10 +1650,12 @@ void StmtProfiler::VisitObjCIsaExpr(const ObjCIsaExpr *S) {
   ID.AddBoolean(S->isArrow());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *S) {
   VisitExpr(S);
   ID.AddBoolean(S->getValue());
 }
+#endif
 
 void StmtProfiler::VisitObjCIndirectCopyRestoreExpr(
     const ObjCIndirectCopyRestoreExpr *S) {

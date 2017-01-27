@@ -34,13 +34,8 @@ def AsmStmt : Stmt<1>;
 def GCCAsmStmt : DStmt<AsmStmt>;
 
 // Obj-C statements
-def ObjCAtTryStmt : Stmt;
-def ObjCAtCatchStmt : Stmt;
-def ObjCAtFinallyStmt : Stmt;
-def ObjCAtThrowStmt : Stmt;
-def ObjCAtSynchronizedStmt : Stmt;
-def ObjCForCollectionStmt : Stmt;
-def ObjCAutoreleasePoolStmt : Stmt;
+
+// REMOVED
 
 // C++ statments
 def CXXCatchStmt : Stmt;
@@ -159,7 +154,6 @@ def ObjCIvarRefExpr : DStmt<Expr>;
 def ObjCPropertyRefExpr : DStmt<Expr>;
 def ObjCIsaExpr : DStmt<Expr>;
 def ObjCIndirectCopyRestoreExpr : DStmt<Expr>;
-def ObjCBoolLiteralExpr : DStmt<Expr>;
 def ObjCSubscriptRefExpr : DStmt<Expr>;
 
 // Obj-C ARC Expressions.

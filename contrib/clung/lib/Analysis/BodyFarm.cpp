@@ -70,7 +70,9 @@ public:
   ImplicitCastExpr *makeLvalueToRvalue(const Expr *Arg, QualType Ty);
   
   /// Create an Objective-C bool literal.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   ObjCBoolLiteralExpr *makeObjCBool(bool Val);
+#endif
 
   /// Create an Objective-C ivar reference.
   ObjCIvarRefExpr *makeObjCIvarRef(const Expr *Base, const ObjCIvarDecl *IVar);
@@ -142,10 +144,12 @@ ImplicitCastExpr *ASTMaker::makeIntegralCastToBoolean(const Expr *Arg) {
                                   const_cast<Expr*>(Arg), nullptr, VK_RValue);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCBoolLiteralExpr *ASTMaker::makeObjCBool(bool Val) {
   QualType Ty = C.getBOOLDecl() ? C.getBOOLType() : C.ObjCBuiltinBoolTy;
   return new (C) ObjCBoolLiteralExpr(Val, Ty, SourceLocation());
 }
+#endif
 
 ObjCIvarRefExpr *ASTMaker::makeObjCIvarRef(const Expr *Base,
                                            const ObjCIvarDecl *IVar) {
@@ -271,6 +275,7 @@ static Stmt *create_dispatch_sync(ASTContext &C, const FunctionDecl *D) {
   return CE;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX XXX something is very fishy here
 static Stmt *create_OSAtomicCompareAndSwap(ASTContext &C, const FunctionDecl *D)
 {
   // There are exactly 3 arguments.
@@ -348,6 +353,7 @@ static Stmt *create_OSAtomicCompareAndSwap(ASTContext &C, const FunctionDecl *D)
 
   return If;  
 }
+#endif
 
 Stmt *BodyFarm::getBody(const FunctionDecl *D) {
   D = D->getCanonicalDecl();
@@ -369,7 +375,11 @@ Stmt *BodyFarm::getBody(const FunctionDecl *D) {
 
   if (Name.startswith("OSAtomicCompareAndSwap") ||
       Name.startswith("objc_atomicCompareAndSwap")) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX XXX smth is very very naughty here, kill it
     FF = create_OSAtomicCompareAndSwap;
+#else
+    assert(false);
+#endif
   }
   else {
     FF = llvm::StringSwitch<FunctionFarmer>(Name)

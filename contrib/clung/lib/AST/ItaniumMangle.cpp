@@ -3827,11 +3827,13 @@ recurse:
     break;
 
   // FIXME. __objc_yes/__objc_no are mangled same as true/false
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoolLiteralExprClass:
     Out << "Lb";
     Out << (cast<ObjCBoolLiteralExpr>(E)->getValue() ? '1' : '0');
     Out << 'E';
     break;
+#endif
   
   case Expr::CXXBoolLiteralExprClass:
     Out << "Lb";

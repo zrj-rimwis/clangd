@@ -2863,8 +2863,8 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case SizeOfPackExprClass:
   case ObjCStringLiteralClass:
   case ObjCEncodeExprClass:
-  case ObjCBoolLiteralExprClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  case ObjCBoolLiteralExprClass:
   case ObjCAvailabilityCheckExprClass:
 #endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__

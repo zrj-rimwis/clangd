@@ -771,6 +771,7 @@ struct CounterCoverageMappingBuilder
       pushRegion(OutCount);
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S) {
     extendRegion(S);
     Visit(S->getElement());
@@ -790,6 +791,7 @@ struct CounterCoverageMappingBuilder
     if (OutCount != ParentCount)
       pushRegion(OutCount);
   }
+#endif
 
   void VisitSwitchStmt(const SwitchStmt *S) {
     extendRegion(S);

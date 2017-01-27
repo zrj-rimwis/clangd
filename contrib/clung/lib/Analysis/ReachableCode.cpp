@@ -41,7 +41,11 @@ static bool isEnumConstant(const Expr *Ex) {
 static bool isTrivialExpression(const Expr *Ex) {
   Ex = Ex->IgnoreParenCasts();
   return isa<IntegerLiteral>(Ex) || isa<StringLiteral>(Ex) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
          isa<CXXBoolLiteralExpr>(Ex) || isa<ObjCBoolLiteralExpr>(Ex) ||
+#else
+         isa<CXXBoolLiteralExpr>(Ex) || false ||
+#endif
          isa<CharacterLiteral>(Ex) ||
          isEnumConstant(Ex);
 }
@@ -132,6 +136,7 @@ static bool isExpandedFromConfigurationMacro(const Stmt *S,
   // so that we can refine it later.
   SourceLocation L = S->getLocStart();
   if (L.isMacroID()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, nice simplification
     if (IgnoreYES_NO) {
       // The Objective-C constant 'YES' and 'NO'
       // are defined as macros.  Do not treat them
@@ -142,6 +147,7 @@ static bool isExpandedFromConfigurationMacro(const Stmt *S,
       if (MacroName == "YES" || MacroName == "NO")
         return false;
     }
+#endif
     return true;
   }
   return false;
@@ -176,7 +182,9 @@ static bool isConfigurationValue(const Stmt *S,
   if (const Expr *Ex = dyn_cast<Expr>(S))
     S = Ex->IgnoreCasts();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
   bool IgnoreYES_NO = false;
+#endif
 
   switch (S->getStmtClass()) {
     case Stmt::CallExprClass: {
@@ -186,16 +194,22 @@ static bool isConfigurationValue(const Stmt *S,
     }
     case Stmt::DeclRefExprClass:
       return isConfigurationValue(cast<DeclRefExpr>(S)->getDecl(), PP);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCBoolLiteralExprClass:
       IgnoreYES_NO = true;
       // Fallthrough.
+#endif
     case Stmt::CXXBoolLiteralExprClass:
     case Stmt::IntegerLiteralClass: {
       const Expr *E = cast<Expr>(S);
       if (IncludeIntegers) {
         if (SilenceableCondVal && !SilenceableCondVal->getBegin().isValid())
           *SilenceableCondVal = E->getSourceRange();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
         return WrappedInParens || isExpandedFromConfigurationMacro(E, PP, IgnoreYES_NO);
+#else
+        return WrappedInParens || isExpandedFromConfigurationMacro(E, PP, false);
+#endif
       }
       return false;
     }

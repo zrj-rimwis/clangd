@@ -22,7 +22,9 @@
 #include "clang/AST/ParentMap.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Analysis/Analyses/CFGReachabilityAnalysis.h"
 #include "clang/Analysis/Analyses/Consumed.h"
@@ -374,10 +376,12 @@ static ControlFlowKind CheckFallThrough(AnalysisDeclContext &AC) {
       HasLiveReturn = true;
       continue;
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (isa<ObjCAtThrowStmt>(S)) {
       HasFakeEdge = true;
       continue;
     }
+#endif
     if (isa<CXXThrowExpr>(S)) {
       HasFakeEdge = true;
       continue;
@@ -1185,7 +1189,9 @@ static bool isInLoop(const ASTContext &Ctx, const ParentMap &PM,
     case Stmt::ForStmtClass:
     case Stmt::WhileStmtClass:
     case Stmt::CXXForRangeStmtClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCForCollectionStmtClass:
+#endif
       return true;
     case Stmt::DoStmtClass: {
       const Expr *Cond = cast<DoStmt>(S)->getCond();

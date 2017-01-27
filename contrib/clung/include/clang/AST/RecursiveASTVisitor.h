@@ -30,7 +30,9 @@
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/AST/StmtOpenMP.h"
 #include "clang/AST/TemplateBase.h"
 #include "clang/AST/TemplateName.h"
@@ -2040,6 +2042,7 @@ DEF_TRAVERSE_STMT(IndirectGotoStmt, {})
 DEF_TRAVERSE_STMT(LabelStmt, {})
 DEF_TRAVERSE_STMT(AttributedStmt, {})
 DEF_TRAVERSE_STMT(NullStmt, {})
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCAtCatchStmt, {})
 DEF_TRAVERSE_STMT(ObjCAtFinallyStmt, {})
 DEF_TRAVERSE_STMT(ObjCAtSynchronizedStmt, {})
@@ -2047,6 +2050,7 @@ DEF_TRAVERSE_STMT(ObjCAtThrowStmt, {})
 DEF_TRAVERSE_STMT(ObjCAtTryStmt, {})
 DEF_TRAVERSE_STMT(ObjCForCollectionStmt, {})
 DEF_TRAVERSE_STMT(ObjCAutoreleasePoolStmt, {})
+#endif
 DEF_TRAVERSE_STMT(CXXForRangeStmt, {
   if (!getDerived().shouldVisitImplicitCode()) {
     TRY_TO_TRAVERSE_OR_ENQUEUE_STMT(S->getLoopVarStmt());
@@ -2345,7 +2349,9 @@ DEF_TRAVERSE_STMT(ExtVectorElementExpr, {})
 DEF_TRAVERSE_STMT(GNUNullExpr, {})
 DEF_TRAVERSE_STMT(ImplicitValueInitExpr, {})
 DEF_TRAVERSE_STMT(NoInitExpr, {})
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCBoolLiteralExpr, {})
+#endif
 DEF_TRAVERSE_STMT(ObjCEncodeExpr, {
   if (TypeSourceInfo *TInfo = S->getEncodedTypeSourceInfo())
     TRY_TO(TraverseTypeLoc(TInfo->getTypeLoc()));

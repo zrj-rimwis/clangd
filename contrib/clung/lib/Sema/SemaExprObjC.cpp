@@ -460,7 +460,11 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
     if (isa<IntegerLiteral>(OrigElement) || 
         isa<CharacterLiteral>(OrigElement) ||
         isa<FloatingLiteral>(OrigElement) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         isa<ObjCBoolLiteralExpr>(OrigElement) ||
+#else
+        false ||
+#endif
         isa<CXXBoolLiteralExpr>(OrigElement)) {
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (S.NSAPIObj->getNSNumberFactoryMethodKind(OrigElement->getType())) {

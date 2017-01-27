@@ -1206,7 +1206,9 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::NoInitExprClass:
   case Expr::ObjCEncodeExprClass:
   case Expr::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoolLiteralExprClass:
+#endif
   case Expr::OpaqueValueExprClass:
   case Expr::PredefinedExprClass:
   case Expr::SizeOfPackExprClass:

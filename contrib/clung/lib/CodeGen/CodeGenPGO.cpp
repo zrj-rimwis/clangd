@@ -82,7 +82,11 @@ public:
     DoStmt,
     ForStmt,
     CXXForRangeStmt,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX why this one is here?
     ObjCForCollectionStmt,
+#else
+    ObjCForCollectionStmt_disabled,
+#endif
     SwitchStmt,
     CaseStmt,
     DefaultStmt,
@@ -168,8 +172,10 @@ struct MapRegionCounters : public RecursiveASTVisitor<MapRegionCounters> {
       return PGOHash::ForStmt;
     case Stmt::CXXForRangeStmtClass:
       return PGOHash::CXXForRangeStmt;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCForCollectionStmtClass:
       return PGOHash::ObjCForCollectionStmt;
+#endif
     case Stmt::SwitchStmtClass:
       return PGOHash::SwitchStmt;
     case Stmt::CaseStmtClass:
@@ -439,6 +445,7 @@ struct ComputeRegionCounts : public ConstStmtVisitor<ComputeRegionCounts> {
     RecordNextStmtCount = true;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void VisitObjCForCollectionStmt(const ObjCForCollectionStmt *S) {
     RecordStmtCount(S);
     Visit(S->getElement());
@@ -455,6 +462,7 @@ struct ComputeRegionCounts : public ConstStmtVisitor<ComputeRegionCounts> {
              BodyCount);
     RecordNextStmtCount = true;
   }
+#endif
 
   void VisitSwitchStmt(const SwitchStmt *S) {
     RecordStmtCount(S);

@@ -20,7 +20,9 @@
 #include "TargetInfo.h"
 #include "clang/AST/Mangle.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Basic/TargetBuiltins.h"
 #include "llvm/IR/CallSite.h"

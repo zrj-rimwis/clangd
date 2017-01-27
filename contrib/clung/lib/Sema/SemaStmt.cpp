@@ -22,7 +22,9 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/AST/TypeLoc.h"
 #include "clang/AST/TypeOrdering.h"
 #include "clang/Basic/TargetInfo.h"
@@ -1696,6 +1698,7 @@ StmtResult Sema::ActOnForEachLValueExpr(Expr *E) {
   return StmtResult(static_cast<Stmt*>(FullExpr.get()));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 Sema::CheckObjCForCollectionOperand(SourceLocation forLoc, Expr *collection) {
   if (!collection)
@@ -1774,7 +1777,9 @@ Sema::CheckObjCForCollectionOperand(SourceLocation forLoc, Expr *collection) {
   // Wrap up any cleanups in the expression.
   return collection;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCForCollectionStmt(SourceLocation ForLoc,
                                  Stmt *First, Expr *collection,
@@ -1854,6 +1859,7 @@ Sema::ActOnObjCForCollectionStmt(SourceLocation ForLoc,
   return new (Context) ObjCForCollectionStmt(First, CollectionExprResult.get(),
                                              nullptr, ForLoc, RParenLoc);
 }
+#endif
 
 /// Finish building a variable declaration for a for-range statement.
 /// \return true if an error occurs.
@@ -1945,10 +1951,12 @@ VarDecl *BuildForRangeVarDecl(Sema &SemaRef, SourceLocation Loc,
 
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 static bool ObjCEnumerationCollection(Expr *Collection) {
   return !Collection->isTypeDependent()
           && Collection->getType()->getAs<ObjCObjectPointerType>() != nullptr;
 }
+#endif
 
 /// ActOnCXXForRangeStmt - Check and build a C++11 for-range statement.
 ///
@@ -1976,8 +1984,10 @@ StmtResult Sema::ActOnCXXForRangeStmt(Scope *S, SourceLocation ForLoc,
   if (!First)
     return StmtError();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (Range && ObjCEnumerationCollection(Range))
     return ActOnObjCForCollectionStmt(ForLoc, First, Range, RParenLoc);
+#endif
 
   DeclStmt *DS = dyn_cast<DeclStmt>(First);
   assert(DS && "first part of for range not a decl stmt");
@@ -2438,6 +2448,7 @@ Sema::BuildCXXForRangeStmt(SourceLocation ForLoc, SourceLocation CoawaitLoc,
 
 /// FinishObjCForCollectionStmt - Attach the body to a objective-C foreach
 /// statement.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult Sema::FinishObjCForCollectionStmt(Stmt *S, Stmt *B) {
   if (!S || !B)
     return StmtError();
@@ -2446,6 +2457,7 @@ StmtResult Sema::FinishObjCForCollectionStmt(Stmt *S, Stmt *B) {
   ForStmt->setBody(B);
   return S;
 }
+#endif
 
 // Warn when the loop variable is a const reference that creates a copy.
 // Suggest using the non-reference type for copies.  If a copy can be prevented
@@ -2609,8 +2621,10 @@ StmtResult Sema::FinishCXXForRangeStmt(Stmt *S, Stmt *B) {
   if (!S || !B)
     return StmtError();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, why so deep in to c++ logic??
   if (isa<ObjCForCollectionStmt>(S))
     return FinishObjCForCollectionStmt(S, B);
+#endif
 
   CXXForRangeStmt *ForStmt = cast<CXXForRangeStmt>(S);
   ForStmt->setBody(B);
@@ -3414,6 +3428,7 @@ StmtResult Sema::BuildReturnStmt(SourceLocation ReturnLoc, Expr *RetValExp) {
   return Result;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCAtCatchStmt(SourceLocation AtLoc,
                            SourceLocation RParen, Decl *Parm,
@@ -3424,20 +3439,20 @@ Sema::ActOnObjCAtCatchStmt(SourceLocation AtLoc,
 
   return new (Context) ObjCAtCatchStmt(AtLoc, RParen, Var, Body);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCAtFinallyStmt(SourceLocation AtLoc, Stmt *Body) {
   return new (Context) ObjCAtFinallyStmt(AtLoc, Body);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCAtTryStmt(SourceLocation AtLoc, Stmt *Try,
                          MultiStmtArg CatchStmts, Stmt *Finally) {
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!getLangOpts().ObjCExceptions)
-#else
-  if (!false)
-#endif
     Diag(AtLoc, diag::err_objc_exceptions_disabled) << "@try";
 
   getCurFunction()->setHasBranchProtectedScope();
@@ -3445,7 +3460,9 @@ Sema::ActOnObjCAtTryStmt(SourceLocation AtLoc, Stmt *Try,
   return ObjCAtTryStmt::Create(Context, AtLoc, Try, CatchStmts.data(),
                                NumCatchStmts, Finally);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult Sema::BuildObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw) {
   if (Throw) {
     ExprResult Result = DefaultLvalueConversion(Throw);
@@ -3470,15 +3487,13 @@ StmtResult Sema::BuildObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw) {
 
   return new (Context) ObjCAtThrowStmt(AtLoc, Throw);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw,
                            Scope *CurScope) {
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!getLangOpts().ObjCExceptions)
-#else
-  if (!false)
-#endif
     Diag(AtLoc, diag::err_objc_exceptions_disabled) << "@throw";
 
   if (!Throw) {
@@ -3492,7 +3507,9 @@ Sema::ActOnObjCAtThrowStmt(SourceLocation AtLoc, Expr *Throw,
   }
   return BuildObjCAtThrowStmt(AtLoc, Throw);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 Sema::ActOnObjCAtSynchronizedOperand(SourceLocation atLoc, Expr *operand) {
   ExprResult result = DefaultLvalueConversion(operand);
@@ -3528,7 +3545,9 @@ Sema::ActOnObjCAtSynchronizedOperand(SourceLocation atLoc, Expr *operand) {
   // The operand to @synchronized is a full-expression.
   return ActOnFinishFullExpr(operand);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCAtSynchronizedStmt(SourceLocation AtLoc, Expr *SyncExpr,
                                   Stmt *SyncBody) {
@@ -3536,6 +3555,7 @@ Sema::ActOnObjCAtSynchronizedStmt(SourceLocation AtLoc, Expr *SyncExpr,
   getCurFunction()->setHasBranchProtectedScope();
   return new (Context) ObjCAtSynchronizedStmt(AtLoc, SyncExpr, SyncBody);
 }
+#endif
 
 /// ActOnCXXCatchBlock - Takes an exception declaration and a handler block
 /// and creates a proper catch handler from them.
@@ -3547,11 +3567,13 @@ Sema::ActOnCXXCatchBlock(SourceLocation CatchLoc, Decl *ExDecl,
       CXXCatchStmt(CatchLoc, cast_or_null<VarDecl>(ExDecl), HandlerBlock);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StmtResult
 Sema::ActOnObjCAutoreleasePoolStmt(SourceLocation AtLoc, Stmt *Body) {
   getCurFunction()->setHasBranchProtectedScope();
   return new (Context) ObjCAutoreleasePoolStmt(AtLoc, Body);
 }
+#endif
 
 namespace {
 class CatchHandlerType {

@@ -512,7 +512,9 @@ public:
   void VisitCallExpr(CallExpr *ce);
   void VisitDeclRefExpr(DeclRefExpr *dr);
   void VisitDeclStmt(DeclStmt *ds);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void VisitObjCForCollectionStmt(ObjCForCollectionStmt *FS);
+#endif
   void VisitObjCMessageExpr(ObjCMessageExpr *ME);
 
   bool isTrackedVar(const VarDecl *vd) {
@@ -680,6 +682,7 @@ void TransferFunctions::reportUse(const Expr *ex, const VarDecl *vd) {
     handler.handleUseOfUninitVariable(vd, getUninitUse(ex, vd, v));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void TransferFunctions::VisitObjCForCollectionStmt(ObjCForCollectionStmt *FS) {
   // This represents an initialization of the 'element' value.
   if (DeclStmt *DS = dyn_cast<DeclStmt>(FS->getElement())) {
@@ -688,6 +691,7 @@ void TransferFunctions::VisitObjCForCollectionStmt(ObjCForCollectionStmt *FS) {
       vals[VD] = Initialized;
   }
 }
+#endif
 
 void TransferFunctions::VisitBlockExpr(BlockExpr *be) {
   const BlockDecl *bd = be->getBlockDecl();

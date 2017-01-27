@@ -468,12 +468,14 @@ private:
                                                          CFGBlock *TrueBlock,
                                                          CFGBlock *FalseBlock);
   CFGBlock *VisitMemberExpr(MemberExpr *M, AddStmtChoice asc);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   CFGBlock *VisitObjCAtCatchStmt(ObjCAtCatchStmt *S);
   CFGBlock *VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *S);
   CFGBlock *VisitObjCAtThrowStmt(ObjCAtThrowStmt *S);
   CFGBlock *VisitObjCAtTryStmt(ObjCAtTryStmt *S);
   CFGBlock *VisitObjCAutoreleasePoolStmt(ObjCAutoreleasePoolStmt *S);
   CFGBlock *VisitObjCForCollectionStmt(ObjCForCollectionStmt *S);
+#endif
   CFGBlock *VisitPseudoObjectExpr(PseudoObjectExpr *E);
   CFGBlock *VisitReturnStmt(ReturnStmt *R);
   CFGBlock *VisitStmtExpr(StmtExpr *S, AddStmtChoice asc);
@@ -1559,23 +1561,35 @@ CFGBlock *CFGBuilder::Visit(Stmt * S, AddStmtChoice asc) {
     case Stmt::NullStmtClass:
       return Block;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCAtCatchStmtClass:
       return VisitObjCAtCatchStmt(cast<ObjCAtCatchStmt>(S));
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCAutoreleasePoolStmtClass:
     return VisitObjCAutoreleasePoolStmt(cast<ObjCAutoreleasePoolStmt>(S));
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCAtSynchronizedStmtClass:
       return VisitObjCAtSynchronizedStmt(cast<ObjCAtSynchronizedStmt>(S));
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCAtThrowStmtClass:
       return VisitObjCAtThrowStmt(cast<ObjCAtThrowStmt>(S));
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCAtTryStmtClass:
       return VisitObjCAtTryStmt(cast<ObjCAtTryStmt>(S));
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCForCollectionStmtClass:
       return VisitObjCForCollectionStmt(cast<ObjCForCollectionStmt>(S));
+#endif
 
     case Stmt::OpaqueValueExprClass:
       return Block;
@@ -2568,6 +2582,7 @@ CFGBlock *CFGBuilder::VisitMemberExpr(MemberExpr *M, AddStmtChoice asc) {
   return Visit(M->getBase());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 CFGBlock *CFGBuilder::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   // Objective-C fast enumeration 'for' statements:
   //  http://developer.apple.com/documentation/Cocoa/Conceptual/ObjectiveC
@@ -2676,13 +2691,17 @@ CFGBlock *CFGBuilder::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   Block = createBlock();
   return addStmt(S->getCollection());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 CFGBlock *CFGBuilder::VisitObjCAutoreleasePoolStmt(ObjCAutoreleasePoolStmt *S) {
   // Inline the body.
   return addStmt(S->getSubStmt());
   // TODO: consider adding cleanups for the end of @autoreleasepool scope.
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 CFGBlock *CFGBuilder::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *S) {
   // FIXME: Add locking 'primitives' to CFG for @synchronized.
 
@@ -2706,11 +2725,14 @@ CFGBlock *CFGBuilder::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *S) {
   // Inline the sync expression.
   return addStmt(S->getSynchExpr());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 CFGBlock *CFGBuilder::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
   // FIXME
   return NYS();
 }
+#endif
 
 CFGBlock *CFGBuilder::VisitPseudoObjectExpr(PseudoObjectExpr *E) {
   autoCreateBlock();
@@ -2866,12 +2888,15 @@ CFGBlock *CFGBuilder::VisitWhileStmt(WhileStmt *W) {
 }
 
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 CFGBlock *CFGBuilder::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
   // FIXME: For now we pretend that @catch and the code it contains does not
   //  exit.
   return Block;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 CFGBlock *CFGBuilder::VisitObjCAtThrowStmt(ObjCAtThrowStmt *S) {
   // FIXME: This isn't complete.  We basically treat @throw like a return
   //  statement.
@@ -2890,6 +2915,7 @@ CFGBlock *CFGBuilder::VisitObjCAtThrowStmt(ObjCAtThrowStmt *S) {
   // control-flow (short-circuit operations).
   return VisitStmt(S, AddStmtChoice::AlwaysAdd);
 }
+#endif
 
 CFGBlock *CFGBuilder::VisitCXXThrowExpr(CXXThrowExpr *T) {
   // If we were in the middle of a block we stop processing that block.
@@ -4631,8 +4657,10 @@ Stmt *CFGBlock::getTerminatorCondition(bool StripParens) {
       E = cast<BinaryOperator>(Terminator)->getLHS();
       break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCForCollectionStmtClass:
       return Terminator;
+#endif
   }
 
   if (!StripParens)

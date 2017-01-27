@@ -293,6 +293,7 @@ void StmtPrinter::VisitForStmt(ForStmt *Node) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *Node) {
   Indent() << "for (";
   if (DeclStmt *DS = dyn_cast<DeclStmt>(Node->getElement()))
@@ -311,6 +312,7 @@ void StmtPrinter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *Node) {
     PrintStmt(Node->getBody());
   }
 }
+#endif
 
 void StmtPrinter::VisitCXXForRangeStmt(CXXForRangeStmt *Node) {
   Indent() << "for (";
@@ -458,6 +460,7 @@ void StmtPrinter::VisitCapturedStmt(CapturedStmt *Node) {
   PrintStmt(Node->getCapturedDecl()->getBody());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAtTryStmt(ObjCAtTryStmt *Node) {
   Indent() << "@try";
   if (CompoundStmt *TS = dyn_cast<CompoundStmt>(Node->getTryBody())) {
@@ -486,14 +489,20 @@ void StmtPrinter::VisitObjCAtTryStmt(ObjCAtTryStmt *Node) {
     OS << "\n";
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *Node) {
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAtCatchStmt (ObjCAtCatchStmt *Node) {
   Indent() << "@catch (...) { /* todo */ } \n";
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAtThrowStmt(ObjCAtThrowStmt *Node) {
   Indent() << "@throw";
   if (Node->getThrowExpr()) {
@@ -502,6 +511,7 @@ void StmtPrinter::VisitObjCAtThrowStmt(ObjCAtThrowStmt *Node) {
   }
   OS << ";\n";
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAvailabilityCheckExpr(
@@ -510,6 +520,7 @@ void StmtPrinter::VisitObjCAvailabilityCheckExpr(
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *Node) {
   Indent() << "@synchronized (";
   PrintExpr(Node->getSynchExpr());
@@ -517,12 +528,15 @@ void StmtPrinter::VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *Node) {
   PrintRawCompoundStmt(Node->getSynchBody());
   OS << "\n";
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCAutoreleasePoolStmt(ObjCAutoreleasePoolStmt *Node) {
   Indent() << "@autoreleasepool";
   PrintRawCompoundStmt(dyn_cast<CompoundStmt>(Node->getSubStmt()));
   OS << "\n";
 }
+#endif
 
 void StmtPrinter::PrintRawCXXCatchStmt(CXXCatchStmt *Node) {
   OS << "catch (";
@@ -2533,9 +2547,11 @@ void StmtPrinter::VisitObjCMessageExpr(ObjCMessageExpr *Mess) {
   OS << "]";
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 void StmtPrinter::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *Node) {
   OS << (Node->getValue() ? "__objc_yes" : "__objc_no");
 }
+#endif
 
 void
 StmtPrinter::VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {

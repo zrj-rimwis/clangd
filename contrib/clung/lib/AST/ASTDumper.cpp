@@ -547,7 +547,9 @@ namespace  {
     void VisitSizeOfPackExpr(const SizeOfPackExpr *Node);
 
     // ObjC
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node);
+#endif
     void VisitObjCEncodeExpr(const ObjCEncodeExpr *Node);
     void VisitObjCMessageExpr(const ObjCMessageExpr *Node);
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
@@ -558,7 +560,9 @@ namespace  {
     void VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node);
     void VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node);
     void VisitObjCIvarRefExpr(const ObjCIvarRefExpr *Node);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *Node);
+#endif
 
     // Comments.
     const char *getCommandName(unsigned CommandID);
@@ -2227,6 +2231,7 @@ void ASTDumper::VisitObjCBoxedExpr(const ObjCBoxedExpr *Node) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node) {
   VisitStmt(Node);
   if (const VarDecl *CatchParam = Node->getCatchParamDecl())
@@ -2234,6 +2239,7 @@ void ASTDumper::VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node) {
   else
     OS << " catch all";
 }
+#endif
 
 void ASTDumper::VisitObjCEncodeExpr(const ObjCEncodeExpr *Node) {
   VisitExpr(Node);
@@ -2305,10 +2311,12 @@ void ASTDumper::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node) {
     OS << "(null)";
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *Node) {
   VisitExpr(Node);
   OS << " " << (Node->getValue() ? "__objc_yes" : "__objc_no");
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // Comments

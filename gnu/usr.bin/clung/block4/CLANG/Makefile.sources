@@ -44,7 +44,6 @@ SRCS+=	APValue.cpp \
 	Stmt.cpp \
 	StmtCXX.cpp \
 	StmtIterator.cpp \
-	StmtObjC.cpp \
 	StmtOpenMP.cpp \
 	StmtPrinter.cpp \
 	StmtProfile.cpp \

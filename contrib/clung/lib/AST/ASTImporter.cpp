@@ -215,6 +215,7 @@ namespace clang {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     // FIXME: MSDependentExistsStmt
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Stmt *VisitObjCForCollectionStmt(ObjCForCollectionStmt *S);
     Stmt *VisitObjCAtCatchStmt(ObjCAtCatchStmt *S);
     Stmt *VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *S);
@@ -222,6 +223,7 @@ namespace clang {
     Stmt *VisitObjCAtSynchronizedStmt(ObjCAtSynchronizedStmt *S);
     Stmt *VisitObjCAtThrowStmt(ObjCAtThrowStmt *S);
     Stmt *VisitObjCAutoreleasePoolStmt(ObjCAutoreleasePoolStmt *S);
+#endif
 
     // Importing expressions
     Expr *VisitExpr(Expr *E);
@@ -5233,6 +5235,7 @@ Stmt *ASTNodeImporter::VisitCXXForRangeStmt(CXXForRangeStmt *S) {
                                                        ToColonLoc, ToRParenLoc);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
   Stmt *ToElem = Importer.Import(S->getElement());
   if (!ToElem && S->getElement())
@@ -5250,7 +5253,9 @@ Stmt *ASTNodeImporter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {
                                                              ToBody, ToForLoc,
                                                              ToRParenLoc);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
   SourceLocation ToAtCatchLoc = Importer.Import(S->getAtCatchLoc());
   SourceLocation ToRParenLoc = Importer.Import(S->getRParenLoc());
@@ -5269,7 +5274,9 @@ Stmt *ASTNodeImporter::VisitObjCAtCatchStmt(ObjCAtCatchStmt *S) {
                                                        ToExceptionDecl,
                                                        ToBody);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *S) {
   SourceLocation ToAtFinallyLoc = Importer.Import(S->getAtFinallyLoc());
   Stmt *ToAtFinallyStmt = Importer.Import(S->getFinallyBody());
@@ -5278,7 +5285,9 @@ Stmt *ASTNodeImporter::VisitObjCAtFinallyStmt(ObjCAtFinallyStmt *S) {
   return new (Importer.getToContext()) ObjCAtFinallyStmt(ToAtFinallyLoc,
                                                          ToAtFinallyStmt);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
   SourceLocation ToAtTryLoc = Importer.Import(S->getAtTryLoc());
   Stmt *ToAtTryStmt = Importer.Import(S->getTryBody());
@@ -5300,7 +5309,9 @@ Stmt *ASTNodeImporter::VisitObjCAtTryStmt(ObjCAtTryStmt *S) {
                                ToCatchStmts.begin(), ToCatchStmts.size(),
                                ToAtFinallyStmt);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCAtSynchronizedStmt
   (ObjCAtSynchronizedStmt *S) {
   SourceLocation ToAtSynchronizedLoc =
@@ -5314,7 +5325,9 @@ Stmt *ASTNodeImporter::VisitObjCAtSynchronizedStmt
   return new (Importer.getToContext()) ObjCAtSynchronizedStmt(
     ToAtSynchronizedLoc, ToSynchExpr, ToSynchBody);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCAtThrowStmt(ObjCAtThrowStmt *S) {
   SourceLocation ToAtThrowLoc = Importer.Import(S->getThrowLoc());
   Expr *ToThrow = Importer.Import(S->getThrowExpr());
@@ -5322,7 +5335,9 @@ Stmt *ASTNodeImporter::VisitObjCAtThrowStmt(ObjCAtThrowStmt *S) {
     return nullptr;
   return new (Importer.getToContext()) ObjCAtThrowStmt(ToAtThrowLoc, ToThrow);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *ASTNodeImporter::VisitObjCAutoreleasePoolStmt
   (ObjCAutoreleasePoolStmt *S) {
   SourceLocation ToAtLoc = Importer.Import(S->getAtLoc());
@@ -5332,6 +5347,7 @@ Stmt *ASTNodeImporter::VisitObjCAutoreleasePoolStmt
   return new (Importer.getToContext()) ObjCAutoreleasePoolStmt(ToAtLoc,
                                                                ToSubStmt);
 }
+#endif
 
 //----------------------------------------------------------------------------
 // Import Expressions

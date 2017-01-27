@@ -233,9 +233,11 @@ public:
   Value *VisitCharacterLiteral(const CharacterLiteral *E) {
     return llvm::ConstantInt::get(ConvertType(E->getType()), E->getValue());
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Value *VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *E) {
     return llvm::ConstantInt::get(ConvertType(E->getType()), E->getValue());
   }
+#endif
   Value *VisitCXXBoolLiteralExpr(const CXXBoolLiteralExpr *E) {
     return llvm::ConstantInt::get(ConvertType(E->getType()), E->getValue());
   }

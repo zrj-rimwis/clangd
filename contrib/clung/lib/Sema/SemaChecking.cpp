@@ -23,7 +23,9 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/StmtCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // not needed
 #include "clang/AST/StmtObjC.h"
+#endif
 #include "clang/Analysis/Analyses/FormatString.h"
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/TargetBuiltins.h"
@@ -5256,9 +5258,7 @@ static bool requiresParensToAddCast(const Expr *E) {
   case Stmt::MemberExprClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCArrayLiteralClass:
-#endif
   case Stmt::ObjCBoolLiteralExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCBoxedExprClass:
   case Stmt::ObjCDictionaryLiteralClass:
 #endif
