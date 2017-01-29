@@ -232,7 +232,9 @@ PLACEHOLDER_TYPE(BuiltinFn, BuiltinFnTy)
 // The type of a cast which, in ARC, would normally require a
 // __bridge, but which might be okay depending on the immediate
 // context.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 PLACEHOLDER_TYPE(ARCUnbridgedCast, ARCUnbridgedCastTy)
+#endif
 
 // A placeholder type for OpenMP array sections.
 PLACEHOLDER_TYPE(OMPArraySection, OMPArraySectionTy)

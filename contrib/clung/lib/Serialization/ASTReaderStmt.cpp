@@ -644,6 +644,7 @@ void ASTStmtReader::VisitMemberExpr(MemberExpr *E) {
          "It's a subclass, we must advance Idx!");
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCIsaExpr(ObjCIsaExpr *E) {
   VisitExpr(E);
   E->setBase(Reader.ReadSubExpr());
@@ -651,13 +652,16 @@ void ASTStmtReader::VisitObjCIsaExpr(ObjCIsaExpr *E) {
   E->setOpLoc(ReadSourceLocation(Record, Idx));
   E->setArrow(Record[Idx++]);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::
 VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   VisitExpr(E);
   E->Operand = Reader.ReadSubExpr();
   E->setShouldCopy(Record[Idx++]);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
@@ -1016,12 +1020,14 @@ void ASTStmtReader::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
   VisitExpr(E);
   E->setEncodedTypeSourceInfo(GetTypeSourceInfo(Record, Idx));
   E->setAtLoc(ReadSourceLocation(Record, Idx));
   E->setRParenLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
 void ASTStmtReader::VisitObjCSelectorExpr(ObjCSelectorExpr *E) {
   VisitExpr(E);
@@ -1075,6 +1081,7 @@ void ASTStmtReader::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
   VisitExpr(E);
   E->setRBracket(ReadSourceLocation(Record, Idx));
@@ -1083,6 +1090,7 @@ void ASTStmtReader::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
   E->GetAtIndexMethodDecl = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
   E->SetAtIndexMethodDecl = ReadDeclAs<ObjCMethodDecl>(Record, Idx);
 }
+#endif
 
 void ASTStmtReader::VisitObjCMessageExpr(ObjCMessageExpr *E) {
   VisitExpr(E);
@@ -3219,9 +3227,11 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
             Record[ASTStmtReader::NumExprFields + 1]);
       break;
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case EXPR_OBJC_ENCODE:
       S = new (Context) ObjCEncodeExpr(Empty);
       break;
+#endif
     case EXPR_OBJC_SELECTOR_EXPR:
       S = new (Context) ObjCSelectorExpr(Empty);
       break;
@@ -3234,9 +3244,11 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
     case EXPR_OBJC_PROPERTY_REF_EXPR:
       S = new (Context) ObjCPropertyRefExpr(Empty);
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case EXPR_OBJC_SUBSCRIPT_REF_EXPR:
       S = new (Context) ObjCSubscriptRefExpr(Empty);
       break;
+#endif
     case EXPR_OBJC_KVC_REF_EXPR:
       llvm_unreachable("mismatching AST file");
     case EXPR_OBJC_MESSAGE_EXPR:
@@ -3244,12 +3256,14 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
                                      Record[ASTStmtReader::NumExprFields],
                                      Record[ASTStmtReader::NumExprFields + 1]);
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     case EXPR_OBJC_ISA:
       S = new (Context) ObjCIsaExpr(Empty);
       break;
     case EXPR_OBJC_INDIRECT_COPY_RESTORE:
       S = new (Context) ObjCIndirectCopyRestoreExpr(Empty);
       break;
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     case EXPR_OBJC_BRIDGED_CAST:
       S = new (Context) ObjCBridgedCastExpr(Empty);

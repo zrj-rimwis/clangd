@@ -2872,6 +2872,7 @@ public:
   }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCSubscriptRefExpr(SourceLocation RB,
                                          Expr *Base, Expr *Key,
                                          ObjCMethodDecl *getterMethod,
@@ -2879,6 +2880,7 @@ public:
     return  getSema().BuildObjCSubscriptExpression(RB, Base, Key,
                                                    getterMethod, setterMethod);
   }
+#endif
 
   /// \brief Build a new Objective-C dictionary literal.
   ///
@@ -2895,11 +2897,13 @@ public:
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCEncodeExpr(SourceLocation AtLoc,
                                          TypeSourceInfo *EncodeTypeInfo,
                                          SourceLocation RParenLoc) {
     return SemaRef.BuildObjCEncodeExpression(AtLoc, EncodeTypeInfo, RParenLoc);
   }
+#endif
 
   /// \brief Build a new Objective-C class message.
   ExprResult RebuildObjCMessageExpr(TypeSourceInfo *ReceiverTypeInfo,
@@ -3012,6 +3016,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCIsaExpr(Expr *BaseArg, SourceLocation IsaLoc,
                                 SourceLocation OpLoc, bool IsArrow) {
     CXXScopeSpec SS;
@@ -3024,6 +3029,7 @@ public:
                                               /*TemplateArgs=*/nullptr,
                                               /*S=*/nullptr);
   }
+#endif
 
   /// \brief Build a new shuffle vector expression.
   ///
@@ -11141,6 +11147,7 @@ TreeTransform<Derived>::TransformObjCDictionaryLiteral(
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCEncodeExpr(ObjCEncodeExpr *E) {
@@ -11157,7 +11164,9 @@ TreeTransform<Derived>::TransformObjCEncodeExpr(ObjCEncodeExpr *E) {
                                             EncodedTypeInfo,
                                             E->getRParenLoc());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult TreeTransform<Derived>::
 TransformObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
@@ -11167,6 +11176,7 @@ TransformObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   // it appears *immediately* as an argument expression.
   return getDerived().TransformExpr(E->getSubExpr());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
@@ -11338,6 +11348,7 @@ TreeTransform<Derived>::TransformObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
                                                  E->getLocation());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
@@ -11361,7 +11372,9 @@ TreeTransform<Derived>::TransformObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
                                                   E->getAtIndexMethodDecl(),
                                                   E->setAtIndexMethodDecl());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCIsaExpr(ObjCIsaExpr *E) {
@@ -11379,6 +11392,7 @@ TreeTransform<Derived>::TransformObjCIsaExpr(ObjCIsaExpr *E) {
                                          E->getOpLoc(),
                                          E->isArrow());
 }
+#endif
 
 template<typename Derived>
 ExprResult

@@ -1353,9 +1353,11 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
       // There's an implicit 'isa' ivar on all objects.
       // But we only actually find it this way on objects of type 'id',
       // apparently.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
       if (OTy->isObjCId() && Member->isStr("isa"))
         return new (S.Context) ObjCIsaExpr(BaseExpr.get(), IsArrow, MemberLoc,
                                            OpLoc, S.Context.getObjCClassType());
+#endif
       if (ShouldTryAgainWithRedefinitionType(S, BaseExpr))
         return LookupMemberExpr(S, R, BaseExpr, IsArrow, OpLoc, SS,
                                 ObjCImpDecl, HasTemplateArgs);

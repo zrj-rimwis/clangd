@@ -967,6 +967,7 @@ public:
     return CGM.GetConstantArrayFromStringLiteral(E);
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   llvm::Constant *VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
     // This must be an @encode initializing an array in a static initializer.
     // Don't emit it as the address of the string, emit the string data itself
@@ -983,6 +984,7 @@ public:
     Str.resize(CAT->getSize().getZExtValue(), '\0');
     return llvm::ConstantDataArray::getString(VMContext, Str, false);
   }
+#endif
 
   llvm::Constant *VisitUnaryExtension(const UnaryOperator *E) {
     return Visit(E->getSubExpr());
@@ -1041,8 +1043,10 @@ public:
     }
     case Expr::StringLiteralClass:
       return CGM.GetAddrOfConstantStringFromLiteral(cast<StringLiteral>(E));
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Expr::ObjCEncodeExprClass:
       return CGM.GetAddrOfConstantStringFromObjCEncode(cast<ObjCEncodeExpr>(E));
+#endif
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed, short-circuit
     case Expr::ObjCStringLiteralClass: {
       ObjCStringLiteral* SL = cast<ObjCStringLiteral>(E);

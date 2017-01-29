@@ -2279,7 +2279,11 @@ public:
     AA_Initializing,
     AA_Sending,
     AA_Casting,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     AA_Passing_CFAudited
+#else
+    AA_Passing_CFAudited_disabled
+#endif
   };
 
   /// C++ Overloading.
@@ -2328,9 +2332,9 @@ public:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
   bool isObjCPointerConversion(QualType FromType, QualType ToType,
                                QualType& ConvertedType, bool &IncompatibleObjC);
-#endif
   bool isObjCWritebackConversion(QualType FromType, QualType ToType,
                                  QualType &ConvertedType);
+#endif
   bool IsBlockPointerConversion(QualType FromType, QualType ToType,
                                 QualType& ConvertedType);
   bool FunctionParamTypesAreEqual(const FunctionProtoType *OldType,
@@ -2472,12 +2476,14 @@ public:
       SourceLocation Loc, Expr *FromE, ContextualImplicitConverter &Converter);
 
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum ObjCSubscriptKind {
     OS_Array,
     OS_Dictionary,
     OS_Error
   };
   ObjCSubscriptKind CheckSubscriptingKind(Expr *FromE);
+#endif
 
   // Note that LK_String is intentionally after the other literals, as
   // this is used for diagnostics logic.
@@ -5298,9 +5304,9 @@ public:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ParseObjCStringLiteral(SourceLocation *AtLocs,
                                     ArrayRef<Expr *> Strings);
-#endif
 
   ExprResult BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S);
+#endif
 
   /// BuildObjCNumericLiteral - builds an ObjCBoxedExpr AST node for the
   /// numeric literal expression. Type of the expression will be "NSNumber *"
@@ -5321,19 +5327,23 @@ public:
   ExprResult BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                           Expr *IndexExpr,
                                           ObjCMethodDecl *getterMethod,
                                           ObjCMethodDecl *setterMethod);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCDictionaryLiteral(SourceRange SR,
                                MutableArrayRef<ObjCDictionaryElement> Elements);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCEncodeExpression(SourceLocation AtLoc,
                                   TypeSourceInfo *EncodedTypeInfo,
                                   SourceLocation RParenLoc);
+#endif
   ExprResult BuildCXXMemberCallExpr(Expr *Exp, NamedDecl *FoundDecl,
                                     CXXConversionDecl *Method,
                                     bool HadMultipleCandidates);
@@ -7796,15 +7806,14 @@ public:
   
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
   void CheckTollFreeBridgeCast(QualType castType, Expr *castExpr);
-#endif
   
   void CheckObjCBridgeRelatedCast(QualType castType, Expr *castExpr);
   
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
   bool CheckTollFreeBridgeStaticCast(QualType castType, Expr *castExpr,
                                      CastKind &Kind);
 #endif
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool checkObjCBridgeRelatedComponents(SourceLocation Loc,
                                         QualType DestType, QualType SrcType,
                                         ObjCInterfaceDecl *&RelatedClass,
@@ -7816,6 +7825,7 @@ public:
   bool CheckObjCBridgeRelatedConversions(SourceLocation Loc,
                                          QualType DestType, QualType SrcType,
                                          Expr *&SrcExpr, bool Diagnose = true);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC and just returns
   bool ConversionToObjCStringLiteralCheck(QualType DstType, Expr *&SrcExpr,
@@ -9064,8 +9074,10 @@ public:
                                              );
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Expr *stripARCUnbridgedCast(Expr *e);
   void diagnoseARCUnbridgedCast(Expr *e);
+#endif
 
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume true
   bool CheckObjCARCUnavailableWeakConversion(QualType castType,

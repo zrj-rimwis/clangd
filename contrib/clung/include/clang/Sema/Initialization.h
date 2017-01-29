@@ -85,7 +85,11 @@ public:
     EK_RelatedResult,
     /// \brief The entity being initialized is a function parameter; function
     /// is member of group of audited CF APIs.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     EK_Parameter_CF_Audited
+#else
+    EK_Parameter_CF_Audited_disabled
+#endif
 
     // Note: err_init_conversion_failed in DiagnosticSemaKinds.td uses this
     // enum as an index for its first %select.  When modifying this list,
@@ -371,7 +375,11 @@ public:
 
   bool isParameterKind() const {
     return (getKind() == EK_Parameter  ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
             getKind() == EK_Parameter_CF_Audited);
+#else
+            false);
+#endif
   }
   /// \brief Determine whether this initialization consumes the
   /// parameter.
@@ -432,9 +440,11 @@ public:
     return SourceLocation::getFromRawEncoding(Capture.Location);
   }
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   void setParameterCFAudited() {
     Kind = EK_Parameter_CF_Audited;
   }
+#endif
 
   unsigned allocateManglingNumber() const { return ++ManglingNumber; }
 
@@ -703,9 +713,17 @@ public:
     /// This is a GNU C++ extension.
     SK_ParenthesizedArrayInit,
     /// \brief Pass an object by indirect copy-and-restore.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume only for OBJC, strange why no prefix?
     SK_PassByIndirectCopyRestore,
+#else
+    SK_PassByIndirectCopyRestore_disabled,
+#endif
     /// \brief Pass an object by indirect restore.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume only for OBJC, strange why no prefix too?
     SK_PassByIndirectRestore,
+#else
+    SK_PassByIndirectRestore_disabled,
+#endif
     /// \brief Produce an Objective-C object pointer.
     SK_ProduceObjCObject,
     /// \brief Construct a std::initializer_list from an initializer list.
@@ -1083,7 +1101,9 @@ public:
   void AddParenthesizedArrayInitStep(QualType T);
 
   /// \brief Add a step to pass an object by indirect copy-restore.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, uses OBJC funcs
   void AddPassByIndirectCopyRestoreStep(QualType T, bool shouldCopy);
+#endif
 
   /// \brief Add a step to "produce" an Objective-C object (by
   /// retaining it).

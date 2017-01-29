@@ -3240,8 +3240,10 @@ recurse:
   case Expr::DesignatedInitExprClass:
   case Expr::ExtVectorElementExprClass:
   case Expr::GenericSelectionExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCEncodeExprClass:
   case Expr::ObjCIsaExprClass:
+#endif
   case Expr::ObjCIvarRefExprClass:
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCPropertyRefExprClass:
@@ -3252,10 +3254,8 @@ recurse:
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
-#endif
   case Expr::ObjCSubscriptRefExprClass:
   case Expr::ObjCIndirectCopyRestoreExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
 #endif
   case Expr::OffsetOfExprClass:

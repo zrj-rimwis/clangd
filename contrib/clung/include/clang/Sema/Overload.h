@@ -81,7 +81,11 @@ namespace clang {
     ICK_Complex_Real,          ///< Complex-real conversions (C99 6.3.1.7)
     ICK_Block_Pointer_Conversion,    ///< Block Pointer conversions 
     ICK_TransparentUnionConversion, ///< Transparent Union Conversions
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     ICK_Writeback_Conversion,  ///< Objective-C ARC writeback conversion
+#else
+    ICK_Writeback_Conversion_disabled,
+#endif
     ICK_Zero_Event_Conversion, ///< Zero constant to event (OpenCL1.2 6.12.10)
     ICK_C_Only_Conversion,     ///< Conversions allowed in C, but not C++
     ICK_Num_Conversion_Kinds,  ///< The number of conversion kinds

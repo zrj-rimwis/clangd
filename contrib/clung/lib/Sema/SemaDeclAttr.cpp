@@ -4483,6 +4483,7 @@ static void handleCFUnknownTransferAttr(Sema &S, Decl *D,
              Attr.getAttributeSpellingListIndex()));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void handleObjCBridgeAttr(Sema &S, Scope *Sc, Decl *D,
                                 const AttributeList &Attr) {
   IdentifierLoc * Parm = Attr.isArgIdent(0) ? Attr.getArgAsIdent(0) : nullptr;
@@ -4512,7 +4513,9 @@ static void handleObjCBridgeAttr(Sema &S, Scope *Sc, Decl *D,
              ObjCBridgeAttr(Attr.getRange(), S.Context, Parm->Ident,
                            Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void handleObjCBridgeMutableAttr(Sema &S, Scope *Sc, Decl *D,
                                         const AttributeList &Attr) {
   IdentifierLoc * Parm = Attr.isArgIdent(0) ? Attr.getArgAsIdent(0) : nullptr;
@@ -4526,7 +4529,9 @@ static void handleObjCBridgeMutableAttr(Sema &S, Scope *Sc, Decl *D,
              ObjCBridgeMutableAttr(Attr.getRange(), S.Context, Parm->Ident,
                             Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void handleObjCBridgeRelatedAttr(Sema &S, Scope *Sc, Decl *D,
                                  const AttributeList &Attr) {
   IdentifierInfo *RelatedClass =
@@ -4544,6 +4549,7 @@ static void handleObjCBridgeRelatedAttr(Sema &S, Scope *Sc, Decl *D,
                                    ClassMethod, InstanceMethod,
                                    Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
 static void handleObjCDesignatedInitializer(Sema &S, Decl *D,
                                             const AttributeList &Attr) {
@@ -5654,6 +5660,7 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_ObjCRequiresSuper:
     handleObjCRequiresSuperAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributeList::AT_ObjCBridge:
     handleObjCBridgeAttr(S, scope, D, Attr);
     break;
@@ -5663,6 +5670,7 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_ObjCBridgeRelated:
     handleObjCBridgeRelatedAttr(S, scope, D, Attr);
     break;
+#endif
   case AttributeList::AT_ObjCDesignatedInitializer:
     handleObjCDesignatedInitializer(S, D, Attr);
     break;

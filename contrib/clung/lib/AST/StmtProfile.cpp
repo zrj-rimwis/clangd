@@ -1597,10 +1597,12 @@ void StmtProfiler::VisitObjCDictionaryLiteral(const ObjCDictionaryLiteral *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCEncodeExpr(const ObjCEncodeExpr *S) {
   VisitExpr(S);
   VisitType(S->getEncodedType());
 }
+#endif
 
 void StmtProfiler::VisitObjCSelectorExpr(const ObjCSelectorExpr *S) {
   VisitExpr(S);
@@ -1633,11 +1635,13 @@ void StmtProfiler::VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *S) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *S) {
   VisitExpr(S);
   VisitDecl(S->getAtIndexMethodDecl());
   VisitDecl(S->setAtIndexMethodDecl());
 }
+#endif
 
 void StmtProfiler::VisitObjCMessageExpr(const ObjCMessageExpr *S) {
   VisitExpr(S);
@@ -1645,10 +1649,12 @@ void StmtProfiler::VisitObjCMessageExpr(const ObjCMessageExpr *S) {
   VisitDecl(S->getMethodDecl());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCIsaExpr(const ObjCIsaExpr *S) {
   VisitExpr(S);
   ID.AddBoolean(S->isArrow());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *S) {
@@ -1657,11 +1663,13 @@ void StmtProfiler::VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *S) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCIndirectCopyRestoreExpr(
     const ObjCIndirectCopyRestoreExpr *S) {
   VisitExpr(S);
   ID.AddBoolean(S->shouldCopy());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCBridgedCastExpr(const ObjCBridgedCastExpr *S) {

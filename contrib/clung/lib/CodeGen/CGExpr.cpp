@@ -985,8 +985,10 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
   case Expr::ObjCSelectorExprClass:
     return EmitObjCSelectorLValue(cast<ObjCSelectorExpr>(E));
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCIsaExprClass:
     return EmitObjCIsaExpr(cast<ObjCIsaExpr>(E));
+#endif
   case Expr::BinaryOperatorClass:
     return EmitBinaryOperatorLValue(cast<BinaryOperator>(E));
   case Expr::CompoundAssignOperatorClass: {
@@ -1014,8 +1016,10 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
     return EmitPredefinedLValue(cast<PredefinedExpr>(E));
   case Expr::StringLiteralClass:
     return EmitStringLiteralLValue(cast<StringLiteral>(E));
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCEncodeExprClass:
     return EmitObjCEncodeExprLValue(cast<ObjCEncodeExpr>(E));
+#endif
   case Expr::PseudoObjectExprClass:
     return EmitPseudoObjectLValue(cast<PseudoObjectExpr>(E));
   case Expr::InitListExprClass:
@@ -2305,10 +2309,12 @@ LValue CodeGenFunction::EmitStringLiteralLValue(const StringLiteral *E) {
                         E->getType(), AlignmentSource::Decl);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 LValue CodeGenFunction::EmitObjCEncodeExprLValue(const ObjCEncodeExpr *E) {
   return MakeAddrLValue(CGM.GetAddrOfConstantStringFromObjCEncode(E),
                         E->getType(), AlignmentSource::Decl);
 }
+#endif
 
 LValue CodeGenFunction::EmitPredefinedLValue(const PredefinedExpr *E) {
   auto SL = E->getFunctionName();

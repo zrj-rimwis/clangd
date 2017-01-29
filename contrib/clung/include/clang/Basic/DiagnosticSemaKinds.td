@@ -858,12 +858,6 @@ def warn_objc_property_no_assignment_attribute : Warning<
   "no 'assign', 'retain', or 'copy' attribute is specified - "
   "'assign' is assumed">,
   InGroup<ObjCPropertyNoAttribute>;
-def warn_objc_isa_use : Warning<
-  "direct access to Objective-C's isa is deprecated in favor of "
-  "object_getClass()">, InGroup<DeprecatedObjCIsaUsage>;
-def warn_objc_isa_assign : Warning<
-  "assignment to Objective-C's isa is deprecated in favor of "
-  "object_setClass()">, InGroup<DeprecatedObjCIsaUsage>;
 def warn_objc_pointer_masking : Warning<
   "bitmasking for introspection of Objective-C object pointers is strongly "
   "discouraged">,
@@ -3053,10 +3047,6 @@ def err_objc_cf_bridged_not_interface : Error<
   "CF object of type %0 is bridged to %1, which is not an Objective-C class">;
 def err_objc_ns_bridged_invalid_cfobject : Error<
   "ObjectiveC object of type %0 is bridged to %1, which is not valid CF object">;
-def warn_objc_invalid_bridge : Warning<
-  "%0 bridges to %1, not %2">, InGroup<ObjCBridge>;
-def warn_objc_invalid_bridge_to_cf : Warning<
-  "%0 cannot bridge to %1">, InGroup<ObjCBridge>;
 
 // objc_bridge_related attribute diagnostics.
 def err_objc_bridged_related_invalid_class : Error<

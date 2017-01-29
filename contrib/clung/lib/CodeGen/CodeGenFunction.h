@@ -2857,7 +2857,9 @@ public:
   LValue EmitVAArgExprLValue(const VAArgExpr *E);
   LValue EmitDeclRefLValue(const DeclRefExpr *E);
   LValue EmitStringLiteralLValue(const StringLiteral *E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   LValue EmitObjCEncodeExprLValue(const ObjCEncodeExpr *E);
+#endif
   LValue EmitPredefinedLValue(const PredefinedExpr *E);
   LValue EmitUnaryOpLValue(const UnaryOperator *E);
   LValue EmitArraySubscriptExpr(const ArraySubscriptExpr *E,
@@ -2866,7 +2868,9 @@ public:
                                  bool IsLowerBound = true);
   LValue EmitExtVectorElementExpr(const ExtVectorElementExpr *E);
   LValue EmitMemberExpr(const MemberExpr *E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   LValue EmitObjCIsaExpr(const ObjCIsaExpr *E);
+#endif
   LValue EmitCompoundLiteralLValue(const CompoundLiteralExpr *E);
   LValue EmitInitListLValue(const InitListExpr *E);
   LValue EmitConditionalOperatorLValue(const AbstractConditionalOperator *E);

@@ -549,8 +549,8 @@ namespace  {
     // ObjC
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node);
-#endif
     void VisitObjCEncodeExpr(const ObjCEncodeExpr *Node);
+#endif
     void VisitObjCMessageExpr(const ObjCMessageExpr *Node);
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCBoxedExpr(const ObjCBoxedExpr *Node);
@@ -558,7 +558,9 @@ namespace  {
     void VisitObjCSelectorExpr(const ObjCSelectorExpr *Node);
     void VisitObjCProtocolExpr(const ObjCProtocolExpr *Node);
     void VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node);
+#endif
     void VisitObjCIvarRefExpr(const ObjCIvarRefExpr *Node);
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *Node);
@@ -1887,9 +1889,11 @@ void ASTDumper::VisitExpr(const Expr *Node) {
     case OK_ObjCProperty:
       OS << " objcproperty";
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case OK_ObjCSubscript:
       OS << " objcsubscript";
       break;
+#endif
     case OK_VectorComponent:
       OS << " vectorcomponent";
       break;
@@ -2241,10 +2245,12 @@ void ASTDumper::VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCEncodeExpr(const ObjCEncodeExpr *Node) {
   VisitExpr(Node);
   dumpType(Node->getEncodedType());
 }
+#endif
 
 void ASTDumper::VisitObjCSelectorExpr(const ObjCSelectorExpr *Node) {
   VisitExpr(Node);
@@ -2290,6 +2296,7 @@ void ASTDumper::VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node) {
     OS << "Setter";
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node) {
   VisitExpr(Node);
   if (Node->isArraySubscriptRefExpr())
@@ -2310,6 +2317,7 @@ void ASTDumper::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node) {
   else
     OS << "(null)";
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *Node) {

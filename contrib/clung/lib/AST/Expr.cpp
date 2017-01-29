@@ -1829,7 +1829,11 @@ bool InitListExpr::isStringLiteralInit() const {
   if (!Init)
     return false;
   Init = Init->IgnoreParens();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   return isa<StringLiteral>(Init) || isa<ObjCEncodeExpr>(Init);
+#else
+  return isa<StringLiteral>(Init) || false;
+#endif
 }
 
 SourceLocation InitListExpr::getLocStart() const {
@@ -2640,7 +2644,9 @@ bool Expr::isConstantInitializer(ASTContext &Ctx, bool IsForRef,
   switch (getStmtClass()) {
   default: break;
   case StringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCEncodeExprClass:
+#endif
     return true;
   case CXXTemporaryObjectExprClass:
   case CXXConstructExprClass: {
@@ -2862,8 +2868,8 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case CXXNoexceptExprClass:
   case SizeOfPackExprClass:
   case ObjCStringLiteralClass:
-  case ObjCEncodeExprClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  case ObjCEncodeExprClass:
   case ObjCBoolLiteralExprClass:
   case ObjCAvailabilityCheckExprClass:
 #endif
@@ -3066,10 +3072,10 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
 #endif
   case ObjCSelectorExprClass:
   case ObjCProtocolExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCIsaExprClass:
   case ObjCIndirectCopyRestoreExprClass:
   case ObjCSubscriptRefExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCBridgedCastExprClass:
 #endif
   case ObjCMessageExprClass:

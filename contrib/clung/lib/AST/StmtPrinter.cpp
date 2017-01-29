@@ -1294,6 +1294,7 @@ void StmtPrinter::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *Node) {
     OS << Node->getExplicitProperty()->getName();
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *Node) {
   
   PrintExpr(Node->getBaseExpr());
@@ -1301,6 +1302,7 @@ void StmtPrinter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *Node) {
   PrintExpr(Node->getKeyExpr());
   OS << "]";
 }
+#endif
 
 void StmtPrinter::VisitPredefinedExpr(PredefinedExpr *Node) {
   OS << PredefinedExpr::getIdentTypeName(Node->getIdentType());
@@ -1596,10 +1598,12 @@ void StmtPrinter::VisitMemberExpr(MemberExpr *Node) {
     TemplateSpecializationType::PrintTemplateArgumentList(
         OS, Node->template_arguments(), Policy);
 }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCIsaExpr(ObjCIsaExpr *Node) {
   PrintExpr(Node->getBase());
   OS << (Node->isArrow() ? "->isa" : ".isa");
 }
+#endif
 
 void StmtPrinter::VisitExtVectorElementExpr(ExtVectorElementExpr *Node) {
   PrintExpr(Node->getBase());
@@ -2493,11 +2497,13 @@ void StmtPrinter::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCEncodeExpr(ObjCEncodeExpr *Node) {
   OS << "@encode(";
   Node->getEncodedType().print(OS, Policy);
   OS << ')';
 }
+#endif
 
 void StmtPrinter::VisitObjCSelectorExpr(ObjCSelectorExpr *Node) {
   OS << "@selector(";
@@ -2553,10 +2559,12 @@ void StmtPrinter::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *Node) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void
 StmtPrinter::VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   PrintExpr(E->getSubExpr());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void

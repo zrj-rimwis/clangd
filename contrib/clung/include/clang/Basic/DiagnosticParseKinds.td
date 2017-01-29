@@ -797,10 +797,6 @@ def err_availability_expected_platform : Error<
   "expected a platform name, e.g., 'macos'">;
   
 // objc_bridge_related attribute
-def err_objcbridge_related_expected_related_class : Error<
-  "expected a related ObjectiveC class name, e.g., 'NSColor'">;
-def err_objcbridge_related_selector_name : Error<
-  "expected a class method selector with single argument, e.g., 'colorWithCGColor:'">;
 
 def err_availability_expected_change : Error<
   "expected 'introduced', 'deprecated', or 'obsoleted'">;

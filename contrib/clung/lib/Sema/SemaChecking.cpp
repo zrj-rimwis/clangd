@@ -5261,13 +5261,15 @@ static bool requiresParensToAddCast(const Expr *E) {
   case Stmt::ObjCBoolLiteralExprClass:
   case Stmt::ObjCBoxedExprClass:
   case Stmt::ObjCDictionaryLiteralClass:
-#endif
   case Stmt::ObjCEncodeExprClass:
+#endif
   case Stmt::ObjCIvarRefExprClass:
   case Stmt::ObjCMessageExprClass:
   case Stmt::ObjCPropertyRefExprClass:
   case Stmt::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCSubscriptRefExprClass:
+#endif
   case Stmt::ParenExprClass:
   case Stmt::StringLiteralClass:
   case Stmt::UnaryOperatorClass:

@@ -3028,17 +3028,20 @@ static void deactivateArgCleanupsBeforeCall(CodeGenFunction &CGF,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 static const Expr *maybeGetUnaryAddrOfOperand(const Expr *E) {
   if (const UnaryOperator *uop = dyn_cast<UnaryOperator>(E->IgnoreParens()))
     if (uop->getOpcode() == UO_AddrOf)
       return uop->getSubExpr();
   return nullptr;
 }
+#endif
 
 /// Emit an argument that's being passed call-by-writeback.  That is,
 /// we are passing the address of an __autoreleased temporary; it
 /// might be copy-initialized with the current value of the given
 /// address, but it will definitely be copied out of after the call.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 static void emitWritebackArg(CodeGenFunction &CGF, CallArgList &args,
                              const ObjCIndirectCopyRestoreExpr *CRE) {
   LValue srcLV;
@@ -3165,6 +3168,7 @@ static void emitWritebackArg(CodeGenFunction &CGF, CallArgList &args,
   args.addWriteback(srcLV, temp, valueToUse);
   args.add(RValue::get(finalArgument), CRE->getType());
 }
+#endif
 
 void CallArgList::allocateArgumentMemory(CodeGenFunction &CGF) {
   assert(!StackBase && !StackCleanup.isValid());
@@ -3303,6 +3307,7 @@ struct DisableDebugLocationUpdates {
 void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
                                   QualType type) {
   DisableDebugLocationUpdates Dis(*this, E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ //assume notneeded
   if (const ObjCIndirectCopyRestoreExpr *CRE
         = dyn_cast<ObjCIndirectCopyRestoreExpr>(E)) {
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume flase
@@ -3313,6 +3318,7 @@ void CodeGenFunction::EmitCallArg(CallArgList &args, const Expr *E,
     assert(getContext().hasSameType(E->getType(), type));
     return emitWritebackArg(*this, args, CRE);
   }
+#endif
 
   assert(type->isReferenceType() == E->isGLValue() &&
          "reference binding to unmaterialized r-value!");

@@ -36,6 +36,7 @@ enum UnaryOperatorKind {
 };
 
 /// \brief The kind of bridging performed by the Objective-C bridge cast.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX why these here??
 enum ObjCBridgeCastKind {
   /// \brief Bridging via __bridge, which does nothing but reinterpret
   /// the bits.
@@ -47,6 +48,7 @@ enum ObjCBridgeCastKind {
   /// as a +1 C pointer.
   OBC_BridgeRetained
 };
+#endif
 
 }  // end namespace clang
 

@@ -66,8 +66,10 @@ static StringInitFailureKind IsStringInit(Expr *Init, const ArrayType *AT,
   Init = Init->IgnoreParens();
 
   // Handle @encode, which is a narrow string.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && smth
   if (isa<ObjCEncodeExpr>(Init) && AT->getElementType()->isCharType())
     return SIF_None;
+#endif
 
   // Otherwise we can only handle string literals.
   StringLiteral *SL = dyn_cast<StringLiteral>(Init);
@@ -134,7 +136,11 @@ static StringInitFailureKind IsStringInit(Expr *init, QualType declType,
 static void updateStringLiteralType(Expr *E, QualType Ty) {
   while (true) {
     E->setType(Ty);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (isa<StringLiteral>(E) || isa<ObjCEncodeExpr>(E))
+#else
+    if (isa<StringLiteral>(E) || false)
+#endif
       break;
     else if (ParenExpr *PE = dyn_cast<ParenExpr>(E))
       E = PE->getSubExpr();
@@ -906,7 +912,9 @@ static void warnBracedScalarInit(Sema &S, const InitializedEntity &Entity,
   case InitializedEntity::EK_ComplexElement:
   case InitializedEntity::EK_ArrayElement:
   case InitializedEntity::EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case InitializedEntity::EK_Parameter_CF_Audited:
+#endif
   case InitializedEntity::EK_Result:
     // Extra braces here are suspicious.
     DiagID = diag::warn_braces_around_scalar_init;
@@ -2507,6 +2515,7 @@ InitListChecker::CheckDesignatedInitializer(const InitializedEntity &Entity,
                                           Init, nullptr, VK_RValue);
         StructuredList->updateInit(Context, i, Init);
       }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and never taken
     } else {
       ObjCEncodeExpr *E = cast<ObjCEncodeExpr>(SubExpr);
       std::string Str;
@@ -2529,6 +2538,7 @@ InitListChecker::CheckDesignatedInitializer(const InitializedEntity &Entity,
                                           Init, nullptr, VK_RValue);
         StructuredList->updateInit(Context, i, Init);
       }
+#endif
     }
   }
 
@@ -2891,7 +2901,11 @@ InitializedEntity::InitializeBase(ASTContext &Context,
 DeclarationName InitializedEntity::getName() const {
   switch (getKind()) {
   case EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case EK_Parameter_CF_Audited: {
+#else
+  {
+#endif
     ParmVarDecl *D = reinterpret_cast<ParmVarDecl*>(Parameter & ~0x1);
     return (D ? D->getDeclName() : DeclarationName());
   }
@@ -2928,7 +2942,9 @@ DeclaratorDecl *InitializedEntity::getDecl() const {
     return VariableOrMember;
 
   case EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case EK_Parameter_CF_Audited:
+#endif
     return reinterpret_cast<ParmVarDecl*>(Parameter & ~0x1);
 
   case EK_Result:
@@ -2958,7 +2974,9 @@ bool InitializedEntity::allowsNRVO() const {
 
   case EK_Variable:
   case EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case EK_Parameter_CF_Audited:
+#endif
   case EK_Member:
   case EK_New:
   case EK_Temporary:
@@ -2986,8 +3004,10 @@ unsigned InitializedEntity::dumpImpl(raw_ostream &OS) const {
   switch (getKind()) {
   case EK_Variable: OS << "Variable"; break;
   case EK_Parameter: OS << "Parameter"; break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case EK_Parameter_CF_Audited: OS << "CF audited function Parameter";
     break;
+#endif
   case EK_Result: OS << "Result"; break;
   case EK_Exception: OS << "Exception"; break;
   case EK_Member: OS << "Member"; break;
@@ -3051,8 +3071,10 @@ void InitializationSequence::Step::Destroy() {
   case SK_ObjCObjectConversion:
   case SK_ArrayInit:
   case SK_ParenthesizedArrayInit:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case SK_PassByIndirectCopyRestore:
   case SK_PassByIndirectRestore:
+#endif
   case SK_ProduceObjCObject:
   case SK_StdInitializerList:
   case SK_StdInitializerListConstructorCall:
@@ -3282,6 +3304,7 @@ void InitializationSequence::AddParenthesizedArrayInitStep(QualType T) {
   Steps.push_back(S);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC, uses OBJC funcs
 void InitializationSequence::AddPassByIndirectCopyRestoreStep(QualType type,
                                                               bool shouldCopy) {
   Step s;
@@ -3290,6 +3313,7 @@ void InitializationSequence::AddPassByIndirectCopyRestoreStep(QualType type,
   s.Type = type;
   Steps.push_back(s);
 }
+#endif
 
 void InitializationSequence::AddProduceObjCObjectStep(QualType T) {
   Step S;
@@ -4846,6 +4870,7 @@ static bool hasCompatibleArrayTypes(ASTContext &Context, const ArrayType *Dest,
   return Source->isConstantArrayType() && Dest->isIncompleteArrayType();
 }
 
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static bool tryObjCWritebackConversion(Sema &S,
                                        InitializationSequence &Sequence,
                                        const InitializedEntity &Entity,
@@ -4892,6 +4917,7 @@ static bool tryObjCWritebackConversion(Sema &S,
   Sequence.AddPassByIndirectCopyRestoreStep(Entity.getType(), ShouldCopy);
   return true;
 }
+#endif
 
 static bool TryOCLSamplerInitialization(Sema &S,
                                         InitializationSequence &Sequence,
@@ -5209,6 +5235,7 @@ void InitializationSequence::InitializeFrom(Sema &S,
                               false);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smtg && false
   if (ICS.isStandard() &&
       ICS.Standard.Second == ICK_Writeback_Conversion) {
     // Objective-C ARC writeback conversion.
@@ -5231,6 +5258,10 @@ void InitializationSequence::InitializeFrom(Sema &S,
     }
     
     AddPassByIndirectCopyRestoreStep(DestType, ShouldCopy);
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (ICS.isBad()) {
     DeclAccessPair dap;
     if (isLibstdcxxPointerReturnFalseHack(S, Entity, Initializer)) {
@@ -5276,12 +5307,14 @@ getAssignmentAction(const InitializedEntity &Entity, bool Diagnose = false) {
 
     return Sema::AA_Passing;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case InitializedEntity::EK_Parameter_CF_Audited:
     if (Entity.getDecl() &&
       isa<ObjCMethodDecl>(Entity.getDecl()->getDeclContext()))
       return Sema::AA_Sending;
       
     return !Diagnose ? Sema::AA_Passing : Sema::AA_Passing_CFAudited;
+#endif
       
   case InitializedEntity::EK_Result:
     return Sema::AA_Returning;
@@ -5324,7 +5357,9 @@ static bool shouldBindAsTemporary(const InitializedEntity &Entity) {
     return false;
 
   case InitializedEntity::EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case InitializedEntity::EK_Parameter_CF_Audited:
+#endif
   case InitializedEntity::EK_Temporary:
   case InitializedEntity::EK_RelatedResult:
     return true;
@@ -5350,7 +5385,9 @@ static bool shouldDestroyTemporary(const InitializedEntity &Entity) {
     case InitializedEntity::EK_Member:
     case InitializedEntity::EK_Variable:
     case InitializedEntity::EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     case InitializedEntity::EK_Parameter_CF_Audited:
+#endif
     case InitializedEntity::EK_Temporary:
     case InitializedEntity::EK_ArrayElement:
     case InitializedEntity::EK_Exception:
@@ -5425,7 +5462,9 @@ static SourceLocation getInitializationLoc(const InitializedEntity &Entity,
   case InitializedEntity::EK_ArrayElement:
   case InitializedEntity::EK_Member:
   case InitializedEntity::EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case InitializedEntity::EK_Parameter_CF_Audited:
+#endif
   case InitializedEntity::EK_Temporary:
   case InitializedEntity::EK_New:
   case InitializedEntity::EK_Base:
@@ -5862,7 +5901,9 @@ InitializedEntityOutlivesFullExpression(const InitializedEntity &Entity) {
     return false;
 
   case InitializedEntity::EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case InitializedEntity::EK_Parameter_CF_Audited:
+#endif
   case InitializedEntity::EK_Temporary:
   case InitializedEntity::EK_LambdaCapture:
   case InitializedEntity::EK_CompoundLiteralInit:
@@ -5898,7 +5939,9 @@ static const InitializedEntity *getEntityForTemporaryLifetimeExtension(
     return Entity;
 
   case InitializedEntity::EK_Parameter:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case InitializedEntity::EK_Parameter_CF_Audited:
+#endif
     //   -- A temporary bound to a reference parameter in a function call
     //      persists until the completion of the full-expression containing
     //      the call.
@@ -6370,8 +6413,10 @@ InitializationSequence::Perform(Sema &S,
   case SK_ObjCObjectConversion:
   case SK_ArrayInit:
   case SK_ParenthesizedArrayInit:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ //assume only for OBJC
   case SK_PassByIndirectCopyRestore:
   case SK_PassByIndirectRestore:
+#endif
   case SK_ProduceObjCObject:
   case SK_StdInitializerList:
   case SK_OCLSamplerInit:
@@ -6816,7 +6861,11 @@ InitializationSequence::Perform(Sema &S,
       ExprResult Result = CurInit;
       Sema::AssignConvertType ConvTy =
         S.CheckSingleAssignmentConstraints(Step->Type, Result, true,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and only for OBJC
             Entity.getKind() == InitializedEntity::EK_Parameter_CF_Audited);
+#else
+            false);
+#endif
       if (Result.isInvalid())
         return ExprError();
       CurInit = Result;
@@ -6888,6 +6937,7 @@ InitializationSequence::Perform(Sema &S,
         << CurInit.get()->getSourceRange();
       break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume only for OBJC, strange
     case SK_PassByIndirectCopyRestore:
     case SK_PassByIndirectRestore:
       checkIndirectCopyRestoreSource(S, CurInit.get());
@@ -6895,6 +6945,7 @@ InitializationSequence::Perform(Sema &S,
           CurInit.get(), Step->Type,
           Step->Kind == SK_PassByIndirectCopyRestore);
       break;
+#endif
 
     case SK_ProduceObjCObject:
       CurInit =
@@ -7714,6 +7765,7 @@ void InitializationSequence::dump(raw_ostream &OS) const {
       OS << "parenthesized array initialization";
       break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     case SK_PassByIndirectCopyRestore:
       OS << "pass by indirect copy and restore";
       break;
@@ -7721,6 +7773,7 @@ void InitializationSequence::dump(raw_ostream &OS) const {
     case SK_PassByIndirectRestore:
       OS << "pass by indirect restore";
       break;
+#endif
 
     case SK_ProduceObjCObject:
       OS << "Objective-C object retension";

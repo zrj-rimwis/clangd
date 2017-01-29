@@ -118,9 +118,11 @@ serialization::TypeIdxFromBuiltin(const BuiltinType *BT) {
   case BuiltinType::UnknownAny:
     ID = PREDEF_TYPE_UNKNOWN_ANY;
     break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case BuiltinType::ARCUnbridgedCast:
     ID = PREDEF_TYPE_ARC_UNBRIDGED_CAST;
     break;
+#endif
   case BuiltinType::ObjCId:
     ID = PREDEF_TYPE_OBJC_ID;
     break;

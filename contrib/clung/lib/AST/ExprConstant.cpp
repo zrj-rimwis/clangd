@@ -1364,7 +1364,9 @@ static bool IsGlobalLValue(APValue::LValueBase B) {
   case Expr::StringLiteralClass:
   case Expr::PredefinedExprClass:
   case Expr::ObjCStringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCEncodeExprClass:
+#endif
   case Expr::CXXTypeidExprClass:
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::CXXUuidofExprClass:
@@ -4729,7 +4731,9 @@ public:
   bool VisitCompoundLiteralExpr(const CompoundLiteralExpr *E);
   bool VisitMemberExpr(const MemberExpr *E);
   bool VisitStringLiteral(const StringLiteral *E) { return Success(E); }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool VisitObjCEncodeExpr(const ObjCEncodeExpr *E) { return Success(E); }
+#endif
   bool VisitCXXTypeidExpr(const CXXTypeidExpr *E);
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   bool VisitCXXUuidofExpr(const CXXUuidofExpr *E);
@@ -9407,16 +9411,16 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
-#endif
   case Expr::ObjCEncodeExprClass:
+#endif
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCSelectorExprClass:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCIvarRefExprClass:
   case Expr::ObjCPropertyRefExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSubscriptRefExprClass:
   case Expr::ObjCIsaExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
 #endif
   case Expr::ShuffleVectorExprClass:
@@ -9428,7 +9432,9 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::SubstNonTypeTemplateParmPackExprClass:
   case Expr::FunctionParmPackExprClass:
   case Expr::AsTypeExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCIndirectCopyRestoreExprClass:
+#endif
   case Expr::MaterializeTemporaryExprClass:
   case Expr::PseudoObjectExprClass:
   case Expr::AtomicExprClass:

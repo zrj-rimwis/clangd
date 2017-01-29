@@ -6114,9 +6114,11 @@ QualType ASTReader::GetType(TypeID ID) {
       T = Context.getAutoRRefDeductType();
       break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     case PREDEF_TYPE_ARC_UNBRIDGED_CAST:
       T = Context.ARCUnbridgedCastTy;
       break;
+#endif
 
     case PREDEF_TYPE_BUILTIN_FN:
       T = Context.BuiltinFnTy;

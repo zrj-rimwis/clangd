@@ -219,12 +219,14 @@ protected:
     unsigned ResultIndex : 32 - 8 - NumExprBits;
   };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   class ObjCIndirectCopyRestoreExprBitfields {
     friend class ObjCIndirectCopyRestoreExpr;
     unsigned : NumExprBits;
 
     unsigned ShouldCopy : 1;
   };
+#endif
 
   class InitListExprBitfields {
     friend class InitListExpr;
@@ -267,7 +269,9 @@ protected:
     CallExprBitfields CallExprBits;
     ExprWithCleanupsBitfields ExprWithCleanupsBits;
     PseudoObjectExprBitfields PseudoObjectExprBits;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ObjCIndirectCopyRestoreExprBitfields ObjCIndirectCopyRestoreExprBits;
+#endif
     InitListExprBitfields InitListExprBits;
     TypeTraitExprBitfields TypeTraitExprBits;
   };

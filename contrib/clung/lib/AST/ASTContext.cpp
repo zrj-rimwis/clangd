@@ -1082,7 +1082,9 @@ void ASTContext::InitBuiltinTypes(const TargetInfo &Target,
   InitBuiltinType(UnknownAnyTy,        BuiltinType::UnknownAny);
 
   // Placeholder type for unbridged ARC casts.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   InitBuiltinType(ARCUnbridgedCastTy,  BuiltinType::ARCUnbridgedCast);
+#endif
 
   // Placeholder type for builtin functions.
   InitBuiltinType(BuiltinFnTy,  BuiltinType::BuiltinFn);

@@ -3464,7 +3464,9 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
     case AA_Passing:
     case AA_Returning:
     case AA_Sending:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     case AA_Passing_CFAudited:
+#endif
       if (CheckExceptionSpecCompatibility(From, ToType))
         return ExprError();
       break;
@@ -3542,7 +3544,9 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
                                VK_RValue, /*BasePath=*/nullptr, CCK).get();
     break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case ICK_Writeback_Conversion:
+#endif
   case ICK_Pointer_Conversion: {
     if (SCS.IncompatibleObjC && Action != AA_Casting) {
       // Diagnose incompatible Objective-C conversions

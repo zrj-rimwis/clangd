@@ -1079,31 +1079,6 @@ def NoThrow : InheritableAttr {
   let Documentation = [Undocumented];
 }
 
-def ObjCBridge : InheritableAttr {
-  let Spellings = [GNU<"objc_bridge">];
-  let Subjects = SubjectList<[Record, TypedefName], ErrorDiag,
-                             "ExpectedStructOrUnionOrTypedef">;
-  let Args = [IdentifierArgument<"BridgedType">];
-  let Documentation = [Undocumented];
-}
-
-def ObjCBridgeMutable : InheritableAttr {
-  let Spellings = [GNU<"objc_bridge_mutable">];
-  let Subjects = SubjectList<[Record], ErrorDiag>;
-  let Args = [IdentifierArgument<"BridgedType">];
-  let Documentation = [Undocumented];
-}
-
-def ObjCBridgeRelated : InheritableAttr {
-  let Spellings = [GNU<"objc_bridge_related">];
-  let Subjects = SubjectList<[Record], ErrorDiag>;
-  let Args = [IdentifierArgument<"RelatedClass">,
-          IdentifierArgument<"ClassMethod", 1>,
-          IdentifierArgument<"InstanceMethod", 1>];
-  let HasCustomParsing = 1;
-  let Documentation = [Undocumented];
-}
-
 def NSReturnsRetained : InheritableAttr {
   let Spellings = [GNU<"ns_returns_retained">];
 //  let Subjects = SubjectList<[ObjCMethod, ObjCProperty, Function]>;

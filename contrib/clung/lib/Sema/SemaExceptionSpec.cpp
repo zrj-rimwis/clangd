@@ -1075,7 +1075,9 @@ CanThrowResult Sema::canThrow(const Expr *E) {
     // specs.
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCPropertyRefExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSubscriptRefExprClass:
+#endif
     return CT_Can;
 
     // All the ObjC literals that are implemented as calls are
@@ -1103,7 +1105,9 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::ExtVectorElementExprClass:
   case Expr::InitListExprClass:
   case Expr::MemberExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not not needed
   case Expr::ObjCIsaExprClass:
+#endif
   case Expr::ObjCIvarRefExprClass:
   case Expr::ParenExprClass:
   case Expr::ParenListExprClass:
@@ -1163,8 +1167,8 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::DeclRefExprClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass:
-#endif
   case Expr::ObjCIndirectCopyRestoreExprClass:
+#endif
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCSelectorExprClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
@@ -1204,7 +1208,9 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::ImplicitValueInitExprClass:
   case Expr::IntegerLiteralClass:
   case Expr::NoInitExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCEncodeExprClass:
+#endif
   case Expr::ObjCStringLiteralClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoolLiteralExprClass:

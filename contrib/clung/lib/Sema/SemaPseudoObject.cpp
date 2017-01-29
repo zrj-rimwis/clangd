@@ -77,6 +77,7 @@ namespace {
           refExpr->getValueKind(), refExpr->getObjectKind(),
           refExpr->getLocation(), SpecificCallback(refExpr->getBase(), 0));
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Expr *rebuildObjCSubscriptRefExpr(ObjCSubscriptRefExpr *refExpr) {
       assert(refExpr->getBaseExpr());
       assert(refExpr->getKeyExpr());
@@ -88,6 +89,7 @@ namespace {
           refExpr->getAtIndexMethodDecl(), refExpr->setAtIndexMethodDecl(),
           refExpr->getRBracket());
     }
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     Expr *rebuildMSPropertyRefExpr(MSPropertyRefExpr *refExpr) {
       assert(refExpr->getBaseExpr());
@@ -118,8 +120,10 @@ namespace {
       // Fast path: nothing to look through.
       if (auto *PRE = dyn_cast<ObjCPropertyRefExpr>(e))
         return rebuildObjCPropertyRefExpr(PRE);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (auto *SRE = dyn_cast<ObjCSubscriptRefExpr>(e))
         return rebuildObjCSubscriptRefExpr(SRE);
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       if (auto *MSPRE = dyn_cast<MSPropertyRefExpr>(e))
         return rebuildMSPropertyRefExpr(MSPRE);
@@ -314,6 +318,7 @@ namespace {
   };
 
  /// A PseudoOpBuilder for Objective-C array/dictionary indexing.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
  class ObjCSubscriptOpBuilder : public PseudoOpBuilder {
    ObjCSubscriptRefExpr *RefExpr;
    OpaqueValueExpr *InstanceBase;
@@ -344,6 +349,7 @@ namespace {
    ExprResult buildGet() override;
    ExprResult buildSet(Expr *op, SourceLocation, bool) override;
  };
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
  class MSPropertyOpBuilder : public PseudoOpBuilder {
@@ -997,13 +1003,16 @@ ExprResult ObjCPropertyOpBuilder::complete(Expr *SyntacticForm) {
 /// conversion.
 /// FIXME. Remove this routine if it is proven that no additional 
 /// specifity is needed.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult ObjCSubscriptOpBuilder::buildRValueOperation(Expr *op) {
   ExprResult result = PseudoOpBuilder::buildRValueOperation(op);
   if (result.isInvalid()) return ExprError();
   return result;
 }
+#endif
 
 /// objective-c subscripting-specific  behavior for doing assignments.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 ObjCSubscriptOpBuilder::buildAssignmentOperation(Scope *Sc,
                                                 SourceLocation opcLoc,
@@ -1032,8 +1041,10 @@ ObjCSubscriptOpBuilder::buildAssignmentOperation(Scope *Sc,
   
   return result;
 }
+#endif
 
 /// Capture the base object of an Objective-C Index'ed expression.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Expr *ObjCSubscriptOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
   assert(InstanceBase == nullptr);
 
@@ -1056,9 +1067,11 @@ Expr *ObjCSubscriptOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
 
   return syntacticBase;
 }
+#endif
 
 /// CheckSubscriptingKind - This routine decide what type 
 /// of indexing represented by "FromE" is being done.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Sema::ObjCSubscriptKind 
   Sema::CheckSubscriptingKind(Expr *FromE) {
   // If the expression already has integral or enumeration type, we're golden.
@@ -1129,6 +1142,7 @@ Sema::ObjCSubscriptKind
     
   return OS_Error;
 }
+#endif
 
 /// CheckKeyForObjCARCConversion - This routine suggests bridge casting of CF
 /// objects used as dictionary subscript key objects.
@@ -1153,6 +1167,7 @@ static void CheckKeyForObjCARCConversion(Sema &S, QualType ContainerT,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool ObjCSubscriptOpBuilder::findAtIndexGetter() {
   if (AtIndexGetter)
     return true;
@@ -1262,7 +1277,9 @@ bool ObjCSubscriptOpBuilder::findAtIndexGetter() {
   }
   return true;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool ObjCSubscriptOpBuilder::findAtIndexSetter() {
   if (AtIndexSetter)
     return true;
@@ -1401,9 +1418,11 @@ bool ObjCSubscriptOpBuilder::findAtIndexSetter() {
 
   return !err;
 }
+#endif
 
 // Get the object at "Index" position in the container.
 // [BaseExpr objectAtIndexedSubscript : IndexExpr];
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult ObjCSubscriptOpBuilder::buildGet() {
   if (!findAtIndexGetter())
     return ExprError();
@@ -1425,12 +1444,14 @@ ExprResult ObjCSubscriptOpBuilder::buildGet() {
                                        MultiExprArg(args, 1));
   return msg;
 }
+#endif
 
 /// Store into the container the "op" object at "Index"'ed location
 /// by building this messaging expression:
 /// - (void)setObject:(id)object atIndexedSubscript:(NSInteger)index;
 /// \param captureSetValueAsResult If true, capture the actual
 ///   value being set as the value of the property operation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult ObjCSubscriptOpBuilder::buildSet(Expr *op, SourceLocation opcLoc,
                                            bool captureSetValueAsResult) {
   if (!findAtIndexSetter())
@@ -1460,6 +1481,7 @@ ExprResult ObjCSubscriptOpBuilder::buildSet(Expr *op, SourceLocation opcLoc,
   
   return msg;
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 //  MSVC __declspec(property) references
@@ -1571,11 +1593,13 @@ ExprResult Sema::checkPseudoObjectRValue(Expr *E) {
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
     return builder.buildRValueOperation(E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   }
   else if (ObjCSubscriptRefExpr *refExpr
            = dyn_cast<ObjCSubscriptRefExpr>(opaqueRef)) {
     ObjCSubscriptOpBuilder builder(*this, refExpr);
     return builder.buildRValueOperation(E);
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (MSPropertyRefExpr *refExpr
              = dyn_cast<MSPropertyRefExpr>(opaqueRef)) {
@@ -1605,9 +1629,11 @@ ExprResult Sema::checkPseudoObjectIncDec(Scope *Sc, SourceLocation opcLoc,
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
     return builder.buildIncDecOperation(Sc, opcLoc, opcode, op);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   } else if (isa<ObjCSubscriptRefExpr>(opaqueRef)) {
     Diag(opcLoc, diag::err_illegal_container_subscripting_op);
     return ExprError();
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (MSPropertyRefExpr *refExpr
              = dyn_cast<MSPropertyRefExpr>(opaqueRef)) {
@@ -1643,10 +1669,12 @@ ExprResult Sema::checkPseudoObjectAssignment(Scope *S, SourceLocation opcLoc,
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
     return builder.buildAssignmentOperation(S, opcLoc, opcode, LHS, RHS);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   } else if (ObjCSubscriptRefExpr *refExpr
              = dyn_cast<ObjCSubscriptRefExpr>(opaqueRef)) {
     ObjCSubscriptOpBuilder builder(*this, refExpr);
     return builder.buildAssignmentOperation(S, opcLoc, opcode, LHS, RHS);
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   } else if (MSPropertyRefExpr *refExpr
              = dyn_cast<MSPropertyRefExpr>(opaqueRef)) {

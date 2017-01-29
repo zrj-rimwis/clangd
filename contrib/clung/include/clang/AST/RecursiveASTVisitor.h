@@ -2352,22 +2352,28 @@ DEF_TRAVERSE_STMT(NoInitExpr, {})
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCBoolLiteralExpr, {})
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCEncodeExpr, {
   if (TypeSourceInfo *TInfo = S->getEncodedTypeSourceInfo())
     TRY_TO(TraverseTypeLoc(TInfo->getTypeLoc()));
 })
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCIsaExpr, {})
+#endif
 DEF_TRAVERSE_STMT(ObjCIvarRefExpr, {})
 DEF_TRAVERSE_STMT(ObjCMessageExpr, {
   if (TypeSourceInfo *TInfo = S->getClassReceiverTypeInfo())
     TRY_TO(TraverseTypeLoc(TInfo->getTypeLoc()));
 })
 DEF_TRAVERSE_STMT(ObjCPropertyRefExpr, {})
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCSubscriptRefExpr, {})
+#endif
 DEF_TRAVERSE_STMT(ObjCProtocolExpr, {})
 DEF_TRAVERSE_STMT(ObjCSelectorExpr, {})
-DEF_TRAVERSE_STMT(ObjCIndirectCopyRestoreExpr, {})
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__
+DEF_TRAVERSE_STMT(ObjCIndirectCopyRestoreExpr, {})
 DEF_TRAVERSE_STMT(ObjCBridgedCastExpr, {
   TRY_TO(TraverseTypeLoc(S->getTypeInfoAsWritten()->getTypeLoc()));
 })

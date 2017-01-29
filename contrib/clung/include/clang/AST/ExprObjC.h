@@ -371,6 +371,7 @@ public:
 /// ObjCEncodeExpr, used for \@encode in Objective-C.  \@encode has the same
 /// type and behavior as StringLiteral except that the string initializer is
 /// obtained from ASTContext with the encoding type as an argument.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCEncodeExpr : public Expr {
   TypeSourceInfo *EncodedType;
   SourceLocation AtLoc, RParenLoc;
@@ -411,6 +412,7 @@ public:
     return child_range(child_iterator(), child_iterator());
   }
 };
+#endif
 
 /// ObjCSelectorExpr used for \@selector in Objective-C.
 class ObjCSelectorExpr : public Expr {
@@ -776,6 +778,7 @@ private:
 /// ObjCSubscriptRefExpr - used for array and dictionary subscripting.
 /// array[4] = array[3]; dictionary[key] = dictionary[alt_key];
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCSubscriptRefExpr : public Expr {
   // Location of ']' in an indexing expression.
   SourceLocation RBracket;
@@ -847,6 +850,7 @@ public:
 private:
   friend class ASTStmtReader;
 };
+#endif
   
 
 /// \brief An expression that sends a message to the given Objective-C
@@ -1399,6 +1403,7 @@ public:
 
 /// ObjCIsaExpr - Represent X->isa and X.isa when X is an ObjC 'id' type.
 /// (similar in spirit to MemberExpr).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCIsaExpr : public Expr {
   /// Base - the expression for the base object pointer.
   Stmt *Base;
@@ -1456,6 +1461,7 @@ public:
   // Iterators
   child_range children() { return child_range(&Base, &Base+1); }
 };
+#endif
 
 
 /// ObjCIndirectCopyRestoreExpr - Represents the passing of a function
@@ -1480,6 +1486,7 @@ public:
 /// Currently 'T' must be a retainable object lifetime and must be
 /// __autoreleasing;  this qualifier is ignored when initializing
 /// the value.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCIndirectCopyRestoreExpr : public Expr {
   Stmt *Operand;
 
@@ -1528,6 +1535,7 @@ public:
     return s->getStmtClass() == ObjCIndirectCopyRestoreExprClass;
   }
 };
+#endif
 
 /// \brief An Objective-C "bridged" cast expression, which casts between
 /// Objective-C pointers and C pointers, transferring ownership in the process.

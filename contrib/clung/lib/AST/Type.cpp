@@ -2615,8 +2615,10 @@ StringRef BuiltinType::getName(const PrintingPolicy &Policy) const {
     return "<dependent type>";
   case UnknownAny:
     return "<unknown type>";
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ARCUnbridgedCast:
     return "<ARC unbridged cast type>";
+#endif
   case BuiltinFn:
     return "<builtin fn type>";
   case ObjCId:
@@ -3600,7 +3602,9 @@ bool Type::canHaveNullability() const {
     case BuiltinType::BoundMember:
     case BuiltinType::PseudoObject:
     case BuiltinType::UnknownAny:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case BuiltinType::ARCUnbridgedCast:
+#endif
       return true;
 
     case BuiltinType::Void:

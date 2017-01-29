@@ -3366,6 +3366,7 @@ static PointerDeclaratorKind classifyPointerDeclarator(Sema &S,
     }
 
     // Look at Objective-C object pointers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
     if (auto objcObjectPtr = type->getAs<ObjCObjectPointerType>()) {
       ++numNormalPointers;
       ++numTypeSpecifierPointers;
@@ -3380,8 +3381,10 @@ static PointerDeclaratorKind classifyPointerDeclarator(Sema &S,
 
       break;
     }
+#endif
 
     // Look at Objective-C class types.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, early
     if (auto objcClass = type->getAs<ObjCInterfaceType>()) {
       if (objcClass->getInterface()->getIdentifier() == S.getNSErrorIdent()) {
         if (numNormalPointers == 2 && numTypeSpecifierPointers < 2)
@@ -3390,6 +3393,7 @@ static PointerDeclaratorKind classifyPointerDeclarator(Sema &S,
 
       break;
     }
+#endif
 
     // If at this point we haven't seen a pointer, we won't see one.
     if (numNormalPointers == 0)
@@ -3405,6 +3409,7 @@ static PointerDeclaratorKind classifyPointerDeclarator(Sema &S,
       } else {
         // Check whether this is CFError, which we identify based on its bridge
         // to NSError.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
         if (recordDecl->getTagKind() == TTK_Struct && numNormalPointers > 0) {
           if (auto bridgeAttr = recordDecl->getAttr<ObjCBridgeAttr>()) {
             if (bridgeAttr->getBridgedType() == S.getNSErrorIdent()) {
@@ -3413,6 +3418,7 @@ static PointerDeclaratorKind classifyPointerDeclarator(Sema &S,
             }
           }
         }
+#endif
       }
 
       // If this is CFErrorRef*, report it as such.

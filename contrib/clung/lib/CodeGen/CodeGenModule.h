@@ -57,7 +57,9 @@ class ObjCMethodDecl;
 class ObjCImplementationDecl;
 class ObjCCategoryImplDecl;
 class ObjCProtocolDecl;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCEncodeExpr;
+#endif
 class BlockExpr;
 class CharUnits;
 class Decl;
@@ -812,8 +814,10 @@ public:
                                      StringRef Name = ".str");
 
   /// Return a pointer to a constant array for the given ObjCEncodeExpr node.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ConstantAddress
   GetAddrOfConstantStringFromObjCEncode(const ObjCEncodeExpr *);
+#endif
 
   /// Returns a pointer to a character array containing the literal and a
   /// terminating '\0' character. The result has pointer to array type.

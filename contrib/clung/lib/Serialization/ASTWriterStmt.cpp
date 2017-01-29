@@ -609,6 +609,7 @@ void ASTStmtWriter::VisitMemberExpr(MemberExpr *E) {
   Code = serialization::EXPR_MEMBER;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCIsaExpr(ObjCIsaExpr *E) {
   VisitExpr(E);
   Record.AddStmt(E->getBase());
@@ -617,7 +618,9 @@ void ASTStmtWriter::VisitObjCIsaExpr(ObjCIsaExpr *E) {
   Record.push_back(E->isArrow());
   Code = serialization::EXPR_OBJC_ISA;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::
 VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   VisitExpr(E);
@@ -625,6 +628,7 @@ VisitObjCIndirectCopyRestoreExpr(ObjCIndirectCopyRestoreExpr *E) {
   Record.push_back(E->shouldCopy());
   Code = serialization::EXPR_OBJC_INDIRECT_COPY_RESTORE;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCBridgedCastExpr(ObjCBridgedCastExpr *E) {
@@ -975,6 +979,7 @@ void ASTStmtWriter::VisitObjCDictionaryLiteral(ObjCDictionaryLiteral *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
   VisitExpr(E);
   Record.AddTypeSourceInfo(E->getEncodedTypeSourceInfo());
@@ -982,6 +987,7 @@ void ASTStmtWriter::VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
   Record.AddSourceLocation(E->getRParenLoc());
   Code = serialization::EXPR_OBJC_ENCODE;
 }
+#endif
 
 void ASTStmtWriter::VisitObjCSelectorExpr(ObjCSelectorExpr *E) {
   VisitExpr(E);
@@ -1037,6 +1043,7 @@ void ASTStmtWriter::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
   Code = serialization::EXPR_OBJC_PROPERTY_REF_EXPR;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
   VisitExpr(E);
   Record.AddSourceLocation(E->getRBracket());
@@ -1047,6 +1054,7 @@ void ASTStmtWriter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
   
   Code = serialization::EXPR_OBJC_SUBSCRIPT_REF_EXPR;
 }
+#endif
 
 void ASTStmtWriter::VisitObjCMessageExpr(ObjCMessageExpr *E) {
   VisitExpr(E);

@@ -329,7 +329,9 @@ TypeSpecifierType BuiltinTypeLoc::getWrittenTypeSpec() const {
   case BuiltinType::Dependent:
   case BuiltinType::BoundMember:
   case BuiltinType::UnknownAny:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case BuiltinType::ARCUnbridgedCast:
+#endif
   case BuiltinType::PseudoObject:
   case BuiltinType::ObjCId:
   case BuiltinType::ObjCClass:

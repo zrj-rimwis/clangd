@@ -112,15 +112,21 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     llvm_unreachable("cannot classify a statement");
 
     // First come the expressions that are always lvalues, unconditionally.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCIsaExprClass:
+#endif
     // C++ [expr.prim.general]p1: A string literal is an lvalue.
   case Expr::StringLiteralClass:
     // @encode is equivalent to its string
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCEncodeExprClass:
+#endif
     // __func__ and friends are too.
   case Expr::PredefinedExprClass:
     // Property references are lvalues
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSubscriptRefExprClass:
+#endif
   case Expr::ObjCPropertyRefExprClass:
     // C++ [expr.typeid]p1: The result of a typeid expression is an lvalue of...
   case Expr::CXXTypeidExprClass:
@@ -187,7 +193,9 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::SizeOfPackExprClass:
   case Expr::SubstNonTypeTemplateParmPackExprClass:
   case Expr::AsTypeExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCIndirectCopyRestoreExprClass:
+#endif
   case Expr::AtomicExprClass:
   case Expr::CXXFoldExprClass:
   case Expr::NoInitExprClass:

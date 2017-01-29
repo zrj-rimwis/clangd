@@ -83,6 +83,7 @@ ExprResult Sema::ParseObjCStringLiteral(SourceLocation *AtLocs,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S){
   // Verify that this composite string is acceptable for ObjC strings.
   if (CheckObjCString(S))
@@ -152,9 +153,11 @@ ExprResult Sema::BuildObjCStringLiteral(SourceLocation AtLoc, StringLiteral *S){
 
   return new (Context) ObjCStringLiteral(S, Ty, AtLoc);
 }
+#endif
 
 /// \brief Emits an error if the given method does not exist, or if the return
 /// type is not an Objective-C object.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool validateBoxingMethod(Sema &S, SourceLocation Loc,
                                  const ObjCInterfaceDecl *Class,
                                  Selector Sel, const ObjCMethodDecl *Method) {
@@ -176,6 +179,7 @@ static bool validateBoxingMethod(Sema &S, SourceLocation Loc,
 
   return true;
 }
+#endif
 
 /// \brief Maps ObjCLiteralKind to NSClassIdKindKind
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
@@ -417,6 +421,7 @@ ExprResult Sema::ActOnObjCBoolLiteral(SourceLocation AtLoc,
 
 /// \brief Check that the given expression is a valid element of an Objective-C
 /// collection literal.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element, 
                                                     QualType T,
                                                     bool ArrayLiteral = false) {
@@ -460,11 +465,7 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
     if (isa<IntegerLiteral>(OrigElement) || 
         isa<CharacterLiteral>(OrigElement) ||
         isa<FloatingLiteral>(OrigElement) ||
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         isa<ObjCBoolLiteralExpr>(OrigElement) ||
-#else
-        false ||
-#endif
         isa<CXXBoolLiteralExpr>(OrigElement)) {
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
       if (S.NSAPIObj->getNSNumberFactoryMethodKind(OrigElement->getType())) {
@@ -537,6 +538,7 @@ static ExprResult CheckObjCCollectionLiteralElement(Sema &S, Expr *Element,
                                                   /*Consumed=*/false),
            Element->getLocStart(), Element);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
@@ -787,6 +789,7 @@ ExprResult Sema::BuildObjCBoxedExpr(SourceRange SR, Expr *ValueExpr) {
 
 /// Build an ObjC subscript pseudo-object expression, given that
 /// that's supported by the runtime.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
                                         Expr *IndexExpr,
                                         ObjCMethodDecl *getterMethod,
@@ -818,6 +821,7 @@ ExprResult Sema::BuildObjCSubscriptExpression(SourceLocation RB, Expr *BaseExpr,
       BaseExpr, IndexExpr, Context.PseudoObjectTy, VK_LValue, OK_ObjCSubscript,
       getterMethod, setterMethod, RB);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCArrayLiteral(SourceRange SR, MultiExprArg Elements) {
@@ -1112,6 +1116,7 @@ ExprResult Sema::BuildObjCDictionaryLiteral(SourceRange SR,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCEncodeExpression(SourceLocation AtLoc,
                                       TypeSourceInfo *EncodedTypeInfo,
                                       SourceLocation RParenLoc) {
@@ -1146,6 +1151,7 @@ ExprResult Sema::BuildObjCEncodeExpression(SourceLocation AtLoc,
 
   return new (Context) ObjCEncodeExpr(StrTy, EncodedTypeInfo, AtLoc, RParenLoc);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ParseObjCEncodeExpression(SourceLocation AtLoc,
@@ -1164,6 +1170,7 @@ ExprResult Sema::ParseObjCEncodeExpression(SourceLocation AtLoc,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool HelperToDiagnoseMismatchedMethodsInGlobalPool(Sema &S,
                                                SourceLocation AtLoc,
                                                SourceLocation LParenLoc,
@@ -1194,7 +1201,9 @@ static bool HelperToDiagnoseMismatchedMethodsInGlobalPool(Sema &S,
   }
   return Warned;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void DiagnoseMismatchedSelectors(Sema &S, SourceLocation AtLoc,
                                         ObjCMethodDecl *Method,
                                         SourceLocation LParenLoc,
@@ -1219,6 +1228,7 @@ static void DiagnoseMismatchedSelectors(Sema &S, SourceLocation AtLoc,
       return;
   }
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ParseObjCSelectorExpression(Selector Sel,
@@ -1689,9 +1699,11 @@ bool Sema::CheckMessageArgumentTypes(QualType ReceiverType,
 
     // Strip the unbridged-cast placeholder expression off unless it's
     // a consumed argument.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (argExpr->hasPlaceholderType(BuiltinType::ARCUnbridgedCast) &&
         !param->hasAttr<CFConsumedAttr>())
       argExpr = stripARCUnbridgedCast(argExpr);
+#endif
 
     // If the parameter is __unknown_anytype, infer its type
     // from the argument.
@@ -3179,6 +3191,7 @@ ExprResult Sema::ActOnInstanceMessage(Scope *S,
                               RBracLoc, Args);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 enum ARCConversionTypeClass {
   /// int, void, struct A
   ACTC_none,
@@ -3195,19 +3208,25 @@ enum ARCConversionTypeClass {
   /// struct A*
   ACTC_coreFoundation
 };
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool isAnyRetainable(ARCConversionTypeClass ACTC) {
   return (ACTC == ACTC_retainable ||
           ACTC == ACTC_coreFoundation ||
           ACTC == ACTC_voidPtr);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool isAnyCLike(ARCConversionTypeClass ACTC) {
   return ACTC == ACTC_none ||
          ACTC == ACTC_voidPtr ||
          ACTC == ACTC_coreFoundation;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static ARCConversionTypeClass classifyTypeForARCConversion(QualType type) {
   bool isIndirect = false;
   
@@ -3250,7 +3269,9 @@ static ARCConversionTypeClass classifyTypeForARCConversion(QualType type) {
 
   return ACTC_none;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume no not needed
 namespace {
   /// A result from the cast checker.
   enum ACCResult {
@@ -3484,7 +3505,9 @@ namespace {
     }
   };
 } // end anonymous namespace
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool Sema::isKnownName(StringRef name) {
   if (name.empty())
     return false;
@@ -3492,7 +3515,9 @@ bool Sema::isKnownName(StringRef name) {
                  Sema::LookupOrdinaryName);
   return LookupName(R, TUScope, false);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void addFixitForObjCARCConversion(Sema &S,
                                          DiagnosticBuilder &DiagB,
                                          Sema::CheckedConversionKind CCK,
@@ -3590,7 +3615,9 @@ static void addFixitForObjCARCConversion(Sema &S,
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename T>
 static inline T *getObjCBridgeAttr(const TypedefType *TD) {
   TypedefNameDecl *TDNDecl = TD->getDecl();
@@ -3603,7 +3630,9 @@ static inline T *getObjCBridgeAttr(const TypedefType *TD) {
   }
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static ObjCBridgeRelatedAttr *ObjCBridgeRelatedAttrFromType(QualType T,
                                                             TypedefNameDecl *&TDNDecl) {
   while (const TypedefType *TD = dyn_cast<TypedefType>(T.getTypePtr())) {
@@ -3615,7 +3644,9 @@ static ObjCBridgeRelatedAttr *ObjCBridgeRelatedAttrFromType(QualType T,
   }
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 static void
 diagnoseObjCARCConversion(Sema &S, SourceRange castRange,
                           QualType castType, ARCConversionTypeClass castACTC,
@@ -3745,7 +3776,9 @@ diagnoseObjCARCConversion(Sema &S, SourceRange castRange,
     << srcKind << castExprType << castType
     << castRange << castExpr->getSourceRange();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename TB>
 static bool CheckObjCBridgeNSCast(Sema &S, QualType castType, Expr *castExpr,
                                   bool &HadTheAttribute, bool warn) {
@@ -3810,7 +3843,9 @@ static bool CheckObjCBridgeNSCast(Sema &S, QualType castType, Expr *castExpr,
   }
   return true;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename TB>
 static bool CheckObjCBridgeCFCast(Sema &S, QualType castType, Expr *castExpr,
                                   bool &HadTheAttribute, bool warn) {
@@ -3876,6 +3911,7 @@ static bool CheckObjCBridgeCFCast(Sema &S, QualType castType, Expr *castExpr,
   }
   return true;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
 void Sema::CheckTollFreeBridgeCast(QualType castType, Expr *castExpr) {
@@ -3929,6 +3965,7 @@ void Sema::CheckTollFreeBridgeCast(QualType castType, Expr *castExpr) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::CheckObjCBridgeRelatedCast(QualType castType, Expr *castExpr) {
   QualType SrcType = castExpr->getType();
   if (ObjCPropertyRefExpr *PRE = dyn_cast<ObjCPropertyRefExpr>(castExpr)) {
@@ -3949,6 +3986,7 @@ void Sema::CheckObjCBridgeRelatedCast(QualType castType, Expr *castExpr) {
   CheckObjCBridgeRelatedConversions(castExpr->getLocStart(),
                                     castType, SrcType, castExpr);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns false
 bool Sema::CheckTollFreeBridgeStaticCast(QualType castType, Expr *castExpr,
@@ -3969,6 +4007,7 @@ bool Sema::CheckTollFreeBridgeStaticCast(QualType castType, Expr *castExpr,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool Sema::checkObjCBridgeRelatedComponents(SourceLocation Loc,
                                             QualType DestType, QualType SrcType,
                                             ObjCInterfaceDecl *&RelatedClass,
@@ -4041,7 +4080,9 @@ bool Sema::checkObjCBridgeRelatedComponents(SourceLocation Loc,
   }
   return true;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 bool
 Sema::CheckObjCBridgeRelatedConversions(SourceLocation Loc,
                                         QualType DestType, QualType SrcType,
@@ -4134,6 +4175,7 @@ Sema::CheckObjCBridgeRelatedConversions(SourceLocation Loc,
   }
   return false;
 }
+#endif
 
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 Sema::ARCConversionResult
@@ -4250,6 +4292,7 @@ Sema::CheckObjCARCConversion(SourceRange castRange, QualType castType,
 
 /// Given that we saw an expression with the ARCUnbridgedCastTy
 /// placeholder type, complain bitterly.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::diagnoseARCUnbridgedCast(Expr *e) {
   // We expect the spurious ImplicitCastExpr to already have been stripped.
   assert(!e->hasPlaceholderType(BuiltinType::ARCUnbridgedCast));
@@ -4281,9 +4324,11 @@ void Sema::diagnoseARCUnbridgedCast(Expr *e) {
   diagnoseObjCARCConversion(*this, castRange, castType, castACTC,
                             castExpr, realCast, ACTC_retainable, CCK);
 }
+#endif
 
 /// stripARCUnbridgedCast - Given an expression of ARCUnbridgedCast
 /// type, remove the placeholder cast.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Expr *Sema::stripARCUnbridgedCast(Expr *e) {
   assert(e->hasPlaceholderType(BuiltinType::ARCUnbridgedCast));
 
@@ -4322,6 +4367,7 @@ Expr *Sema::stripARCUnbridgedCast(Expr *e) {
     return cast<ImplicitCastExpr>(e)->getSubExpr();
   }
 }
+#endif
 
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 bool Sema::CheckObjCARCUnavailableWeakConversion(QualType castType,
@@ -4343,6 +4389,7 @@ bool Sema::CheckObjCARCUnavailableWeakConversion(QualType castType,
 #endif
 
 /// Look for an ObjCReclaimReturnedObject cast and destroy it.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static Expr *maybeUndoReclaimObject(Expr *e) {
   // For now, we just undo operands that are *immediately* reclaim
   // expressions, which prevents the vast majority of potential
@@ -4355,6 +4402,7 @@ static Expr *maybeUndoReclaimObject(Expr *e) {
 
   return e;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildObjCBridgedCast(SourceLocation LParenLoc,

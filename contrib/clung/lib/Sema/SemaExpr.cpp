@@ -571,6 +571,7 @@ static void CheckForNullPointerDereference(Sema &S, Expr *E) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void DiagnoseDirectIsaAccess(Sema &S, const ObjCIvarRefExpr *OIRE,
                                     SourceLocation AssignLoc,
                                     const Expr* RHS) {
@@ -626,6 +627,7 @@ static void DiagnoseDirectIsaAccess(Sema &S, const ObjCIvarRefExpr *OIRE,
       }
     }
 }
+#endif
 
 ExprResult Sema::DefaultLvalueConversion(Expr *E) {
   // Handle any placeholder expressions which made it here.
@@ -668,6 +670,7 @@ ExprResult Sema::DefaultLvalueConversion(Expr *E) {
   }
 
   CheckForNullPointerDereference(*this, E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (const ObjCIsaExpr *OISA = dyn_cast<ObjCIsaExpr>(E->IgnoreParenCasts())) {
     NamedDecl *ObjectGetClass = LookupSingleName(TUScope,
                                      &Context.Idents.get("object_getClass"),
@@ -683,6 +686,7 @@ ExprResult Sema::DefaultLvalueConversion(Expr *E) {
   else if (const ObjCIvarRefExpr *OIRE =
             dyn_cast<ObjCIvarRefExpr>(E->IgnoreParenCasts()))
     DiagnoseDirectIsaAccess(*this, OIRE, SourceLocation(), /* Expr*/nullptr);
+#endif
 
   // C++ [conv.lval]p1:
   //   [...] If T is a non-class type, the type of the prvalue is the
@@ -956,12 +960,17 @@ ExprResult Sema::DefaultVariadicArgumentPromotion(Expr *E, VariadicCallType CT,
                                                   FunctionDecl *FDecl) {
   if (const BuiltinType *PlaceholderTy = E->getType()->getAsPlaceholderType()) {
     // Strip the unbridged-cast placeholder expression off, if applicable.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (smth || smth)
     if (PlaceholderTy->getKind() == BuiltinType::ARCUnbridgedCast &&
         (CT == VariadicMethod ||
          (FDecl && FDecl->hasAttr<CFAuditedTransferAttr>()))) {
       E = stripARCUnbridgedCast(E);
 
     // Otherwise, do normal placeholder checking.
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       ExprResult ExprRes = CheckPlaceholderExpr(E);
       if (ExprRes.isInvalid())
@@ -4447,6 +4456,7 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
     BaseExpr = LHSExp;
     IndexExpr = RHSExp;
     ResultType = PTy->getPointeeType();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
   } else if (const ObjCObjectPointerType *PTy =
                LHSTy->getAs<ObjCObjectPointerType>()) {
     BaseExpr = LHSExp;
@@ -4463,6 +4473,7 @@ Sema::CreateBuiltinArraySubscriptExpr(Expr *Base, SourceLocation LLoc,
                                           nullptr);
 
     ResultType = PTy->getPointeeType();
+#endif
   } else if (const PointerType *PTy = RHSTy->getAs<PointerType>()) {
      // Handle the uncommon case of "123[Ptr]".
     BaseExpr = RHSExp;
@@ -4893,6 +4904,7 @@ bool Sema::GatherArgumentsForCall(SourceLocation CallLoc, FunctionDecl *FDecl,
         return true;
 
       // Strip the unbridged-cast placeholder expression off, if applicable.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
       bool CFAudited = false;
       if (Arg->getType() == Context.ARCUnbridgedCastTy &&
           FDecl && FDecl->hasAttr<CFAuditedTransferAttr>() &&
@@ -4904,6 +4916,7 @@ bool Sema::GatherArgumentsForCall(SourceLocation CallLoc, FunctionDecl *FDecl,
                (!Param || !Param->hasAttr<CFConsumedAttr>()))
         CFAudited = true;
 #endif
+#endif
 
       InitializedEntity Entity =
           Param ? InitializedEntity::InitializeParameter(Context, Param,
@@ -4912,8 +4925,10 @@ bool Sema::GatherArgumentsForCall(SourceLocation CallLoc, FunctionDecl *FDecl,
                       Context, ProtoArgType, Proto->isParamConsumed(i));
 
       // Remember that parameter belongs to a CF audited API.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (CFAudited)
         Entity.setParameterCFAudited();
+#endif
 
       ExprResult ArgE = PerformCopyInitialization(
           Entity, SourceLocation(), Arg, IsListInitialization, AllowExplicit);
@@ -5056,8 +5071,10 @@ static bool isPlaceholderToRemoveAsArg(QualType type) {
 
   // Unbridged casts in ARC can be handled in some call positions and
   // should be left in place.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case BuiltinType::ARCUnbridgedCast:
     return false;
+#endif
 
   // Pseudo-objects should be converted as soon as possible.
   case BuiltinType::PseudoObject:
@@ -6087,7 +6104,9 @@ Sema::ActOnCastExpr(Scope *S, SourceLocation LParenLoc,
   CheckTollFreeBridgeCast(castType, CastExpr);
 #endif
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
   CheckObjCBridgeRelatedCast(castType, CastExpr);
+#endif
   
   return BuildCStyleCastExpr(LParenLoc, castTInfo, RParenLoc, CastExpr);
 }
@@ -9233,13 +9252,21 @@ QualType Sema::CheckCompareOperands(ExprResult &LHS, ExprResult &RHS,
     // operand is null), the user probably wants strcmp.
     Expr *literalString = nullptr;
     Expr *literalStringStripped = nullptr;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if ((isa<StringLiteral>(LHSStripped) || isa<ObjCEncodeExpr>(LHSStripped)) &&
+#else
+    if ((isa<StringLiteral>(LHSStripped) || false) &&
+#endif
         !RHSStripped->isNullPointerConstant(Context,
                                             Expr::NPC_ValueDependentIsNull)) {
       literalString = LHS.get();
       literalStringStripped = LHSStripped;
     } else if ((isa<StringLiteral>(RHSStripped) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
                 isa<ObjCEncodeExpr>(RHSStripped)) &&
+#else
+                false) &&
+#endif
                !LHSStripped->isNullPointerConstant(Context,
                                             Expr::NPC_ValueDependentIsNull)) {
       literalString = RHS.get();
@@ -9249,7 +9276,11 @@ QualType Sema::CheckCompareOperands(ExprResult &LHS, ExprResult &RHS,
     if (literalString) {
       DiagRuntimeBehavior(Loc, nullptr,
         PDiag(diag::warn_stringcompare)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
           << isa<ObjCEncodeExpr>(literalStringStripped)
+#else
+          << false
+#endif
           << literalString->getSourceRange());
     }
   }
@@ -11092,6 +11123,7 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
   CheckArrayAccess(LHS.get());
   CheckArrayAccess(RHS.get());
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (const ObjCIsaExpr *OISA = dyn_cast<ObjCIsaExpr>(LHS.get()->IgnoreParenCasts())) {
     NamedDecl *ObjectSetClass = LookupSingleName(TUScope,
                                                  &Context.Idents.get("object_setClass"),
@@ -11109,6 +11141,7 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
   else if (const ObjCIvarRefExpr *OIRE =
            dyn_cast<ObjCIvarRefExpr>(LHS.get()->IgnoreParenCasts()))
     DiagnoseDirectIsaAccess(*this, OIRE, OpLoc, RHS.get());
+#endif
   
   if (CompResultTy.isNull())
     return new (Context) BinaryOperator(LHS.get(), RHS.get(), Opc, ResultTy, VK,
@@ -12571,9 +12604,13 @@ bool Sema::DiagnoseAssignmentResult(AssignConvertType ConvTy,
     break;
   case IncompatiblePointer:
       DiagKind =
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and only for OBJC
         (Action == AA_Passing_CFAudited ?
           diag::err_arc_typecheck_convert_incompatible_pointer :
           diag::ext_typecheck_convert_incompatible_pointer);
+#else
+        diag::ext_typecheck_convert_incompatible_pointer;
+#endif
     CheckInferredResultType = DstType->isObjCObjectPointerType() &&
       SrcType->isObjCObjectPointerType();
     if (Hint.isNull() && !CheckInferredResultType) {
@@ -12692,7 +12729,9 @@ bool Sema::DiagnoseAssignmentResult(AssignConvertType ConvTy,
 
   case AA_Returning:
   case AA_Passing:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case AA_Passing_CFAudited:
+#endif
   case AA_Converting:
   case AA_Sending:
   case AA_Casting:
@@ -12703,9 +12742,11 @@ bool Sema::DiagnoseAssignmentResult(AssignConvertType ConvTy,
   }
 
   PartialDiagnostic FDiag = PDiag(DiagKind);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   if (Action == AA_Passing_CFAudited)
     FDiag << FirstType << SecondType << AA_Passing << SrcExpr->getSourceRange();
   else
+#endif
     FDiag << FirstType << SecondType << Action << SrcExpr->getSourceRange();
 
   // If we can fix the conversion, suggest the FixIts.
@@ -15162,11 +15203,13 @@ ExprResult Sema::CheckPlaceholderExpr(Expr *E) {
   }
 
   // ARC unbridged casts.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case BuiltinType::ARCUnbridgedCast: {
     Expr *realCast = stripARCUnbridgedCast(E);
     diagnoseARCUnbridgedCast(realCast);
     return realCast;
   }
+#endif
 
   // Expressions of unknown type.
   case BuiltinType::UnknownAny:

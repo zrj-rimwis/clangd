@@ -52,7 +52,11 @@ namespace {
       : Self(S), SrcExpr(src), DestType(destType),
         ResultType(destType.getNonLValueExprType(S.Context)),
         ValueKind(Expr::getValueKindForType(destType)),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         Kind(CK_Dependent), IsARCUnbridgedCast(false) {
+#else
+        Kind(CK_Dependent) {
+#endif
 
       if (const BuiltinType *placeholder =
             src.get()->getType()->getAsPlaceholderType()) {
@@ -70,7 +74,9 @@ namespace {
     CastKind Kind;
     BuiltinType::Kind PlaceholderKind;
     CXXCastPath BasePath;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     bool IsARCUnbridgedCast;
+#endif
 
     SourceRange OpRange;
     SourceRange DestRange;
@@ -88,12 +94,14 @@ namespace {
     ExprResult complete(CastExpr *castExpr) {
       // If this is an unbridged cast, wrap the result in an implicit
       // cast that yields the unbridged-cast placeholder type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, XXX this could be now simplified
       if (IsARCUnbridgedCast) {
         castExpr = ImplicitCastExpr::Create(Self.Context,
                                             Self.Context.ARCUnbridgedCastTy,
                                             CK_Dependent, castExpr, nullptr,
                                             castExpr->getValueKind());
       }
+#endif
       return castExpr;
     }
 
@@ -1934,8 +1942,10 @@ static TryCastResult TryReinterpretCast(Sema &Self, ExprResult &SrcExpr,
     case OK_BitField:        inappropriate = "bit-field";           break;
     case OK_VectorComponent: inappropriate = "vector element";      break;
     case OK_ObjCProperty:    inappropriate = "property expression"; break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case OK_ObjCSubscript:   inappropriate = "container subscripting expression"; 
                              break;
+#endif
     }
     if (inappropriate) {
       Self.Diag(OpRange.getBegin(), diag::err_bad_reinterpret_cast_reference)

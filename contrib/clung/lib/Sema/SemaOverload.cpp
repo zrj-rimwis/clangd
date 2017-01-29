@@ -826,12 +826,14 @@ namespace {
     SmallVector<Entry, 2> Entries;
     
   public:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and only for OBJC
     void save(Sema &S, Expr *&E) {
       assert(E->hasPlaceholderType(BuiltinType::ARCUnbridgedCast));
       Entry entry = { &E, E };
       Entries.push_back(entry);
       E = S.stripARCUnbridgedCast(E);
     }
+#endif
 
     void restore() {
       for (SmallVectorImpl<Entry>::iterator
@@ -858,11 +860,13 @@ checkPlaceholderForOverload(Sema &S, Expr *&E,
 
     // If the context potentially accepts unbridged ARC casts, strip
     // the unbridged cast and add it to the collection for later restoration.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (placeholder->getKind() == BuiltinType::ARCUnbridgedCast &&
         unbridgedCasts) {
       unbridgedCasts->save(S, E);
       return false;
     }
+#endif
 
     // Go ahead and check everything else.
     ExprResult result = S.CheckPlaceholderExpr(E);
@@ -1711,9 +1715,11 @@ static bool IsStandardConversion(Sema &S, Expr* From, QualType ToType,
     FromType = ToType.getUnqualifiedType();
   } else if (S.IsBlockPointerConversion(FromType, ToType, FromType)) {
     SCS.Second = ICK_Block_Pointer_Conversion;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   } else if (AllowObjCWritebackConversion &&
              S.isObjCWritebackConversion(FromType, ToType, FromType)) {
     SCS.Second = ICK_Writeback_Conversion;
+#endif
   } else if (S.IsPointerConversion(From, FromType, ToType, InOverloadResolution,
                                    FromType, IncompatibleObjC)) {
     // Pointer conversions (C++ 4.10).
@@ -2464,6 +2470,7 @@ bool Sema::isObjCPointerConversion(QualType FromType, QualType ToType,
 ///
 /// \param ConvertedType The type that will be produced after applying
 /// this conversion.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 bool Sema::isObjCWritebackConversion(QualType FromType, QualType ToType,
                                      QualType &ConvertedType) {
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false || smth, and return early
@@ -2525,6 +2532,7 @@ bool Sema::isObjCWritebackConversion(QualType FromType, QualType ToType,
   return true;
 #endif
 }
+#endif
 
 bool Sema::IsBlockPointerConversion(QualType FromType, QualType ToType,
                                     QualType& ConvertedType) {
@@ -5156,7 +5164,9 @@ static bool CheckConvertedConstantConversions(Sema &S,
   case ICK_Complex_Real:
   case ICK_Block_Pointer_Conversion:
   case ICK_TransparentUnionConversion:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case ICK_Writeback_Conversion:
+#endif
   case ICK_Zero_Event_Conversion:
   case ICK_C_Only_Conversion:
     return false;
@@ -5949,9 +5959,11 @@ Sema::SelectBestMethod(Selector Sel, MultiExprArg Args, bool IsInstance,
                 
       // Strip the unbridged-cast placeholder expression off unless it's
       // a consumed argument.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (argExpr->hasPlaceholderType(BuiltinType::ARCUnbridgedCast) &&
           !param->hasAttr<CFConsumedAttr>())
         argExpr = stripARCUnbridgedCast(argExpr);
+#endif
                 
       // If the parameter is __unknown_anytype, move on to the next method.
       if (param->getType() == Context.UnknownAnyTy) {
@@ -11445,7 +11457,9 @@ bool Sema::buildOverloadedCallSet(Scope *S, Expr *Fn,
   if (CandidateSet->empty())
     return false;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   UnbridgedCasts.restore();
+#endif
   return false;
 }
 

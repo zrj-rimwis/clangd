@@ -137,7 +137,11 @@ namespace clang {
     /// An Objective-C array/dictionary subscripting which reads an
     /// object or writes at the subscripted array/dictionary element via
     /// Objective-C method calls.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     OK_ObjCSubscript
+#else
+    OK_ObjCSubscript_disabled
+#endif
   };
 
   /// \brief Describes the kind of template specialization that a

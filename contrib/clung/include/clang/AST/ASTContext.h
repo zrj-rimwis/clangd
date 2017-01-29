@@ -912,7 +912,11 @@ public:
   CanQualType VoidPtrTy, NullPtrTy;
   CanQualType DependentTy, OverloadTy, BoundMemberTy, UnknownAnyTy;
   CanQualType BuiltinFnTy;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   CanQualType PseudoObjectTy, ARCUnbridgedCastTy;
+#else
+  CanQualType PseudoObjectTy;
+#endif
   CanQualType ObjCBuiltinIdTy, ObjCBuiltinClassTy, ObjCBuiltinSelTy;
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   CanQualType ObjCBuiltinBoolTy;

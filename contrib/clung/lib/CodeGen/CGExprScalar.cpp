@@ -303,11 +303,13 @@ public:
   }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Value *VisitObjCIsaExpr(ObjCIsaExpr *E) {
     LValue LV = CGF.EmitObjCIsaExpr(E);
     Value *V = CGF.EmitLoadOfLValue(LV, E->getExprLoc()).getScalarVal();
     return V;
   }
+#endif
 
   Value *VisitArraySubscriptExpr(ArraySubscriptExpr *E);
   Value *VisitShuffleVectorExpr(ShuffleVectorExpr *E);
@@ -3497,6 +3499,7 @@ EmitScalarPrePostIncDec(const UnaryOperator *E, LValue LV,
   return ScalarExprEmitter(*this).EmitScalarPrePostIncDec(E, LV, isInc, isPre);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 LValue CodeGenFunction::EmitObjCIsaExpr(const ObjCIsaExpr *E) {
   // object->isa or (*object).isa
   // Generate code as for: *(Class*)object
@@ -3513,6 +3516,7 @@ LValue CodeGenFunction::EmitObjCIsaExpr(const ObjCIsaExpr *E) {
   Addr = Builder.CreateElementBitCast(Addr, ConvertType(E->getType()));
   return MakeAddrLValue(Addr, E->getType());
 }
+#endif
 
 
 LValue CodeGenFunction::EmitCompoundAssignmentLValue(

@@ -3616,6 +3616,7 @@ CodeGenModule::GetAddrOfConstantStringFromLiteral(const StringLiteral *S,
 
 /// GetAddrOfConstantStringFromObjCEncode - Return a pointer to a constant
 /// array for the given ObjCEncodeExpr node.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ConstantAddress
 CodeGenModule::GetAddrOfConstantStringFromObjCEncode(const ObjCEncodeExpr *E) {
   std::string Str;
@@ -3623,6 +3624,7 @@ CodeGenModule::GetAddrOfConstantStringFromObjCEncode(const ObjCEncodeExpr *E) {
 
   return GetAddrOfConstantCString(Str);
 }
+#endif
 
 /// GetAddrOfConstantCString - Returns a pointer to a character array containing
 /// the literal and a terminating '\0' character.

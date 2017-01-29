@@ -783,7 +783,11 @@ namespace clang {
       /// \brief The OpenCL 'half' / ARM NEON __fp16 type.
       PREDEF_TYPE_HALF_ID       = 33,
       /// \brief ARC's unbridged-cast placeholder type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
       PREDEF_TYPE_ARC_UNBRIDGED_CAST = 34,
+#else
+      PREDEF_TYPE_ARC_UNBRIDGED_CAST_disabled = 34,
+#endif
       /// \brief The pseudo-object placeholder type.
       PREDEF_TYPE_PSEUDO_OBJECT = 35,
       /// \brief The placeholder type for builtin functions.
@@ -1342,7 +1346,11 @@ namespace clang {
 
     
       /// \brief An ObjCEncodeExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_ENCODE,
+#else
+      EXPR_OBJC_ENCODE_disabled,
+#endif
       /// \brief An ObjCSelectorExpr record.
       EXPR_OBJC_SELECTOR_EXPR,
       /// \brief An ObjCProtocolExpr record.
@@ -1352,15 +1360,27 @@ namespace clang {
       /// \brief An ObjCPropertyRefExpr record.
       EXPR_OBJC_PROPERTY_REF_EXPR,
       /// \brief An ObjCSubscriptRefExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_SUBSCRIPT_REF_EXPR,
+#else
+      EXPR_OBJC_SUBSCRIPT_REF_EXPR_disabled,
+#endif
       /// \brief UNUSED
       EXPR_OBJC_KVC_REF_EXPR,
       /// \brief An ObjCMessageExpr record.
       EXPR_OBJC_MESSAGE_EXPR,
       /// \brief An ObjCIsa Expr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_ISA,
+#else
+      EXPR_OBJC_ISA_disabled,
+#endif
       /// \brief An ObjCIndirectCopyRestoreExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_INDIRECT_COPY_RESTORE,
+#else
+      EXPR_OBJC_INDIRECT_COPY_RESTORE_disabled,
+#endif
 
       /// \brief An ObjCForCollectionStmt record.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
