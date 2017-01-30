@@ -2406,6 +2406,7 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property) {
   //   double bar = [foo bar];
   // }
   //
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not it is implemented properly, right?
   if (!IsClassProperty) {
     if (GetterMethod)
       AddInstanceMethodToGlobalPool(GetterMethod);
@@ -2417,6 +2418,7 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property) {
     if (SetterMethod)
       AddFactoryMethodToGlobalPool(SetterMethod);
   }
+#endif
 
   ObjCInterfaceDecl *CurrentClass = dyn_cast<ObjCInterfaceDecl>(CD);
   if (!CurrentClass) {
@@ -2425,10 +2427,12 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property) {
     else if (ObjCImplDecl *Impl = dyn_cast<ObjCImplDecl>(CD))
       CurrentClass = Impl->getClassInterface();
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume there are no overrides
   if (GetterMethod)
     CheckObjCMethodOverrides(GetterMethod, CurrentClass, Sema::RTC_Unknown);
   if (SetterMethod)
     CheckObjCMethodOverrides(SetterMethod, CurrentClass, Sema::RTC_Unknown);
+#endif
 }
 
 void Sema::CheckObjCPropertyAttributes(Decl *PDecl,

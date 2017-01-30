@@ -2879,6 +2879,7 @@ void ASTWriter::WriteComments() {
 
 namespace {
 // Trait used for the on-disk hash table used in the method pool.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ASTMethodPoolTrait {
   ASTWriter &Writer;
 
@@ -2982,6 +2983,7 @@ public:
     assert(Out.tell() - Start == DataLen && "Data length is wrong");
   }
 };
+#endif
 } // end anonymous namespace
 
 /// \brief Write ObjC data: selectors and the method pool.
@@ -2989,6 +2991,7 @@ public:
 /// The method pool contains both instance and factory methods, stored
 /// in an on-disk hash table indexed by the selector. The hash table also
 /// contains an empty entry for every other selector known to Sema.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTWriter::WriteSelectors(Sema &SemaRef) {
   using namespace llvm;
 
@@ -3086,8 +3089,10 @@ void ASTWriter::WriteSelectors(Sema &SemaRef) {
     }
   }
 }
+#endif
 
 /// \brief Write the selectors referenced in @selector expression into AST file.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTWriter::WriteReferencedSelectorsPool(Sema &SemaRef) {
   using namespace llvm;
   if (SemaRef.ReferencedSelectors.empty())
@@ -3107,6 +3112,7 @@ void ASTWriter::WriteReferencedSelectorsPool(Sema &SemaRef) {
   }
   Writer.Emit(REFERENCED_SELECTOR_POOL);
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // Identifier Table Serialization
@@ -3497,11 +3503,13 @@ public:
     case DeclarationName::CXXLiteralOperatorName:
       LE.write<uint32_t>(Writer.getIdentifierRef(Name.getIdentifier()));
       return;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case DeclarationName::ObjCZeroArgSelector:
     case DeclarationName::ObjCOneArgSelector:
     case DeclarationName::ObjCMultiArgSelector:
       LE.write<uint32_t>(Writer.getSelectorRef(Name.getSelector()));
       return;
+#endif
     case DeclarationName::CXXOperatorName:
       assert(Name.getOperatorKind() < NUM_OVERLOADED_OPERATORS &&
              "Invalid operator?");
@@ -4420,11 +4428,13 @@ uint64_t ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
 
   // It's possible that updateOutOfDateSelector can update SelectorIDs. To be
   // safe, we copy all selectors out.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume it is coded properly, right?
   llvm::SmallVector<Selector, 256> AllSelectors;
   for (auto &SelectorAndID : SelectorIDs)
     AllSelectors.push_back(SelectorAndID.first);
   for (auto &Selector : AllSelectors)
     SemaRef.updateOutOfDateSelector(Selector);
+#endif
 
   // Form the record of special types.
   RecordData SpecialTypes;
@@ -4528,8 +4538,10 @@ uint64_t ASTWriter::WriteASTCore(Sema &SemaRef, StringRef isysroot,
   WriteComments();
   WritePreprocessor(PP, isModule);
   WriteHeaderSearch(PP.getHeaderSearchInfo());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume both not needed
   WriteSelectors(SemaRef);
   WriteReferencedSelectorsPool(SemaRef);
+#endif
   WriteLateParsedTemplates(SemaRef);
   WriteIdentifierTable(PP, SemaRef.IdResolver, isModule);
   WriteFPPragmaOptions(SemaRef.getFPOptions());
@@ -4877,10 +4889,13 @@ uint64_t ASTWriter::getMacroDirectivesOffset(const IdentifierInfo *Name) {
   return IdentMacroDirectivesOffsetMap.lookup(Name);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTRecordWriter::AddSelectorRef(const Selector SelRef) {
   Record->push_back(Writer->getSelectorRef(SelRef));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 SelectorID ASTWriter::getSelectorRef(Selector Sel) {
   if (Sel.getAsOpaquePtr() == nullptr) {
     return 0;
@@ -4899,6 +4914,7 @@ SelectorID ASTWriter::getSelectorRef(Selector Sel) {
   }
   return SID;
 }
+#endif
 
 void ASTRecordWriter::AddCXXTemporary(const CXXTemporary *Temp) {
   AddDeclRef(Temp->getDestructor());
@@ -5100,11 +5116,13 @@ void ASTRecordWriter::AddDeclarationName(DeclarationName Name) {
     AddIdentifierRef(Name.getAsIdentifierInfo());
     break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case DeclarationName::ObjCZeroArgSelector:
   case DeclarationName::ObjCOneArgSelector:
   case DeclarationName::ObjCMultiArgSelector:
     AddSelectorRef(Name.getObjCSelector());
     break;
+#endif
 
   case DeclarationName::CXXConstructorName:
   case DeclarationName::CXXDestructorName:

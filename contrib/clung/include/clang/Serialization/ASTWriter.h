@@ -453,8 +453,10 @@ private:
   void WriteTypeDeclOffsets();
   void WriteFileDeclIDsMap();
   void WriteComments();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void WriteSelectors(Sema &SemaRef);
   void WriteReferencedSelectorsPool(Sema &SemaRef);
+#endif
   void WriteIdentifierTable(Preprocessor &PP, IdentifierResolver &IdResolver,
                             bool IsModule);
   void WriteDeclUpdatesBlocks(RecordDataImpl &OffsetsRecord);
@@ -541,7 +543,9 @@ public:
   void AddIdentifierRef(const IdentifierInfo *II, RecordDataImpl &Record);
 
   /// \brief Get the unique number used to refer to the given selector.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   serialization::SelectorID getSelectorRef(Selector Sel);
+#endif
 
   /// \brief Get the unique number used to refer to the given identifier.
   serialization::IdentID getIdentifierRef(const IdentifierInfo *II);
@@ -816,7 +820,9 @@ public:
   }
 
   /// \brief Emit a Selector (which is a smart pointer reference).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void AddSelectorRef(Selector S);
+#endif
 
   /// \brief Emit a CXXTemporary.
   void AddCXXTemporary(const CXXTemporary *Temp);

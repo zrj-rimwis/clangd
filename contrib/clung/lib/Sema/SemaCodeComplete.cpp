@@ -5686,13 +5686,20 @@ static void AddClassMessageCompletions(Sema &SemaRef, Scope *S,
                     N = SemaRef.getExternalSource()->GetNumExternalSelectors();
            I != N; ++I) {
         Selector Sel = SemaRef.getExternalSource()->GetExternalSelector(I);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         if (Sel.isNull() || SemaRef.MethodPool.count(Sel))
+#else
+        if (Sel.isNull() || false)
+#endif
           continue;
         
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
         SemaRef.ReadMethodPool(Sel);
+#endif
       }
     }
     
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     for (Sema::GlobalMethodPool::iterator M = SemaRef.MethodPool.begin(),
                                        MEnd = SemaRef.MethodPool.end();
          M != MEnd; ++M) {
@@ -5709,6 +5716,7 @@ static void AddClassMessageCompletions(Sema &SemaRef, Scope *S,
         Results.MaybeAddResult(R, SemaRef.CurContext);
       }
     }
+#endif
   }
   
   Results.ExitScope();  
@@ -5864,13 +5872,20 @@ void Sema::CodeCompleteObjCInstanceMessage(Scope *S, Expr *Receiver,
       for (uint32_t I = 0, N = ExternalSource->GetNumExternalSelectors();
            I != N; ++I) {
         Selector Sel = ExternalSource->GetExternalSelector(I);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         if (Sel.isNull() || MethodPool.count(Sel))
+#else
+        if (Sel.isNull() || false)
+#endif
           continue;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
         ReadMethodPool(Sel);
+#endif
       }
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     for (GlobalMethodPool::iterator M = MethodPool.begin(),
                                     MEnd = MethodPool.end();
          M != MEnd; ++M) {
@@ -5890,6 +5905,7 @@ void Sema::CodeCompleteObjCInstanceMessage(Scope *S, Expr *Receiver,
         Results.MaybeAddResult(R, CurContext);
       }
     }
+#endif
   }
   Results.ExitScope();
   
@@ -5940,10 +5956,16 @@ void Sema::CodeCompleteObjCSelector(Scope *S,
     for (uint32_t I = 0, N = ExternalSource->GetNumExternalSelectors();
          I != N; ++I) {
       Selector Sel = ExternalSource->GetExternalSelector(I);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (Sel.isNull() || MethodPool.count(Sel))
+#else
+      if (Sel.isNull() || false)
+#endif
         continue;
       
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
       ReadMethodPool(Sel);
+#endif
     }
   }
   
@@ -5951,6 +5973,7 @@ void Sema::CodeCompleteObjCSelector(Scope *S,
                         CodeCompleter->getCodeCompletionTUInfo(),
                         CodeCompletionContext::CCC_SelectorName);
   Results.EnterNewScope();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
   for (GlobalMethodPool::iterator M = MethodPool.begin(),
                                MEnd = MethodPool.end();
        M != MEnd; ++M) {
@@ -5984,6 +6007,7 @@ void Sema::CodeCompleteObjCSelector(Scope *S,
     Builder.AddTypedTextChunk(Builder.getAllocator().CopyString( Accumulator));
     Results.AddResult(Builder.TakeString());
   }
+#endif
   Results.ExitScope();
   
   HandleCodeCompleteResults(this, CodeCompleter, 
@@ -7287,10 +7311,16 @@ void Sema::CodeCompleteObjCMethodDeclSelector(Scope *S,
     for (uint32_t I = 0, N = ExternalSource->GetNumExternalSelectors();
          I != N; ++I) {
       Selector Sel = ExternalSource->GetExternalSelector(I);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (Sel.isNull() || MethodPool.count(Sel))
+#else
+      if (Sel.isNull() || false)
+#endif
         continue;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
       ReadMethodPool(Sel);
+#endif
     }
   }
 
@@ -7304,6 +7334,7 @@ void Sema::CodeCompleteObjCMethodDeclSelector(Scope *S,
     Results.setPreferredType(GetTypeFromParser(ReturnTy).getNonReferenceType());
 
   Results.EnterNewScope();  
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   for (GlobalMethodPool::iterator M = MethodPool.begin(),
                                   MEnd = MethodPool.end();
        M != MEnd; ++M) {
@@ -7341,6 +7372,7 @@ void Sema::CodeCompleteObjCMethodDeclSelector(Scope *S,
       Results.MaybeAddResult(R, CurContext);
     }
   }
+#endif
   
   Results.ExitScope();
   HandleCodeCompleteResults(this, CodeCompleter, 

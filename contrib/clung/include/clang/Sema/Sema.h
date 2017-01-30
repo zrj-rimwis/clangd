@@ -48,7 +48,11 @@
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/ExternalSemaSource.h"
 #include "clang/Sema/IdentifierResolver.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // add correct header for now
 #include "clang/Sema/ObjCMethodList.h"
+#else
+#include "clang/AST/DeclObjC.h"
+#endif
 #include "clang/Sema/Ownership.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/ScopeInfo.h"
@@ -1027,8 +1031,10 @@ public:
   const llvm::MapVector<FieldDecl *, DeleteLocs> &
   getMismatchingDeleteExpressions() const;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   typedef std::pair<ObjCMethodList, ObjCMethodList> GlobalMethods;
   typedef llvm::DenseMap<Selector, GlobalMethods> GlobalMethodPool;
+#endif
 
   /// Method Pool - allows efficient lookup when typechecking messages to "id".
   /// We need to maintain a list, since selectors can have differing signatures
@@ -1036,7 +1042,9 @@ public:
   /// of selectors are "overloaded").
   /// At the head of the list it is recorded whether there were 0, 1, or >= 2
   /// methods inside categories with a particular selector.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   GlobalMethodPool MethodPool;
+#endif
 
   /// Method selectors used in a \@selector expression. Used for implementation
   /// of -Wselector.
@@ -1060,8 +1068,10 @@ public:
   /// same special member, we should act as if it is not yet declared.
   llvm::SmallSet<SpecialMemberDecl, 4> SpecialMembersBeingDeclared;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ReadMethodPool(Selector Sel);
   void updateOutOfDateSelector(Selector Sel);
+#endif
 
   /// Private Helper predicate to check for 'self'.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX where the OBJC prefixes??
@@ -1560,7 +1570,9 @@ public:
 
   DeclGroupPtrTy ConvertDeclToDeclGroup(Decl *Ptr, Decl *OwnedType = nullptr);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseUseOfUnimplementedSelectors();
+#endif
 
   bool isSimpleTypeSpecifier(tok::TokenKind Kind) const;
 
@@ -3272,11 +3284,14 @@ public:
   void CheckCategoryVsClassMethodMatches(ObjCCategoryImplDecl *CatIMP);
 
   /// \brief Add the given method to the list of globally-known methods.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void addMethodToGlobalList(ObjCMethodList *List, ObjCMethodDecl *Method);
+#endif
 
 private:
   /// AddMethodToGlobalPool - Add an instance or factory method to the global
   /// pool. See descriptoin of AddInstanceMethodToGlobalPool.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
   void AddMethodToGlobalPool(ObjCMethodDecl *Method, bool impl, bool instance);
 
   /// LookupMethodInGlobalPool - Returns the instance or factory method and
@@ -3284,6 +3299,7 @@ private:
   ObjCMethodDecl *LookupMethodInGlobalPool(Selector Sel, SourceRange R,
                                            bool receiverIdOrClass,
                                            bool instance);
+#endif
 
 public:
   /// \brief - Returns instance or factory methods in global method pool for
@@ -3291,6 +3307,7 @@ public:
   /// parameter checkTheOther is set, it then checks the other kind. If no such
   /// method or only one method is found, function returns false; otherwise, it
   /// returns true.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool
   CollectMultipleMethodsInGlobalPool(Selector Sel,
                                      SmallVectorImpl<ObjCMethodDecl*>& Methods,
@@ -3306,6 +3323,7 @@ public:
   DiagnoseMultipleMethodInGlobalPool(SmallVectorImpl<ObjCMethodDecl*> &Methods,
                                      Selector Sel, SourceRange R,
                                      bool receiverIdOrClass);
+#endif
 
 private:
   /// \brief - Returns a selector which best matches given argument list or
@@ -3328,6 +3346,7 @@ public:
   /// unit are added to a global pool. This allows us to efficiently associate
   /// a selector with a method declaraation for purposes of typechecking
   /// messages sent to "id" (where the class of the object is unknown).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void AddInstanceMethodToGlobalPool(ObjCMethodDecl *Method, bool impl=false) {
     AddMethodToGlobalPool(Method, impl, /*instance*/true);
   }
@@ -3356,6 +3375,7 @@ public:
     return LookupMethodInGlobalPool(Sel, R, receiverIdOrClass,
                                     /*instance*/false);
   }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   const ObjCMethodDecl *SelectorsForTypoCorrection(Selector Sel,
@@ -3363,7 +3383,9 @@ public:
 #endif
   /// LookupImplementedMethodInGlobalPool - Returns the method which has an
   /// implementation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCMethodDecl *LookupImplementedMethodInGlobalPool(Selector Sel);
+#endif
 
   /// CollectIvarsToConstructOrDestruct - Collect those ivars which require
   /// initialization.
@@ -7874,9 +7896,11 @@ public:
     RTC_Unknown
   };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CheckObjCMethodOverrides(ObjCMethodDecl *ObjCMethod,
                                 ObjCInterfaceDecl *CurrentClass,
                                 ResultTypeCompatibilityKind RTC);
+#endif
 
   enum PragmaOptionsAlignKind {
     POAK_Native,  // #pragma options align=native

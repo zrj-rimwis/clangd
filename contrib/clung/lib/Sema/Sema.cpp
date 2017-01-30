@@ -31,7 +31,9 @@
 #include "clang/Sema/DelayedDiagnostic.h"
 #include "clang/Sema/ExternalSemaSource.h"
 #include "clang/Sema/MultiplexExternalSemaSource.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/Sema/ObjCMethodList.h"
+#endif
 #include "clang/Sema/PrettyDeclStackTrace.h"
 #include "clang/Sema/Scope.h"
 #include "clang/Sema/ScopeInfo.h"
@@ -688,7 +690,9 @@ void Sema::ActOnEndOfTranslationUnit() {
   // Complete translation units and modules define vtables and perform implicit
   // instantiations. PCH files do not.
   if (TUKind != TU_Prefix) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     DiagnoseUseOfUnimplementedSelectors();
+#endif
 
     // If DefinedUsedVTables ends up marking any virtual member functions it
     // might lead to more pending template instantiations, which we then need
@@ -1288,8 +1292,10 @@ void Sema::ActOnComment(SourceRange Comment) {
 // Pin this vtable to this file.
 ExternalSemaSource::~ExternalSemaSource() {}
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ExternalSemaSource::ReadMethodPool(Selector Sel) { }
 void ExternalSemaSource::updateOutOfDateSelector(Selector Sel) { }
+#endif
 
 void ExternalSemaSource::ReadKnownNamespaces(
                            SmallVectorImpl<NamespaceDecl *> &Namespaces) {

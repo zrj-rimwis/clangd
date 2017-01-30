@@ -287,7 +287,9 @@ private:
 
 namespace serialization {
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ReadMethodPoolVisitor;
+#endif
 
 namespace reader {
   class ASTIdentifierLookupTrait;
@@ -352,7 +354,9 @@ public:
   friend class TypeLocReader;
   friend class ASTWriter;
   friend class ASTUnit; // ASTUnit needs to remap source locations.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   friend class serialization::ReadMethodPoolVisitor;
+#endif
 
   typedef serialization::ModuleFile ModuleFile;
   typedef serialization::ModuleKind ModuleKind;
@@ -1813,11 +1817,15 @@ public:
 
   /// \brief Load the contents of the global method pool for a given
   /// selector.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ReadMethodPool(Selector Sel) override;
+#endif
 
   /// Load the contents of the global method pool for a given
   /// selector if necessary.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void updateOutOfDateSelector(Selector Sel) override;
+#endif
 
   /// \brief Load the set of namespaces that are known to the external source,
   /// which will be used during typo correction.
@@ -1862,7 +1870,9 @@ public:
       override;
 
   /// \brief Load a selector from disk, registering its ID if it exists.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void LoadSelector(Selector Sel);
+#endif
 
   void SetIdentifierInfo(unsigned ID, IdentifierInfo *II);
   void SetGloballyVisibleDecls(IdentifierInfo *II,

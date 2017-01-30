@@ -3322,6 +3322,7 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
 
 
 /// \brief Move the given method to the back of the global list of methods.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void moveMethodToBackOfGlobalList(Sema &S, ObjCMethodDecl *Method) {
   // Find the entry for this selector in the method pool.
   Sema::GlobalMethodPool::iterator Known
@@ -3349,6 +3350,7 @@ static void moveMethodToBackOfGlobalList(Sema &S, ObjCMethodDecl *Method) {
       List->setMethod(Method);
   }
 }
+#endif
 
 void ASTReader::makeNamesVisible(const HiddenNames &Names, Module *Owner) {
   assert(Owner->NameVisibility != Module::Hidden && "nothing to make visible?");
@@ -3357,9 +3359,11 @@ void ASTReader::makeNamesVisible(const HiddenNames &Names, Module *Owner) {
     D->Hidden = false;
 
     if (wasHidden && SemaObj) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (ObjCMethodDecl *Method = dyn_cast<ObjCMethodDecl>(D)) {
         moveMethodToBackOfGlobalList(*SemaObj, Method);
       }
+#endif
     }
   }
 }
@@ -7114,6 +7118,7 @@ IdentifierIterator *ASTReader::getIdentifiers() {
 }
 
 namespace clang { namespace serialization {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   class ReadMethodPoolVisitor {
     ASTReader &Reader;
     Selector Sel;
@@ -7183,16 +7188,20 @@ namespace clang { namespace serialization {
     }
     bool factoryHasMoreThanOneDecl() const { return FactoryHasMoreThanOneDecl; }
   };
+#endif
 } } // end namespace clang::serialization
 
 /// \brief Add the given set of methods to the method list.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void addMethodsToPool(Sema &S, ArrayRef<ObjCMethodDecl *> Methods,
                              ObjCMethodList &List) {
   for (unsigned I = 0, N = Methods.size(); I != N; ++I) {
     S.addMethodToGlobalList(&List, Methods[I]);
   }
 }
+#endif
                              
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTReader::ReadMethodPool(Selector Sel) {
   // Get the selector generation and update it to the current generation.
   unsigned &Generation = SelectorGeneration[Sel];
@@ -7229,11 +7238,14 @@ void ASTReader::ReadMethodPool(Selector Sel) {
   addMethodsToPool(S, Visitor.getInstanceMethods(), Pos->second.first);
   addMethodsToPool(S, Visitor.getFactoryMethods(), Pos->second.second);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTReader::updateOutOfDateSelector(Selector Sel) {
   if (SelectorOutOfDate[Sel])
     ReadMethodPool(Sel);
 }
+#endif
 
 void ASTReader::ReadKnownNamespaces(
                           SmallVectorImpl<NamespaceDecl *> &Namespaces) {
@@ -7410,10 +7422,12 @@ void ASTReader::ReadLateParsedTemplates(
   LateParsedTemplates.clear();
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTReader::LoadSelector(Selector Sel) {
   // It would be complicated to avoid reading the methods anyway. So don't.
   ReadMethodPool(Sel);
 }
+#endif
 
 void ASTReader::SetIdentifierInfo(IdentifierID ID, IdentifierInfo *II) {
   assert(ID && "Non-zero identifier ID required");

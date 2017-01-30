@@ -192,15 +192,19 @@ void MultiplexExternalSemaSource::ForgetSema() {
     Sources[i]->ForgetSema();
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void MultiplexExternalSemaSource::ReadMethodPool(Selector Sel) {
   for(size_t i = 0; i < Sources.size(); ++i)
     Sources[i]->ReadMethodPool(Sel);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void MultiplexExternalSemaSource::updateOutOfDateSelector(Selector Sel) {
   for(size_t i = 0; i < Sources.size(); ++i)
     Sources[i]->updateOutOfDateSelector(Sel);
 }
+#endif
 
 void MultiplexExternalSemaSource::ReadKnownNamespaces(
                                    SmallVectorImpl<NamespaceDecl*> &Namespaces){

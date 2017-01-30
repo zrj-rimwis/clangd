@@ -31,7 +31,9 @@ class CXXDeleteExpr;
 class CXXRecordDecl;
 class DeclaratorDecl;
 class LookupResult;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 struct ObjCMethodList;
+#endif
 class Scope;
 class Sema;
 class TypedefNameDecl;
@@ -68,11 +70,15 @@ public:
 
   /// \brief Load the contents of the global method pool for a given
   /// selector.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   virtual void ReadMethodPool(Selector Sel);
+#endif
 
   /// Load the contents of the global method pool for a given
   /// selector if necessary.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   virtual void updateOutOfDateSelector(Selector Sel);
+#endif
 
   /// \brief Load the set of namespaces that are known to the external source,
   /// which will be used during typo correction.

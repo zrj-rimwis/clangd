@@ -268,6 +268,7 @@ static void DiagnoseObjCImplementedDeprecations(Sema &S,
 
 /// AddAnyMethodToGlobalPool - Add any method, instance or factory to global
 /// pool.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::AddAnyMethodToGlobalPool(Decl *D) {
   ObjCMethodDecl *MDecl = dyn_cast_or_null<ObjCMethodDecl>(D);
     
@@ -279,6 +280,7 @@ void Sema::AddAnyMethodToGlobalPool(Decl *D) {
   else
     AddFactoryMethodToGlobalPool(MDecl, true);
 }
+#endif
 
 /// HasExplicitOwnershipAttr - returns true when pointer to ObjC pointer
 /// has explicit ownership attribute; false otherwise.
@@ -3221,6 +3223,7 @@ static bool isMethodContextSameForKindofLookup(ObjCMethodDecl *Method,
   return MethodInterface == MethodInListInterface;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 void Sema::addMethodToGlobalList(ObjCMethodList *List,
                                  ObjCMethodDecl *Method) {
   // Record at the head of the list whether there were 0, 1, or >= 2 methods
@@ -3323,20 +3326,26 @@ void Sema::addMethodToGlobalList(ObjCMethodList *List,
 
   Previous->setNext(new (Mem) ObjCMethodList(Method));
 }
+#endif
 
 /// \brief Read the contents of the method pool for a given selector from
 /// external storage.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::ReadMethodPool(Selector Sel) {
   assert(ExternalSource && "We need an external AST source");
   ExternalSource->ReadMethodPool(Sel);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::updateOutOfDateSelector(Selector Sel) {
   if (!ExternalSource)
     return;
   ExternalSource->updateOutOfDateSelector(Sel);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::AddMethodToGlobalPool(ObjCMethodDecl *Method, bool impl,
                                  bool instance) {
   // Ignore methods of invalid containers.
@@ -3356,6 +3365,7 @@ void Sema::AddMethodToGlobalPool(ObjCMethodDecl *Method, bool impl,
   ObjCMethodList &Entry = instance ? Pos->second.first : Pos->second.second;
   addMethodToGlobalList(&Entry, Method);
 }
+#endif
 
 /// Determines if this is an "acceptable" loose mismatch in the global
 /// method pool.  This exists mostly as a hack to get around certain
@@ -3411,6 +3421,7 @@ static bool FilterMethodsByTypeBound(ObjCMethodDecl *Method,
 
 /// We first select the type of the method: Instance or Factory, then collect
 /// all methods with that type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool Sema::CollectMultipleMethodsInGlobalPool(
     Selector Sel, SmallVectorImpl<ObjCMethodDecl *> &Methods,
     bool InstanceFirst, bool CheckTheOther,
@@ -3474,7 +3485,9 @@ bool Sema::AreMultipleMethodsInGlobalPool(
     BestMethod->isInstanceMethod() ? Pos->second.first : Pos->second.second;
   return MethList.hasMoreThanOneDecl();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMethodDecl *Sema::LookupMethodInGlobalPool(Selector Sel, SourceRange R,
                                                bool receiverIdOrClass,
                                                bool instance) {
@@ -3494,7 +3507,9 @@ ObjCMethodDecl *Sema::LookupMethodInGlobalPool(Selector Sel, SourceRange R,
   }
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::DiagnoseMultipleMethodInGlobalPool(SmallVectorImpl<ObjCMethodDecl*> &Methods,
                                               Selector Sel, SourceRange R,
                                               bool receiverIdOrClass) {
@@ -3554,7 +3569,9 @@ void Sema::DiagnoseMultipleMethodInGlobalPool(SmallVectorImpl<ObjCMethodDecl*> &
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMethodDecl *Sema::LookupImplementedMethodInGlobalPool(Selector Sel) {
   GlobalMethodPool::iterator Pos = MethodPool.find(Sel);
   if (Pos == MethodPool.end())
@@ -3576,6 +3593,7 @@ ObjCMethodDecl *Sema::LookupImplementedMethodInGlobalPool(Selector Sel) {
       return Method->getMethod();
   return nullptr;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void
@@ -3786,7 +3804,9 @@ Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
         }
         InsMap[Method->getSelector()] = Method;
         /// The following allows us to typecheck messages to "id".
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         AddInstanceMethodToGlobalPool(Method);
+#endif
       }
     } else {
       /// Check for class method of the same name with incompatible types
@@ -3809,7 +3829,9 @@ Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
           Diag(PrevMethod->getLocation(), diag::note_previous_declaration);
         }
         ClsMap[Method->getSelector()] = Method;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         AddFactoryMethodToGlobalPool(Method);
+#endif
       }
     }
   }
@@ -3999,6 +4021,7 @@ CheckRelatedResultTypeCompatibility(Sema &S, ObjCMethodDecl *Method,
 namespace {
 /// A helper class for searching for methods which a particular method
 /// overrides.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class OverrideSearch {
 public:
   Sema &S;
@@ -4143,8 +4166,10 @@ private:
     searchFromContainer(container);
   }
 };
+#endif
 } // end anonymous namespace
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::CheckObjCMethodOverrides(ObjCMethodDecl *ObjCMethod,
                                     ObjCInterfaceDecl *CurrentClass,
                                     ResultTypeCompatibilityKind RTC) {
@@ -4243,6 +4268,7 @@ void Sema::CheckObjCMethodOverrides(ObjCMethodDecl *ObjCMethod,
 
   ObjCMethod->setOverriding(hasOverriddenMethodsInBaseOrProtocol);
 }
+#endif
 
 /// Merge type nullability from for a redeclaration of the same entity,
 /// producing the updated type of the redeclared entity.
@@ -4728,6 +4754,7 @@ void Sema::CollectIvarsToConstructOrDestruct(ObjCInterfaceDecl *OI,
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::DiagnoseUseOfUnimplementedSelectors() {
   // Load referenced selectors from the external source.
   if (ExternalSource) {
@@ -4750,6 +4777,7 @@ void Sema::DiagnoseUseOfUnimplementedSelectors() {
       Diag(Loc, diag::warn_unimplemented_selector) << Sel;
   }
 }
+#endif
 
 ObjCIvarDecl *
 Sema::GetIvarBackingPropertyAccessor(const ObjCMethodDecl *Method,
