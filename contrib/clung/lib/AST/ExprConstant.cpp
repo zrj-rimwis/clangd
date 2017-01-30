@@ -4779,7 +4779,11 @@ public:
 ///  * @selector() expressions in Objective-C
 static bool EvaluateLValue(const Expr *E, LValue &Result, EvalInfo &Info) {
   assert(E->isGLValue() || E->getType()->isFunctionType() ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
          E->getType()->isVoidType() || isa<ObjCSelectorExpr>(E));
+#else
+         E->getType()->isVoidType() || false);
+#endif
   return LValueExprEvaluator(Info, Result).Visit(E);
 }
 
@@ -9412,13 +9416,11 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:
   case Expr::ObjCEncodeExprClass:
-#endif
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCSelectorExprClass:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCIvarRefExprClass:
   case Expr::ObjCPropertyRefExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSubscriptRefExprClass:
   case Expr::ObjCIsaExprClass:
   case Expr::ObjCAvailabilityCheckExprClass:

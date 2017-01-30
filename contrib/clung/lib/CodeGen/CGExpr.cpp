@@ -978,8 +978,10 @@ LValue CodeGenFunction::EmitLValue(const Expr *E) {
   switch (E->getStmtClass()) {
   default: return EmitUnsupportedLValue(E, "l-value expression");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCPropertyRefExprClass:
     llvm_unreachable("cannot emit a property reference directly");
+#endif
 
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case Expr::ObjCSelectorExprClass:
@@ -1876,6 +1878,7 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
   if (Ctx.getLangOpts().getGC() == LangOptions::NonGC)
     return;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (isa<ObjCIvarRefExpr>(E)) {
     QualType ExpTy = E->getType();
     if (IsMemberAccess && ExpTy->isPointerType()) {
@@ -1894,6 +1897,7 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     LV.setObjCArray(E->getType()->isArrayType());
     return;
   }
+#endif
 
   if (const auto *Exp = dyn_cast<DeclRefExpr>(E)) {
     if (const auto *VD = dyn_cast<VarDecl>(Exp->getDecl())) {
@@ -3867,11 +3871,13 @@ LValue CodeGenFunction::EmitBinaryOperatorLValue(const BinaryOperator *E) {
   switch (getEvaluationKind(E->getType())) {
   case TEK_Scalar: {
     switch (E->getLHS()->getType().getObjCLifetime()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Qualifiers::OCL_Strong:
       return EmitARCStoreStrong(E, /*ignored*/ false).first;
 
     case Qualifiers::OCL_Autoreleasing:
       return EmitARCStoreAutoreleasing(E).first;
+#endif
 
     // No reason to do any of these differently.
     case Qualifiers::OCL_None:

@@ -1329,6 +1329,7 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
   }
 
   // Handle ivar access to Objective-C objects.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (const ObjCObjectType *OTy = BaseType->getAs<ObjCObjectType>()) {
     if (!SS.isEmpty() && !SS.isInvalid()) {
       S.Diag(SS.getRange().getBegin(), diag::err_qualified_objc_access)
@@ -1476,9 +1477,11 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
         S.Diag(MemberLoc, diag::warn_direct_ivar_access) << IV->getDeclName();
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ObjCIvarRefExpr *Result = new (S.Context) ObjCIvarRefExpr(
         IV, IV->getUsageType(BaseType), MemberLoc, OpLoc, BaseExpr.get(),
         IsArrow);
+#endif
 
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (S.getLangOpts().ObjCAutoRefCount) {
@@ -1491,8 +1494,10 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
 
     return Result;
   }
+#endif
 
   // Objective-C property access.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   const ObjCObjectPointerType *OPT;
   if (!IsArrow && (OPT = BaseType->getAs<ObjCObjectPointerType>())) {
     if (!SS.isEmpty() && !SS.isInvalid()) {
@@ -1615,6 +1620,7 @@ static ExprResult LookupMemberExpr(Sema &S, LookupResult &R,
                                        MemberLoc, SourceLocation(), QualType(),
                                        false);
   }
+#endif
 
   // Handle 'field access' to vectors, such as 'V.xx'.
   if (BaseType->isExtVectorType()) {

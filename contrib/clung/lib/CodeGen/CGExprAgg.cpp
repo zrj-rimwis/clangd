@@ -166,9 +166,11 @@ public:
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__
   void VisitObjCMessageExpr(ObjCMessageExpr *E);
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     EmitAggLoadOfLValue(E);
   }
+#endif
 
   void VisitDesignatedInitUpdateExpr(DesignatedInitUpdateExpr *E);
   void VisitAbstractConditionalOperator(const AbstractConditionalOperator *CO);

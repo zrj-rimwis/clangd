@@ -44,7 +44,9 @@ namespace clang {
   class IdentifierInfo;
   class MaterializeTemporaryExpr;
   class NamedDecl;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   class ObjCPropertyRefExpr;
+#endif
   class OpaqueValueExpr;
   class ParmVarDecl;
   class StringLiteral;
@@ -447,7 +449,9 @@ public:
 
   /// \brief If this expression is an l-value for an Objective C
   /// property, find the underlying property reference expression.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   const ObjCPropertyRefExpr *getObjCProperty() const;
+#endif
 
   /// \brief Check if this expression is the ObjC 'self' implicit parameter.
   bool isObjCSelfExpr() const;

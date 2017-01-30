@@ -3243,12 +3243,12 @@ recurse:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCEncodeExprClass:
   case Expr::ObjCIsaExprClass:
-#endif
   case Expr::ObjCIvarRefExprClass:
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCPropertyRefExprClass:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCSelectorExprClass:
+#endif
   case Expr::ObjCStringLiteralClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:

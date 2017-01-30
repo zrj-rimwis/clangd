@@ -550,19 +550,13 @@ namespace  {
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCAtCatchStmt(const ObjCAtCatchStmt *Node);
     void VisitObjCEncodeExpr(const ObjCEncodeExpr *Node);
-#endif
     void VisitObjCMessageExpr(const ObjCMessageExpr *Node);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCBoxedExpr(const ObjCBoxedExpr *Node);
-#endif
     void VisitObjCSelectorExpr(const ObjCSelectorExpr *Node);
     void VisitObjCProtocolExpr(const ObjCProtocolExpr *Node);
     void VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node);
-#endif
     void VisitObjCIvarRefExpr(const ObjCIvarRefExpr *Node);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCBoolLiteralExpr(const ObjCBoolLiteralExpr *Node);
 #endif
 
@@ -1964,6 +1958,7 @@ void ASTDumper::VisitUnresolvedLookupExpr(const UnresolvedLookupExpr *Node) {
     dumpPointer(*I);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCIvarRefExpr(const ObjCIvarRefExpr *Node) {
   VisitExpr(Node);
 
@@ -1976,6 +1971,7 @@ void ASTDumper::VisitObjCIvarRefExpr(const ObjCIvarRefExpr *Node) {
   if (Node->isFreeIvar())
     OS << " isFreeIvar";
 }
+#endif
 
 void ASTDumper::VisitPredefinedExpr(const PredefinedExpr *Node) {
   VisitExpr(Node);
@@ -2202,6 +2198,7 @@ void ASTDumper::VisitSizeOfPackExpr(const SizeOfPackExpr *Node) {
 // Obj-C Expressions
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCMessageExpr(const ObjCMessageExpr *Node) {
   VisitExpr(Node);
   OS << " selector=";
@@ -2224,6 +2221,7 @@ void ASTDumper::VisitObjCMessageExpr(const ObjCMessageExpr *Node) {
     break;
   }
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCBoxedExpr(const ObjCBoxedExpr *Node) {
@@ -2252,19 +2250,24 @@ void ASTDumper::VisitObjCEncodeExpr(const ObjCEncodeExpr *Node) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCSelectorExpr(const ObjCSelectorExpr *Node) {
   VisitExpr(Node);
 
   OS << " ";
   Node->getSelector().print(OS);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCProtocolExpr(const ObjCProtocolExpr *Node) {
   VisitExpr(Node);
 
   OS << ' ' << *Node->getProtocol();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node) {
   VisitExpr(Node);
   if (Node->isImplicitProperty()) {
@@ -2295,6 +2298,7 @@ void ASTDumper::VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *Node) {
   else if (Node->isMessagingSetter())
     OS << "Setter";
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTDumper::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *Node) {

@@ -1285,6 +1285,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
   if (CompleteTypeErr || !compat)
     PIDecl->setInvalidDecl();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
   if (ObjCMethodDecl *getterMethod = property->getGetterMethodDecl()) {
     getterMethod->createImplicitParams(Context, IDecl);
     if (getLangOpts().CPlusPlus && Synthesize && !CompleteTypeErr &&
@@ -1388,6 +1389,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       PIDecl->setSetterCXXAssignment(Res.getAs<Expr>());
     }
   }
+#endif
   
   if (IC) {
     if (Synthesize)

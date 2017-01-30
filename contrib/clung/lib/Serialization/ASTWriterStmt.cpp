@@ -989,6 +989,7 @@ void ASTStmtWriter::VisitObjCEncodeExpr(ObjCEncodeExpr *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCSelectorExpr(ObjCSelectorExpr *E) {
   VisitExpr(E);
   Record.AddSelectorRef(E->getSelector());
@@ -996,7 +997,9 @@ void ASTStmtWriter::VisitObjCSelectorExpr(ObjCSelectorExpr *E) {
   Record.AddSourceLocation(E->getRParenLoc());
   Code = serialization::EXPR_OBJC_SELECTOR_EXPR;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCProtocolExpr(ObjCProtocolExpr *E) {
   VisitExpr(E);
   Record.AddDeclRef(E->getProtocol());
@@ -1005,7 +1008,9 @@ void ASTStmtWriter::VisitObjCProtocolExpr(ObjCProtocolExpr *E) {
   Record.AddSourceLocation(E->getRParenLoc());
   Code = serialization::EXPR_OBJC_PROTOCOL_EXPR;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
   VisitExpr(E);
   Record.AddDeclRef(E->getDecl());
@@ -1016,7 +1021,9 @@ void ASTStmtWriter::VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
   Record.push_back(E->isFreeIvar());
   Code = serialization::EXPR_OBJC_IVAR_REF_EXPR;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
   VisitExpr(E);
   Record.push_back(E->SetterAndMethodRefFlags.getInt());
@@ -1042,6 +1049,7 @@ void ASTStmtWriter::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
   
   Code = serialization::EXPR_OBJC_PROPERTY_REF_EXPR;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
@@ -1056,6 +1064,7 @@ void ASTStmtWriter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCMessageExpr(ObjCMessageExpr *E) {
   VisitExpr(E);
   Record.push_back(E->getNumArgs());
@@ -1101,6 +1110,7 @@ void ASTStmtWriter::VisitObjCMessageExpr(ObjCMessageExpr *E) {
 
   Code = serialization::EXPR_OBJC_MESSAGE_EXPR;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCForCollectionStmt(ObjCForCollectionStmt *S) {

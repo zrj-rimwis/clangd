@@ -79,9 +79,11 @@ bool ConversionFixItGenerator::tryToFixConversion(const Expr *FullExpr,
       isa<CXXThisExpr>(Expr) ||
       isa<CXXTypeidExpr>(Expr) ||
       isa<CXXUnresolvedConstructExpr>(Expr) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       isa<ObjCMessageExpr>(Expr) ||
       isa<ObjCPropertyRefExpr>(Expr) ||
       isa<ObjCProtocolExpr>(Expr) ||
+#endif
       isa<MemberExpr>(Expr) ||
       isa<ParenExpr>(FullExpr) ||
       isa<ParenListExpr>(Expr) ||

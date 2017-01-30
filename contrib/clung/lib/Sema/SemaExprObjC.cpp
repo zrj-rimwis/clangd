@@ -1522,6 +1522,7 @@ findExplicitInstancetypeDeclarer(const ObjCMethodDecl *MD,
   return nullptr;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 void Sema::EmitRelatedResultTypeNoteForReturn(QualType destType) {
   // Only complain if we're in an ObjC method and the required return
   // type doesn't match the method's declared return type.
@@ -1550,7 +1551,9 @@ void Sema::EmitRelatedResultTypeNoteForReturn(QualType destType) {
       << /*current method*/ 1
       << family;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 void Sema::EmitRelatedResultTypeNote(const Expr *E) {
   E = E->IgnoreParenImpCasts();
   const ObjCMessageExpr *MsgSend = dyn_cast<ObjCMessageExpr>(E);
@@ -1576,6 +1579,7 @@ void Sema::EmitRelatedResultTypeNote(const Expr *E) {
     << Method->isInstanceMethod() << Method->getSelector()
     << MsgSend->getType();
 }
+#endif
 
 bool Sema::CheckMessageArgumentTypes(QualType ReceiverType,
                                      MultiExprArg Args,
@@ -1844,6 +1848,7 @@ ObjCMethodDecl *Sema::LookupMethodInQualifiedType(Selector Sel,
 
 /// HandleExprPropertyRefExpr - Handle foo.bar where foo is a pointer to an
 /// objective C interface.  This is a property reference expression.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::
 HandleExprPropertyRefExpr(const ObjCObjectPointerType *OPT,
                           Expr *BaseExpr, SourceLocation OpLoc,
@@ -2026,7 +2031,9 @@ HandleExprPropertyRefExpr(const ObjCObjectPointerType *OPT,
           << MemberName << BaseExpr->getSourceRange();
   return ExprError();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::
 ActOnClassPropertyRefExpr(IdentifierInfo &receiverName,
                           IdentifierInfo &propertyName,
@@ -2124,6 +2131,7 @@ ActOnClassPropertyRefExpr(IdentifierInfo &receiverName,
   return ExprError(Diag(propertyNameLoc, diag::err_property_not_found)
                      << &propertyName << Context.getObjCInterfaceType(IFace));
 }
+#endif
 
 namespace {
 
@@ -2241,6 +2249,7 @@ Sema::ObjCMessageKind Sema::getObjCMessageKind(Scope *S,
   return ObjCInstanceMessage;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnSuperMessage(Scope *S, 
                                    SourceLocation SuperLoc,
                                    Selector Sel,
@@ -2291,7 +2300,9 @@ ExprResult Sema::ActOnSuperMessage(Scope *S,
                            SuperLoc, Sel, /*Method=*/nullptr,
                            LBracLoc, SelectorLocs, RBracLoc, Args);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildClassMessageImplicit(QualType ReceiverType,
                                            bool isSuperReceiver,
                                            SourceLocation Loc,
@@ -2307,6 +2318,7 @@ ExprResult Sema::BuildClassMessageImplicit(QualType ReceiverType,
                            Sel, Method, Loc, Loc, Loc, Args,
                            /*isImplicit=*/true);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume ignored
 static void applyCocoaAPICheck(Sema &S, const ObjCMessageExpr *Msg,
@@ -2423,6 +2435,7 @@ DiagnoseCStringFormatDirectiveInObjCAPI(Sema &S,
 /// \param RBracLoc The location of the closing square bracket ']'.
 ///
 /// \param ArgsIn The message arguments.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildClassMessage(TypeSourceInfo *ReceiverTypeInfo,
                                    QualType ReceiverType,
                                    SourceLocation SuperLoc,
@@ -2570,10 +2583,12 @@ ExprResult Sema::BuildClassMessage(TypeSourceInfo *ReceiverTypeInfo,
   }
   return MaybeBindToTemporary(Result);
 }
+#endif
 
 // ActOnClassMessage - used for both unary and keyword messages.
 // ArgExprs is optional - if it is present, the number of expressions
 // is obtained from Sel.getNumArgs().
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnClassMessage(Scope *S, 
                                    ParsedType Receiver,
                                    Selector Sel,
@@ -2594,7 +2609,9 @@ ExprResult Sema::ActOnClassMessage(Scope *S,
                            /*Method=*/nullptr, LBracLoc, SelectorLocs, RBracLoc,
                            Args);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildInstanceMessageImplicit(Expr *Receiver,
                                               QualType ReceiverType,
                                               SourceLocation Loc,
@@ -2606,6 +2623,7 @@ ExprResult Sema::BuildInstanceMessageImplicit(Expr *Receiver,
                               Sel, Method, Loc, Loc, Loc, Args,
                               /*isImplicit=*/true);
 }
+#endif
 
 /// \brief Build an Objective-C instance message expression.
 ///
@@ -2635,6 +2653,7 @@ ExprResult Sema::BuildInstanceMessageImplicit(Expr *Receiver,
 /// \param RBracLoc The location of the closing square bracket ']'.
 ///
 /// \param ArgsIn The message arguments.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
                                       QualType ReceiverType,
                                       SourceLocation SuperLoc,
@@ -3146,7 +3165,9 @@ ExprResult Sema::BuildInstanceMessage(Expr *Receiver,
 
   return MaybeBindToTemporary(Result);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
 static void RemoveSelectorFromWarningCache(Sema &S, Expr* Arg) {
   if (ObjCSelectorExpr *OSE =
       dyn_cast<ObjCSelectorExpr>(Arg->IgnoreParenCasts())) {
@@ -3157,10 +3178,12 @@ static void RemoveSelectorFromWarningCache(Sema &S, Expr* Arg) {
       S.ReferencedSelectors.erase(Pos);
   }
 }
+#endif
 
 // ActOnInstanceMessage - used for both unary and keyword messages.
 // ArgExprs is optional - if it is present, the number of expressions
 // is obtained from Sel.getNumArgs().
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult Sema::ActOnInstanceMessage(Scope *S,
                                       Expr *Receiver, 
                                       Selector Sel,
@@ -3190,6 +3213,7 @@ ExprResult Sema::ActOnInstanceMessage(Scope *S,
                               /*Method=*/nullptr, LBracLoc, SelectorLocs,
                               RBracLoc, Args);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 enum ARCConversionTypeClass {
@@ -3464,6 +3488,7 @@ namespace {
       return checkCallToMethod(e->getMethodDecl());
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ACCResult VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *e) {
       ObjCMethodDecl *method;
       if (e->isExplicitProperty())
@@ -3472,6 +3497,7 @@ namespace {
         method = e->getImplicitPropertyGetter();
       return checkCallToMethod(method);
     }
+#endif
 
     ACCResult checkCallToMethod(ObjCMethodDecl *method) {
       if (!method) return ACC_invalid;

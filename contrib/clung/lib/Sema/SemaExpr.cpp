@@ -2489,6 +2489,7 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
   // ivar, that's an error.
   bool IsClassMethod = CurMethod->isClassMethod();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool LookForIvars;
   if (Lookup.empty())
     LookForIvars = true;
@@ -2498,6 +2499,8 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
     LookForIvars = (Lookup.isSingleResult() &&
                     Lookup.getFoundDecl()->isDefinedOutsideFunctionOrMethod());
   ObjCInterfaceDecl *IFace = nullptr;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   if (LookForIvars) {
     IFace = CurMethod->getClassInterface();
     ObjCInterfaceDecl *ClassDeclared;
@@ -2582,6 +2585,7 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
       return ExprError(Diag(Loc, diag::error_ivar_use_in_class_method)
                        << IV->getDeclName());
   }
+#endif
 
   if (Lookup.empty() && II && AllowBuiltinCreation) {
     // FIXME. Consolidate this with similar code in LookupName.
@@ -7878,6 +7882,7 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &CallerRHS,
       return Incompatible;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Expr *PRE = RHS.get()->IgnoreParenCasts();
   if (Diagnose && isa<ObjCProtocolExpr>(PRE)) {
     ObjCProtocolDecl *PDecl = cast<ObjCProtocolExpr>(PRE)->getProtocol();
@@ -7886,6 +7891,7 @@ Sema::CheckSingleAssignmentConstraints(QualType LHSType, ExprResult &CallerRHS,
       Diag(PDecl->getLocation(), diag::note_entity_declared_at) << PDecl;
     }
   }
+#endif
   
   CastKind Kind = CK_Invalid;
   Sema::AssignConvertType result =
@@ -9167,10 +9173,12 @@ static void diagnoseLogicalNotOnLHSofComparison(Sema &S, ExprResult &LHS,
 static ValueDecl *getCompareDecl(Expr *E) {
   if (DeclRefExpr* DR = dyn_cast<DeclRefExpr>(E))
     return DR->getDecl();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (ObjCIvarRefExpr* Ivar = dyn_cast<ObjCIvarRefExpr>(E)) {
     if (Ivar->isFreeIvar())
       return Ivar->getDecl();
   }
+#endif
   if (MemberExpr* Mem = dyn_cast<MemberExpr>(E)) {
     if (Mem->isImplicitAccess())
       return Mem->getMemberDecl();
@@ -9796,10 +9804,14 @@ static bool IsReadonlyMessage(Expr *E, Sema &S) {
   const MemberExpr *ME = dyn_cast<MemberExpr>(E);
   if (!ME) return false;
   if (!isa<FieldDecl>(ME->getMemberDecl())) return false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume nullptr and return false
   ObjCMessageExpr *Base =
     dyn_cast<ObjCMessageExpr>(ME->getBase()->IgnoreParenImpCasts());
   if (!Base) return false;
   return Base->getMethodDecl() != nullptr;
+#else
+  return false;
+#endif
 }
 
 /// Is the given expression (which must be 'const') a reference to a
@@ -10110,6 +10122,7 @@ static void CheckIdentityFieldAssignment(Expr *LHSExpr, Expr *RHSExpr,
   }
 
   // Objective-C instance variables
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCIvarRefExpr *OL = dyn_cast<ObjCIvarRefExpr>(LHSExpr);
   ObjCIvarRefExpr *OR = dyn_cast<ObjCIvarRefExpr>(RHSExpr);
   if (OL && OR && OL->getDecl() == OR->getDecl()) {
@@ -10118,6 +10131,7 @@ static void CheckIdentityFieldAssignment(Expr *LHSExpr, Expr *RHSExpr,
     if (RL && RR && RL->getDecl() == RR->getDecl())
       Sema.Diag(Loc, diag::warn_identity_field_assign) << 1;
   }
+#endif
 }
 
 // C99 6.5.16.1
@@ -10573,8 +10587,10 @@ QualType Sema::CheckAddressOfOperand(ExprResult &OrigOp, SourceLocation OpLoc) {
     // Materialize the temporary as an lvalue so that we can take its address.
     OrigOp = op =
         CreateMaterializeTemporaryExpr(op->getType(), OrigOp.get(), true);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (isa<ObjCSelectorExpr>(op)) {
     return Context.getPointerType(op->getType());
+#endif
   } else if (lval == Expr::LV_MemberFunction) {
     // If it's an instance method, make a member pointer.
     // The expression must have exactly the form &A::foo.
@@ -10931,8 +10947,10 @@ static NamedDecl *getDeclFromExpr(Expr *E) {
     return DRE->getDecl();
   if (auto *ME = dyn_cast<MemberExpr>(E))
     return ME->getMemberDecl();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__  // assume not needed
   if (auto *IRE = dyn_cast<ObjCIvarRefExpr>(E))
     return IRE->getDecl();
+#endif
   return nullptr;
 }
 
@@ -12772,11 +12790,13 @@ bool Sema::DiagnoseAssignmentResult(AssignConvertType ConvTy,
     NoteAllOverloadCandidates(OverloadExpr::find(SrcExpr).Expression,
                               FirstType, /*TakingAddress=*/true);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   if (CheckInferredResultType)
     EmitRelatedResultTypeNote(SrcExpr);
 
   if (Action == AA_Returning && ConvTy == IncompatiblePointer)
     EmitRelatedResultTypeNoteForReturn(DstType);
+#endif
   
   if (Complained)
     *Complained = true;
@@ -14493,6 +14513,7 @@ void Sema::DiagnoseAssignmentAsCondition(Expr *E) {
     IsOrAssign = Op->getOpcode() == BO_OrAssign;
 
     // Greylist some idioms by putting them into a warning subcategory.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (ObjCMessageExpr *ME
           = dyn_cast<ObjCMessageExpr>(Op->getRHS()->IgnoreParenCasts())) {
       Selector Sel = ME->getSelector();
@@ -14505,6 +14526,7 @@ void Sema::DiagnoseAssignmentAsCondition(Expr *E) {
       else if (Sel.isUnarySelector() && Sel.getNameForSlot(0) == "nextObject")
         diagnostic = diag::warn_condition_is_idiomatic_assignment;
     }
+#endif
 
     Loc = Op->getOperatorLoc();
   } else if (CXXOperatorCallExpr *Op = dyn_cast<CXXOperatorCallExpr>(E)) {
@@ -14741,7 +14763,9 @@ namespace {
     }
 
     ExprResult VisitCallExpr(CallExpr *E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ExprResult VisitObjCMessageExpr(ObjCMessageExpr *E);
+#endif
 
     /// Rebuild an expression which simply semantically wraps another
     /// expression which it shares the type and value kind of.
@@ -14907,6 +14931,7 @@ ExprResult RebuildUnknownAnyExpr::VisitCallExpr(CallExpr *E) {
   return S.MaybeBindToTemporary(E);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 ExprResult RebuildUnknownAnyExpr::VisitObjCMessageExpr(ObjCMessageExpr *E) {
   // Verify that this is a legal result type of a call.
   if (DestType->isArrayType() || DestType->isFunctionType()) {
@@ -14927,6 +14952,7 @@ ExprResult RebuildUnknownAnyExpr::VisitObjCMessageExpr(ObjCMessageExpr *E) {
 
   return S.MaybeBindToTemporary(E);
 }
+#endif
 
 ExprResult RebuildUnknownAnyExpr::VisitImplicitCastExpr(ImplicitCastExpr *E) {
   // The only case we should ever see here is a function-to-pointer decay.
@@ -15125,6 +15151,7 @@ static ExprResult diagnoseUnknownAnyExpr(Sema &S, Expr *E) {
   } else if (MemberExpr *mem = dyn_cast<MemberExpr>(E)) {
     loc = mem->getMemberLoc();
     d = mem->getMemberDecl();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (ObjCMessageExpr *msg = dyn_cast<ObjCMessageExpr>(E)) {
     diagID = diag::err_uncasted_call_of_unknown_any;
     loc = msg->getSelectorStartLoc();
@@ -15135,6 +15162,7 @@ static ExprResult diagnoseUnknownAnyExpr(Sema &S, Expr *E) {
         << orig->getSourceRange();
       return ExprError();
     }
+#endif
   } else {
     S.Diag(E->getExprLoc(), diag::err_unsupported_unknown_any_expr)
       << E->getSourceRange();

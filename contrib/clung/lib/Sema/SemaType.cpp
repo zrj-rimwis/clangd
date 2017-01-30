@@ -7341,11 +7341,15 @@ static QualType getDecltypeForExpr(Sema &S, Expr *E) {
   } else if (const MemberExpr *ME = dyn_cast<MemberExpr>(E)) {
     if (const FieldDecl *FD = dyn_cast<FieldDecl>(ME->getMemberDecl()))
       return FD->getType();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
   } else if (const ObjCIvarRefExpr *IR = dyn_cast<ObjCIvarRefExpr>(E)) {
     return IR->getDecl()->getType();
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   } else if (const ObjCPropertyRefExpr *PR = dyn_cast<ObjCPropertyRefExpr>(E)) {
     if (PR->isExplicitProperty())
       return PR->getExplicitProperty()->getType();
+#endif
   } else if (auto *PE = dyn_cast<PredefinedExpr>(E)) {
     return PE->getType();
   }

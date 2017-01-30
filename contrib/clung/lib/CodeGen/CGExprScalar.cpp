@@ -291,9 +291,11 @@ public:
     return CGF.EmitObjCProtocolExpr(E);
   }
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Value *VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     return EmitLoadOfLValue(E);
   }
+#endif
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   Value *VisitObjCMessageExpr(ObjCMessageExpr *E) {
     if (E->getMethodDecl() &&
@@ -1498,14 +1500,18 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
     return CGF.CGM.getCXXABI().EmitMemberPointerConversion(CGF, CE, Src);
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCProduceObject:
     return CGF.EmitARCRetainScalarExpr(E);
+#endif
   case CK_ARCConsumeObject:
     return CGF.EmitObjCConsumeObject(E->getType(), Visit(E));
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCReclaimReturnedObject:
     return CGF.EmitARCReclaimReturnedObject(E, /*allowUnsafe*/ Ignored);
   case CK_ARCExtendBlockObject:
     return CGF.EmitARCExtendBlockObject(E);
+#endif
 
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   case CK_CopyAndAutoreleaseBlockObject:
@@ -2998,6 +3004,7 @@ Value *ScalarExprEmitter::VisitBinAssign(const BinaryOperator *E) {
   LValue LHS;
 
   switch (E->getLHS()->getType().getObjCLifetime()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Qualifiers::OCL_Strong:
     std::tie(LHS, RHS) = CGF.EmitARCStoreStrong(E, Ignore);
     break;
@@ -3015,6 +3022,7 @@ Value *ScalarExprEmitter::VisitBinAssign(const BinaryOperator *E) {
     LHS = EmitCheckedLValue(E->getLHS(), CodeGenFunction::TCK_Store);
     RHS = CGF.EmitARCStoreWeak(LHS.getAddress(), RHS, Ignore);
     break;
+#endif
 
   case Qualifiers::OCL_None:
     // __block variables need to have the rhs evaluated first, plus

@@ -7069,6 +7069,7 @@ static bool DiagnoseUninitializedReference(Sema &S, SourceLocation Loc,
 /// "simple" conversion failure.
 static void emitBadConversionNotes(Sema &S, const InitializedEntity &entity,
                                    Expr *op) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem only for OBJC, XXX XXX kill
   QualType destType = entity.getType();
   if (destType.getNonReferenceType()->isObjCObjectPointerType() &&
       op->getType()->isObjCObjectPointerType()) {
@@ -7082,6 +7083,7 @@ static void emitBadConversionNotes(Sema &S, const InitializedEntity &entity,
     if (entity.getKind() == InitializedEntity::EK_Result)
       S.EmitRelatedResultTypeNoteForReturn(destType);
   }
+#endif
 }
 
 static void diagnoseListInit(Sema &S, const InitializedEntity &Entity,

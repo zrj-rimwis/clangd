@@ -43,9 +43,11 @@ class SwitchStmt;
 class TemplateTypeParmDecl;
 class TemplateParameterList;
 class VarDecl;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCIvarRefExpr;
 class ObjCPropertyRefExpr;
 class ObjCMessageExpr;
+#endif
 
 namespace sema {
 
@@ -221,10 +223,14 @@ public:
     static inline WeakObjectProfileTy getSentinel();
 
   public:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     WeakObjectProfileTy(const ObjCPropertyRefExpr *RE);
+#endif
     WeakObjectProfileTy(const Expr *Base, const ObjCPropertyDecl *Property);
     WeakObjectProfileTy(const DeclRefExpr *RE);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__  // assume not needed
     WeakObjectProfileTy(const ObjCIvarRefExpr *RE);
+#endif
 
     const NamedDecl *getBase() const { return Base.getPointer(); }
     const NamedDecl *getProperty() const { return Property; }
@@ -319,11 +325,13 @@ public:
   /// Record that a weak object was accessed.
   ///
   /// Part of the implementation of -Wrepeated-use-of-weak.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   template <typename ExprT>
   inline void recordUseOfWeak(const ExprT *E, bool IsRead = true);
 
   void recordUseOfWeak(const ObjCMessageExpr *Msg,
                        const ObjCPropertyDecl *Prop);
+#endif
 
   /// Record that a given expression is a "safe" access of a weak object (e.g.
   /// assigning it to a strong variable.)
@@ -870,12 +878,14 @@ FunctionScopeInfo::WeakObjectProfileTy::getSentinel() {
   return Result;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename ExprT>
 void FunctionScopeInfo::recordUseOfWeak(const ExprT *E, bool IsRead) {
   assert(E);
   WeakUseVector &Uses = WeakObjectUses[WeakObjectProfileTy(E)];
   Uses.push_back(WeakUseTy(E, IsRead));
 }
+#endif
 
 inline void
 CapturingScopeInfo::addThisCapture(bool isNested, SourceLocation Loc,

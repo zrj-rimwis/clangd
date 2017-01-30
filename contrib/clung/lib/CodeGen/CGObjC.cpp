@@ -33,9 +33,9 @@ using namespace clang;
 using namespace CodeGen;
 
 typedef llvm::PointerIntPair<llvm::Value*,1,bool> TryEmitResult;
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static TryEmitResult
 tryEmitARCRetainScalarExpr(CodeGenFunction &CGF, const Expr *e);
-#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static RValue AdjustObjCObjectType(CodeGenFunction &CGF,
                                    QualType ET,
                                    RValue Result);
@@ -1370,9 +1370,11 @@ CodeGenFunction::generateObjCSetterBody(const ObjCImplementationDecl *classImpl,
   ImplicitCastExpr selfLoad(ImplicitCastExpr::OnStack,
                             selfDecl->getType(), CK_LValueToRValue, &self,
                             VK_RValue);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCIvarRefExpr ivarRef(ivar, ivar->getType().getNonReferenceType(),
                           SourceLocation(), SourceLocation(),
                           &selfLoad, true, true);
+#endif
 
   ParmVarDecl *argDecl = *setterMethod->param_begin();
   QualType argType = argDecl->getType().getNonReferenceType();
@@ -2677,6 +2679,7 @@ static llvm::Value *emitARCUnsafeClaimCallResult(CodeGenFunction &CGF,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitARCReclaimReturnedObject(const Expr *E,
                                                       bool allowUnsafeClaim) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not allow
@@ -2692,6 +2695,7 @@ llvm::Value *CodeGenFunction::EmitARCReclaimReturnedObject(const Expr *E,
     return EmitObjCConsumeObject(E->getType(), value);
   }
 }
+#endif
 
 /// Determine whether it might be important to emit a separate
 /// objc_retain_block on the result of the given expression, or
@@ -2729,6 +2733,7 @@ static bool shouldEmitSeparateBlockRetain(const Expr *e) {
   return true;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 namespace {
 /// A CRTP base class for emitting expressions of retainable object
 /// pointer type in ARC.
@@ -2762,10 +2767,12 @@ public:
   //   llvm::Value *getValueOfResult(Result result)
 };
 }
+#endif
 
 /// Try to emit a PseudoObjectExpr under special ARC rules.
 ///
 /// This massively duplicates emitPseudoObjectRValue.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Impl, typename Result>
 Result
 ARCExprEmitter<Impl,Result>::visitPseudoObjectExpr(const PseudoObjectExpr *E) {
@@ -2817,7 +2824,9 @@ ARCExprEmitter<Impl,Result>::visitPseudoObjectExpr(const PseudoObjectExpr *E) {
 
   return result;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Impl, typename Result>
 Result ARCExprEmitter<Impl,Result>::visitCastExpr(const CastExpr *e) {
   switch (e->getCastKind()) {
@@ -2852,7 +2861,9 @@ Result ARCExprEmitter<Impl,Result>::visitCastExpr(const CastExpr *e) {
     return asImpl().visitExpr(e);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Impl, typename Result>
 Result
 ARCExprEmitter<Impl,Result>::visitBinaryOperator(const BinaryOperator *e) {
@@ -2869,7 +2880,9 @@ ARCExprEmitter<Impl,Result>::visitBinaryOperator(const BinaryOperator *e) {
     return asImpl().visitExpr(e);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Impl, typename Result>
 Result ARCExprEmitter<Impl,Result>::visitBinAssign(const BinaryOperator *e) {
   switch (e->getLHS()->getType().getObjCLifetime()) {
@@ -2890,9 +2903,11 @@ Result ARCExprEmitter<Impl,Result>::visitBinAssign(const BinaryOperator *e) {
   }
   llvm_unreachable("bad ObjC ownership qualifier");
 }
+#endif
 
 /// The default rule for __unsafe_unretained emits the RHS recursively,
 /// stores into the unsafe variable, and propagates the result outward.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Impl, typename Result>
 Result ARCExprEmitter<Impl,Result>::
                     visitBinAssignUnsafeUnretained(const BinaryOperator *e) {
@@ -2908,7 +2923,9 @@ Result ARCExprEmitter<Impl,Result>::
 
   return result;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template <typename Impl, typename Result>
 Result
 ARCExprEmitter<Impl,Result>::visitBinAssignAutoreleasing(const BinaryOperator *e) {
@@ -2926,8 +2943,10 @@ Result
 ARCExprEmitter<Impl,Result>::visitBinAssignStrong(const BinaryOperator *e) {
   return asImpl().visitExpr(e);
 }
+#endif
 
 /// The general expression-emission logic.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 template <typename Impl, typename Result>
 Result ARCExprEmitter<Impl,Result>::visit(const Expr *e) {
   // We should *never* see a nested full-expression here, because if
@@ -2965,10 +2984,12 @@ Result ARCExprEmitter<Impl,Result>::visit(const Expr *e) {
 
   return asImpl().visitExpr(e);
 }
+#endif
 
 namespace {
 
 /// An emitter for +1 results.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 struct ARCRetainExprEmitter :
   public ARCExprEmitter<ARCRetainExprEmitter, TryEmitResult> {
 
@@ -3047,12 +3068,15 @@ struct ARCRetainExprEmitter :
     return TryEmitResult(result, false);
   }
 };
+#endif
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static TryEmitResult
 tryEmitARCRetainScalarExpr(CodeGenFunction &CGF, const Expr *e) {
   return ARCRetainExprEmitter(CGF).visit(e);
 }
+#endif
 
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static llvm::Value *emitARCRetainLoadOfScalar(CodeGenFunction &CGF,
@@ -3070,6 +3094,7 @@ static llvm::Value *emitARCRetainLoadOfScalar(CodeGenFunction &CGF,
 /// EmitARCRetainObject(e->getType(), EmitScalarExpr(e)), but making a
 /// best-effort attempt to peephole expressions that naturally produce
 /// retained objects.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, nice comment btw
 llvm::Value *CodeGenFunction::EmitARCRetainScalarExpr(const Expr *e) {
   // The retain needs to happen within the full-expression.
   if (const ExprWithCleanups *cleanups = dyn_cast<ExprWithCleanups>(e)) {
@@ -3084,7 +3109,9 @@ llvm::Value *CodeGenFunction::EmitARCRetainScalarExpr(const Expr *e) {
     value = EmitARCRetain(e->getType(), value);
   return value;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 llvm::Value *
 CodeGenFunction::EmitARCRetainAutoreleaseScalarExpr(const Expr *e) {
   // The retain needs to happen within the full-expression.
@@ -3102,7 +3129,9 @@ CodeGenFunction::EmitARCRetainAutoreleaseScalarExpr(const Expr *e) {
     value = EmitARCRetainAutorelease(e->getType(), value);
   return value;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitARCExtendBlockObject(const Expr *e) {
   llvm::Value *result;
   bool doRetain;
@@ -3120,6 +3149,7 @@ llvm::Value *CodeGenFunction::EmitARCExtendBlockObject(const Expr *e) {
     result = EmitARCRetainBlock(result, /*mandatory*/ true);
   return EmitObjCConsumeObject(e->getType(), result);
 }
+#endif
 
 llvm::Value *CodeGenFunction::EmitObjCThrowOperand(const Expr *expr) {
   // In ARC, retain and autorelease the expression.
@@ -3142,6 +3172,7 @@ llvm::Value *CodeGenFunction::EmitObjCThrowOperand(const Expr *expr) {
 namespace {
 
 /// An emitter for assigning into an __unsafe_unretained context.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 struct ARCUnsafeUnretainedExprEmitter :
   public ARCExprEmitter<ARCUnsafeUnretainedExprEmitter, llvm::Value*> {
 
@@ -3188,17 +3219,21 @@ struct ARCUnsafeUnretainedExprEmitter :
     return CGF.EmitScalarExpr(e);
   }
 };
+#endif
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static llvm::Value *emitARCUnsafeUnretainedScalarExpr(CodeGenFunction &CGF,
                                                       const Expr *e) {
   return ARCUnsafeUnretainedExprEmitter(CGF).visit(e);
 }
+#endif
 
 /// EmitARCUnsafeUnretainedScalarExpr - Semantically equivalent to
 /// immediately releasing the resut of EmitARCRetainScalarExpr, but
 /// avoiding any spurious retains, including by performing reclaims
 /// with objc_unsafeClaimAutoreleasedReturnValue.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 llvm::Value *CodeGenFunction::EmitARCUnsafeUnretainedScalarExpr(const Expr *e) {
   // Look through full-expressions.
   if (const ExprWithCleanups *cleanups = dyn_cast<ExprWithCleanups>(e)) {
@@ -3209,7 +3244,9 @@ llvm::Value *CodeGenFunction::EmitARCUnsafeUnretainedScalarExpr(const Expr *e) {
 
   return emitARCUnsafeUnretainedScalarExpr(*this, e);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 std::pair<LValue,llvm::Value*>
 CodeGenFunction::EmitARCStoreUnsafeUnretained(const BinaryOperator *e,
                                               bool ignored) {
@@ -3228,7 +3265,9 @@ CodeGenFunction::EmitARCStoreUnsafeUnretained(const BinaryOperator *e,
 
   return std::pair<LValue,llvm::Value*>(std::move(lvalue), value);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 std::pair<LValue,llvm::Value*>
 CodeGenFunction::EmitARCStoreStrong(const BinaryOperator *e,
                                     bool ignored) {
@@ -3259,7 +3298,9 @@ CodeGenFunction::EmitARCStoreStrong(const BinaryOperator *e,
 
   return std::pair<LValue,llvm::Value*>(lvalue, value);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assueme not needed
 std::pair<LValue,llvm::Value*>
 CodeGenFunction::EmitARCStoreAutoreleasing(const BinaryOperator *e) {
   llvm::Value *value = EmitARCRetainAutoreleaseScalarExpr(e->getRHS());
@@ -3269,6 +3310,7 @@ CodeGenFunction::EmitARCStoreAutoreleasing(const BinaryOperator *e) {
 
   return std::pair<LValue,llvm::Value*>(lvalue, value);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 void CodeGenFunction::EmitObjCAutoreleasePoolStmt(

@@ -50,12 +50,14 @@ void FunctionScopeInfo::Clear() {
   ModifiedNonNullParams.clear();
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 static const NamedDecl *getBestPropertyDecl(const ObjCPropertyRefExpr *PropE) {
   if (PropE->isExplicitProperty())
     return PropE->getExplicitProperty();
 
   return PropE->getImplicitPropertyGetter();
 }
+#endif
 
 FunctionScopeInfo::WeakObjectProfileTy::BaseInfoTy
 FunctionScopeInfo::WeakObjectProfileTy::getBaseInfo(const Expr *E) {
@@ -75,14 +77,17 @@ FunctionScopeInfo::WeakObjectProfileTy::getBaseInfo(const Expr *E) {
     IsExact = isa<CXXThisExpr>(ME->getBase()->IgnoreParenImpCasts());
     break;
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCIvarRefExprClass: {
     const ObjCIvarRefExpr *IE = cast<ObjCIvarRefExpr>(E);
     D = IE->getDecl();
     IsExact = IE->getBase()->isObjCSelfExpr();
     break;
   }
+#endif
   case Stmt::PseudoObjectExprClass: {
     const PseudoObjectExpr *POE = cast<PseudoObjectExpr>(E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     const ObjCPropertyRefExpr *BaseProp =
       dyn_cast<ObjCPropertyRefExpr>(POE->getSyntacticForm());
     if (BaseProp) {
@@ -96,6 +101,7 @@ FunctionScopeInfo::WeakObjectProfileTy::getBaseInfo(const Expr *E) {
         IsExact = DoubleBase->isObjCSelfExpr();
       }
     }
+#endif
     break;
   }
   default:
@@ -120,6 +126,7 @@ bool CapturingScopeInfo::isVLATypeCaptured(const VariableArrayType *VAT) const {
   return false;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy(
                                           const ObjCPropertyRefExpr *PropE)
     : Base(nullptr, true), Property(getBestPropertyDecl(PropE)) {
@@ -134,6 +141,7 @@ FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy(
     assert(PropE->isSuperReceiver());
   }
 }
+#endif
 
 FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy(const Expr *BaseE,
                                                 const ObjCPropertyDecl *Prop)
@@ -149,11 +157,14 @@ FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy(
   assert(isa<VarDecl>(Property));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy(
                                                   const ObjCIvarRefExpr *IvarE)
   : Base(getBaseInfo(IvarE->getBase())), Property(IvarE->getDecl()) {
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void FunctionScopeInfo::recordUseOfWeak(const ObjCMessageExpr *Msg,
                                         const ObjCPropertyDecl *Prop) {
   assert(Msg && Prop);
@@ -161,6 +172,7 @@ void FunctionScopeInfo::recordUseOfWeak(const ObjCMessageExpr *Msg,
     WeakObjectUses[WeakObjectProfileTy(Msg->getInstanceReceiver(), Prop)];
   Uses.push_back(WeakUseTy(Msg, Msg->getNumArgs() == 0));
 }
+#endif
 
 void FunctionScopeInfo::markSafeWeakUse(const Expr *E) {
   E = E->IgnoreParenCasts();
@@ -185,6 +197,7 @@ void FunctionScopeInfo::markSafeWeakUse(const Expr *E) {
 
   // Has this weak object been seen before?
   FunctionScopeInfo::WeakObjectUseMap::iterator Uses;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (const ObjCPropertyRefExpr *RefExpr = dyn_cast<ObjCPropertyRefExpr>(E)) {
     if (!RefExpr->isObjectReceiver())
       return;
@@ -194,11 +207,18 @@ void FunctionScopeInfo::markSafeWeakUse(const Expr *E) {
       markSafeWeakUse(RefExpr->getBase());
       return;
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ /// assume not needed
   else if (const ObjCIvarRefExpr *IvarE = dyn_cast<ObjCIvarRefExpr>(E))
     Uses = WeakObjectUses.find(WeakObjectProfileTy(IvarE));
+#endif
   else if (const DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(E))
     Uses = WeakObjectUses.find(WeakObjectProfileTy(DRE));
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   else if (const ObjCMessageExpr *MsgE = dyn_cast<ObjCMessageExpr>(E)) {
     Uses = WeakObjectUses.end();
     if (const ObjCMethodDecl *MD = MsgE->getMethodDecl()) {
@@ -209,6 +229,7 @@ void FunctionScopeInfo::markSafeWeakUse(const Expr *E) {
       }
     }
   }
+#endif
   else
     return;
 

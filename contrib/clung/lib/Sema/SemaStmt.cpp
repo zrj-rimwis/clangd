@@ -274,6 +274,7 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S) {
   } else if (ShouldSuppress)
     return;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (const ObjCMessageExpr *ME = dyn_cast<ObjCMessageExpr>(E)) {
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     if (getLangOpts().ObjCAutoRefCount && ME->isDelegateInitCall()) {
@@ -288,6 +289,10 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S) {
         return;
       }
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (const PseudoObjectExpr *POE = dyn_cast<PseudoObjectExpr>(E)) {
     const Expr *Source = POE->getSyntacticForm();
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed

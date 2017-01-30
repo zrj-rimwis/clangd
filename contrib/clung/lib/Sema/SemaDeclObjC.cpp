@@ -4787,6 +4787,7 @@ namespace {
       assert(IvarD);
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     bool VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
       if (E->getDecl() == IvarD) {
         AccessedIvar = true;
@@ -4794,7 +4795,9 @@ namespace {
       }
       return true;
     }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     bool VisitObjCMessageExpr(ObjCMessageExpr *E) {
       if (E->getReceiverKind() == ObjCMessageExpr::Instance &&
           S.isSelfExpr(E->getInstanceReceiver(), Method)) {
@@ -4802,6 +4805,7 @@ namespace {
       }
       return true;
     }
+#endif
   };
 } // end anonymous namespace
 

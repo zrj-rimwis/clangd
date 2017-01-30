@@ -126,8 +126,8 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     // Property references are lvalues
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSubscriptRefExprClass:
-#endif
   case Expr::ObjCPropertyRefExprClass:
+#endif
     // C++ [expr.typeid]p1: The result of a typeid expression is an lvalue of...
   case Expr::CXXTypeidExprClass:
     // Unresolved lookups and uncorrected typos get classified as lvalues.
@@ -139,7 +139,9 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::DependentScopeDeclRefExprClass:
     // ObjC instance variables are lvalues
     // FIXME: ObjC++0x might have different rules
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCIvarRefExprClass:
+#endif
   case Expr::FunctionParmPackExprClass:
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case Expr::MSPropertyRefExprClass:
@@ -179,8 +181,10 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::TypeTraitExprClass:
   case Expr::ArrayTypeTraitExprClass:
   case Expr::ExpressionTraitExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSelectorExprClass:
   case Expr::ObjCProtocolExprClass:
+#endif
   case Expr::ObjCStringLiteralClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:
@@ -247,8 +251,10 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
       Cl::Kinds K = ClassifyInternal(Ctx, Op);
       if (K != Cl::CL_LValue) return K;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (isa<ObjCPropertyRefExpr>(Op))
         return Cl::CL_SubObjCPropertySetting;
+#endif
       return Cl::CL_LValue;
     }
 
@@ -367,6 +373,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
 
     // ObjC message sends are effectively function calls, if the target function
     // is known.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCMessageExprClass:
     if (const ObjCMethodDecl *Method =
           cast<ObjCMessageExpr>(E)->getMethodDecl()) {
@@ -374,6 +381,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
       return (kind == Cl::CL_PRValue) ? Cl::CL_ObjCMessageRValue : kind;
     }
     return Cl::CL_PRValue;
+#endif
       
     // Some C++ expressions are always class temporaries.
   case Expr::CXXConstructExprClass:
@@ -492,8 +500,10 @@ static Cl::Kinds ClassifyMemberExpr(ASTContext &Ctx, const MemberExpr *E) {
       return Cl::CL_LValue;
     // ObjC property accesses are not lvalues, but get special treatment.
     Expr *Base = E->getBase()->IgnoreParens();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (isa<ObjCPropertyRefExpr>(Base))
       return Cl::CL_SubObjCPropertySetting;
+#endif
     return ClassifyInternal(Ctx, Base);
   }
 
@@ -518,8 +528,10 @@ static Cl::Kinds ClassifyMemberExpr(ASTContext &Ctx, const MemberExpr *E) {
     if (E->isArrow())
       return Cl::CL_LValue;
     Expr *Base = E->getBase()->IgnoreParenImpCasts();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (isa<ObjCPropertyRefExpr>(Base))
       return Cl::CL_SubObjCPropertySetting;
+#endif
     return ClassifyInternal(Ctx, E->getBase());
   }
 
@@ -627,11 +639,13 @@ static Cl::ModifiableType IsModifiable(ASTContext &Ctx, const Expr *E,
 
   // Assignment to a property in ObjC is an implicit setter access. But a
   // setter might not exist.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (const ObjCPropertyRefExpr *Expr = dyn_cast<ObjCPropertyRefExpr>(E)) {
     if (Expr->isImplicitProperty() &&
         Expr->getImplicitPropertySetter() == nullptr)
       return Cl::CM_NoSetterProperty;
   }
+#endif
 
   CanQualType CT = Ctx.getCanonicalType(E->getType());
   // Const stuff is obviously not modifiable.

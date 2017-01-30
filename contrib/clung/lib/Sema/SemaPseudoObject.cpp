@@ -59,6 +59,7 @@ namespace {
 #endif
           SpecificCallback(SpecificCallback) {}
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Expr *rebuildObjCPropertyRefExpr(ObjCPropertyRefExpr *refExpr) {
       // Fortunately, the constraint that we're rebuilding something
       // with a base limits the number of cases here.
@@ -77,6 +78,7 @@ namespace {
           refExpr->getValueKind(), refExpr->getObjectKind(),
           refExpr->getLocation(), SpecificCallback(refExpr->getBase(), 0));
     }
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Expr *rebuildObjCSubscriptRefExpr(ObjCSubscriptRefExpr *refExpr) {
       assert(refExpr->getBaseExpr());
@@ -118,9 +120,9 @@ namespace {
 
     Expr *rebuild(Expr *e) {
       // Fast path: nothing to look through.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (auto *PRE = dyn_cast<ObjCPropertyRefExpr>(e))
         return rebuildObjCPropertyRefExpr(PRE);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (auto *SRE = dyn_cast<ObjCSubscriptRefExpr>(e))
         return rebuildObjCSubscriptRefExpr(SRE);
 #endif
@@ -278,6 +280,7 @@ namespace {
   };
 
   /// A PseudoOpBuilder for Objective-C \@properties.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   class ObjCPropertyOpBuilder : public PseudoOpBuilder {
     ObjCPropertyRefExpr *RefExpr;
     ObjCPropertyRefExpr *SyntacticRefExpr;
@@ -316,6 +319,7 @@ namespace {
 
     bool isWeakProperty() const;
   };
+#endif
 
  /// A PseudoOpBuilder for Objective-C array/dictionary indexing.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
@@ -559,6 +563,7 @@ PseudoOpBuilder::buildIncDecOperation(Scope *Sc, SourceLocation opcLoc,
 
 /// Look up a method in the receiver type of an Objective-C property
 /// reference.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static ObjCMethodDecl *LookupMethodInReceiverType(Sema &S, Selector sel,
                                             const ObjCPropertyRefExpr *PRE) {
   if (PRE->isObjectReceiver()) {
@@ -592,7 +597,9 @@ static ObjCMethodDecl *LookupMethodInReceiverType(Sema &S, Selector sel,
   QualType IT = S.Context.getObjCInterfaceType(PRE->getClassReceiver());
   return S.LookupMethodInObjectType(sel, IT, false);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool ObjCPropertyOpBuilder::isWeakProperty() const {
   QualType T;
   if (RefExpr->isExplicitProperty()) {
@@ -609,7 +616,9 @@ bool ObjCPropertyOpBuilder::isWeakProperty() const {
 
   return T.getObjCLifetime() == Qualifiers::OCL_Weak;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool ObjCPropertyOpBuilder::findGetter() {
   if (Getter) return true;
 
@@ -637,11 +646,13 @@ bool ObjCPropertyOpBuilder::findGetter() {
   Getter = LookupMethodInReceiverType(S, prop->getGetterName(), RefExpr);
   return (Getter != nullptr);
 }
+#endif
 
 /// Try to find the most accurate setter declaration for the property
 /// reference.
 ///
 /// \return true if a setter was found, in which case Setter 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool ObjCPropertyOpBuilder::findSetter(bool warn) {
   // For implicit properties, just trust the lookup we already did.
   if (RefExpr->isImplicitProperty()) {
@@ -698,7 +709,9 @@ bool ObjCPropertyOpBuilder::findSetter(bool warn) {
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ObjCPropertyOpBuilder::DiagnoseUnsupportedPropertyUse() {
   if (S.getCurLexicalContext()->isObjCContainer() &&
       S.getCurLexicalContext()->getDeclKind() != Decl::ObjCCategoryImpl &&
@@ -710,8 +723,10 @@ void ObjCPropertyOpBuilder::DiagnoseUnsupportedPropertyUse() {
     }
   }
 }
+#endif
 
 /// Capture the base object of an Objective-C property expression.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Expr *ObjCPropertyOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
   assert(InstanceReceiver == nullptr);
 
@@ -730,8 +745,10 @@ Expr *ObjCPropertyOpBuilder::rebuildAndCaptureObject(Expr *syntacticBase) {
 
   return syntacticBase;
 }
+#endif
 
 /// Load from an Objective-C property reference.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 ExprResult ObjCPropertyOpBuilder::buildGet() {
   findGetter();
   if (!Getter) {
@@ -760,11 +777,13 @@ ExprResult ObjCPropertyOpBuilder::buildGet() {
   }
   return msg;
 }
+#endif
 
 /// Store to an Objective-C property reference.
 ///
 /// \param captureSetValueAsResult If true, capture the actual
 ///   value being set as the value of the property operation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult ObjCPropertyOpBuilder::buildSet(Expr *op, SourceLocation opcLoc,
                                            bool captureSetValueAsResult) {
   if (!findSetter(false)) {
@@ -829,8 +848,10 @@ ExprResult ObjCPropertyOpBuilder::buildSet(Expr *op, SourceLocation opcLoc,
 
   return msg;
 }
+#endif
 
 /// @property-specific behavior for doing lvalue-to-rvalue conversion.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult ObjCPropertyOpBuilder::buildRValueOperation(Expr *op) {
   // Explicit properties always have getters, but implicit ones don't.
   // Check that before proceeding.
@@ -872,11 +893,13 @@ ExprResult ObjCPropertyOpBuilder::buildRValueOperation(Expr *op) {
 
   return result;
 }
+#endif
 
 /// Try to build this as a call to a getter that returns a reference.
 ///
 /// \return true if it was possible, whether or not it actually
 ///   succeeded
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool ObjCPropertyOpBuilder::tryBuildGetOfReference(Expr *op,
                                                    ExprResult &result) {
   if (!S.getLangOpts().CPlusPlus) return false;
@@ -896,8 +919,10 @@ bool ObjCPropertyOpBuilder::tryBuildGetOfReference(Expr *op,
   result = buildRValueOperation(op);
   return true;
 }
+#endif
 
 /// @property-specific behavior for doing assignments.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 ObjCPropertyOpBuilder::buildAssignmentOperation(Scope *Sc,
                                                 SourceLocation opcLoc,
@@ -945,8 +970,10 @@ ObjCPropertyOpBuilder::buildAssignmentOperation(Scope *Sc,
 
   return result;
 }
+#endif
 
 /// @property-specific behavior for doing increments and decrements.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult
 ObjCPropertyOpBuilder::buildIncDecOperation(Scope *Sc, SourceLocation opcLoc,
                                             UnaryOperatorKind opcode,
@@ -983,7 +1010,9 @@ ObjCPropertyOpBuilder::buildIncDecOperation(Scope *Sc, SourceLocation opcLoc,
 
   return PseudoOpBuilder::buildIncDecOperation(Sc, opcLoc, opcode, op);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ExprResult ObjCPropertyOpBuilder::complete(Expr *SyntacticForm) {
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
   if (S.getLangOpts().ObjCAutoRefCount && isWeakProperty() &&
@@ -995,6 +1024,7 @@ ExprResult ObjCPropertyOpBuilder::complete(Expr *SyntacticForm) {
 
   return PseudoOpBuilder::complete(SyntacticForm);
 }
+#endif
 
 // ObjCSubscript build stuff.
 //
@@ -1589,10 +1619,15 @@ ExprResult MSPropertyOpBuilder::buildSet(Expr *op, SourceLocation sl,
 
 ExprResult Sema::checkPseudoObjectRValue(Expr *E) {
   Expr *opaqueRef = E->IgnoreParens();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (ObjCPropertyRefExpr *refExpr
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
     return builder.buildRValueOperation(E);
+#else
+  if (false) {
+    /* dummy */
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   }
   else if (ObjCSubscriptRefExpr *refExpr
@@ -1625,10 +1660,15 @@ ExprResult Sema::checkPseudoObjectIncDec(Scope *Sc, SourceLocation opcLoc,
 
   assert(UnaryOperator::isIncrementDecrementOp(opcode));
   Expr *opaqueRef = op->IgnoreParens();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (ObjCPropertyRefExpr *refExpr
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
     return builder.buildIncDecOperation(Sc, opcLoc, opcode, op);
+#else
+  if (false) {
+    /* dummy */
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   } else if (isa<ObjCSubscriptRefExpr>(opaqueRef)) {
     Diag(opcLoc, diag::err_illegal_container_subscripting_op);
@@ -1665,10 +1705,15 @@ ExprResult Sema::checkPseudoObjectAssignment(Scope *S, SourceLocation opcLoc,
   }
 
   Expr *opaqueRef = LHS->IgnoreParens();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (ObjCPropertyRefExpr *refExpr
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
     return builder.buildAssignmentOperation(S, opcLoc, opcode, LHS, RHS);
+#else
+  if (false) {
+    /* dummy */
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   } else if (ObjCSubscriptRefExpr *refExpr
              = dyn_cast<ObjCSubscriptRefExpr>(opaqueRef)) {

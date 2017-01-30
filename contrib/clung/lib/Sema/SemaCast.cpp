@@ -2528,11 +2528,13 @@ void CastOperation::CheckCStyleCast() {
   //   - all kinds of pointers
   // Note that member pointers were filtered out with C++, above.
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, what it is doing here?
   if (isa<ObjCSelectorExpr>(SrcExpr.get())) {
     Self.Diag(SrcExpr.get()->getExprLoc(), diag::err_cast_selector_expr);
     SrcExpr = ExprError();
     return;
   }
+#endif
 
   // If either type is a pointer, the other type has to be either an
   // integer or a pointer.

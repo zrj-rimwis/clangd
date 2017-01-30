@@ -1270,6 +1270,7 @@ void StmtPrinter::VisitUnresolvedLookupExpr(UnresolvedLookupExpr *Node) {
         OS, Node->template_arguments(), Policy);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCIvarRefExpr(ObjCIvarRefExpr *Node) {
   if (Node->getBase()) {
     PrintExpr(Node->getBase());
@@ -1277,7 +1278,9 @@ void StmtPrinter::VisitObjCIvarRefExpr(ObjCIvarRefExpr *Node) {
   }
   OS << *Node->getDecl();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *Node) {
   if (Node->isSuperReceiver())
     OS << "super.";
@@ -1293,6 +1296,7 @@ void StmtPrinter::VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *Node) {
   else
     OS << Node->getExplicitProperty()->getName();
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *Node) {
@@ -2505,16 +2509,21 @@ void StmtPrinter::VisitObjCEncodeExpr(ObjCEncodeExpr *Node) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCSelectorExpr(ObjCSelectorExpr *Node) {
   OS << "@selector(";
   Node->getSelector().print(OS);
   OS << ')';
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCProtocolExpr(ObjCProtocolExpr *Node) {
   OS << "@protocol(" << *Node->getProtocol() << ')';
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCMessageExpr(ObjCMessageExpr *Mess) {
   OS << "[";
   switch (Mess->getReceiverKind()) {
@@ -2552,6 +2561,7 @@ void StmtPrinter::VisitObjCMessageExpr(ObjCMessageExpr *Mess) {
   }
   OS << "]";
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 void StmtPrinter::VisitObjCBoolLiteralExpr(ObjCBoolLiteralExpr *Node) {

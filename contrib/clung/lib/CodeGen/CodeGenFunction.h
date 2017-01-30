@@ -3144,23 +3144,27 @@ public:
   llvm::Value *EmitARCUnsafeClaimAutoreleasedReturnValue(llvm::Value *value);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   std::pair<LValue,llvm::Value*>
   EmitARCStoreAutoreleasing(const BinaryOperator *e);
   std::pair<LValue,llvm::Value*>
   EmitARCStoreStrong(const BinaryOperator *e, bool ignored);
   std::pair<LValue,llvm::Value*>
   EmitARCStoreUnsafeUnretained(const BinaryOperator *e, bool ignored);
+#endif
 
   llvm::Value *EmitObjCThrowOperand(const Expr *expr);
   llvm::Value *EmitObjCConsumeObject(QualType T, llvm::Value *Ptr);
   llvm::Value *EmitObjCExtendObjectLifetime(QualType T, llvm::Value *Ptr);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   llvm::Value *EmitARCExtendBlockObject(const Expr *expr);
   llvm::Value *EmitARCReclaimReturnedObject(const Expr *e,
                                             bool allowUnsafeClaim);
   llvm::Value *EmitARCRetainScalarExpr(const Expr *expr);
   llvm::Value *EmitARCRetainAutoreleaseScalarExpr(const Expr *expr);
   llvm::Value *EmitARCUnsafeUnretainedScalarExpr(const Expr *expr);
+#endif
 
   void EmitARCIntrinsicUse(ArrayRef<llvm::Value*> values);
 

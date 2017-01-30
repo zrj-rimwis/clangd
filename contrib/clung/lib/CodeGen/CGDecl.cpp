@@ -726,14 +726,18 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
   case Qualifiers::OCL_None:
     llvm_unreachable("present but none");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Qualifiers::OCL_ExplicitNone:
     value = EmitARCUnsafeUnretainedScalarExpr(init);
     break;
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Qualifiers::OCL_Strong: {
     value = EmitARCRetainScalarExpr(init);
     break;
   }
+#endif
 
   case Qualifiers::OCL_Weak: {
     // If it's not accessed by the initializer, try to emit the
@@ -755,9 +759,11 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
     return;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Qualifiers::OCL_Autoreleasing:
     value = EmitARCRetainAutoreleaseScalarExpr(init);
     break;
+#endif
   }
 
   if (capturedByInit) drillIntoBlockVariable(*this, lvalue, cast<VarDecl>(D));

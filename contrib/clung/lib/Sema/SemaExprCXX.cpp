@@ -3561,9 +3561,11 @@ Sema::PerformImplicitConversion(Expr *From, QualType ToType,
           << From->getType() << ToType << Action
           << From->getSourceRange() << 0;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (From->getType()->isObjCObjectPointerType() &&
           ToType->isObjCObjectPointerType())
         EmitRelatedResultTypeNote(From);
+#endif
     } 
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
     else if (getLangOpts().ObjCAutoRefCount &&
@@ -6533,7 +6535,11 @@ static bool IsSpecialDiscardedValue(Expr *E) {
   }
 
   // Objective-C++ extensions to the rule.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__  // assume not needed
   if (isa<PseudoObjectExpr>(E) || isa<ObjCIvarRefExpr>(E))
+#else
+  if (isa<PseudoObjectExpr>(E) || false)
+#endif
     return true;
 
   return false;
@@ -6919,13 +6925,17 @@ public:
 
   ExprResult TransformBlockExpr(BlockExpr *E) { return Owned(E); }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult TransformObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
     return Owned(E);
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult TransformObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     return Owned(E);
   }
+#endif
 
   ExprResult Transform(Expr *E) {
     ExprResult Res;

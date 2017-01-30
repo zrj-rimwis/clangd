@@ -127,9 +127,11 @@ public:
     }
     return EmitLoadOfLValue(E);
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ComplexPairTy VisitObjCIvarRefExpr(ObjCIvarRefExpr *E) {
     return EmitLoadOfLValue(E);
   }
+#endif
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   ComplexPairTy VisitObjCMessageExpr(ObjCMessageExpr *E) {
     return CGF.EmitObjCMessageExpr(E).getComplexVal();

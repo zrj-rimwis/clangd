@@ -1073,12 +1073,12 @@ CanThrowResult Sema::canThrow(const Expr *E) {
 
     // ObjC message sends are like function calls, but never have exception
     // specs.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCMessageExprClass:
   case Expr::ObjCPropertyRefExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSubscriptRefExprClass:
-#endif
     return CT_Can;
+#endif
 
     // All the ObjC literals that are implemented as calls are
     // potentially throwing unless we decide to close off that
@@ -1107,8 +1107,8 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::MemberExprClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not not needed
   case Expr::ObjCIsaExprClass:
-#endif
   case Expr::ObjCIvarRefExprClass:
+#endif
   case Expr::ParenExprClass:
   case Expr::ParenListExprClass:
   case Expr::ShuffleVectorExprClass:
@@ -1168,10 +1168,8 @@ CanThrowResult Sema::canThrow(const Expr *E) {
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBridgedCastExprClass:
   case Expr::ObjCIndirectCopyRestoreExprClass:
-#endif
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCSelectorExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCAvailabilityCheckExprClass:
 #endif
   case Expr::OffsetOfExprClass:

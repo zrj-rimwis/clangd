@@ -5311,6 +5311,7 @@ void Sema::CodeCompleteObjCPassingType(Scope *S, ObjCDeclSpec &DS,
 /// that it has some more-specific class type based on knowledge of
 /// common uses of Objective-C. This routine returns that class type,
 /// or NULL if no better result could be determined.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static ObjCInterfaceDecl *GetAssumedMessageSendExprType(Expr *E) {
   ObjCMessageExpr *Msg = dyn_cast_or_null<ObjCMessageExpr>(E);
   if (!Msg)
@@ -5377,6 +5378,7 @@ static ObjCInterfaceDecl *GetAssumedMessageSendExprType(Expr *E) {
     .Case("superclass", Super)
     .Default(nullptr);
 }
+#endif
 
 // Add a special completion for a message send to "super", which fills in the
 // most likely case of forwarding all of our arguments to the superclass 
@@ -5769,6 +5771,7 @@ void Sema::CodeCompleteObjCInstanceMessage(Scope *S, Expr *Receiver,
   // If we're messaging an expression with type "id" or "Class", check
   // whether we know something special about the receiver that allows
   // us to assume a more-specific receiver type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (ReceiverType->isObjCIdType() || ReceiverType->isObjCClassType()) {
     if (ObjCInterfaceDecl *IFace = GetAssumedMessageSendExprType(RecExpr)) {
       if (ReceiverType->isObjCClassType())
@@ -5780,6 +5783,10 @@ void Sema::CodeCompleteObjCInstanceMessage(Scope *S, Expr *Receiver,
       ReceiverType = Context.getObjCObjectPointerType(
                                           Context.getObjCInterfaceType(IFace));
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (RecExpr && getLangOpts().CPlusPlus) {
     ExprResult Conv = PerformContextuallyConvertToObjCPointer(RecExpr);
     if (Conv.isUsable()) {

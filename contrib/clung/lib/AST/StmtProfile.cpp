@@ -1604,23 +1604,30 @@ void StmtProfiler::VisitObjCEncodeExpr(const ObjCEncodeExpr *S) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCSelectorExpr(const ObjCSelectorExpr *S) {
   VisitExpr(S);
   VisitName(S->getSelector());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCProtocolExpr(const ObjCProtocolExpr *S) {
   VisitExpr(S);
   VisitDecl(S->getProtocol());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCIvarRefExpr(const ObjCIvarRefExpr *S) {
   VisitExpr(S);
   VisitDecl(S->getDecl());
   ID.AddBoolean(S->isArrow());
   ID.AddBoolean(S->isFreeIvar());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *S) {
   VisitExpr(S);
   if (S->isImplicitProperty()) {
@@ -1634,6 +1641,7 @@ void StmtProfiler::VisitObjCPropertyRefExpr(const ObjCPropertyRefExpr *S) {
     VisitType(S->getSuperReceiverType());
   }
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *S) {
@@ -1643,11 +1651,13 @@ void StmtProfiler::VisitObjCSubscriptRefExpr(const ObjCSubscriptRefExpr *S) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCMessageExpr(const ObjCMessageExpr *S) {
   VisitExpr(S);
   VisitName(S->getSelector());
   VisitDecl(S->getMethodDecl());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCIsaExpr(const ObjCIsaExpr *S) {

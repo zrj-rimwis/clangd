@@ -9439,7 +9439,9 @@ namespace {
       Inherited::VisitUnaryOperator(E);
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume pointless
     void VisitObjCMessageExpr(ObjCMessageExpr *E) {}
+#endif
 
     void VisitCXXConstructExpr(CXXConstructExpr *E) {
       if (E->getConstructor()->isCopyConstructor()) {

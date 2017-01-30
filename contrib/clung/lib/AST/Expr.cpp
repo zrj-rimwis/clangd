@@ -2096,6 +2096,7 @@ bool Expr::isUnusedResultAWarning(const Expr *&WarnE, SourceLocation &Loc,
     return false;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCMessageExprClass: {
     const ObjCMessageExpr *ME = cast<ObjCMessageExpr>(this);
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
@@ -2119,12 +2120,15 @@ bool Expr::isUnusedResultAWarning(const Expr *&WarnE, SourceLocation &Loc,
 
     return false;
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCPropertyRefExprClass:
     WarnE = this;
     Loc = getExprLoc();
     R1 = getSourceRange();
     return true;
+#endif
 
   case PseudoObjectExprClass: {
     const PseudoObjectExpr *PO = cast<PseudoObjectExpr>(this);
@@ -2536,7 +2540,9 @@ bool Expr::isTemporaryObject(ASTContext &C, const CXXRecordDecl *TempTy) const {
   // Temporaries are by definition pr-values of class type.
   if (!E->Classify(C).isPRValue()) {
     // In this context, property reference is a message call and is pr-value.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
     if (!isa<ObjCPropertyRefExpr>(E))
+#endif
       return false;
   }
 
@@ -2845,7 +2851,9 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
     llvm_unreachable("shouldn't see dependent / unresolved nodes here");
 
   case DeclRefExprClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not need
   case ObjCIvarRefExprClass:
+#endif
   case PredefinedExprClass:
   case IntegerLiteralClass:
   case FloatingLiteralClass:
@@ -3065,25 +3073,23 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
     return false;
   }
 
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // ssume not needed
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX stupid last } for switch..
   case ObjCBoxedExprClass:
   case ObjCArrayLiteralClass:
   case ObjCDictionaryLiteralClass:
-#endif
   case ObjCSelectorExprClass:
   case ObjCProtocolExprClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case ObjCIsaExprClass:
   case ObjCIndirectCopyRestoreExprClass:
   case ObjCSubscriptRefExprClass:
   case ObjCBridgedCastExprClass:
-#endif
   case ObjCMessageExprClass:
   case ObjCPropertyRefExprClass:
   // FIXME: Classify these cases better.
     if (IncludePossibleEffects)
       return true;
     break;
+#endif
   }
 
   // Recurse to children.
@@ -3282,6 +3288,7 @@ Expr::isNullPointerConstant(ASTContext &Ctx,
 
 /// \brief If this expression is an l-value for an Objective C
 /// property, find the underlying property reference expression.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 const ObjCPropertyRefExpr *Expr::getObjCProperty() const {
   const Expr *E = this;
   while (true) {
@@ -3301,6 +3308,7 @@ const ObjCPropertyRefExpr *Expr::getObjCProperty() const {
 
   return cast<ObjCPropertyRefExpr>(E);
 }
+#endif
 
 bool Expr::isObjCSelfExpr() const {
   const Expr *E = IgnoreParenImpCasts();
@@ -3336,10 +3344,12 @@ FieldDecl *Expr::getSourceBitField() {
       if (Field->isBitField())
         return Field;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (ObjCIvarRefExpr *IvarRef = dyn_cast<ObjCIvarRefExpr>(E))
     if (FieldDecl *Ivar = dyn_cast<FieldDecl>(IvarRef->getDecl()))
       if (Ivar->isBitField())
         return Ivar;
+#endif
 
   if (DeclRefExpr *DeclRef = dyn_cast<DeclRefExpr>(E))
     if (FieldDecl *Field = dyn_cast<FieldDecl>(DeclRef->getDecl()))

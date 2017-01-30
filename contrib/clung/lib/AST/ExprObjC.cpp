@@ -108,6 +108,7 @@ ObjCDictionaryLiteral::CreateEmpty(const ASTContext &C, unsigned NumElements,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 QualType ObjCPropertyRefExpr::getReceiverType(const ASTContext &ctx) const {
   if (isClassReceiver())
     return ctx.getObjCInterfaceType(getClassReceiver());
@@ -117,7 +118,9 @@ QualType ObjCPropertyRefExpr::getReceiverType(const ASTContext &ctx) const {
 
   return getBase()->getType();
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr::ObjCMessageExpr(QualType T, ExprValueKind VK,
                                  SourceLocation LBracLoc,
                                  SourceLocation SuperLoc, bool IsInstanceSuper,
@@ -139,7 +142,9 @@ ObjCMessageExpr::ObjCMessageExpr(QualType T, ExprValueKind VK,
   initArgsAndSelLocs(Args, SelLocs, SelLocsK);
   setReceiverPointer(SuperType.getAsOpaquePtr());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr::ObjCMessageExpr(QualType T, ExprValueKind VK,
                                  SourceLocation LBracLoc,
                                  TypeSourceInfo *Receiver, Selector Sel,
@@ -157,7 +162,9 @@ ObjCMessageExpr::ObjCMessageExpr(QualType T, ExprValueKind VK,
   initArgsAndSelLocs(Args, SelLocs, SelLocsK);
   setReceiverPointer(Receiver);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr::ObjCMessageExpr(QualType T, ExprValueKind VK,
                                  SourceLocation LBracLoc, Expr *Receiver,
                                  Selector Sel, ArrayRef<SourceLocation> SelLocs,
@@ -175,7 +182,9 @@ ObjCMessageExpr::ObjCMessageExpr(QualType T, ExprValueKind VK,
   initArgsAndSelLocs(Args, SelLocs, SelLocsK);
   setReceiverPointer(Receiver);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ObjCMessageExpr::initArgsAndSelLocs(ArrayRef<Expr *> Args,
                                          ArrayRef<SourceLocation> SelLocs,
                                          SelectorLocationsKind SelLocsK) {
@@ -200,7 +209,9 @@ void ObjCMessageExpr::initArgsAndSelLocs(ArrayRef<Expr *> Args,
       std::copy(SelLocs.begin(), SelLocs.end(), getStoredSelLocs());
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr *
 ObjCMessageExpr::Create(const ASTContext &Context, QualType T, ExprValueKind VK,
                         SourceLocation LBracLoc, SourceLocation SuperLoc,
@@ -220,7 +231,9 @@ ObjCMessageExpr::Create(const ASTContext &Context, QualType T, ExprValueKind VK,
                                    SuperType, Sel, SelLocs, SelLocsK, Method,
                                    Args, RBracLoc, isImplicit);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr *
 ObjCMessageExpr::Create(const ASTContext &Context, QualType T, ExprValueKind VK,
                         SourceLocation LBracLoc, TypeSourceInfo *Receiver,
@@ -239,7 +252,9 @@ ObjCMessageExpr::Create(const ASTContext &Context, QualType T, ExprValueKind VK,
       ObjCMessageExpr(T, VK, LBracLoc, Receiver, Sel, SelLocs, SelLocsK, Method,
                       Args, RBracLoc, isImplicit);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr *
 ObjCMessageExpr::Create(const ASTContext &Context, QualType T, ExprValueKind VK,
                         SourceLocation LBracLoc, Expr *Receiver, Selector Sel,
@@ -258,14 +273,18 @@ ObjCMessageExpr::Create(const ASTContext &Context, QualType T, ExprValueKind VK,
       ObjCMessageExpr(T, VK, LBracLoc, Receiver, Sel, SelLocs, SelLocsK, Method,
                       Args, RBracLoc, isImplicit);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr *ObjCMessageExpr::CreateEmpty(const ASTContext &Context,
                                               unsigned NumArgs,
                                               unsigned NumStoredSelLocs) {
   ObjCMessageExpr *Mem = alloc(Context, NumArgs, NumStoredSelLocs);
   return new (Mem) ObjCMessageExpr(EmptyShell(), NumArgs);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr *ObjCMessageExpr::alloc(const ASTContext &C,
                                         ArrayRef<Expr *> Args,
                                         SourceLocation RBraceLoc,
@@ -277,20 +296,26 @@ ObjCMessageExpr *ObjCMessageExpr::alloc(const ASTContext &C,
       (SelLocsK == SelLoc_NonStandard) ? SelLocs.size() : 0;
   return alloc(C, Args.size(), NumStoredSelLocs);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCMessageExpr *ObjCMessageExpr::alloc(const ASTContext &C, unsigned NumArgs,
                                         unsigned NumStoredSelLocs) {
   return (ObjCMessageExpr *)C.Allocate(
       totalSizeToAlloc<void *, SourceLocation>(NumArgs + 1, NumStoredSelLocs),
       llvm::AlignOf<ObjCMessageExpr>::Alignment);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ObjCMessageExpr::getSelectorLocs(
     SmallVectorImpl<SourceLocation> &SelLocs) const {
   for (unsigned i = 0, e = getNumSelectorLocs(); i != e; ++i)
     SelLocs.push_back(getSelectorLoc(i));
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 SourceRange ObjCMessageExpr::getReceiverRange() const {
   switch (getReceiverKind()) {
   case Instance:
@@ -306,14 +331,18 @@ SourceRange ObjCMessageExpr::getReceiverRange() const {
 
   llvm_unreachable("Invalid ReceiverKind!");
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Selector ObjCMessageExpr::getSelector() const {
   if (HasMethod)
     return reinterpret_cast<const ObjCMethodDecl *>(SelectorOrMethod)
         ->getSelector();
   return Selector(SelectorOrMethod);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 QualType ObjCMessageExpr::getReceiverType() const {
   switch (getReceiverKind()) {
   case Instance:
@@ -327,7 +356,9 @@ QualType ObjCMessageExpr::getReceiverType() const {
 
   llvm_unreachable("unexpected receiver kind");
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCInterfaceDecl *ObjCMessageExpr::getReceiverInterface() const {
   QualType T = getReceiverType();
 
@@ -339,7 +370,9 @@ ObjCInterfaceDecl *ObjCMessageExpr::getReceiverInterface() const {
 
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt::child_range ObjCMessageExpr::children() {
   Stmt **begin;
   if (getReceiverKind() == Instance)
@@ -349,6 +382,7 @@ Stmt::child_range ObjCMessageExpr::children() {
   return child_range(begin,
                      reinterpret_cast<Stmt **>(getArgs() + getNumArgs()));
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 StringRef ObjCBridgedCastExpr::getBridgeKindName() const {

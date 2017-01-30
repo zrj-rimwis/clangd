@@ -75,7 +75,9 @@ public:
 #endif
 
   /// Create an Objective-C ivar reference.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCIvarRefExpr *makeObjCIvarRef(const Expr *Base, const ObjCIvarDecl *IVar);
+#endif
   
   /// Create a Return statement.
   ReturnStmt *makeReturn(const Expr *RetVal);
@@ -151,6 +153,7 @@ ObjCBoolLiteralExpr *ASTMaker::makeObjCBool(bool Val) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCIvarRefExpr *ASTMaker::makeObjCIvarRef(const Expr *Base,
                                            const ObjCIvarDecl *IVar) {
   return new (C) ObjCIvarRefExpr(const_cast<ObjCIvarDecl*>(IVar),
@@ -158,6 +161,7 @@ ObjCIvarRefExpr *ASTMaker::makeObjCIvarRef(const Expr *Base,
                                  SourceLocation(), const_cast<Expr*>(Base),
                                  /*arrow=*/true, /*free=*/false);
 }
+#endif
 
 
 ReturnStmt *ASTMaker::makeReturn(const Expr *RetVal) {
@@ -432,6 +436,7 @@ static const ObjCIvarDecl *findBackingIvar(const ObjCPropertyDecl *Prop) {
   return IVar;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assue not needed and return nullptr
 static Stmt *createObjCPropertyGetter(ASTContext &Ctx,
                                       const ObjCPropertyDecl *Prop) {
   // First, find the backing ivar.
@@ -490,6 +495,7 @@ static Stmt *createObjCPropertyGetter(ASTContext &Ctx,
 
   return M.makeReturn(loadedIVar);
 }
+#endif
 
 Stmt *BodyFarm::getBody(const ObjCMethodDecl *D) {
   // We currently only know how to synthesize property accessors.
@@ -503,6 +509,7 @@ Stmt *BodyFarm::getBody(const ObjCMethodDecl *D) {
     return Val.getValue();
   Val = nullptr;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
   const ObjCPropertyDecl *Prop = D->findPropertyDecl();
   if (!Prop)
     return nullptr;
@@ -522,5 +529,8 @@ Stmt *BodyFarm::getBody(const ObjCMethodDecl *D) {
   Val = createObjCPropertyGetter(C, Prop);
 
   return Val.getValue();
+#else
+  return nullptr;
+#endif
 }
 

@@ -65,7 +65,6 @@ SRCS+=	AnalysisDeclContext.cpp \
 	CFGStmtMap.cpp \
 	Consumed.cpp \
 	FormatString.cpp \
-	ObjCNoReturn.cpp \
 	PostOrderCFGView.cpp \
 	PrintfFormatString.cpp \
 	PseudoConstantAnalysis.cpp \

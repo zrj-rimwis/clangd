@@ -20,7 +20,9 @@
 #include "clang/Analysis/Analyses/UninitializedValues.h"
 #include "clang/Analysis/AnalysisContext.h"
 #include "clang/Analysis/CFG.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/Analysis/DomainSpecific/ObjCNoReturn.h"
+#endif
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/PackedVector.h"
@@ -493,7 +495,9 @@ class TransferFunctions : public StmtVisitor<TransferFunctions> {
   const CFGBlock *block;
   AnalysisDeclContext &ac;
   const ClassifyRefs &classification;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCNoReturn objCNoRet;
+#endif
   UninitVariablesHandler &handler;
 
 public:
@@ -502,7 +506,11 @@ public:
                     const ClassifyRefs &classification,
                     UninitVariablesHandler &handler)
     : vals(vals), cfg(cfg), block(block), ac(ac),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       classification(classification), objCNoRet(ac.getASTContext()),
+#else
+      classification(classification),
+#endif
       handler(handler) {}
 
   void reportUse(const Expr *ex, const VarDecl *vd);
@@ -514,8 +522,8 @@ public:
   void VisitDeclStmt(DeclStmt *ds);
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void VisitObjCForCollectionStmt(ObjCForCollectionStmt *FS);
-#endif
   void VisitObjCMessageExpr(ObjCMessageExpr *ME);
+#endif
 
   bool isTrackedVar(const VarDecl *vd) {
     return ::isTrackedVar(vd, cast<DeclContext>(ac.getDecl()));
@@ -790,6 +798,7 @@ void TransferFunctions::VisitDeclStmt(DeclStmt *DS) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void TransferFunctions::VisitObjCMessageExpr(ObjCMessageExpr *ME) {
   // If the Objective-C message expression is an implicit no-return that
   // is not modeled in the CFG, set the tracked dataflow values to Unknown.
@@ -797,6 +806,7 @@ void TransferFunctions::VisitObjCMessageExpr(ObjCMessageExpr *ME) {
     vals.setAllScratchValues(Unknown);
   }
 }
+#endif
 
 //------------------------------------------------------------------------====//
 // High-level "driver" logic for uninitialized values analysis.

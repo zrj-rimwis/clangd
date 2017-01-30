@@ -1352,13 +1352,29 @@ namespace clang {
       EXPR_OBJC_ENCODE_disabled,
 #endif
       /// \brief An ObjCSelectorExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_SELECTOR_EXPR,
+#else
+      EXPR_OBJC_SELECTOR_EXPR_disabled,
+#endif
       /// \brief An ObjCProtocolExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_PROTOCOL_EXPR,
+#else
+      EXPR_OBJC_PROTOCOL_EXPR_disabled,
+#endif
       /// \brief An ObjCIvarRefExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_IVAR_REF_EXPR,
+#else
+      EXPR_OBJC_IVAR_REF_EXPR_disabled,
+#endif
       /// \brief An ObjCPropertyRefExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_PROPERTY_REF_EXPR,
+#else
+      EXPR_OBJC_PROPERTY_REF_EXPR_disabled,
+#endif
       /// \brief An ObjCSubscriptRefExpr record.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_SUBSCRIPT_REF_EXPR,
@@ -1366,9 +1382,17 @@ namespace clang {
       EXPR_OBJC_SUBSCRIPT_REF_EXPR_disabled,
 #endif
       /// \brief UNUSED
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume wth??! just in case
       EXPR_OBJC_KVC_REF_EXPR,
+#else
+      EXPR_OBJC_KVC_REF_EXPR_disabled,
+#endif
       /// \brief An ObjCMessageExpr record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_MESSAGE_EXPR,
+#else
+      EXPR_OBJC_MESSAGE_EXPR_disabled,
+#endif
       /// \brief An ObjCIsa Expr record.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_ISA,

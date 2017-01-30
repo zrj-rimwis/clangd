@@ -146,11 +146,6 @@ def CoyieldExpr : DStmt<CoroutineSuspendExpr>;
 
 // Obj-C Expressions.
 def ObjCStringLiteral : DStmt<Expr>;
-def ObjCMessageExpr : DStmt<Expr>;
-def ObjCSelectorExpr : DStmt<Expr>;
-def ObjCProtocolExpr : DStmt<Expr>;
-def ObjCIvarRefExpr : DStmt<Expr>;
-def ObjCPropertyRefExpr : DStmt<Expr>;
 
 // Obj-C ARC Expressions.
 

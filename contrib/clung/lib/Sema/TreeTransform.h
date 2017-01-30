@@ -2906,6 +2906,7 @@ public:
 #endif
 
   /// \brief Build a new Objective-C class message.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCMessageExpr(TypeSourceInfo *ReceiverTypeInfo,
                                           Selector Sel,
                                           ArrayRef<SourceLocation> SelectorLocs,
@@ -2919,8 +2920,10 @@ public:
                                      Sel, Method, LBracLoc, SelectorLocs,
                                      RBracLoc, Args);
   }
+#endif
 
   /// \brief Build a new Objective-C instance message.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCMessageExpr(Expr *Receiver,
                                           Selector Sel,
                                           ArrayRef<SourceLocation> SelectorLocs,
@@ -2934,8 +2937,10 @@ public:
                                         Sel, Method, LBracLoc, SelectorLocs,
                                         RBracLoc, Args);
   }
+#endif
 
   /// \brief Build a new Objective-C instance/class message to 'super'.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCMessageExpr(SourceLocation SuperLoc,
                                     Selector Sel,
                                     ArrayRef<SourceLocation> SelectorLocs,
@@ -2957,11 +2962,13 @@ public:
 
       
   }
+#endif
 
   /// \brief Build a new Objective-C ivar reference expression.
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCIvarRefExpr(Expr *BaseArg, ObjCIvarDecl *Ivar,
                                           SourceLocation IvarLoc,
                                           bool IsArrow, bool IsFreeIvar) {
@@ -2976,11 +2983,13 @@ public:
                                               /*TemplateArgs=*/nullptr,
                                               /*S=*/nullptr);
   }
+#endif
 
   /// \brief Build a new Objective-C property reference expression.
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCPropertyRefExpr(Expr *BaseArg,
                                         ObjCPropertyDecl *Property,
                                         SourceLocation PropertyLoc) {
@@ -2995,11 +3004,13 @@ public:
                                               /*TemplateArgs=*/nullptr,
                                               /*S=*/nullptr);
   }
+#endif
 
   /// \brief Build a new Objective-C property reference expression.
   ///
   /// By default, performs semantic analysis to build the new expression.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult RebuildObjCPropertyRefExpr(Expr *Base, QualType T,
                                         ObjCMethodDecl *Getter,
                                         ObjCMethodDecl *Setter,
@@ -3011,6 +3022,7 @@ public:
                                                   VK_LValue, OK_ObjCProperty,
                                                   PropertyLoc, Base));
   }
+#endif
 
   /// \brief Build a new Objective-C "isa" expression.
   ///
@@ -11210,6 +11222,7 @@ ExprResult TreeTransform<Derived>::TransformObjCAvailabilityCheckExpr(
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCMessageExpr(ObjCMessageExpr *E) {
@@ -11283,19 +11296,25 @@ TreeTransform<Derived>::TransformObjCMessageExpr(ObjCMessageExpr *E) {
                                              Args,
                                              E->getRightLoc());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCSelectorExpr(ObjCSelectorExpr *E) {
   return E;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCProtocolExpr(ObjCProtocolExpr *E) {
   return E;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCIvarRefExpr(ObjCIvarRefExpr *E) {
@@ -11315,7 +11334,9 @@ TreeTransform<Derived>::TransformObjCIvarRefExpr(ObjCIvarRefExpr *E) {
                                              E->getLocation(),
                                              E->isArrow(), E->isFreeIvar());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
@@ -11347,6 +11368,7 @@ TreeTransform<Derived>::TransformObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
                                                  E->getImplicitPropertySetter(),
                                                  E->getLocation());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>

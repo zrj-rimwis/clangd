@@ -5262,10 +5262,10 @@ static bool requiresParensToAddCast(const Expr *E) {
   case Stmt::ObjCBoxedExprClass:
   case Stmt::ObjCDictionaryLiteralClass:
   case Stmt::ObjCEncodeExprClass:
-#endif
   case Stmt::ObjCIvarRefExprClass:
   case Stmt::ObjCMessageExprClass:
   case Stmt::ObjCPropertyRefExprClass:
+#endif
   case Stmt::ObjCStringLiteralClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCSubscriptRefExprClass:
@@ -10065,6 +10065,7 @@ static bool findRetainCycleOwner(Sema &S, Expr *e, RetainCycleOwner &owner) {
       }
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (ObjCIvarRefExpr *ref = dyn_cast<ObjCIvarRefExpr>(e)) {
       ObjCIvarDecl *ivar = ref->getDecl();
       if (ivar->getType().getObjCLifetime() != Qualifiers::OCL_Strong)
@@ -10078,6 +10079,7 @@ static bool findRetainCycleOwner(Sema &S, Expr *e, RetainCycleOwner &owner) {
       owner.Indirect = true;
       return true;
     }
+#endif
 
     if (DeclRefExpr *ref = dyn_cast<DeclRefExpr>(e)) {
       VarDecl *var = dyn_cast<VarDecl>(ref->getDecl());
@@ -10093,6 +10095,7 @@ static bool findRetainCycleOwner(Sema &S, Expr *e, RetainCycleOwner &owner) {
       continue;
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just return false
     if (PseudoObjectExpr *pseudo = dyn_cast<PseudoObjectExpr>(e)) {
       // Only pay attention to pseudo-objects on property references.
       ObjCPropertyRefExpr *pre
@@ -10120,6 +10123,9 @@ static bool findRetainCycleOwner(Sema &S, Expr *e, RetainCycleOwner &owner) {
                               ->getSourceExpr());
       continue;
     }
+#else
+    return false;
+#endif
 
     // Array ivars?
 
@@ -10143,12 +10149,14 @@ namespace {
         Capturer = ref;
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void VisitObjCIvarRefExpr(ObjCIvarRefExpr *ref) {
       if (Capturer) return;
       Visit(ref->getBase());
       if (Capturer && ref->isFreeIvar())
         Capturer = ref;
     }
+#endif
 
     void VisitBlockExpr(BlockExpr *block) {
       // Look inside nested blocks 
@@ -10187,6 +10195,7 @@ static Expr *findCapturingExpr(Sema &S, Expr *e, RetainCycleOwner &owner) {
   e = e->IgnoreParenCasts();
 
   // Look through [^{...} copy] and Block_copy(^{...}).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (ObjCMessageExpr *ME = dyn_cast<ObjCMessageExpr>(e)) {
     Selector Cmd = ME->getSelector();
     if (Cmd.isUnarySelector() && Cmd.getNameForSlot(0) == "copy") {
@@ -10195,6 +10204,10 @@ static Expr *findCapturingExpr(Sema &S, Expr *e, RetainCycleOwner &owner) {
         return nullptr;
       e = e->IgnoreParenCasts();
     }
+#else
+  if (false) {
+    /* dummy */
+#endif
   } else if (CallExpr *CE = dyn_cast<CallExpr>(e)) {
     if (CE->getNumArgs() == 1) {
       FunctionDecl *Fn = dyn_cast_or_null<FunctionDecl>(CE->getCalleeDecl());
@@ -10406,6 +10419,7 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
           }
         }
       }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     } else if (ObjCIvarRefExpr *IvarRE = dyn_cast<ObjCIvarRefExpr>(Receiver)) {
       if (ObjCIvarRefExpr *IvarArgRE = dyn_cast<ObjCIvarRefExpr>(Arg)) {
         if (IvarRE->getDecl() == IvarArgRE->getDecl()) {
@@ -10418,12 +10432,14 @@ void Sema::CheckObjCCircularContainer(ObjCMessageExpr *Message) {
             << Decl->getName();
         }
       }
+#endif
     }
   }
 }
 #endif
 
 /// Check a message send to see if it's likely to cause a retain cycle.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::checkRetainCycles(ObjCMessageExpr *msg) {
   // Only check instance methods whose selector looks like a setter.
   if (!msg->isInstanceMessage() || !isSetterLikeSelector(msg->getSelector()))
@@ -10446,6 +10462,7 @@ void Sema::checkRetainCycles(ObjCMessageExpr *msg) {
     if (Expr *capturer = findCapturingExpr(*this, msg->getArg(i), owner))
       return diagnoseRetainCycle(*this, capturer, owner);
 }
+#endif
 
 /// Check a property assign to see if it's likely to cause a retain cycle.
 void Sema::checkRetainCycles(Expr *receiver, Expr *argument) {
@@ -10532,6 +10549,7 @@ void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
   QualType LHSType;
   // PropertyRef on LHS type need be directly obtained from
   // its declaration as it has a PseudoType.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   ObjCPropertyRefExpr *PRE
     = dyn_cast<ObjCPropertyRefExpr>(LHS->IgnoreParens());
   if (PRE && !PRE->isImplicitProperty()) {
@@ -10539,6 +10557,7 @@ void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
     if (PD)
       LHSType = PD->getType();
   }
+#endif
   
   if (LHSType.isNull())
     LHSType = LHS->getType();
@@ -10557,6 +10576,7 @@ void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
   if (LT != Qualifiers::OCL_None)
     return;
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume it was false
   if (PRE) {
     if (PRE->isImplicitProperty())
       return;
@@ -10588,6 +10608,7 @@ void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
         return;
     }
   }
+#endif
 }
 
 //===--- CHECK: Empty statement body (-Wempty-body) ---------------------===//

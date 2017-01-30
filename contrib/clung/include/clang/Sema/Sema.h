@@ -148,7 +148,9 @@ namespace clang {
   class ObjCInterfaceDecl;
   class ObjCIvarDecl;
   template <class T> class ObjCList;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   class ObjCMessageExpr;
+#endif
   class ObjCMethodDecl;
   class ObjCPropertyDecl;
   class ObjCProtocolDecl;
@@ -1236,11 +1238,13 @@ public:
     return nullptr;
   }
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   template <typename ExprT>
   void recordUseOfEvaluatedWeak(const ExprT *E, bool IsRead=true) {
     if (!isUnevaluatedContext())
       getCurFunction()->recordUseOfWeak(E, IsRead);
   }
+#endif
   
   void PushCompoundScope();
   void PopCompoundScope();
@@ -7691,6 +7695,7 @@ public:
   bool inferObjCARCLifetime(ValueDecl *decl);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult
   HandleExprPropertyRefExpr(const ObjCObjectPointerType *OPT,
                             Expr *BaseExpr,
@@ -7699,12 +7704,15 @@ public:
                             SourceLocation MemberLoc,
                             SourceLocation SuperLoc, QualType SuperType,
                             bool Super);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   ExprResult
   ActOnClassPropertyRefExpr(IdentifierInfo &receiverName,
                             IdentifierInfo &propertyName,
                             SourceLocation receiverNameLoc,
                             SourceLocation propertyNameLoc);
+#endif
 
   ObjCMethodDecl *tryCaptureObjCSelf(SourceLocation Loc);
 
@@ -7727,13 +7735,16 @@ public:
                                      bool HasTrailingDot,
                                      ParsedType &ReceiverType);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ActOnSuperMessage(Scope *S, SourceLocation SuperLoc,
                                Selector Sel,
                                SourceLocation LBracLoc,
                                ArrayRef<SourceLocation> SelectorLocs,
                                SourceLocation RBracLoc,
                                MultiExprArg Args);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildClassMessage(TypeSourceInfo *ReceiverTypeInfo,
                                QualType ReceiverType,
                                SourceLocation SuperLoc,
@@ -7759,7 +7770,9 @@ public:
                                ArrayRef<SourceLocation> SelectorLocs,
                                SourceLocation RBracLoc,
                                MultiExprArg Args);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildInstanceMessage(Expr *Receiver,
                                   QualType ReceiverType,
                                   SourceLocation SuperLoc,
@@ -7785,6 +7798,7 @@ public:
                                   ArrayRef<SourceLocation> SelectorLocs,
                                   SourceLocation RBracLoc,
                                   MultiExprArg Args);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult BuildObjCBridgedCast(SourceLocation LParenLoc,
@@ -9086,7 +9100,9 @@ public:
 
   /// checkRetainCycles - Check whether an Objective-C message send
   /// might create an obvious retain cycle.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void checkRetainCycles(ObjCMessageExpr *msg);
+#endif
   void checkRetainCycles(Expr *receiver, Expr *argument);
   void checkRetainCycles(VarDecl *Var, Expr *Init);
 
@@ -9120,12 +9136,16 @@ public:
 
   /// \brief If the given expression involves a message send to a method
   /// with a related result type, emit a note describing what happened.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   void EmitRelatedResultTypeNote(const Expr *E);
+#endif
 
   /// \brief Given that we had incompatible pointer types in a return
   /// statement, check whether we're in a method with a related result
   /// type, and if so, emit a note describing what happened.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   void EmitRelatedResultTypeNoteForReturn(QualType destType);
+#endif
 
   class ConditionResult {
     Decl *ConditionVar;

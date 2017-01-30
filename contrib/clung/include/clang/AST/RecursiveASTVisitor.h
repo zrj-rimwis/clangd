@@ -2360,19 +2360,19 @@ DEF_TRAVERSE_STMT(ObjCEncodeExpr, {
 #endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCIsaExpr, {})
-#endif
 DEF_TRAVERSE_STMT(ObjCIvarRefExpr, {})
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DEF_TRAVERSE_STMT(ObjCMessageExpr, {
   if (TypeSourceInfo *TInfo = S->getClassReceiverTypeInfo())
     TRY_TO(TraverseTypeLoc(TInfo->getTypeLoc()));
 })
-DEF_TRAVERSE_STMT(ObjCPropertyRefExpr, {})
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
-DEF_TRAVERSE_STMT(ObjCSubscriptRefExpr, {})
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+DEF_TRAVERSE_STMT(ObjCPropertyRefExpr, {})
+DEF_TRAVERSE_STMT(ObjCSubscriptRefExpr, {})
 DEF_TRAVERSE_STMT(ObjCProtocolExpr, {})
 DEF_TRAVERSE_STMT(ObjCSelectorExpr, {})
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 DEF_TRAVERSE_STMT(ObjCIndirectCopyRestoreExpr, {})
 DEF_TRAVERSE_STMT(ObjCBridgedCastExpr, {
   TRY_TO(TraverseTypeLoc(S->getTypeInfoAsWritten()->getTypeLoc()));

@@ -415,6 +415,7 @@ public:
 #endif
 
 /// ObjCSelectorExpr used for \@selector in Objective-C.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCSelectorExpr : public Expr {
   Selector SelName;
   SourceLocation AtLoc, RParenLoc;
@@ -450,6 +451,7 @@ public:
     return child_range(child_iterator(), child_iterator());
   }
 };
+#endif
 
 /// ObjCProtocolExpr used for protocol expression in Objective-C.
 ///
@@ -459,6 +461,7 @@ public:
 /// \endcode
 ///
 /// The return type is "Protocol*".
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCProtocolExpr : public Expr {
   ObjCProtocolDecl *TheProtocol;
   SourceLocation AtLoc, ProtoLoc, RParenLoc;
@@ -495,8 +498,10 @@ public:
   friend class ASTStmtReader;
   friend class ASTStmtWriter;
 };
+#endif
 
 /// ObjCIvarRefExpr - A reference to an ObjC instance variable.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCIvarRefExpr : public Expr {
   ObjCIvarDecl *D;
   Stmt *Base;
@@ -554,9 +559,11 @@ public:
   // Iterators
   child_range children() { return child_range(&Base, &Base+1); }
 };
+#endif
 
 /// ObjCPropertyRefExpr - A dot-syntax expression to access an ObjC
 /// property.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCPropertyRefExpr : public Expr {
 private:
   /// If the bool is true, this is an implicit property reference; the
@@ -774,6 +781,7 @@ private:
     SetterAndMethodRefFlags.setInt(f);
   }
 };
+#endif
   
 /// ObjCSubscriptRefExpr - used for array and dictionary subscripting.
 /// array[4] = array[3]; dictionary[key] = dictionary[alt_key];
@@ -880,6 +888,7 @@ private:
 /// receiver pointer), and NumArgs Expr *. But due to the
 /// implementation of children(), these must be together contiguously.
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCMessageExpr final
     : public Expr,
       private llvm::TrailingObjects<ObjCMessageExpr, void *, SourceLocation> {
@@ -1400,6 +1409,7 @@ public:
   friend class ASTStmtReader;
   friend class ASTStmtWriter;
 };
+#endif
 
 /// ObjCIsaExpr - Represent X->isa and X.isa when X is an ObjC 'id' type.
 /// (similar in spirit to MemberExpr).
