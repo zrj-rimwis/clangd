@@ -1563,19 +1563,25 @@ public:
   /// \p S.
   ///
   /// If \p Field is specified then record field names are also encoded.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
   void getObjCEncodingForType(QualType T, std::string &S,
                               const FieldDecl *Field=nullptr,
                               QualType *NotEncodedT=nullptr) const;
+//#endif
 
   /// \brief Emit the Objective-C property type encoding for the given
   /// type \p T into \p S.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume only for OBJC
   void getObjCEncodingForPropertyType(QualType T, std::string &S) const;
+#endif
 
   void getLegacyIntegralTypeEncoding(QualType &t) const;
 
   /// \brief Put the string version of the type qualifiers \p QT into \p S.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
   void getObjCEncodingForTypeQualifier(Decl::ObjCDeclQualifier QT,
                                        std::string &S) const;
+#endif
 
   /// \brief Emit the encoded type for the function \p Decl into \p S.
   ///
@@ -1583,6 +1589,7 @@ public:
   ///
   /// \returns true if an error occurred (e.g., because one of the parameter
   /// types is incomplete), false otherwise.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
   bool getObjCEncodingForFunctionDecl(const FunctionDecl *Decl, std::string& S);
 
   /// \brief Emit the encoded type for the method declaration \p Decl into
@@ -1593,17 +1600,22 @@ public:
   bool getObjCEncodingForMethodDecl(const ObjCMethodDecl *Decl, std::string &S,
                                     bool Extended = false)
     const;
+#endif
 
   /// \brief Return the encoded type for this block declaration.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
   std::string getObjCEncodingForBlock(const BlockExpr *blockExpr) const;
+//#endif
   
   /// getObjCEncodingForPropertyDecl - Return the encoded type for
   /// this method declaration. If non-NULL, Container must be either
   /// an ObjCCategoryImplDecl or ObjCImplementationDecl; it should
   /// only be NULL when getting encodings for protocol properties.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume only for OBJC
   void getObjCEncodingForPropertyDecl(const ObjCPropertyDecl *PD,
                                       const Decl *Container,
                                       std::string &S) const;
+#endif
 
   bool ProtocolCompatibleWithProtocol(ObjCProtocolDecl *lProto,
                                       ObjCProtocolDecl *rProto) const;
@@ -1614,7 +1626,9 @@ public:
 
   /// \brief Return the size of type \p T for Objective-C encoding purpose,
   /// in characters.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
   CharUnits getObjCEncodingTypeSize(QualType T) const;
+//#endif
 
   /// \brief Retrieve the typedef corresponding to the predefined \c id type
   /// in Objective-C.
@@ -2524,6 +2538,7 @@ private:
   void InitBuiltinType(CanQualType &R, BuiltinType::Kind K);
 
   // Return the Objective-C type encoding for a given type.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
   void getObjCEncodingForTypeImpl(QualType t, std::string &S,
                                   bool ExpandPointedToStructures,
                                   bool ExpandStructures,
@@ -2535,17 +2550,22 @@ private:
                                   bool EncodeClassNames = false,
                                   bool EncodePointerToObjCTypedef = false,
                                   QualType *NotEncodedT=nullptr) const;
+//#endif
 
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume only for OBJC
   // Adds the encoding of the structure's members.
   void getObjCEncodingForStructureImpl(RecordDecl *RD, std::string &S,
                                        const FieldDecl *Field,
                                        bool includeVBases = true,
                                        QualType *NotEncodedT=nullptr) const;
+#endif
 public:
   // Adds the encoding of a method parameter or return type.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
   void getObjCEncodingForMethodParameter(Decl::ObjCDeclQualifier QT,
                                          QualType T, std::string& S,
                                          bool Extended) const;
+#endif
 
   /// \brief Returns true if this is an inline-initialized static data member
   /// which is treated as a definition for MSVC compatibility.

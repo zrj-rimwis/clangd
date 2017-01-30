@@ -5145,6 +5145,7 @@ static bool isTypeTypedefedAsBOOL(QualType T) {
 
 /// getObjCEncodingTypeSize returns size of type for objective-c encoding
 /// purpose.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
 CharUnits ASTContext::getObjCEncodingTypeSize(QualType type) const {
   if (!type->isIncompleteArrayType() && type->isIncompleteType())
     return CharUnits::Zero();
@@ -5159,6 +5160,7 @@ CharUnits ASTContext::getObjCEncodingTypeSize(QualType type) const {
     sz = getTypeSizeInChars(VoidPtrTy);
   return sz;
 }
+//#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
 bool ASTContext::isMSStaticDataMemberInlineDefinition(const VarDecl *VD) const {
@@ -5197,6 +5199,7 @@ std::string charUnitsToString(const CharUnits &CU) {
 
 /// getObjCEncodingForBlock - Return the encoded type for this block
 /// declaration.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
 std::string ASTContext::getObjCEncodingForBlock(const BlockExpr *Expr) const {
   std::string S;
 
@@ -5257,6 +5260,7 @@ std::string ASTContext::getObjCEncodingForBlock(const BlockExpr *Expr) const {
   return S;
 }
 
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 bool ASTContext::getObjCEncodingForFunctionDecl(const FunctionDecl *Decl,
                                                 std::string& S) {
   // Encode result type.
@@ -5294,10 +5298,12 @@ bool ASTContext::getObjCEncodingForFunctionDecl(const FunctionDecl *Decl,
   
   return false;
 }
+#endif
 
 /// getObjCEncodingForMethodParameter - Return the encoded type for a single
 /// method parameter or return type. If Extended, include class names and 
 /// block object types.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 void ASTContext::getObjCEncodingForMethodParameter(Decl::ObjCDeclQualifier QT,
                                                    QualType T, std::string& S,
                                                    bool Extended) const {
@@ -5311,9 +5317,11 @@ void ASTContext::getObjCEncodingForMethodParameter(Decl::ObjCDeclQualifier QT,
                              Extended /*EncodeBlockParameters*/, 
                              Extended /*EncodeClassNames*/);
 }
+#endif
 
 /// getObjCEncodingForMethodDecl - Return the encoded type for this method
 /// declaration.
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 bool ASTContext::getObjCEncodingForMethodDecl(const ObjCMethodDecl *Decl,
                                               std::string& S, 
                                               bool Extended) const {
@@ -5366,6 +5374,7 @@ bool ASTContext::getObjCEncodingForMethodDecl(const ObjCMethodDecl *Decl,
   
   return false;
 }
+#endif
 
 ObjCPropertyImplDecl *
 ASTContext::getObjCPropertyImplDeclForPropertyDecl(
@@ -5412,6 +5421,7 @@ ASTContext::getObjCPropertyImplDeclForPropertyDecl(
 /// kPropertyNonAtomic = 'N'         // property non-atomic
 /// };
 /// @endcode
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 void ASTContext::getObjCEncodingForPropertyDecl(const ObjCPropertyDecl *PD,
                                                 const Decl *Container,
                                                 std::string& S) const {
@@ -5478,6 +5488,7 @@ void ASTContext::getObjCEncodingForPropertyDecl(const ObjCPropertyDecl *PD,
 
   // FIXME: OBJCGC: weak & strong
 }
+#endif
 
 /// getLegacyIntegralTypeEncoding -
 /// Another legacy compatibility encoding: 32-bit longs are encoded as
@@ -5496,6 +5507,7 @@ void ASTContext::getLegacyIntegralTypeEncoding (QualType &PointeeTy) const {
   }
 }
 
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
 void ASTContext::getObjCEncodingForType(QualType T, std::string& S,
                                         const FieldDecl *Field,
                                         QualType *NotEncodedT) const {
@@ -5507,7 +5519,9 @@ void ASTContext::getObjCEncodingForType(QualType T, std::string& S,
                              true /* outermost type */, false, false,
                              false, false, false, NotEncodedT);
 }
+//#endif
 
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 void ASTContext::getObjCEncodingForPropertyType(QualType T,
                                                 std::string& S) const {
   // Encode result type.
@@ -5517,7 +5531,9 @@ void ASTContext::getObjCEncodingForPropertyType(QualType T,
                              true /* outermost type */,
                              true /* encoding property */);
 }
+#endif
 
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL, it even does not have encode for half...
 static char getObjCEncodingForPrimitiveKind(const ASTContext *C,
                                             BuiltinType::Kind kind) {
     switch (kind) {
@@ -5577,7 +5593,9 @@ static char getObjCEncodingForPrimitiveKind(const ASTContext *C,
     }
     llvm_unreachable("invalid BuiltinType::Kind value");
 }
+//#endif
 
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // likely needed for OpenCL
 static char ObjCEncodingForEnumType(const ASTContext *C, const EnumType *ET) {
   EnumDecl *Enum = ET->getDecl();
   
@@ -5589,7 +5607,9 @@ static char ObjCEncodingForEnumType(const ASTContext *C, const EnumType *ET) {
   const BuiltinType *BT = Enum->getIntegerType()->castAs<BuiltinType>();
   return getObjCEncodingForPrimitiveKind(C, BT->getKind());
 }
+//#endif
 
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 static void EncodeBitField(const ASTContext *Ctx, std::string& S,
                            QualType T, const FieldDecl *FD) {
   assert(FD->isBitField() && "not a bitfield - getObjCEncodingForTypeImpl");
@@ -5624,8 +5644,10 @@ static void EncodeBitField(const ASTContext *Ctx, std::string& S,
 #endif
   S += llvm::utostr(FD->getBitWidthValue(*Ctx));
 }
+#endif
 
 // FIXME: Use SmallString for accumulating string.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // needed for OpenCL
 void ASTContext::getObjCEncodingForTypeImpl(QualType T, std::string& S,
                                             bool ExpandPointedToStructures,
                                             bool ExpandStructures,
@@ -5642,7 +5664,11 @@ void ASTContext::getObjCEncodingForTypeImpl(QualType T, std::string& S,
   case Type::Builtin:
   case Type::Enum:
     if (FD && FD->isBitField())
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
       return EncodeBitField(this, S, T, FD);
+#else
+      assert(false && "in case we would need bitfield for OpenCl");
+#endif
     if (const BuiltinType *BT = dyn_cast<BuiltinType>(CT))
       S += getObjCEncodingForPrimitiveKind(this, BT->getKind());
     else
@@ -5792,7 +5818,11 @@ void ASTContext::getObjCEncodingForTypeImpl(QualType T, std::string& S,
     if (ExpandStructures) {
       S += '=';
       if (!RDecl->isUnion()) {
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
         getObjCEncodingForStructureImpl(RDecl, S, FD, true, NotEncodedT);
+#else
+        assert(false && "in case we land here for OpenCL");
+#endif
       } else {
         for (const auto *Field : RDecl->fields()) {
           if (FD) {
@@ -5996,7 +6026,9 @@ void ASTContext::getObjCEncodingForTypeImpl(QualType T, std::string& S,
   }
   llvm_unreachable("bad type kind!");
 }
+//endif
 
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assume not needed
 void ASTContext::getObjCEncodingForStructureImpl(RecordDecl *RDecl,
                                                  std::string &S,
                                                  const FieldDecl *FD,
@@ -6139,7 +6171,9 @@ void ASTContext::getObjCEncodingForStructureImpl(RecordDecl *RDecl,
     }
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // assuem not needed
 void ASTContext::getObjCEncodingForTypeQualifier(Decl::ObjCDeclQualifier QT,
                                                  std::string& S) const {
   if (QT & Decl::OBJC_TQ_In)
@@ -6155,6 +6189,7 @@ void ASTContext::getObjCEncodingForTypeQualifier(Decl::ObjCDeclQualifier QT,
   if (QT & Decl::OBJC_TQ_Oneway)
     S += 'V';
 }
+#endif
 
 TypedefDecl *ASTContext::getObjCIdDecl() const {
   if (!ObjCIdDecl) {

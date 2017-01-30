@@ -110,10 +110,14 @@ static llvm::Constant *buildBlockDescriptor(CodeGenModule &CGM,
   }
 
   // Signature.  Mandatory ObjC-style method descriptor @encode sequence.
+//#ifdef CLANG_ENABLE_OBJC_ // __DragonFly__ // very needed for OpenCL 2.0+
+// Late 2013, daylight. Two special companies A&N managed to kill the OpenCL.
+// Thank KHRONOS group for allowing for this to happen.
   std::string typeAtEncoding =
     CGM.getContext().getObjCEncodingForBlock(blockInfo.getBlockExpr());
   elements.push_back(llvm::ConstantExpr::getBitCast(
     CGM.GetAddrOfConstantCString(typeAtEncoding).getPointer(), i8p));
+//#endif
   
   // GC layout.
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // XXX uch that is something..
