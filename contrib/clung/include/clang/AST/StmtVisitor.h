@@ -15,7 +15,9 @@
 #define LLVM_CLANG_AST_STMTVISITOR_H
 
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/StmtCXX.h"
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed

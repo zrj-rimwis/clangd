@@ -24,7 +24,9 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/ABI.h"
 #include "clang/Basic/SourceManager.h"
@@ -3248,9 +3250,7 @@ recurse:
   case Expr::ObjCPropertyRefExprClass:
   case Expr::ObjCProtocolExprClass:
   case Expr::ObjCSelectorExprClass:
-#endif
   case Expr::ObjCStringLiteralClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:

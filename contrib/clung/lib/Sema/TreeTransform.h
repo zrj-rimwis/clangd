@@ -20,7 +20,9 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/Stmt.h"
 #include "clang/AST/StmtCXX.h"
@@ -10983,11 +10985,13 @@ TreeTransform<Derived>::TransformCXXStdInitializerListExpr(
   return getDerived().TransformExpr(E->getSubExpr());
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>
 ExprResult
 TreeTransform<Derived>::TransformObjCStringLiteral(ObjCStringLiteral *E) {
   return SemaRef.MaybeBindToTemporary(E);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 template<typename Derived>

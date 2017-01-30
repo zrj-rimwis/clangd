@@ -2458,10 +2458,12 @@ void StmtPrinter::VisitCoyieldExpr(CoyieldExpr *S) {
 
 // Obj-C
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCStringLiteral(ObjCStringLiteral *Node) {
   OS << "@";
   VisitStringLiteral(Node->getString());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtPrinter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {

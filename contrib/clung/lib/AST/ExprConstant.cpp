@@ -1363,8 +1363,8 @@ static bool IsGlobalLValue(APValue::LValueBase B) {
   // A string literal has static storage duration.
   case Expr::StringLiteralClass:
   case Expr::PredefinedExprClass:
-  case Expr::ObjCStringLiteralClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  case Expr::ObjCStringLiteralClass:
   case Expr::ObjCEncodeExprClass:
 #endif
   case Expr::CXXTypeidExprClass:
@@ -5049,9 +5049,9 @@ public:
   bool VisitBinaryOperator(const BinaryOperator *E);
   bool VisitCastExpr(const CastExpr* E);
   bool VisitUnaryAddrOf(const UnaryOperator *E);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool VisitObjCStringLiteral(const ObjCStringLiteral *E)
       { return Success(E); }
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool VisitObjCBoxedExpr(const ObjCBoxedExpr *E)
       { return Success(E); }
 #endif
@@ -9410,8 +9410,8 @@ static ICEDiag CheckICE(const Expr* E, const ASTContext &Ctx) {
   case Expr::CXXUnresolvedConstructExprClass:
   case Expr::CXXDependentScopeMemberExprClass:
   case Expr::UnresolvedMemberExprClass:
-  case Expr::ObjCStringLiteralClass:
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  case Expr::ObjCStringLiteralClass:
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:

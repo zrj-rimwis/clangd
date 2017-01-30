@@ -18,7 +18,9 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Basic/SourceManager.h"
 #include "clang/Sema/DeclSpec.h"
 #include "clang/Sema/Lookup.h"
@@ -3575,6 +3577,7 @@ ObjCMethodDecl *Sema::LookupImplementedMethodInGlobalPool(Selector Sel) {
   return nullptr;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void
 HelperSelectorsForTypoCorrection(
                       SmallVectorImpl<const ObjCMethodDecl *> &BestMethod,
@@ -3597,7 +3600,9 @@ HelperSelectorsForTypoCorrection(
     BestMethod.push_back(Method);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool HelperIsMethodInObjCType(Sema &S, Selector Sel,
                                      QualType ObjectType) {
   if (ObjectType.isNull())
@@ -3607,7 +3612,9 @@ static bool HelperIsMethodInObjCType(Sema &S, Selector Sel,
   return S.LookupMethodInObjectType(Sel, ObjectType, false/*Class method*/) !=
          nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 const ObjCMethodDecl *
 Sema::SelectorsForTypoCorrection(Selector Sel,
                                  QualType ObjectType) {
@@ -3665,6 +3672,7 @@ Sema::SelectorsForTypoCorrection(Selector Sel,
   }
   return (SelectedMethods.size() == 1) ? SelectedMethods[0] : nullptr;
 }
+#endif
 
 /// DiagnoseDuplicateIvars -
 /// Check for duplicate ivars in the entire class at the start of 

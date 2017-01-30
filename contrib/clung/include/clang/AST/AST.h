@@ -21,7 +21,9 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/StmtVisitor.h"
 #include "clang/AST/Type.h"
 

@@ -19,7 +19,9 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/EvaluatedExprVisitor.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/StmtCXX.h"
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed

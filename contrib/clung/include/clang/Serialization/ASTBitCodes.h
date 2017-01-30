@@ -1332,7 +1332,11 @@ namespace clang {
       // Objective-C
 
       /// \brief An ObjCStringLiteral record.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_STRING_LITERAL,
+#else
+      EXPR_OBJC_STRING_LITERAL_disabled,
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_BOXED_EXPRESSION,

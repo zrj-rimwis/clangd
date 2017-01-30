@@ -16,7 +16,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/Expr.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Analysis/CodeInjector.h"
 #include "llvm/ADT/StringSwitch.h"
 
@@ -397,6 +399,7 @@ Stmt *BodyFarm::getBody(const FunctionDecl *D) {
   return Val.getValue();
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static const ObjCIvarDecl *findBackingIvar(const ObjCPropertyDecl *Prop) {
   const ObjCIvarDecl *IVar = Prop->getPropertyIvarDecl();
 
@@ -435,6 +438,7 @@ static const ObjCIvarDecl *findBackingIvar(const ObjCPropertyDecl *Prop) {
 
   return IVar;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assue not needed and return nullptr
 static Stmt *createObjCPropertyGetter(ASTContext &Ctx,
@@ -497,6 +501,7 @@ static Stmt *createObjCPropertyGetter(ASTContext &Ctx,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Stmt *BodyFarm::getBody(const ObjCMethodDecl *D) {
   // We currently only know how to synthesize property accessors.
   if (!D->isPropertyAccessor())
@@ -533,4 +538,4 @@ Stmt *BodyFarm::getBody(const ObjCMethodDecl *D) {
   return nullptr;
 #endif
 }
-
+#endif

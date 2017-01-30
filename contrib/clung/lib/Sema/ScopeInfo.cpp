@@ -18,7 +18,9 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 
 using namespace clang;
 using namespace sema;

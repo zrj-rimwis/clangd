@@ -24,8 +24,10 @@ namespace clang {
 
 class ASTContext;
 class FunctionDecl;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCMethodDecl;
 class ObjCPropertyDecl;
+#endif
 class Stmt;
 class CodeInjector;
   
@@ -37,7 +39,9 @@ public:
   Stmt *getBody(const FunctionDecl *D);
 
   /// Factory method for creating bodies for Objective-C properties.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Stmt *getBody(const ObjCMethodDecl *D);
+#endif
 
 private:
   typedef llvm::DenseMap<const Decl *, Optional<Stmt *> > BodyMap;

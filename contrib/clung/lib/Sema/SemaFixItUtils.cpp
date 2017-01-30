@@ -13,7 +13,9 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaFixItUtils.h"

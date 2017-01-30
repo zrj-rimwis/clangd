@@ -103,6 +103,7 @@ Stmt *AnalysisDeclContext::getBody(bool &IsAutosynthesized) const {
       }
     }
     return Body;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   }
   else if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D)) {
     Stmt *Body = MD->getBody();
@@ -115,6 +116,7 @@ Stmt *AnalysisDeclContext::getBody(bool &IsAutosynthesized) const {
       }
     }
     return Body;
+#endif
   } else if (const BlockDecl *BD = dyn_cast<BlockDecl>(D))
     return BD->getBody();
   else if (const FunctionTemplateDecl *FunTmpl

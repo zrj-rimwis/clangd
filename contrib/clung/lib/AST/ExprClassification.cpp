@@ -17,7 +17,9 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "llvm/Support/ErrorHandling.h"
 using namespace clang;
 
@@ -184,9 +186,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCSelectorExprClass:
   case Expr::ObjCProtocolExprClass:
-#endif
   case Expr::ObjCStringLiteralClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Expr::ObjCBoxedExprClass:
   case Expr::ObjCArrayLiteralClass:
   case Expr::ObjCDictionaryLiteralClass:

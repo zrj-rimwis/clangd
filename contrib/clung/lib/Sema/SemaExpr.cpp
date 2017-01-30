@@ -23,7 +23,9 @@
 #include "clang/AST/EvaluatedExprVisitor.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/TypeLoc.h"
@@ -8964,22 +8966,22 @@ static void diagnoseFunctionPointerToVoidComparison(Sema &S, SourceLocation Loc,
     << LHS.get()->getSourceRange() << RHS.get()->getSourceRange();
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 static bool isObjCObjectLiteral(ExprResult &E) {
   switch (E.get()->IgnoreParenImpCasts()->getStmtClass()) {
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assum not available
   case Stmt::ObjCArrayLiteralClass:
   case Stmt::ObjCDictionaryLiteralClass:
-#endif
   case Stmt::ObjCStringLiteralClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCBoxedExprClass:
-#endif
     return true;
+#endif
   default:
     // Note that ObjCBoolLiteral is NOT an object literal!
     return false;
   }
 }
+#endif
 
 static bool hasIsEqualMethod(Sema &S, const Expr *LHS, const Expr *RHS) {
   const ObjCObjectPointerType *Type =
@@ -9036,10 +9038,10 @@ Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {
   switch (FromE->getStmtClass()) {
     default:
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not avaiable
     case Stmt::ObjCStringLiteralClass:
       // "string literal"
       return LK_String;
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not avaiable
     case Stmt::ObjCArrayLiteralClass:
       // "array literal"
       return LK_Array;
@@ -9084,9 +9086,14 @@ static void diagnoseObjCLiteralComparison(Sema &S, SourceLocation Loc,
                                           BinaryOperator::Opcode Opc){
   Expr *Literal;
   Expr *Other;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (isObjCObjectLiteral(LHS)) {
     Literal = LHS.get();
     Other = RHS.get();
+#else
+  if (false) {
+   /* dummy */
+#endif
   } else {
     Literal = RHS.get();
     Other = LHS.get();
@@ -9536,8 +9543,10 @@ QualType Sema::CheckCompareOperands(ExprResult &LHS, ExprResult &RHS,
       if (!Context.areComparableObjCPointerTypes(LHSType, RHSType))
         diagnoseDistinctPointerComparison(*this, Loc, LHS, RHS,
                                           /*isError*/false);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false || false
       if (isObjCObjectLiteral(LHS) || isObjCObjectLiteral(RHS))
         diagnoseObjCLiteralComparison(*this, Loc, LHS, RHS, Opc);
+#endif
 
       if (LHSIsNull && !RHSIsNull)
         LHS = ImpCastExprToType(LHS.get(), RHSType, CK_BitCast);

@@ -145,7 +145,8 @@ def CoawaitExpr : DStmt<CoroutineSuspendExpr>;
 def CoyieldExpr : DStmt<CoroutineSuspendExpr>;
 
 // Obj-C Expressions.
-def ObjCStringLiteral : DStmt<Expr>;
+
+// REMOVED
 
 // Obj-C ARC Expressions.
 

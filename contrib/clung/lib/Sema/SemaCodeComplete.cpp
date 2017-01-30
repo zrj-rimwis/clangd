@@ -13,7 +13,9 @@
 #include "clang/Sema/SemaInternal.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Basic/CharInfo.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/MacroInfo.h"

@@ -32,7 +32,9 @@
 
 #include "clang/Sema/SemaInternal.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not neede
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Basic/CharInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Initialization.h"

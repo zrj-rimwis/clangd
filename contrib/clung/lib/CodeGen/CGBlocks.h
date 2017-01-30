@@ -22,7 +22,9 @@
 #include "clang/AST/CharUnits.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/Type.h"
 #include "clang/Basic/TargetInfo.h"
 #include "llvm/IR/Module.h"

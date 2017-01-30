@@ -52,7 +52,9 @@ std::string threadSafety::getSourceLiteralString(const clang::Expr *CE) {
     case Stmt::CXXBoolLiteralExprClass:
     case Stmt::FloatingLiteralClass:
     case Stmt::ImaginaryLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCStringLiteralClass:
+#endif
     default:
       return "#lit";
   }
@@ -249,7 +251,9 @@ til::SExpr *SExprBuilder::translate(const Stmt *S, CallingContext *Ctx) {
   case Stmt::ImaginaryLiteralClass:
   case Stmt::IntegerLiteralClass:
   case Stmt::StringLiteralClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCStringLiteralClass:
+#endif
     return new (Arena) til::Literal(cast<Expr>(S));
 
   case Stmt::DeclStmtClass:

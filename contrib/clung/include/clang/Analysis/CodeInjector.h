@@ -21,7 +21,9 @@ namespace clang {
 
 class Stmt;
 class FunctionDecl;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ObjCMethodDecl;
+#endif
 
 /// \brief CodeInjector is an interface which is responsible for injecting AST
 /// of function definitions that may not be available in the original source.
@@ -39,7 +41,9 @@ public:
   virtual ~CodeInjector();
 
   virtual Stmt *getBody(const FunctionDecl *D) = 0;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   virtual Stmt *getBody(const ObjCMethodDecl *D) = 0;
+#endif
 };
 }
 

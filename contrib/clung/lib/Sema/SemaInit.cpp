@@ -15,7 +15,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/TypeLoc.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Sema/Designator.h"

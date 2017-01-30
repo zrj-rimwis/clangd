@@ -16,7 +16,9 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Scope.h"

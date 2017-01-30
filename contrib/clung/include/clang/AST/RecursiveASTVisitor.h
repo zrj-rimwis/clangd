@@ -25,7 +25,9 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/Stmt.h"
@@ -2467,8 +2469,8 @@ DEF_TRAVERSE_STMT(CharacterLiteral, {})
 DEF_TRAVERSE_STMT(FloatingLiteral, {})
 DEF_TRAVERSE_STMT(ImaginaryLiteral, {})
 DEF_TRAVERSE_STMT(StringLiteral, {})
-DEF_TRAVERSE_STMT(ObjCStringLiteral, {})
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
+DEF_TRAVERSE_STMT(ObjCStringLiteral, {})
 DEF_TRAVERSE_STMT(ObjCBoxedExpr, {})
 DEF_TRAVERSE_STMT(ObjCArrayLiteral, {})
 DEF_TRAVERSE_STMT(ObjCDictionaryLiteral, {})

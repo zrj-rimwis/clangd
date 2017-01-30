@@ -17,7 +17,9 @@
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/StmtVisitor.h"
 #include "llvm/ADT/FoldingSet.h"
@@ -1575,9 +1577,11 @@ void StmtProfiler::VisitTypoExpr(const TypoExpr *E) {
   VisitExpr(E);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCStringLiteral(const ObjCStringLiteral *S) {
   VisitExpr(S);
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void StmtProfiler::VisitObjCBoxedExpr(const ObjCBoxedExpr *E) {

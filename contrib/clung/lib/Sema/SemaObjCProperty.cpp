@@ -16,7 +16,9 @@
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
 #include "clang/Lex/Preprocessor.h"

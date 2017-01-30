@@ -967,11 +967,13 @@ void ASTStmtReader::VisitAtomicExpr(AtomicExpr *E) {
 //===----------------------------------------------------------------------===//
 // Objective-C Expressions and Statements
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCStringLiteral(ObjCStringLiteral *E) {
   VisitExpr(E);
   E->setString(cast<StringLiteral>(Reader.ReadSubStmt()));
   E->setAtLoc(ReadSourceLocation(Record, Idx));
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtReader::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {
@@ -3220,10 +3222,10 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       S = new (Context) GenericSelectionExpr(Empty);
       break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case EXPR_OBJC_STRING_LITERAL:
       S = new (Context) ObjCStringLiteral(Empty);
       break;
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case EXPR_OBJC_BOXED_EXPRESSION:
       S = new (Context) ObjCBoxedExpr(Empty);
       break;

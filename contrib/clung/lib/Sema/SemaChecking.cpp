@@ -20,7 +20,9 @@
 #include "clang/AST/EvaluatedExprVisitor.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExprOpenMP.h"
 #include "clang/AST/StmtCXX.h"
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // not needed
@@ -2143,10 +2145,12 @@ DiagnoseCStringFormatDirectiveInCFAPI(Sema &S,
   if (const CStyleCastExpr *CSCE = dyn_cast<CStyleCastExpr>(FormatExpr))
     FormatExpr = CSCE->getSubExpr();
   const StringLiteral *FormatString;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (const ObjCStringLiteral *OSL =
       dyn_cast<ObjCStringLiteral>(FormatExpr->IgnoreParenImpCasts()))
     FormatString = OSL->getString();
   else
+#endif
     FormatString = dyn_cast<StringLiteral>(FormatExpr->IgnoreParenImpCasts());
   if (!FormatString)
     return;
@@ -4208,13 +4212,17 @@ checkFormatStringExpr(Sema &S, const Expr *E, ArrayRef<const Expr *> Args,
 
     return SLCT_NotALiteral;
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not not needed
   case Stmt::ObjCStringLiteralClass:
+#endif
   case Stmt::StringLiteralClass: {
     const StringLiteral *StrE = nullptr;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (const ObjCStringLiteral *ObjCFExpr = dyn_cast<ObjCStringLiteral>(E))
       StrE = ObjCFExpr->getString();
     else
+#endif
       StrE = cast<StringLiteral>(E);
 
     if (StrE) {
@@ -4594,7 +4602,11 @@ void CheckFormatHandler::HandleZeroPosition(const char *startPos,
 }
 
 void CheckFormatHandler::HandleNullChar(const char *nullCharacter) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
   if (!isa<ObjCStringLiteral>(OrigFormatExpr)) {
+#else
+  if (!false) {
+#endif
     // The presence of a null character is likely an error.
     EmitFormatDiagnostic(
       S.PDiag(diag::warn_printf_format_string_contains_null_char),
@@ -5265,9 +5277,7 @@ static bool requiresParensToAddCast(const Expr *E) {
   case Stmt::ObjCIvarRefExprClass:
   case Stmt::ObjCMessageExprClass:
   case Stmt::ObjCPropertyRefExprClass:
-#endif
   case Stmt::ObjCStringLiteralClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Stmt::ObjCSubscriptRefExprClass:
 #endif
   case Stmt::ParenExprClass:
@@ -8440,21 +8450,15 @@ void CheckImplicitConversion(Sema &S, Expr *E, QualType T,
       // prevented by a check in AnalyzeImplicitConversions().
       return DiagnoseImpCast(S, E, T, CC,
                              diag::warn_impcast_string_literal_to_bool);
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not, all 4 false
     if (isa<ObjCStringLiteral>(E) || isa<ObjCArrayLiteral>(E) ||
-#else
-    if (isa<ObjCStringLiteral>(E) || false ||
-#endif
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         isa<ObjCDictionaryLiteral>(E) || isa<ObjCBoxedExpr>(E)) {
-#else
-        false || false) {
-#endif
       // This covers the literal expressions that evaluate to Objective-C
       // objects.
       return DiagnoseImpCast(S, E, T, CC,
                              diag::warn_impcast_objective_c_literal_to_bool);
     }
+#endif
     if (Source->isPointerType() || Source->canDecayToPointerType()) {
       // Warn on pointer to bool conversion that is always true.
       S.DiagnoseAlwaysNonNullPointer(E, Expr::NPCK_NotNull, /*IsEqual*/ false,

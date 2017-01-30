@@ -926,12 +926,14 @@ void ASTStmtWriter::VisitAtomicExpr(AtomicExpr *E) {
 // Objective-C Expressions and Statements.
 //===----------------------------------------------------------------------===//
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCStringLiteral(ObjCStringLiteral *E) {
   VisitExpr(E);
   Record.AddStmt(E->getString());
   Record.AddSourceLocation(E->getAtLoc());
   Code = serialization::EXPR_OBJC_STRING_LITERAL;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void ASTStmtWriter::VisitObjCBoxedExpr(ObjCBoxedExpr *E) {

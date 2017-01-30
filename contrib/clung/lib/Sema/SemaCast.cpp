@@ -18,7 +18,9 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/ExprCXX.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/RecordLayout.h"
 #include "clang/Basic/PartialDiagnostic.h"
 #include "clang/Basic/TargetInfo.h"

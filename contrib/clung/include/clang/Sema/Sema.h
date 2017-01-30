@@ -22,7 +22,9 @@
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 #include "clang/AST/ExprObjC.h"
+#endif
 #include "clang/AST/ExternalASTSource.h"
 #include "clang/AST/LocInfoType.h"
 #include "clang/AST/MangleNumberingContext.h"
@@ -1062,8 +1064,10 @@ public:
   void updateOutOfDateSelector(Selector Sel);
 
   /// Private Helper predicate to check for 'self'.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX where the OBJC prefixes??
   bool isSelfExpr(Expr *RExpr);
   bool isSelfExpr(Expr *RExpr, const ObjCMethodDecl *Method);
+#endif
 
   /// \brief Cause the active diagnostic on the DiagosticsEngine to be
   /// emitted. This is closely coupled to the SemaDiagnosticBuilder class and
@@ -3353,8 +3357,10 @@ public:
                                     /*instance*/false);
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   const ObjCMethodDecl *SelectorsForTypoCorrection(Selector Sel,
                               QualType ObjectType=QualType());
+#endif
   /// LookupImplementedMethodInGlobalPool - Returns the method which has an
   /// implementation.
   ObjCMethodDecl *LookupImplementedMethodInGlobalPool(Selector Sel);
@@ -7684,11 +7690,13 @@ public:
     bool isVariadic, bool MethodDefinition);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCMethodDecl *LookupMethodInQualifiedType(Selector Sel,
                                               const ObjCObjectPointerType *OPT,
                                               bool IsInstance);
   ObjCMethodDecl *LookupMethodInObjectType(Selector Sel, QualType Ty,
                                            bool IsInstance);
+#endif
 
   bool CheckARCMethodDecl(ObjCMethodDecl *method);
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
@@ -7714,10 +7722,13 @@ public:
                             SourceLocation propertyNameLoc);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCMethodDecl *tryCaptureObjCSelf(SourceLocation Loc);
+#endif
 
   /// \brief Describes the kind of message expression indicated by a message
   /// send that starts with an identifier.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum ObjCMessageKind {
     /// \brief The message is sent to 'super'.
     ObjCSuperMessage,
@@ -7727,13 +7738,16 @@ public:
     /// name.
     ObjCClassMessage
   };
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCMessageKind getObjCMessageKind(Scope *S,
                                      IdentifierInfo *Name,
                                      SourceLocation NameLoc,
                                      bool IsSuper,
                                      bool HasTrailingDot,
                                      ParsedType &ReceiverType);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ExprResult ActOnSuperMessage(Scope *S, SourceLocation SuperLoc,
@@ -9118,6 +9132,7 @@ public:
   /// \param Method - May be null.
   /// \param [out] ReturnType - The return type of the send.
   /// \return true iff there were any incompatible types.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool CheckMessageArgumentTypes(QualType ReceiverType,
                                  MultiExprArg Args, Selector Sel,
                                  ArrayRef<SourceLocation> SelectorLocs,
@@ -9126,13 +9141,16 @@ public:
                                  SourceLocation lbrac, SourceLocation rbrac,
                                  SourceRange RecRange,
                                  QualType &ReturnType, ExprValueKind &VK);
+#endif
 
   /// \brief Determine the result of a message send expression based on
   /// the type of the receiver, the method expected to receive the message,
   /// and the form of the message send.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   QualType getMessageSendResultType(QualType ReceiverType,
                                     ObjCMethodDecl *Method,
                                     bool isClassMessage, bool isSuperMessage);
+#endif
 
   /// \brief If the given expression involves a message send to a method
   /// with a related result type, emit a note describing what happened.

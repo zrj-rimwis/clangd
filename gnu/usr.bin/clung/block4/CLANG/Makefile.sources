@@ -29,7 +29,6 @@ SRCS+=	APValue.cpp \
 	ExprClassification.cpp \
 	ExprConstant.cpp \
 	ExprCXX.cpp \
-	ExprObjC.cpp \
 	ExternalASTSource.cpp \
 	zCA_ItaniumCXXABI.cpp \
 	ItaniumMangle.cpp \
@@ -295,7 +294,6 @@ SRCS+=	AnalysisBasedWarnings.cpp \
 	SemaExpr.cpp \
 	SemaExprCXX.cpp \
 	SemaExprMember.cpp \
-	SemaExprObjC.cpp \
 	SemaFixItUtils.cpp \
 	SemaInit.cpp \
 	SemaLambda.cpp \
