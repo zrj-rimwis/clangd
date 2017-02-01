@@ -1349,6 +1349,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new declaration.
   /// Subclasses may override this routine to provide different behavior.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   VarDecl *RebuildObjCExceptionDecl(VarDecl *ExceptionDecl,
                                     TypeSourceInfo *TInfo, QualType T) {
     return getSema().BuildObjCExceptionDecl(TInfo, T,
@@ -1356,6 +1357,7 @@ public:
                                             ExceptionDecl->getLocation(),
                                             ExceptionDecl->getIdentifier());
   }
+#endif
 
   /// \brief Build a new Objective-C \@catch statement.
   ///

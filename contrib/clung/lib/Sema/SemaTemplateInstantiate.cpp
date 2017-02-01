@@ -765,8 +765,10 @@ namespace {
 
     /// \brief Rebuild the Objective-C exception declaration and register the 
     /// declaration as an instantiated local.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     VarDecl *RebuildObjCExceptionDecl(VarDecl *ExceptionDecl, 
                                       TypeSourceInfo *TSInfo, QualType T);
+#endif
       
     /// \brief Check for tag mismatches when instantiating an
     /// elaborated type.
@@ -971,6 +973,7 @@ TemplateInstantiator::RebuildExceptionDecl(VarDecl *ExceptionDecl,
   return Var;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 VarDecl *TemplateInstantiator::RebuildObjCExceptionDecl(VarDecl *ExceptionDecl, 
                                                         TypeSourceInfo *TSInfo, 
                                                         QualType T) {
@@ -979,6 +982,7 @@ VarDecl *TemplateInstantiator::RebuildObjCExceptionDecl(VarDecl *ExceptionDecl,
     getSema().CurrentInstantiationScope->InstantiatedLocal(ExceptionDecl, Var);
   return Var;
 }
+#endif
 
 QualType
 TemplateInstantiator::RebuildElaboratedType(SourceLocation KeywordLoc,

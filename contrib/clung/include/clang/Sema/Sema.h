@@ -1048,7 +1048,9 @@ public:
 
   /// Method selectors used in a \@selector expression. Used for implementation
   /// of -Wselector.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   llvm::MapVector<Selector, SourceLocation> ReferencedSelectors;
+#endif
 
   /// Kinds of C++ special members.
   enum CXXSpecialMember {
@@ -1855,7 +1857,9 @@ public:
                                 SkipBodyInfo *SkipBody = nullptr);
   Decl *ActOnStartOfFunctionDef(Scope *S, Decl *D,
                                 SkipBodyInfo *SkipBody = nullptr);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ActOnStartOfObjCMethodDef(Scope *S, Decl *D);
+#endif
   bool isObjCMethodDecl(Decl *D) {
     return D && isa<ObjCMethodDecl>(D);
   }
@@ -2039,9 +2043,11 @@ public:
                                SourceLocation TagLoc,
                                SourceLocation NameLoc);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX missing OBJC prefix
   void ActOnDefs(Scope *S, Decl *TagD, SourceLocation DeclStart,
                  IdentifierInfo *ClassName,
                  SmallVectorImpl<Decl *> &Decls);
+#endif
   Decl *ActOnField(Scope *S, Decl *TagD, SourceLocation DeclStart,
                    Declarator &D, Expr *BitfieldWidth);
 
@@ -2283,7 +2289,9 @@ public:
                          bool MergeTypeWithOld);
   bool MergeCompatibleFunctionDecls(FunctionDecl *New, FunctionDecl *Old,
                                     Scope *S, bool MergeTypeWithOld);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void mergeObjCMethodDecls(ObjCMethodDecl *New, ObjCMethodDecl *Old);
+#endif
   void MergeVarDecl(VarDecl *New, LookupResult &Previous);
   void MergeVarDeclTypes(VarDecl *New, VarDecl *Old, bool MergeTypeWithOld);
   void MergeVarDeclExceptionSpecs(VarDecl *New, VarDecl *Old);
@@ -3152,28 +3160,38 @@ public:
   StmtResult ProcessStmtAttributes(Stmt *Stmt, AttributeList *Attrs,
                                    SourceRange Range);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void WarnConflictingTypedMethods(ObjCMethodDecl *Method,
                                    ObjCMethodDecl *MethodDecl,
                                    bool IsProtocolMethodDecl);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CheckConflictingOverridingMethod(ObjCMethodDecl *Method,
                                    ObjCMethodDecl *Overridden,
                                    bool IsProtocolMethodDecl);
+#endif
 
   /// WarnExactTypedMethods - This routine issues a warning if method
   /// implementation declaration matches exactly that of its declaration.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void WarnExactTypedMethods(ObjCMethodDecl *Method,
                              ObjCMethodDecl *MethodDecl,
                              bool IsProtocolMethodDecl);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   typedef llvm::SmallPtrSet<Selector, 8> SelectorSet;
   typedef llvm::DenseMap<Selector, ObjCMethodDecl*> ProtocolsMethodsMap;
+#endif
 
   /// CheckImplementationIvars - This routine checks if the instance variables
   /// listed in the implelementation match those listed in the interface.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CheckImplementationIvars(ObjCImplementationDecl *ImpDecl,
                                 ObjCIvarDecl **Fields, unsigned nIvars,
                                 SourceLocation Loc);
+#endif
 
   /// ImplMethodsVsClassMethods - This is main routine to warn if any method
   /// remains unimplemented in the class or category \@implementation.
@@ -3277,21 +3295,28 @@ public:
                                           const ObjCInterfaceDecl *IFD);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseDuplicateIvars(ObjCInterfaceDecl *ID, ObjCInterfaceDecl *SID);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum MethodMatchStrategy {
     MMS_loose,
     MMS_strict
   };
+#endif
 
   /// MatchTwoMethodDeclarations - Checks if two methods' type match and returns
   /// true, or false, accordingly.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool MatchTwoMethodDeclarations(const ObjCMethodDecl *Method,
                                   const ObjCMethodDecl *PrevMethod,
                                   MethodMatchStrategy strategy = MMS_strict);
+#endif
 
   /// MatchAllMethodDeclarations - Check methods declaraed in interface or
   /// or protocol against those declared in their implementations.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void MatchAllMethodDeclarations(const SelectorSet &InsMap,
                                   const SelectorSet &ClsMap,
                                   SelectorSet &InsMapSeen,
@@ -3301,11 +3326,14 @@ public:
                                   bool &IncompleteImpl,
                                   bool ImmediateClass,
                                   bool WarnCategoryMethodImpl=false);
+#endif
 
   /// CheckCategoryVsClassMethodMatches - Checks that methods implemented in
   /// category matches with those implemented in its primary class and
   /// warns each time an exact match is found.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CheckCategoryVsClassMethodMatches(ObjCCategoryImplDecl *CatIMP);
+#endif
 
   /// \brief Add the given method to the list of globally-known methods.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
@@ -3413,8 +3441,10 @@ public:
 
   /// CollectIvarsToConstructOrDestruct - Collect those ivars which require
   /// initialization.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CollectIvarsToConstructOrDestruct(ObjCInterfaceDecl *OI,
                                   SmallVectorImpl<ObjCIvarDecl*> &Ivars);
+#endif
 
   //===--------------------------------------------------------------------===//
   // Statement Parsing Callbacks: SemaStmt.cpp.
@@ -3639,12 +3669,16 @@ public:
                                    SourceLocation Location,
                                    bool AlwaysCreate);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   VarDecl *BuildObjCExceptionDecl(TypeSourceInfo *TInfo, QualType ExceptionType,
                                   SourceLocation StartLoc,
                                   SourceLocation IdLoc, IdentifierInfo *Id,
                                   bool Invalid = false);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnObjCExceptionDecl(Scope *S, Declarator &D);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   StmtResult ActOnObjCAtCatchStmt(SourceLocation AtLoc, SourceLocation RParen,
@@ -5521,7 +5555,9 @@ public:
   bool SetCtorInitializers(CXXConstructorDecl *Constructor, bool AnyErrors,
                            ArrayRef<CXXCtorInitializer *> Initializers = None);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void SetIvarInitializers(ObjCImplementationDecl *ObjCImplementation);
+#endif
 
 
   /// MarkBaseAndMemberDestructorsReferenced - Given a record decl,
@@ -7486,6 +7522,7 @@ public:
                           const MultiLevelTemplateArgumentList &TemplateArgs);
 
   // Objective-C declarations.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum ObjCContainerKind {
     OCK_None = -1,
     OCK_Interface = 0,
@@ -7496,7 +7533,9 @@ public:
     OCK_CategoryImplementation
   };
   ObjCContainerKind getObjCContainerKind() const;
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclResult actOnObjCTypeParam(Scope *S,
                                 ObjCTypeParamVariance variance,
                                 SourceLocation varianceLoc,
@@ -7510,7 +7549,9 @@ public:
                                             ArrayRef<Decl *> typeParams,
                                             SourceLocation rAngleLoc);
   void popObjCTypeParamList(Scope *S, ObjCTypeParamList *typeParamList);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnStartClassInterface(Scope *S,
                                  SourceLocation AtInterfaceLoc,
                                  IdentifierInfo *ClassName,
@@ -7525,7 +7566,9 @@ public:
                                  const SourceLocation *ProtoLocs,
                                  SourceLocation EndProtoLoc,
                                  AttributeList *AttrList);
+#endif
     
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ActOnSuperClassOfClassInterface(Scope *S,
                                        SourceLocation AtInterfaceLoc,
                                        ObjCInterfaceDecl *IDecl,
@@ -7535,21 +7578,29 @@ public:
                                        SourceLocation SuperLoc,
                                        ArrayRef<ParsedType> SuperTypeArgs,
                                        SourceRange SuperTypeArgsRange);
+#endif
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ActOnTypedefedProtocols(SmallVectorImpl<Decl *> &ProtocolRefs,
                                IdentifierInfo *SuperName,
                                SourceLocation SuperLoc);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnCompatibilityAlias(
                     SourceLocation AtCompatibilityAliasLoc,
                     IdentifierInfo *AliasName,  SourceLocation AliasLocation,
                     IdentifierInfo *ClassName, SourceLocation ClassLocation);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool CheckForwardProtocolDeclarationForCircularDependency(
     IdentifierInfo *PName,
     SourceLocation &PLoc, SourceLocation PrevLoc,
     const ObjCList<ObjCProtocolDecl> &PList);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnStartProtocolInterface(
                     SourceLocation AtProtoInterfaceLoc,
                     IdentifierInfo *ProtocolName, SourceLocation ProtocolLoc,
@@ -7557,7 +7608,9 @@ public:
                     const SourceLocation *ProtoLocs,
                     SourceLocation EndProtoLoc,
                     AttributeList *AttrList);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnStartCategoryInterface(SourceLocation AtInterfaceLoc,
                                     IdentifierInfo *ClassName,
                                     SourceLocation ClassLoc,
@@ -7568,45 +7621,61 @@ public:
                                     unsigned NumProtoRefs,
                                     const SourceLocation *ProtoLocs,
                                     SourceLocation EndProtoLoc);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
   Decl *ActOnStartClassImplementation(
                     SourceLocation AtClassImplLoc,
                     IdentifierInfo *ClassName, SourceLocation ClassLoc,
                     IdentifierInfo *SuperClassname,
                     SourceLocation SuperClassLoc);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnStartCategoryImplementation(SourceLocation AtCatImplLoc,
                                          IdentifierInfo *ClassName,
                                          SourceLocation ClassLoc,
                                          IdentifierInfo *CatName,
                                          SourceLocation CatLoc);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclGroupPtrTy ActOnFinishObjCImplementation(Decl *ObjCImpDecl,
                                                ArrayRef<Decl *> Decls);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclGroupPtrTy ActOnForwardClassDeclaration(SourceLocation Loc,
                    IdentifierInfo **IdentList,
                    SourceLocation *IdentLocs,
                    ArrayRef<ObjCTypeParamList *> TypeParamLists,
                    unsigned NumElts);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   DeclGroupPtrTy ActOnForwardProtocolDeclaration(SourceLocation AtProtoclLoc,
                                         ArrayRef<IdentifierLocPair> IdentList,
                                         AttributeList *attrList);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void FindProtocolDeclaration(bool WarnOnDeclarations, bool ForObjCContainer,
                                ArrayRef<IdentifierLocPair> ProtocolId,
                                SmallVectorImpl<Decl *> &Protocols);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseTypeArgsAndProtocols(IdentifierInfo *ProtocolId,
                                     SourceLocation ProtocolLoc,
                                     IdentifierInfo *TypeArgId,
                                     SourceLocation TypeArgLoc,
                                     bool SelectProtocolFirst = false);
+#endif
 
   /// Given a list of identifiers (and their locations), resolve the
   /// names to either Objective-C protocol qualifiers or type
   /// arguments, as appropriate.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void actOnObjCTypeArgsOrProtocolQualifiers(
          Scope *S,
          ParsedType baseType,
@@ -7621,6 +7690,7 @@ public:
          SmallVectorImpl<Decl *> &protocols,
          SourceLocation &protocolRAngleLoc,
          bool warnOnIncompleteProtocols);
+#endif
 
   /// Build a an Objective-C protocol-qualified 'id' type where no
   /// base type was specified.
@@ -7684,8 +7754,10 @@ public:
                                 bool OverridingProtocolProperty);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseClassExtensionDupMethods(ObjCCategoryDecl *CAT,
                                         ObjCInterfaceDecl *ID);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns nullptr
   Decl *ActOnAtEnd(Scope *S, SourceRange AtEnd,
@@ -7758,7 +7830,9 @@ public:
                                            bool IsInstance);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool CheckARCMethodDecl(ObjCMethodDecl *method);
+#endif
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   bool inferObjCARCLifetime(ValueDecl *decl);
 #endif
@@ -7920,19 +7994,25 @@ public:
                                           bool Diagnose = true);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool checkInitMethod(ObjCMethodDecl *method, QualType receiverTypeIfCall);
+#endif
 
   /// \brief Check whether the given new method is a valid override of the
   /// given overridden method, and set any properties that should be inherited.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CheckObjCMethodOverride(ObjCMethodDecl *NewMethod,
                                const ObjCMethodDecl *Overridden);
+#endif
 
   /// \brief Describes the compatibility of a result type with its method.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum ResultTypeCompatibilityKind {
     RTC_Compatible,
     RTC_Incompatible,
     RTC_Unknown
   };
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CheckObjCMethodOverrides(ObjCMethodDecl *ObjCMethod,
@@ -9154,7 +9234,9 @@ public:
                                         Expr *CastExpr,
                                         SourceLocation RParenLoc);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
   enum ARCConversionResult { ACR_okay, ACR_unbridged, ACR_error };
+#endif
 
   /// \brief Checks for invalid conversions and casts between
   /// retainable pointers and other pointer kinds.
@@ -9321,7 +9403,9 @@ public:
   /// Checks that the Objective-C declaration is declared in the global scope.
   /// Emits an error and marks the declaration as invalid if it's not declared
   /// in the global scope.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool CheckObjCDeclScope(Decl *D);
+#endif
 
   /// \brief Abstract base class used for diagnosing integer constant
   /// expression violations.

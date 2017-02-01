@@ -13669,6 +13669,7 @@ void Sema::MarkVirtualMembersReferenced(SourceLocation Loc,
 
 /// SetIvarInitializers - This routine builds initialization ASTs for the
 /// Objective-C implementation whose ivars need be initialized.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::SetIvarInitializers(ObjCImplementationDecl *ObjCImplementation) {
   if (!getLangOpts().CPlusPlus)
     return;
@@ -13721,6 +13722,7 @@ void Sema::SetIvarInitializers(ObjCImplementationDecl *ObjCImplementation) {
                                             AllToInit.data(), AllToInit.size());
   }
 }
+#endif
 
 static
 void DelegatingCycleHelper(CXXConstructorDecl* Ctor,

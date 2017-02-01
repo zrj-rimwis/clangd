@@ -3822,7 +3822,7 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
       ParseStructDeclaration(DS, CFieldCallback);
     } else { // Handle @defs
       ConsumeToken();
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false, XXX this is plain stupid, needs invert
       if (!Tok.isObjCAtKeyword(tok::objc_defs)) {
 #else
       if (!false) {
@@ -3831,6 +3831,7 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
         SkipUntil(tok::semi);
         continue;
       }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC because of ^^^
       ConsumeToken();
       ExpectAndConsume(tok::l_paren);
       if (!Tok.is(tok::identifier)) {
@@ -3844,6 +3845,7 @@ void Parser::ParseStructUnionBody(SourceLocation RecordLoc,
       FieldDecls.insert(FieldDecls.end(), Fields.begin(), Fields.end());
       ConsumeToken();
       ExpectAndConsume(tok::r_paren);
+#endif
     }
 
     if (TryConsumeToken(tok::semi))

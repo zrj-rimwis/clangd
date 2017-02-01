@@ -3337,6 +3337,7 @@ bool Sema::MergeCompatibleFunctionDecls(FunctionDecl *New, FunctionDecl *Old,
   return false;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::mergeObjCMethodDecls(ObjCMethodDecl *newMethod,
                                 ObjCMethodDecl *oldMethod) {
   // Merge the attributes, including deprecated/unavailable
@@ -3358,6 +3359,7 @@ void Sema::mergeObjCMethodDecls(ObjCMethodDecl *newMethod,
 
   CheckObjCMethodOverride(newMethod, oldMethod);
 }
+#endif
 
 static void diagnoseVarDeclTypeMismatch(Sema &S, VarDecl *New, VarDecl* Old) {
   assert(!S.Context.hasSameType(New->getType(), Old->getType()));
@@ -14465,6 +14467,7 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
           << Record->isUnion();
       }
     }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, only OBJC stuff
   } else {
     ObjCIvarDecl **ClsFields =
       reinterpret_cast<ObjCIvarDecl**>(RecFields.data());
@@ -14523,6 +14526,7 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
       CDecl->setIvarLBraceLoc(LBrac);
       CDecl->setIvarRBraceLoc(RBrac);
     }
+#endif
   }
 
   if (Attr)
