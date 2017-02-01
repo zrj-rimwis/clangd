@@ -67,8 +67,10 @@ static void diagnoseBadTypeAttribute(Sema &S, const AttributeList &attr,
   TypeDiagSelector WhichType;
   bool useExpansionLoc = true;
   switch (attr.getKind()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributeList::AT_ObjCGC:        WhichType = TDS_Pointer; break;
   case AttributeList::AT_ObjCOwnership: WhichType = TDS_ObjCObjOrBlock; break;
+#endif
   default:
     // Assume everything else was a function attribute.
     WhichType = TDS_Function;
@@ -96,9 +98,11 @@ static void diagnoseBadTypeAttribute(Sema &S, const AttributeList &attr,
 
 // objc_gc applies to Objective-C pointers or, otherwise, to the
 // smallest available pointer type (i.e. 'void*' in 'void**').
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume wow.. just wow
 #define OBJC_POINTER_TYPE_ATTRS_CASELIST \
     case AttributeList::AT_ObjCGC: \
     case AttributeList::AT_ObjCOwnership
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 #define CALLING_CONV_ATTRS_CASELIST_pascal case AttributeList::AT_Pascal:
@@ -309,12 +313,17 @@ static bool handleMSPointerTypeQualifierAttr(TypeProcessingState &state,
                                              QualType &type);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool handleObjCGCTypeAttr(TypeProcessingState &state,
                                  AttributeList &attr, QualType &type);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
                                        AttributeList &attr, QualType &type);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool handleObjCPointerTypeAttr(TypeProcessingState &state,
                                       AttributeList &attr, QualType &type) {
   if (attr.getKind() == AttributeList::AT_ObjCGC)
@@ -322,6 +331,7 @@ static bool handleObjCPointerTypeAttr(TypeProcessingState &state,
   assert(attr.getKind() == AttributeList::AT_ObjCOwnership);
   return handleObjCOwnershipTypeAttr(state, attr, type);
 }
+#endif
 
 /// Given the index of a declarator chunk, check whether that chunk
 /// directly specifies the return type of a function and, if so, find
@@ -400,6 +410,7 @@ static DeclaratorChunk *maybeMovePastReturnType(Declarator &declarator,
 /// distributeObjCPointerTypeAttrFromDeclarator), and given that it
 /// didn't apply in whatever position it was written in, try to move
 /// it to a more appropriate position.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void distributeObjCPointerTypeAttr(TypeProcessingState &state,
                                           AttributeList &attr,
                                           QualType type) {
@@ -454,9 +465,11 @@ static void distributeObjCPointerTypeAttr(TypeProcessingState &state,
 
   diagnoseBadTypeAttribute(state.getSema(), attr, type);
 }
+#endif
 
 /// Distribute an objc_gc type attribute that was written on the
 /// declarator.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void
 distributeObjCPointerTypeAttrFromDeclarator(TypeProcessingState &state,
                                             AttributeList &attr,
@@ -515,6 +528,7 @@ distributeObjCPointerTypeAttrFromDeclarator(TypeProcessingState &state,
   spliceAttrOutOfList(attr, declarator.getAttrListRef());
   state.addIgnoredTypeAttr(attr);
 }
+#endif
 
 /// A function type attribute was written somewhere in a declaration
 /// *other* than on the declarator itself or in the decl spec.  Given
@@ -643,9 +657,11 @@ static void distributeTypeAttrsFromDeclarator(TypeProcessingState &state,
       continue;
 
     switch (attr->getKind()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     OBJC_POINTER_TYPE_ATTRS_CASELIST:
       distributeObjCPointerTypeAttrFromDeclarator(state, *attr, declSpecType);
       break;
+#endif
 
     case AttributeList::AT_NSReturnsRetained:
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
@@ -1847,6 +1863,7 @@ QualType Sema::BuildParenType(QualType T) {
 }
 
 /// Given that we're building a pointer or reference to the given
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static QualType inferARCLifetimeForPointee(Sema &S, QualType type,
                                            SourceLocation loc,
                                            bool isReference) {
@@ -1897,6 +1914,7 @@ static QualType inferARCLifetimeForPointee(Sema &S, QualType type,
   qs.addObjCLifetime(implicitLifetime);
   return S.Context.getQualifiedType(type, qs);
 }
+#endif
 
 static std::string getFunctionQualifiersAsString(const FunctionProtoType *FnTy){
   std::string Quals =
@@ -2571,13 +2589,17 @@ QualType Sema::GetTypeFromParser(ParsedType Ty, TypeSourceInfo **TInfo) {
   return QT;
 }
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static void transferARCOwnershipToDeclaratorChunk(TypeProcessingState &state,
                                             Qualifiers::ObjCLifetime ownership,
                                             unsigned chunkIndex);
+#endif
 
 /// Given that this is the declaration of a parameter under ARC,
 /// attempt to infer attributes and such for pointer-to-whatever
 /// types.
+
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static void inferARCWriteback(TypeProcessingState &state,
                               QualType &declSpecType) {
   Sema &S = state.getSema();
@@ -2674,6 +2696,7 @@ static void inferARCWriteback(TypeProcessingState &state,
 
   // TODO: mark whether we did this inference?
 }
+#endif
 
 void Sema::diagnoseIgnoredQualifiers(unsigned DiagID, unsigned Quals,
                                      SourceLocation FallbackLoc,
@@ -4130,6 +4153,7 @@ static TypeSourceInfo *GetFullTypeForDeclarator(TypeProcessingState &state,
       // Objective-C ARC ownership qualifiers are ignored on the function
       // return type (by type canonicalization). Complain if this attribute
       // was written here.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (T.getQualifiers().hasObjCLifetime()) {
         SourceLocation AttrLoc;
         if (chunkIndex + 1 < D.getNumTypeObjects()) {
@@ -4164,6 +4188,7 @@ static TypeSourceInfo *GetFullTypeForDeclarator(TypeProcessingState &state,
             << T.getQualifiers().getObjCLifetime();
         }
       }
+#endif
 
       if (LangOpts.CPlusPlus && D.getDeclSpec().hasTagDefinition()) {
         // C++ [dcl.fct]p6:
@@ -4629,6 +4654,7 @@ TypeSourceInfo *Sema::GetTypeForDeclarator(Declarator &D, Scope *S) {
   return GetFullTypeForDeclarator(state, T, ReturnTypeInfo);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void transferARCOwnershipToDeclSpec(Sema &S,
                                            QualType &declSpecTy,
                                            Qualifiers::ObjCLifetime ownership) {
@@ -4639,7 +4665,9 @@ static void transferARCOwnershipToDeclSpec(Sema &S,
     declSpecTy = S.Context.getQualifiedType(declSpecTy, qs);
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void transferARCOwnershipToDeclaratorChunk(TypeProcessingState &state,
                                             Qualifiers::ObjCLifetime ownership,
                                             unsigned chunkIndex) {
@@ -4678,8 +4706,10 @@ static void transferARCOwnershipToDeclaratorChunk(TypeProcessingState &state,
 
   // TODO: mark whether we did this inference?
 }
+#endif
 
 /// \brief Used for transferring ownership in casts resulting in l-values.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void transferARCOwnership(TypeProcessingState &state,
                                  QualType &declSpecTy,
                                  Qualifiers::ObjCLifetime ownership) {
@@ -4730,6 +4760,7 @@ static void transferARCOwnership(TypeProcessingState &state,
     return transferARCOwnershipToDeclSpec(S, declSpecTy, ownership);
   }
 }
+#endif
 
 TypeSourceInfo *Sema::GetTypeForDeclaratorCast(Declarator &D, QualType FromTy) {
   TypeProcessingState state(*this, D);
@@ -4761,11 +4792,13 @@ static AttributeList::Kind getAttrListKind(AttributedType::Kind kind) {
     return AttributeList::AT_NeonVectorType;
   case AttributedType::attr_neon_polyvector_type:
     return AttributeList::AT_NeonPolyVectorType;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributedType::attr_objc_gc:
     return AttributeList::AT_ObjCGC;
   case AttributedType::attr_objc_ownership:
   case AttributedType::attr_objc_inert_unsafe_unretained:
     return AttributeList::AT_ObjCOwnership;
+#endif
   case AttributedType::attr_noreturn:
     return AttributeList::AT_NoReturn;
   case AttributedType::attr_cdecl:
@@ -5375,6 +5408,7 @@ static void HandleAddressSpaceTypeAttribute(QualType &Type,
 /// Does this type have a "direct" ownership qualifier?  That is,
 /// is it written like "__strong id", as opposed to something like
 /// "typeof(foo)", where that happens to be strong?
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool hasDirectOwnershipQualifier(QualType type) {
   // Fast path: no qualifier at all.
   assert(type.getQualifiers().hasObjCLifetime());
@@ -5401,11 +5435,13 @@ static bool hasDirectOwnershipQualifier(QualType type) {
     }
   }
 }
+#endif
 
 /// handleObjCOwnershipTypeAttr - Process an objc_ownership
 /// attribute on the specified type.
 ///
 /// Returns 'true' if the attribute was handled.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
                                        AttributeList &attr,
                                        QualType &type) {
@@ -5478,6 +5514,7 @@ static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
   SplitQualType underlyingType = type.split();
 
   // Check for redundant/conflicting ownership qualifiers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume there could not be any
   if (Qualifiers::ObjCLifetime previousLifetime
         = type.getQualifiers().getObjCLifetime()) {
     // If it's written directly, that's an error.
@@ -5500,6 +5537,7 @@ static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
       underlyingType.Quals.removeObjCLifetime();
     }
   }
+#endif
 
   underlyingType.Quals.addObjCLifetime(lifetime);
 
@@ -5603,11 +5641,13 @@ static bool handleObjCOwnershipTypeAttr(TypeProcessingState &state,
 
   return true;
 }
+#endif
 
 /// handleObjCGCTypeAttr - Process the __attribute__((objc_gc)) type
 /// attribute on the specified type.  Returns true to indicate that
 /// the attribute was handled, false to indicate that the type does
 /// not permit the attribute.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool handleObjCGCTypeAttr(TypeProcessingState &state,
                                  AttributeList &attr,
                                  QualType &type) {
@@ -5662,6 +5702,7 @@ static bool handleObjCGCTypeAttr(TypeProcessingState &state,
 
   return true;
 }
+#endif
 
 namespace {
   /// A helper class to unwrap a type down to a function for the
@@ -6669,11 +6710,13 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
       attr.setUsedAsTypeAttr();
       hasOpenCLAddressSpace = true;
       break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     OBJC_POINTER_TYPE_ATTRS_CASELIST:
       if (!handleObjCPointerTypeAttr(state, attr, type))
         distributeObjCPointerTypeAttr(state, attr, type);
       attr.setUsedAsTypeAttr();
       break;
+#endif
     case AttributeList::AT_VectorSize:
       HandleVectorSizeAttr(type, attr, state.getSema());
       attr.setUsedAsTypeAttr();

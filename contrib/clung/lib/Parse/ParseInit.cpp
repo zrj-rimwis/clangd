@@ -91,6 +91,7 @@ bool Parser::MayBeDesignationStart() {
   return Kind == tok::equal;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void CheckArrayDesignatorSyntax(Parser &P, SourceLocation Loc,
                                        Designation &Desig) {
   // If we have exactly one array designator, this used the GNU
@@ -103,6 +104,7 @@ static void CheckArrayDesignatorSyntax(Parser &P, SourceLocation Loc,
   else if (Desig.getNumDesignators() > 0)
     P.Diag(Loc, diag::err_expected_equal_designator);
 }
+#endif
 
 /// ParseInitializerWithPotentialDesignator - Parse the 'initializer' production
 /// checking to see if the token stream starts with a designator.

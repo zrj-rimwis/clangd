@@ -67,7 +67,9 @@ namespace CodeGen {
       Address Temporary;
 
       /// A value to "use" after the writeback, or null.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC, also dirty as hell
       llvm::Value *ToUse;
+#endif
     };
 
     struct CallArgCleanup {
@@ -88,9 +90,14 @@ namespace CodeGen {
                         other.Writebacks.begin(), other.Writebacks.end());
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     void addWriteback(LValue srcLV, Address temporary,
                       llvm::Value *toUse) {
       Writeback writeback = { srcLV, temporary, toUse };
+#else
+    void addWriteback(LValue srcLV, Address temporary) {
+      Writeback writeback = { srcLV, temporary};
+#endif
       Writebacks.push_back(writeback);
     }
 

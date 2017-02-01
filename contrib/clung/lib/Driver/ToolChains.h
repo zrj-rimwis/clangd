@@ -362,7 +362,9 @@ public:
 
   bool SupportsProfiling() const override;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool SupportsObjCGC() const override { return false; }
+#endif
 
   bool UseDwarfDebugFlags() const override;
 
@@ -562,7 +564,9 @@ public:
     return 0;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool SupportsObjCGC() const override;
+#endif
 
   void CheckObjCARC() const override;
 
@@ -1201,7 +1205,9 @@ private:
   bool isPICDefaultForced() const override;
   bool IsIntegratedAssemblerDefault() const override;
   bool hasBlocksRuntime() const override;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume no needed
   bool SupportsObjCGC() const override;
+#endif
   bool SupportsProfiling() const override;
   bool HasNativeLLVMSupport() const override;
   void addClangTargetOptions(const llvm::opt::ArgList &DriverArgs,

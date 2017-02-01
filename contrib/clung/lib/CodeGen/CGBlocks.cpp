@@ -204,15 +204,23 @@ namespace {
   struct BlockLayoutChunk {
     CharUnits Alignment;
     CharUnits Size;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Qualifiers::ObjCLifetime Lifetime;
+#endif
     const BlockDecl::Capture *Capture; // null for 'this'
     llvm::Type *Type;
 
     BlockLayoutChunk(CharUnits align, CharUnits size,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                      Qualifiers::ObjCLifetime lifetime,
+#endif
                      const BlockDecl::Capture *capture,
                      llvm::Type *type)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       : Alignment(align), Size(size), Lifetime(lifetime),
+#else
+      : Alignment(align), Size(size),
+#endif
         Capture(capture), Type(type) {}
 
     /// Tell the block info that this chunk has the given field index.
@@ -236,10 +244,12 @@ namespace {
     auto getPrefOrder = [](const BlockLayoutChunk &chunk) {
       if (chunk.Capture && chunk.Capture->isByRef())
         return 1;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume not needed, sigh
       if (chunk.Lifetime == Qualifiers::OCL_Strong)
         return 0;
       if (chunk.Lifetime == Qualifiers::OCL_Weak)
         return 2;
+#endif
       return 3;
     };
 
@@ -372,7 +382,9 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
     maxFieldAlign = std::max(maxFieldAlign, tinfo.second);
 
     layout.push_back(BlockLayoutChunk(tinfo.second, tinfo.first,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume by default
                                       Qualifiers::OCL_None,
+#endif
                                       nullptr, llvmType));
   }
 
@@ -389,7 +401,11 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
       maxFieldAlign = std::max(maxFieldAlign, align);
 
       layout.push_back(BlockLayoutChunk(align, CGM.getPointerSize(),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume by default
                                         Qualifiers::OCL_None, &CI,
+#else
+                                        &CI,
+#endif
                                         CGM.VoidPtrTy));
       continue;
     }
@@ -403,6 +419,7 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
 
     // If we have a lifetime qualifier, honor it for capture purposes.
     // That includes *not* copying it if it's __unsafe_unretained.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Qualifiers::ObjCLifetime lifetime =
       variable->getType().getObjCLifetime();
     if (lifetime) {
@@ -416,8 +433,13 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
       case Qualifiers::OCL_Weak:
         info.NeedsCopyDispose = true;
       }
+#else
+    if (false) {
+      /* dummy */
+#endif
 
     // Block pointers require copy/dispose.  So do Objective-C pointers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early, will kill later anyway
     } else if (variable->getType()->isObjCRetainableType()) {
       // But honor the inert __unsafe_unretained qualifier, which doesn't
       // actually make it into the type system.
@@ -428,6 +450,7 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
         // used for mrr below.
         lifetime = Qualifiers::OCL_Strong;
       }
+#endif
 
     // So do types that require non-trivial copy construction.
     } else if (CI.hasCopyExpr()) {
@@ -454,7 +477,11 @@ static void computeBlockInfo(CodeGenModule &CGM, CodeGenFunction *CGF,
     llvm::Type *llvmType =
       CGM.getTypes().ConvertTypeForMem(VT);
     
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume default none
     layout.push_back(BlockLayoutChunk(align, size, lifetime, &CI, llvmType));
+#else
+    layout.push_back(BlockLayoutChunk(align, size, &CI, llvmType));
+#endif
   }
 
   // If that was everything, we're done here.
@@ -618,8 +645,13 @@ static void enterBlockScope(CodeGenFunction &CGF, BlockDecl *block) {
 
     // Block captures count as local values and have imprecise semantics.
     // They also can't be arrays, so need to worry about that.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (dtorKind == QualType::DK_objc_strong_lifetime) {
       destroyer = CodeGenFunction::destroyARCStrongImprecise;
+#else
+    if (false) {
+      /* dummy */
+#endif
     } else {
       destroyer = CGF.getDestroyer(dtorKind);
     }
@@ -867,6 +899,7 @@ llvm::Value *CodeGenFunction::EmitBlockLiteral(const CGBlockInfo &blockInfo) {
     // we should never need to do a block-copy when initializing a local
     // variable, because the local variable's lifetime should be strictly
     // contained within the stack block's.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     } else if (type.getObjCLifetime() == Qualifiers::OCL_Strong &&
                type->isBlockPointerType()) {
       // Load the block and do a simple retain.
@@ -876,6 +909,7 @@ llvm::Value *CodeGenFunction::EmitBlockLiteral(const CGBlockInfo &blockInfo) {
       // Do a primitive store to the block field.
       Builder.CreateStore(value, blockField);
 
+#endif
     // Otherwise, fake up a POD copy into the block field.
     } else {
       // Fake up a new variable so that EmitScalarInit doesn't think
@@ -1401,8 +1435,10 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
     const Expr *copyExpr = CI.getCopyExpr();
     BlockFieldFlags flags;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
     bool useARCWeakCopy = false;
     bool useARCStrongCopy = false;
+#endif
 
     if (copyExpr) {
       assert(!CI.isByRef());
@@ -1410,8 +1446,10 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
 
     } else if (CI.isByRef()) {
       flags = BLOCK_FIELD_IS_BYREF;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (type.isObjCGCWeak())
         flags |= BLOCK_FIELD_IS_WEAK;
+#endif
 
     } else if (type->isObjCRetainableType()) {
       flags = BLOCK_FIELD_IS_OBJECT;
@@ -1423,6 +1461,7 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
       Qualifiers qs = type.getQualifiers();
 
       // We need to register __weak direct captures with the runtime.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed till else
       if (qs.getObjCLifetime() == Qualifiers::OCL_Weak) {
         useARCWeakCopy = true;
 
@@ -1443,6 +1482,10 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
 #endif
         // fall through
 
+#else
+      if (false) {
+        /* dummy */
+#endif
       // Otherwise the memcpy is fine.
       } else {
         continue;
@@ -1460,10 +1503,13 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
     // If there's an explicit copy expression, we do that.
     if (copyExpr) {
       EmitSynthesizedCXXCopyCtor(dstField, srcField, copyExpr);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (useARCWeakCopy) {
       EmitARCCopyWeak(dstField, srcField);
+#endif
     } else {
       llvm::Value *srcValue = Builder.CreateLoad(srcField, "blockcopy.src");
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (useARCStrongCopy) {
         // At -O0, store null into the destination field (so that the
         // storeStrong doesn't over-release) and then call storeStrong.
@@ -1484,6 +1530,10 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
           // worth the annoyance to avoid creating it in the first place.
           cast<llvm::Instruction>(dstField.getPointer())->eraseFromParent();
         }
+#else
+      if (false) {
+        /* dummy */
+#endif
       } else {
         srcValue = Builder.CreateBitCast(srcValue, VoidPtrTy);
         llvm::Value *dstAddr =
@@ -1578,13 +1628,17 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
     BlockFieldFlags flags;
     const CXXDestructorDecl *dtor = nullptr;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
     bool useARCWeakDestroy = false;
     bool useARCStrongDestroy = false;
+#endif
 
     if (CI.isByRef()) {
       flags = BLOCK_FIELD_IS_BYREF;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (type.isObjCGCWeak())
         flags |= BLOCK_FIELD_IS_WEAK;
+#endif
     } else if (const CXXRecordDecl *record = type->getAsCXXRecordDecl()) {
       if (record->hasTrivialDestructor())
         continue;
@@ -1599,6 +1653,7 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
 
       // Use objc_storeStrong for __strong direct captures; the
       // dynamic tools really like it when we do this.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed till else
       if (qs.getObjCLifetime() == Qualifiers::OCL_Strong) {
         useARCStrongDestroy = true;
 
@@ -1614,6 +1669,10 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
 #endif
         // fall through
 
+#else
+      if (false) {
+        /* dummy */
+#endif
       // Otherwise, we have nothing to do.
       } else {
         continue;
@@ -1630,12 +1689,16 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
       PushDestructorCleanup(dtor, srcField);
 
     // If this is a __weak capture, emit the release directly.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (useARCWeakDestroy) {
       EmitARCDestroyWeak(srcField);
+#endif
 
     // Destroy strong objects with a call if requested.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (useARCStrongDestroy) {
       EmitARCDestroyStrong(srcField, ARCImpreciseLifetime);
+#endif
 
     // Otherwise we call _Block_object_dispose.  It wouldn't be too
     // hard to just emit this as a cleanup if we wanted to make sure
@@ -1693,6 +1756,7 @@ public:
 };
 
 /// Emits the copy/dispose helpers for an ARC __block __weak variable.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed sigh
 class ARCWeakByrefHelpers final : public BlockByrefHelpers {
 public:
   ARCWeakByrefHelpers(CharUnits alignment) : BlockByrefHelpers(alignment) {}
@@ -1711,9 +1775,11 @@ public:
     id.AddInteger(0);
   }
 };
+#endif
 
 /// Emits the copy/dispose helpers for an ARC __block __strong variable
 /// that's not of block-pointer type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, even nicer
 class ARCStrongByrefHelpers final : public BlockByrefHelpers {
 public:
   ARCStrongByrefHelpers(CharUnits alignment) : BlockByrefHelpers(alignment) {}
@@ -1747,9 +1813,11 @@ public:
     id.AddInteger(1);
   }
 };
+#endif
 
 /// Emits the copy/dispose helpers for an ARC __block __strong
 /// variable that's of block-pointer type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class ARCStrongBlockByrefHelpers final : public BlockByrefHelpers {
 public:
   ARCStrongBlockByrefHelpers(CharUnits alignment)
@@ -1774,6 +1842,7 @@ public:
     id.AddInteger(2);
   }
 };
+#endif
 
 /// Emits the copy/dispose helpers for a __block variable with a
 /// nontrivial copy constructor or destructor.
@@ -1995,6 +2064,7 @@ CodeGenFunction::buildByrefHelpers(llvm::StructType &byrefType,
   Qualifiers qs = type.getQualifiers();
 
   // If we have lifetime, that dominates.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (Qualifiers::ObjCLifetime lifetime = qs.getObjCLifetime()) {
     switch (lifetime) {
     case Qualifiers::OCL_None: llvm_unreachable("impossible");
@@ -2027,19 +2097,26 @@ CodeGenFunction::buildByrefHelpers(llvm::StructType &byrefType,
     }
     llvm_unreachable("fell out of lifetime switch!");
   }
+#endif
 
   BlockFieldFlags flags;
   if (type->isBlockPointerType()) {
     flags |= BLOCK_FIELD_IS_BLOCK;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (CGM.getContext().isObjCNSObjectType(type) || 
+#else
+  } else if (false ||
+#endif
              type->isObjCObjectPointerType()) {
     flags |= BLOCK_FIELD_IS_OBJECT;
   } else {
     return nullptr;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (type.isObjCGCWeak())
     flags |= BLOCK_FIELD_IS_WEAK;
+#endif
 
   return ::buildByrefHelpers(CGM, byrefInfo,
                              ObjectByrefHelpers(valueAlignment, flags));
@@ -2199,8 +2276,8 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
   QualType type = D.getType();
 
   bool HasByrefExtendedLayout;
-  Qualifiers::ObjCLifetime ByrefLifetime;
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
+  Qualifiers::ObjCLifetime ByrefLifetime;
   bool ByRefHasLifetime =
     getContext().getByrefLifetime(type, ByrefLifetime, HasByrefExtendedLayout);
 #endif
@@ -2209,8 +2286,10 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
 
   // Initialize the 'isa', which is just 0 or 1.
   int isa = 0;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (type.isObjCGCWeak())
     isa = 1;
+#endif
   V = Builder.CreateIntToPtr(Builder.getInt32(isa), Int8PtrTy, "isa");
   storeHeaderField(V, getPointerSize(), "byref.isa");
 

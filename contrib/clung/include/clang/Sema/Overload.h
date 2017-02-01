@@ -155,7 +155,9 @@ namespace clang {
 
     /// \brief Whether the qualification conversion involves a change in the
     /// Objective-C lifetime (for automatic reference counting).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     unsigned QualificationIncludesObjCLifetime : 1;
+#endif
     
     /// IncompatibleObjC - Whether this is an Objective-C conversion
     /// that we should warn about (if we actually use it).
@@ -185,7 +187,9 @@ namespace clang {
     
     /// \brief Whether this binds a reference to an object with a different
     /// Objective-C lifetime qualifier.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     unsigned ObjCLifetimeConversionBinding : 1;
+#endif
     
     /// FromType - The type that this conversion is converting
     /// from. This is an opaque pointer that can be translated into a

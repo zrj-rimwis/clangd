@@ -2216,6 +2216,7 @@ ASTContext::getAddrSpaceQualType(QualType T, unsigned AddressSpace) const {
   return getExtQualType(TypeNode, Quals);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 QualType ASTContext::getObjCGCQualType(QualType T,
                                        Qualifiers::GC GCAttr) const {
   QualType CanT = getCanonicalType(T);
@@ -2243,6 +2244,7 @@ QualType ASTContext::getObjCGCQualType(QualType T,
 
   return getExtQualType(TypeNode, Quals);
 }
+#endif
 
 const FunctionType *ASTContext::adjustFunctionType(const FunctionType *T,
                                                    FunctionType::ExtInfo Info) {
@@ -3009,8 +3011,12 @@ ASTContext::getDependentSizedExtVectorType(QualType vecType,
 /// \brief Determine whether \p T is canonical as the result type of a function.
 static bool isCanonicalResultType(QualType T) {
   return T.isCanonical() &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume true
          (T.getObjCLifetime() == Qualifiers::OCL_None ||
           T.getObjCLifetime() == Qualifiers::OCL_ExplicitNone);
+#else
+         true;
+#endif
 }
 
 /// getFunctionNoProtoType - Return a K&R style C function type like 'int()'.
@@ -3051,12 +3057,14 @@ ASTContext::getCanonicalFunctionResultType(QualType ResultType) const {
   CanQualType CanResultType = getCanonicalType(ResultType);
 
   // Canonical result types do not have ARC lifetime qualifiers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (CanResultType.getQualifiers().hasObjCLifetime()) {
     Qualifiers Qs = CanResultType.getQualifiers();
     Qs.removeObjCLifetime();
     return CanQualType::CreateUnsafe(
              getQualifiedType(CanResultType.getUnqualifiedType(), Qs));
   }
+#endif
 
   return CanResultType;
 }
@@ -4837,6 +4845,7 @@ QualType ASTContext::getPromotedIntegerType(QualType Promotable) const {
 
 /// \brief Recurses in pointer/array types until it finds an objc retainable
 /// type and returns its ownership.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume OCL_None
 Qualifiers::ObjCLifetime ASTContext::getInnerObjCOwnership(QualType T) const {
   while (!T.isNull()) {
     if (T.getObjCLifetime() != Qualifiers::OCL_None)
@@ -4853,6 +4862,7 @@ Qualifiers::ObjCLifetime ASTContext::getInnerObjCOwnership(QualType T) const {
 
   return Qualifiers::OCL_None;
 }
+#endif
 
 static const Type *getIntegerTypeForEnum(const EnumType *ET) {
   // Incomplete enum types are not treated as integer types.
@@ -5079,6 +5089,7 @@ bool ASTContext::BlockRequiresCopying(QualType Ty,
   Qualifiers qs = Ty.getQualifiers();
   
   // If we have lifetime, that dominates.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (Qualifiers::ObjCLifetime lifetime = qs.getObjCLifetime()) {
     switch (lifetime) {
       case Qualifiers::OCL_None: llvm_unreachable("impossible");
@@ -5097,7 +5108,12 @@ bool ASTContext::BlockRequiresCopying(QualType Ty,
     }
     llvm_unreachable("fell out of lifetime switch!");
   }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   return (Ty->isBlockPointerType() || isObjCNSObjectType(Ty) ||
+#else
+  return (Ty->isBlockPointerType() || false ||
+#endif
           Ty->isObjCObjectPointerType());
 }
 
@@ -7737,7 +7753,11 @@ QualType ASTContext::mergeTypes(QualType LHS, QualType RHS,
     // mismatch.
     if (LQuals.getCVRQualifiers() != RQuals.getCVRQualifiers() ||
         LQuals.getAddressSpace() != RQuals.getAddressSpace() ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, they "match"
         LQuals.getObjCLifetime() != RQuals.getObjCLifetime())
+#else
+        false)
+#endif
       return QualType();
 
     // Exactly one GC qualifier difference is allowed: __strong is
@@ -7745,6 +7765,7 @@ QualType ASTContext::mergeTypes(QualType LHS, QualType RHS,
     // C object pointer (i.e. implicitly strong by default).  We fix
     // this by pretending that the unqualified type was actually
     // qualified __strong.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume no-op
     Qualifiers::GC GC_L = LQuals.getObjCGCAttr();
     Qualifiers::GC GC_R = RQuals.getObjCGCAttr();
     assert((GC_L != GC_R) && "unequal qualifier sets had only equal elements");
@@ -7758,6 +7779,7 @@ QualType ASTContext::mergeTypes(QualType LHS, QualType RHS,
     if (GC_R == Qualifiers::Strong && LHSCan->isObjCObjectPointerType()) {
       return mergeTypes(getObjCGCQualType(LHS, Qualifiers::Strong), RHS);
     }
+#endif
     return QualType();
   }
 
@@ -8026,6 +8048,7 @@ void ASTContext::ResetObjCLayout(const ObjCContainerDecl *CD) {
 /// mergeObjCGCQualifiers - This routine merges ObjC's GC attribute of 'LHS' and
 /// 'RHS' attributes and returns the merged version; including for function
 /// return types.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 QualType ASTContext::mergeObjCGCQualifiers(QualType LHS, QualType RHS) {
   QualType LHSCan = getCanonicalType(LHS),
   RHSCan = getCanonicalType(RHS);
@@ -8097,6 +8120,7 @@ QualType ASTContext::mergeObjCGCQualifiers(QualType LHS, QualType RHS) {
   }
   return QualType();
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 //                         Integer Predicates

@@ -1011,7 +1011,9 @@ public:
   ///
   /// The retulting type has a union of the qualifiers from T and the gc
   /// attribute.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // removing prototype cause of typo in comment
   QualType getObjCGCQualType(QualType T, Qualifiers::GC gcAttr) const;
+#endif
 
   /// \brief Return the uniqued reference to the type for a \c restrict
   /// qualified type.
@@ -1747,6 +1749,7 @@ public:
   /// \brief Return a type with the given lifetime qualifier.
   ///
   /// \pre Neither type.ObjCLifetime() nor \p lifetime may be \c OCL_None.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuume not needed
   QualType getLifetimeQualifiedType(QualType type,
                                     Qualifiers::ObjCLifetime lifetime) {
     assert(type.getObjCLifetime() == Qualifiers::OCL_None);
@@ -1756,15 +1759,22 @@ public:
     qs.addObjCLifetime(lifetime);
     return getQualifiedType(type, qs);
   }
+#endif
   
   /// getUnqualifiedObjCPointerType - Returns version of
   /// Objective-C pointer type with lifetime qualifier removed.
   QualType getUnqualifiedObjCPointerType(QualType type) const {
     if (!type.getTypePtr()->isObjCObjectPointerType() ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
         !type.getQualifiers().hasObjCLifetime())
+#else
+        !false)
+#endif
       return type;
     Qualifiers Qs = type.getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Qs.removeObjCLifetime();
+#endif
     return getQualifiedType(type.getUnqualifiedType(), Qs);
   }
   
@@ -1826,9 +1836,11 @@ public:
 
   /// \brief Return true if this is an \c NSObject object with its \c NSObject
   /// attribute set.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   static bool isObjCNSObjectType(QualType Ty) {
     return Ty->isObjCNSObjectType();
   }
+#endif
 
   //===--------------------------------------------------------------------===//
   //                         Type Sizing and Analysis
@@ -2203,7 +2215,9 @@ public:
 
   /// \brief Recurses in pointer/array types until it finds an Objective-C
   /// retainable type and returns its ownership.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qualifiers::ObjCLifetime getInnerObjCOwnership(QualType T) const;
+#endif
 
   /// \brief Whether this is a promotable bitfield reference according
   /// to C99 6.3.1.1p2, bullet 2 (and GCC extensions).
@@ -2311,7 +2325,9 @@ public:
                                      bool OfBlockPointer=false,
                                      bool Unqualified = false);
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   QualType mergeObjCGCQualifiers(QualType, QualType);
+#endif
     
   bool doFunctionTypesMatchOnExtParameterInfos(
          const FunctionProtoType *FromFunctionType,

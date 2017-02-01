@@ -1503,10 +1503,8 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCProduceObject:
     return CGF.EmitARCRetainScalarExpr(E);
-#endif
   case CK_ARCConsumeObject:
     return CGF.EmitObjCConsumeObject(E->getType(), Visit(E));
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCReclaimReturnedObject:
     return CGF.EmitARCReclaimReturnedObject(E, /*allowUnsafe*/ Ignored);
   case CK_ARCExtendBlockObject:
@@ -3003,8 +3001,8 @@ Value *ScalarExprEmitter::VisitBinAssign(const BinaryOperator *E) {
   Value *RHS;
   LValue LHS;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only OCL_None should be taken
   switch (E->getLHS()->getType().getObjCLifetime()) {
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case Qualifiers::OCL_Strong:
     std::tie(LHS, RHS) = CGF.EmitARCStoreStrong(E, Ignore);
     break;
@@ -3022,9 +3020,9 @@ Value *ScalarExprEmitter::VisitBinAssign(const BinaryOperator *E) {
     LHS = EmitCheckedLValue(E->getLHS(), CodeGenFunction::TCK_Store);
     RHS = CGF.EmitARCStoreWeak(LHS.getAddress(), RHS, Ignore);
     break;
-#endif
 
   case Qualifiers::OCL_None:
+#endif
     // __block variables need to have the rhs evaluated first, plus
     // this should improve codegen just a little.
     RHS = Visit(E->getRHS());
@@ -3038,7 +3036,9 @@ Value *ScalarExprEmitter::VisitBinAssign(const BinaryOperator *E) {
       CGF.EmitStoreThroughBitfieldLValue(RValue::get(RHS), LHS, &RHS);
     else
       CGF.EmitStoreThroughLValue(RValue::get(RHS), LHS);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // continuation
   }
+#endif
 
   // If the result is clearly ignored, return now.
   if (Ignore)

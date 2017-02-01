@@ -2358,6 +2358,7 @@ static void handleObjCMethodFamilyAttr(Sema &S, Decl *decl,
                                         Attr.getAttributeSpellingListIndex()));
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void handleObjCNSObject(Sema &S, Decl *D, const AttributeList &Attr) {
   if (TypedefNameDecl *TD = dyn_cast<TypedefNameDecl>(D)) {
     QualType T = TD->getUnderlyingType();
@@ -2394,6 +2395,7 @@ static void handleObjCNSObject(Sema &S, Decl *D, const AttributeList &Attr) {
              ObjCNSObjectAttr(Attr.getRange(), S.Context,
                               Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
 static void handleObjCIndependentClass(Sema &S, Decl *D, const AttributeList &Attr) {
   if (TypedefNameDecl *TD = dyn_cast<TypedefNameDecl>(D)) {
@@ -4242,7 +4244,11 @@ static bool isValidSubjectOfNSReturnsRetainedAttribute(QualType type) {
 static bool isValidSubjectOfNSAttribute(Sema &S, QualType type) {
   return type->isDependentType() || 
          type->isObjCObjectPointerType() || 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
          S.Context.isObjCNSObjectType(type);
+#else
+         false;
+#endif
 }
 
 static bool isValidSubjectOfCFAttribute(Sema &S, QualType type) {
@@ -4607,6 +4613,7 @@ static void handleObjCBoxable(Sema &S, Decl *D, const AttributeList &Attr) {
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void handleObjCOwnershipAttr(Sema &S, Decl *D,
                                     const AttributeList &Attr) {
   if (hasDeclarator(D)) return;
@@ -4614,7 +4621,9 @@ static void handleObjCOwnershipAttr(Sema &S, Decl *D,
   S.Diag(D->getLocStart(), diag::err_attribute_wrong_decl_type)
     << Attr.getRange() << Attr.getName() << ExpectedVariable;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 static void handleObjCPreciseLifetimeAttr(Sema &S, Decl *D,
                                           const AttributeList &Attr) {
   ValueDecl *vd = cast<ValueDecl>(D);
@@ -4655,6 +4664,7 @@ static void handleObjCPreciseLifetimeAttr(Sema &S, Decl *D,
              ObjCPreciseLifetimeAttr(Attr.getRange(), S.Context,
                                      Attr.getAttributeSpellingListIndex()));
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // Microsoft specific attribute handlers.
@@ -5648,12 +5658,14 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_VecReturn:
     handleVecReturnAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributeList::AT_ObjCOwnership:
     handleObjCOwnershipAttr(S, D, Attr);
     break;
   case AttributeList::AT_ObjCPreciseLifetime:
     handleObjCPreciseLifetimeAttr(S, D, Attr);
     break;
+#endif
   case AttributeList::AT_ObjCReturnsInnerPointer:
     handleObjCReturnsInnerPointerAttr(S, D, Attr);
     break;
@@ -5786,9 +5798,11 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_ObjCMethodFamily:
     handleObjCMethodFamilyAttr(S, D, Attr);
     break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributeList::AT_ObjCNSObject:
     handleObjCNSObject(S, D, Attr);
     break;
+#endif
   case AttributeList::AT_ObjCIndependentClass:
     handleObjCIndependentClass(S, D, Attr);
     break;

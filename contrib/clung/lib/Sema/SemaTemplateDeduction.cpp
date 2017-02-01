@@ -865,9 +865,11 @@ static bool hasInconsistentOrSupersetQualifiersOf(QualType ParamType,
     return false;
        
   // Mismatched (but not missing) Objective-C GC attributes.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (ParamQs.getObjCGCAttr() != ArgQs.getObjCGCAttr() && 
       ParamQs.hasObjCGCAttr())
     return true;
+#endif
   
   // Mismatched (but not missing) address spaces.
   if (ParamQs.getAddressSpace() != ArgQs.getAddressSpace() &&
@@ -875,9 +877,11 @@ static bool hasInconsistentOrSupersetQualifiersOf(QualType ParamType,
     return true;
 
   // Mismatched (but not missing) Objective-C lifetime qualifiers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (ParamQs.getObjCLifetime() != ArgQs.getObjCLifetime() &&
       ParamQs.hasObjCLifetime())
     return true;
+#endif
   
   // CVR qualifier superset.
   return (ParamQs.getCVRQualifiers() != ArgQs.getCVRQualifiers()) &&
@@ -993,10 +997,14 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
       if ((ParamRef->isLValueReferenceType() &&
            !ArgRef->isLValueReferenceType()) ||
           ParamQuals.isStrictSupersetOf(ArgQuals) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX this is silly, assume false
           (ParamQuals.hasNonTrivialObjCLifetime() &&
            ArgQuals.getObjCLifetime() == Qualifiers::OCL_ExplicitNone &&
            ParamQuals.withoutObjCLifetime() ==
                ArgQuals.withoutObjCLifetime())) {
+#else
+          (false && false && ParamQuals == ArgQuals)) {
+#endif
         Info.FirstArg = TemplateArgument(ParamIn);
         Info.SecondArg = TemplateArgument(ArgIn);
         return Sema::TDK_NonDeducedMismatch;
@@ -1094,16 +1102,21 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
     Qualifiers DeducedQs = DeducedType.getQualifiers();
     Qualifiers ParamQs = Param.getQualifiers();
     DeducedQs.removeCVRQualifiers(ParamQs.getCVRQualifiers());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (ParamQs.hasObjCGCAttr())
       DeducedQs.removeObjCGCAttr();
+#endif
     if (ParamQs.hasAddressSpace())
       DeducedQs.removeAddressSpace();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (ParamQs.hasObjCLifetime())
       DeducedQs.removeObjCLifetime();
+#endif
     
     // Objective-C ARC:
     //   If template deduction would produce a lifetime qualifier on a type
     //   that is not a lifetime type, template argument deduction fails.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (ParamQs.hasObjCLifetime() && !DeducedType->isObjCLifetimeType() &&
         !DeducedType->isDependentType()) {
       Info.Param = cast<TemplateTypeParmDecl>(TemplateParams->getParam(Index));
@@ -1111,6 +1124,7 @@ DeduceTemplateArgumentsByTypeMatch(Sema &S,
       Info.SecondArg = TemplateArgument(Arg);
       return Sema::TDK_Underqualified;      
     }
+#endif
     
     // Objective-C ARC:
     //   If template deduction would produce an argument type with lifetime type
@@ -2712,11 +2726,17 @@ CheckOriginalCallArgDeduction(Sema &S, Sema::OriginalCallArg OriginalArg,
   // Also allow conversions which merely strip [[noreturn]] from function types
   // (recursively) as an extension.
   // FIXME: Currently, this doesn't play nicely with qualification conversions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX kill dummy
   bool ObjCLifetimeConversion = false;
+#endif
   QualType ResultTy;
   if ((A->isAnyPointerType() || A->isMemberPointerType()) &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       (S.IsQualificationConversion(A, DeducedA, false,
                                    ObjCLifetimeConversion) ||
+#else
+      (S.IsQualificationConversion(A, DeducedA, false) ||
+#endif
        S.IsNoReturnConversion(A, DeducedA, ResultTy)))
     return false;
   

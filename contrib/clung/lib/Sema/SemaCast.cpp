@@ -550,9 +550,11 @@ CastsAwayConstness(Sema &Self, QualType SrcType, QualType DestType,
       }
     }
     
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && !true
     if (CheckObjCLifetime &&
         !DestQuals.compatiblyIncludesObjCLifetime(SrcQuals))
       return true;
+#endif
     
     cv1.push_back(RetainedSrcQuals);
     cv2.push_back(RetainedDestQuals);
@@ -578,10 +580,16 @@ CastsAwayConstness(Sema &Self, QualType SrcType, QualType DestType,
   }
 
   // Test if they're compatible.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX just stupid
   bool ObjCLifetimeConversion;
+#endif
   return SrcConstruct != DestConstruct &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     !Self.IsQualificationConversion(SrcConstruct, DestConstruct, false,
                                     ObjCLifetimeConversion);
+#else
+    !Self.IsQualificationConversion(SrcConstruct, DestConstruct, false);
+#endif
 }
 
 /// CheckDynamicCast - Check that a dynamic_cast\<DestType\>(SrcExpr) is valid.
@@ -1090,10 +1098,12 @@ static TryCastResult TryStaticCast(Sema &Self, ExprResult &SrcExpr,
           if (!CStyle) {
             Qualifiers DestPointeeQuals = DestPointee.getQualifiers();
             Qualifiers SrcPointeeQuals = SrcPointee.getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
             DestPointeeQuals.removeObjCGCAttr();
             DestPointeeQuals.removeObjCLifetime();
             SrcPointeeQuals.removeObjCGCAttr();
             SrcPointeeQuals.removeObjCLifetime();
+#endif
             if (DestPointeeQuals != SrcPointeeQuals &&
                 !DestPointeeQuals.compatiblyIncludes(SrcPointeeQuals)) {
               msg = diag::err_bad_cxx_cast_qualifiers_away;
@@ -1174,7 +1184,9 @@ TryLValueToRValueCast(Sema &Self, Expr *SrcExpr, QualType DestType,
   // FIXME: Should allow casting away constness if CStyle.
   bool DerivedToBase;
   bool ObjCConversion;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool ObjCLifetimeConversion;
+#endif
   QualType FromType = SrcExpr->getType();
   QualType ToType = R->getPointeeType();
   if (CStyle) {
@@ -1184,8 +1196,12 @@ TryLValueToRValueCast(Sema &Self, Expr *SrcExpr, QualType DestType,
   
   if (Self.CompareReferenceRelationship(SrcExpr->getLocStart(),
                                         ToType, FromType,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                         DerivedToBase, ObjCConversion,
                                         ObjCLifetimeConversion) 
+#else
+                                        DerivedToBase, ObjCConversion)
+#endif
         < Sema::Ref_Compatible_With_Added_Qualification) {
     if (CStyle)
       return TC_NotApplicable;

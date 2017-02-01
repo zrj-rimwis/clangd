@@ -2117,6 +2117,7 @@ void CXXNameMangler::mangleQualifiers(Qualifiers Quals) {
   }
 
   // The ARC ownership qualifiers start with underscores.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, bugs!
   switch (Quals.getObjCLifetime()) {
   // Objective-C ARC Extension:
   //
@@ -2148,6 +2149,7 @@ void CXXNameMangler::mangleQualifiers(Qualifiers Quals) {
     // in any type signatures that need to be mangled.
     break;
   }
+#endif
 
   // <CV-qualifiers> ::= [r] [V] [K]    # restrict (C99), volatile, const
   if (Quals.hasRestrict())
@@ -2562,11 +2564,13 @@ void CXXNameMangler::mangleBareFunctionType(const FunctionProtoType *Proto,
 
     // Mangle the return type without any direct ARC ownership qualifiers.
     QualType ReturnTy = Proto->getReturnType();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (ReturnTy.getObjCLifetime()) {
       auto SplitReturnTy = ReturnTy.split();
       SplitReturnTy.Quals.removeObjCLifetime();
       ReturnTy = getASTContext().getQualifiedType(SplitReturnTy);
     }
+#endif
     mangleType(ReturnTy);
 
     FunctionTypeDepth.leaveResultType();

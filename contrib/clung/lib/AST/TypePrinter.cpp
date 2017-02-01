@@ -1178,9 +1178,11 @@ void TypePrinter::printPackExpansionAfter(const PackExpansionType *T,
 void TypePrinter::printAttributedBefore(const AttributedType *T,
                                         raw_ostream &OS) {
   // Prefer the macro forms of the GC and ownership qualifiers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false || false
   if (T->getAttrKind() == AttributedType::attr_objc_gc ||
       T->getAttrKind() == AttributedType::attr_objc_ownership)
     return printBefore(T->getEquivalentType(), OS);
+#endif
 
   if (T->getAttrKind() == AttributedType::attr_objc_kindof)
     OS << "__kindof ";
@@ -1217,9 +1219,11 @@ void TypePrinter::printAttributedBefore(const AttributedType *T,
 void TypePrinter::printAttributedAfter(const AttributedType *T,
                                        raw_ostream &OS) {
   // Prefer the macro forms of the GC and ownership qualifiers.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false || false
   if (T->getAttrKind() == AttributedType::attr_objc_gc ||
       T->getAttrKind() == AttributedType::attr_objc_ownership)
     return printAfter(T->getEquivalentType(), OS);
+#endif
 
   if (T->getAttrKind() == AttributedType::attr_objc_kindof)
     return;
@@ -1241,8 +1245,10 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
   printAfter(T->getModifiedType(), OS);
 
   // Don't print the inert __unsafe_unretained attribute at all.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (T->getAttrKind() == AttributedType::attr_objc_inert_unsafe_unretained)
     return;
+#endif
 
   // Print nullability type specifiers that occur after
   if (T->getAttrKind() == AttributedType::attr_nonnull ||
@@ -1305,6 +1311,7 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
     break;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributedType::attr_objc_gc: {
     OS << "objc_gc(";
 
@@ -1322,7 +1329,9 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
     OS << ')';
     break;
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributedType::attr_objc_ownership:
     OS << "objc_ownership(";
     switch (T->getEquivalentType().getObjCLifetime()) {
@@ -1334,6 +1343,7 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
     }
     OS << ')';
     break;
+#endif
 
   // FIXME: When Sema learns to form this AttributedType, avoid printing the
   // attribute again in printFunctionProtoAfter.
@@ -1576,12 +1586,16 @@ bool Qualifiers::isEmptyWhenPrinted(const PrintingPolicy &Policy) const {
   if (getAddressSpace())
     return false;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (getObjCGCAttr())
     return false;
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (Qualifiers::ObjCLifetime lifetime = getObjCLifetime())
     if (!(lifetime == Qualifiers::OCL_Strong && Policy.SuppressStrongLifetime))
       return false;
+#endif
 
   return true;
 }
@@ -1627,6 +1641,7 @@ void Qualifiers::print(raw_ostream &OS, const PrintingPolicy& Policy,
         OS << ")))";
     }
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (Qualifiers::GC gc = getObjCGCAttr()) {
     if (addSpace)
       OS << ' ';
@@ -1636,6 +1651,8 @@ void Qualifiers::print(raw_ostream &OS, const PrintingPolicy& Policy,
     else
       OS << "__strong";
   }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (Qualifiers::ObjCLifetime lifetime = getObjCLifetime()) {
     if (!(lifetime == Qualifiers::OCL_Strong && Policy.SuppressStrongLifetime)){
       if (addSpace)
@@ -1655,6 +1672,7 @@ void Qualifiers::print(raw_ostream &OS, const PrintingPolicy& Policy,
     case Qualifiers::OCL_Autoreleasing: OS << "__autoreleasing"; break;
     }
   }
+#endif
 
   if (appendSpaceIfNonEmpty && addSpace)
     OS << ' ';

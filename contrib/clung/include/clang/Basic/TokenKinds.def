@@ -555,10 +555,12 @@ ALIAS("__fp16", half                , KEYALL)
 KEYWORD(half                        , HALFSUPPORT)
 
 // Objective-C ARC keywords.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 KEYWORD(__bridge                     , KEYARC)
 KEYWORD(__bridge_transfer            , KEYARC)
 KEYWORD(__bridge_retained            , KEYARC)
 KEYWORD(__bridge_retain              , KEYARC)
+#endif
 
 // Objective-C keywords.
 KEYWORD(__covariant                  , KEYOBJC2)

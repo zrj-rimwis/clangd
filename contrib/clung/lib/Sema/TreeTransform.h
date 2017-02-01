@@ -4105,6 +4105,7 @@ TreeTransform<Derived>::TransformQualifiedType(TypeLocBuilder &TLB,
 
   // Suppress Objective-C lifetime qualifiers if they don't make sense for the
   // resulting type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume wtf and why this is not an assert??!
   if (Quals.hasObjCLifetime()) {
     if (!Result->isObjCLifetimeType() && !Result->isDependentType())
       Quals.removeObjCLifetime();
@@ -4146,6 +4147,7 @@ TreeTransform<Derived>::TransformQualifiedType(TypeLocBuilder &TLB,
       }
     }
   }
+#endif
   if (!Quals.empty()) {
     Result = SemaRef.BuildQualifiedType(Result, T.getBeginLoc(), Quals);
     // BuildQualifiedType might not add qualifiers if they are invalid.

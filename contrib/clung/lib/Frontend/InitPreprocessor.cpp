@@ -303,6 +303,7 @@ static const char *getLockFreeValue(unsigned TypeWidth, unsigned TypeAlign,
 
 /// \brief Add definitions required for a smooth interaction between
 /// Objective-C++ automated reference counting and libstdc++ (4.2).
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts, 
                                          MacroBuilder &Builder) {
   Builder.defineMacro("_GLIBCXX_PREDEFINED_OBJC_ARC_IS_SCALAR");
@@ -363,6 +364,7 @@ static void AddObjCXXARCLibstdcxxDefines(const LangOptions &LangOpts,
   }
   Builder.append(Result);
 }
+#endif
 
 static void InitializeStandardPredefinedMacros(const TargetInfo &TI,
                                                const LangOptions &LangOpts,

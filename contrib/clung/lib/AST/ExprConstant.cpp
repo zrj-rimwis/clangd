@@ -8072,10 +8072,12 @@ bool IntExprEvaluator::VisitCastExpr(const CastExpr *E) {
   case CK_BitCast:
   case CK_Dependent:
   case CK_LValueBitCast:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCProduceObject:
   case CK_ARCConsumeObject:
   case CK_ARCReclaimReturnedObject:
   case CK_ARCExtendBlockObject:
+#endif
   case CK_CopyAndAutoreleaseBlockObject:
     return Error(E);
 
@@ -8549,10 +8551,12 @@ bool ComplexExprEvaluator::VisitCastExpr(const CastExpr *E) {
   case CK_FloatingComplexToBoolean:
   case CK_IntegralComplexToReal:
   case CK_IntegralComplexToBoolean:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCProduceObject:
   case CK_ARCConsumeObject:
   case CK_ARCReclaimReturnedObject:
   case CK_ARCExtendBlockObject:
+#endif
   case CK_CopyAndAutoreleaseBlockObject:
   case CK_BuiltinFnToFnPtr:
   case CK_ZeroToOCLEvent:

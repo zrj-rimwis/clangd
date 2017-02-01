@@ -148,6 +148,7 @@ static ScopePair GetDiagForGotoScopeDecl(Sema &S, const Decl *D) {
 
     if (VD->hasLocalStorage()) {
       switch (VD->getType().isDestructedType()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       case QualType::DK_objc_strong_lifetime:
         return ScopePair(diag::note_protected_by_objc_strong_init,
                          diag::note_exits_objc_strong);
@@ -155,6 +156,7 @@ static ScopePair GetDiagForGotoScopeDecl(Sema &S, const Decl *D) {
       case QualType::DK_objc_weak_lifetime:
         return ScopePair(diag::note_protected_by_objc_weak_init,
                          diag::note_exits_objc_weak);
+#endif
 
       case QualType::DK_cxx_destructor:
         OutDiag = diag::note_exits_dtor;
@@ -248,6 +250,7 @@ void JumpScopeChecker::BuildScopeInformation(VarDecl *D,
         Diags = ScopePair(diag::note_enters_block_captures_cxx_obj,
                           diag::note_exits_block_captures_cxx_obj);
         break;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, that if() is stupid
       case QualType::DK_objc_strong_lifetime:
         Diags = ScopePair(diag::note_enters_block_captures_strong,
                           diag::note_exits_block_captures_strong);
@@ -256,6 +259,7 @@ void JumpScopeChecker::BuildScopeInformation(VarDecl *D,
         Diags = ScopePair(diag::note_enters_block_captures_weak,
                           diag::note_exits_block_captures_weak);
         break;
+#endif
       case QualType::DK_none:
         llvm_unreachable("non-lifetime captured variable");
     }

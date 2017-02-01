@@ -257,9 +257,11 @@ public:
 
   QualType getType() const { return Type; }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qualifiers::ObjCLifetime getObjCLifetime() const {
     return Quals.getObjCLifetime();
   }
+#endif
 
   bool isObjCIvar() const { return Ivar; }
   void setObjCIvar(bool Value) { Ivar = Value; }
@@ -571,9 +573,11 @@ public:
     Quals.setVolatile(flag);
   }
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qualifiers::ObjCLifetime getObjCLifetime() const {
     return Quals.getObjCLifetime();
   }
+#endif
 
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
   NeedsGCBarriers_t requiresGCollection() const {

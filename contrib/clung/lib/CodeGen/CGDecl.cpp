@@ -492,6 +492,7 @@ namespace {
     }
   };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   struct ExtendGCLifetime final : EHScopeStack::Cleanup {
     const VarDecl &Var;
     ExtendGCLifetime(const VarDecl *var) : Var(*var) {}
@@ -506,6 +507,7 @@ namespace {
       CGF.EmitExtendGCLifetime(value);
     }
   };
+#endif
 
   struct CallCleanupFunction final : EHScopeStack::Cleanup {
     llvm::Constant *CleanupFn;
@@ -543,6 +545,7 @@ namespace {
 
 /// EmitAutoVarWithLifetime - Does the setup required for an automatic
 /// variable with lifetime.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void EmitAutoVarWithLifetime(CodeGenFunction &CGF, const VarDecl &var,
                                     Address addr,
                                     Qualifiers::ObjCLifetime lifetime) {
@@ -578,7 +581,9 @@ static void EmitAutoVarWithLifetime(CodeGenFunction &CGF, const VarDecl &var,
     break;
   }
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 static bool isAccessedBy(const VarDecl &var, const Stmt *s) {
   if (const Expr *e = dyn_cast<Expr>(s)) {
     // Skip the most common kinds of expressions that make
@@ -603,14 +608,18 @@ static bool isAccessedBy(const VarDecl &var, const Stmt *s) {
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 static bool isAccessedBy(const ValueDecl *decl, const Expr *e) {
   if (!decl) return false;
   if (!isa<VarDecl>(decl)) return false;
   const VarDecl *var = cast<VarDecl>(decl);
   return isAccessedBy(*var, e);
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 static bool tryEmitARCCopyWeakInit(CodeGenFunction &CGF,
                                    const LValue &destLV, const Expr *init) {
   bool needsCast = false;
@@ -660,6 +669,7 @@ static bool tryEmitARCCopyWeakInit(CodeGenFunction &CGF,
   }
   return false;
 }
+#endif
 
 static void drillIntoBlockVariable(CodeGenFunction &CGF,
                                    LValue &lvalue,
@@ -669,8 +679,12 @@ static void drillIntoBlockVariable(CodeGenFunction &CGF,
 
 void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
                                      LValue lvalue, bool capturedByInit) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false and reduces a lot
   Qualifiers::ObjCLifetime lifetime = lvalue.getObjCLifetime();
   if (!lifetime) {
+#else
+  if (!false) {
+#endif
     llvm::Value *value = EmitScalarExpr(init);
     if (capturedByInit)
       drillIntoBlockVariable(*this, lvalue, cast<VarDecl>(D));
@@ -678,6 +692,7 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
     return;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume unreachable and here it gets very shady, why CXX after return?
   if (const CXXDefaultInitExpr *DIE = dyn_cast<CXXDefaultInitExpr>(init))
     init = DIE->getExpr();
 
@@ -779,14 +794,20 @@ void CodeGenFunction::EmitScalarInit(const Expr *init, const ValueDecl *D,
   }
 
   EmitStoreOfScalar(value, lvalue, /* isInitialization */ true);
+#endif
 }
 
 /// EmitScalarInit - Initialize the given lvalue with the given object.
 void CodeGenFunction::EmitScalarInit(llvm::Value *init, LValue lvalue) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false and early return
   Qualifiers::ObjCLifetime lifetime = lvalue.getObjCLifetime();
   if (!lifetime)
+#else
+  if (!false)
+#endif
     return EmitStoreThroughLValue(RValue::get(init), lvalue, true);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not reached because of ^^^
   switch (lifetime) {
   case Qualifiers::OCL_None:
     llvm_unreachable("present but none");
@@ -810,6 +831,7 @@ void CodeGenFunction::EmitScalarInit(llvm::Value *init, LValue lvalue) {
   }
 
   EmitStoreOfScalar(init, lvalue, /* isInitialization */ true);
+#endif
 }
 
 /// canEmitInitWithFewStoresAfterMemset - Decide whether we can emit the
@@ -1377,6 +1399,7 @@ void CodeGenFunction::emitAutoVarTypeCleanup(
     }
     break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case QualType::DK_objc_strong_lifetime:
     // Suppress cleanups for pseudo-strong variables.
     if (var->isARCPseudoStrong()) return;
@@ -1391,6 +1414,7 @@ void CodeGenFunction::emitAutoVarTypeCleanup(
 
   case QualType::DK_objc_weak_lifetime:
     break;
+#endif
   }
 
   // If we haven't chosen a more specific destroyer, use the default.
@@ -1427,10 +1451,12 @@ void CodeGenFunction::EmitAutoVarCleanups(const AutoVarEmission &emission) {
     emitAutoVarTypeCleanup(emission, dtorKind);
 
   // In GC mode, honor objc_precise_lifetime.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (getLangOpts().getGC() != LangOptions::NonGC &&
       D.hasAttr<ObjCPreciseLifetimeAttr>()) {
     EHStack.pushCleanup<ExtendGCLifetime>(NormalCleanup, &D);
   }
+#endif
 
   // Handle the cleanup attribute.
   if (const CleanupAttr *CA = D.getAttr<CleanupAttr>()) {
@@ -1455,10 +1481,12 @@ CodeGenFunction::getDestroyer(QualType::DestructionKind kind) {
   case QualType::DK_none: llvm_unreachable("no destroyer for trivial dtor");
   case QualType::DK_cxx_destructor:
     return destroyCXXObject;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case QualType::DK_objc_strong_lifetime:
     return destroyARCStrongPrecise;
   case QualType::DK_objc_weak_lifetime:
     return destroyARCWeak;
+#endif
   }
   llvm_unreachable("Unknown DestructionKind");
 }
@@ -1747,6 +1775,7 @@ llvm::Constant *CodeGenModule::getLLVMLifetimeEndFn() {
   return LifetimeEndFn;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 namespace {
   /// A cleanup to perform a release of an object at the end of a
   /// function.  This is used to balance out the incoming +1 of a
@@ -1765,6 +1794,7 @@ namespace {
     }
   };
 } // end anonymous namespace
+#endif
 
 /// Emit an alloca (or GlobalValue depending on target)
 /// for the specified parameter and set up LocalDeclMap.
@@ -1825,6 +1855,7 @@ void CodeGenFunction::EmitParmDecl(const VarDecl &D, ParamValue Arg,
   LValue lv = MakeAddrLValue(DeclPtr, Ty);
   if (IsScalar) {
     Qualifiers qs = Ty.getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (Qualifiers::ObjCLifetime lt = qs.getObjCLifetime()) {
       // We honor __attribute__((ns_consumed)) for types with lifetime.
       // For __strong, it's handled by just skipping the initial retain;
@@ -1879,6 +1910,7 @@ void CodeGenFunction::EmitParmDecl(const VarDecl &D, ParamValue Arg,
       // Enter the cleanup scope.
       EmitAutoVarWithLifetime(*this, D, DeclPtr, lt);
     }
+#endif
   }
 
   // Store the initial value into the alloca.

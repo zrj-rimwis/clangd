@@ -183,14 +183,18 @@ void StandardConversionSequence::setAsIdentityConversion() {
   Second = ICK_Identity;
   Third = ICK_Identity;
   DeprecatedStringLiteralToCharPtr = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   QualificationIncludesObjCLifetime = false;
+#endif
   ReferenceBinding = false;
   DirectBinding = false;
   IsLvalueReference = true;
   BindsToFunctionLvalue = false;
   BindsToRvalue = false;
   BindsImplicitObjectArgumentWithoutRefQualifier = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCLifetimeConversionBinding = false;
+#endif
   CopyConstructor = nullptr;
 }
 
@@ -1620,7 +1624,9 @@ static bool IsStandardConversion(Sema &S, Expr* From, QualType ToType,
       // conversion (4.4). (C++ 4.2p2)
       SCS.Second = ICK_Identity;
       SCS.Third = ICK_Qualification;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       SCS.QualificationIncludesObjCLifetime = false;
+#endif
       SCS.setAllToTypes(FromType);
       return true;
     }
@@ -1767,11 +1773,19 @@ static bool IsStandardConversion(Sema &S, Expr* From, QualType ToType,
   QualType CanonFrom;
   QualType CanonTo;
   // The third conversion can be a qualification conversion (C++ 4p1).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool ObjCLifetimeConversion;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, kill last arg
   if (S.IsQualificationConversion(FromType, ToType, CStyle, 
                                   ObjCLifetimeConversion)) {
+#else
+  if (S.IsQualificationConversion(FromType, ToType, CStyle)) {
+#endif
     SCS.Third = ICK_Qualification;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume default false
     SCS.QualificationIncludesObjCLifetime = ObjCLifetimeConversion;
+#endif
     FromType = ToType;
     CanonFrom = S.Context.getCanonicalType(FromType);
     CanonTo = S.Context.getCanonicalType(ToType);
@@ -2052,8 +2066,12 @@ bool Sema::IsComplexPromotion(QualType FromType, QualType ToType) {
 static QualType
 BuildSimilarlyQualifiedPointerType(const Type *FromPtr,
                                    QualType ToPointee, QualType ToType,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, strip last arg
                                    ASTContext &Context,
                                    bool StripObjCLifetime = false) {
+#else
+                                   ASTContext &Context) {
+#endif
   assert((FromPtr->getTypeClass() == Type::Pointer ||
           FromPtr->getTypeClass() == Type::ObjCObjectPointer) &&
          "Invalid similarly-qualified pointer type");
@@ -2067,8 +2085,10 @@ BuildSimilarlyQualifiedPointerType(const Type *FromPtr,
   QualType CanonToPointee = Context.getCanonicalType(ToPointee);
   Qualifiers Quals = CanonFromPointee.getQualifiers();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (StripObjCLifetime)
     Quals.removeObjCLifetime();
+#endif
   
   // Exact qualifier match -> return the pointer type we're converting to.
   if (CanonToPointee.getLocalQualifiers() == Quals) {
@@ -2205,8 +2225,12 @@ bool Sema::IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
       ToPointeeType->isVoidType()) {
     ConvertedType = BuildSimilarlyQualifiedPointerType(FromTypePtr,
                                                        ToPointeeType,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, strip last arg
                                                        ToType, Context,
                                                    /*StripObjCLifetime=*/true);
+#else
+                                                       ToType, Context);
+#endif
     return true;
   }
 
@@ -2266,6 +2290,7 @@ bool Sema::IsPointerConversion(Expr *From, QualType FromType, QualType ToType,
 }
  
 /// \brief Adopt the given qualifiers for the given type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static QualType AdoptQualifiers(ASTContext &Context, QualType T, Qualifiers Qs){
   Qualifiers TQs = T.getQualifiers();
   
@@ -2278,6 +2303,7 @@ static QualType AdoptQualifiers(ASTContext &Context, QualType T, Qualifiers Qs){
   
   return Context.getQualifiedType(T.getUnqualifiedType(), Qs);
 }
+#endif
 
 /// isObjCPointerConversion - Determines whether this is an
 /// Objective-C pointer conversion. Subroutine of IsPointerConversion,
@@ -2961,6 +2987,7 @@ bool Sema::CheckMemberPointerConversion(Expr *From, QualType ToType,
 
 /// Determine whether the lifetime conversion between the two given
 /// qualifiers sets is nontrivial.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX this is silly, just because of this so much trouble
 static bool isNonTrivialObjCLifetimeConversion(Qualifiers FromQuals,
                                                Qualifiers ToQuals) {
   // Converting anything to const __unsafe_unretained is trivial.
@@ -2970,6 +2997,7 @@ static bool isNonTrivialObjCLifetimeConversion(Qualifiers FromQuals,
 
   return true;
 }
+#endif
 
 /// IsQualificationConversion - Determines whether the conversion from
 /// an rvalue of type FromType to ToType is a qualification conversion
@@ -2980,10 +3008,16 @@ static bool isNonTrivialObjCLifetimeConversion(Qualifiers FromQuals,
 /// object lifetime.
 bool
 Sema::IsQualificationConversion(QualType FromType, QualType ToType,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                 bool CStyle, bool &ObjCLifetimeConversion) {
+#else
+                                bool CStyle) {
+#endif
   FromType = Context.getCanonicalType(FromType);
   ToType = Context.getCanonicalType(ToType);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   ObjCLifetimeConversion = false;
+#endif
   
   // If FromType and ToType are the same type, this is not a
   // qualification conversion.
@@ -3013,6 +3047,7 @@ Sema::IsQualificationConversion(QualType FromType, QualType ToType,
     
     // Objective-C ARC:
     //   Check Objective-C lifetime conversions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assumne not needed and simply a lot
     if (FromQuals.getObjCLifetime() != ToQuals.getObjCLifetime() &&
         UnwrappedAnyPointer) {
       if (ToQuals.compatiblyIncludesObjCLifetime(FromQuals)) {
@@ -3026,13 +3061,16 @@ Sema::IsQualificationConversion(QualType FromType, QualType ToType,
         return false;
       }
     }
+#endif
     
     // Allow addition/removal of GC attributes but not changing GC attributes.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (FromQuals.getObjCGCAttr() != ToQuals.getObjCGCAttr() &&
         (!FromQuals.hasObjCGCAttr() || !ToQuals.hasObjCGCAttr())) {
       FromQuals.removeObjCGCAttr();
       ToQuals.removeObjCGCAttr();
     }
+#endif
     
     //   -- for every j > 0, if const is in cv 1,j then const is in cv
     //      2,j, and similarly for volatile.
@@ -3081,8 +3119,10 @@ static bool tryAtomicConversion(Sema &S, Expr *From, QualType ToType,
   SCS.Second = InnerSCS.Second;
   SCS.setToType(1, InnerSCS.getToType(1));
   SCS.Third = InnerSCS.Third;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   SCS.QualificationIncludesObjCLifetime
     = InnerSCS.QualificationIncludesObjCLifetime;
+#endif
   SCS.setToType(2, InnerSCS.getToType(2));
   return true;
 }
@@ -3767,12 +3807,14 @@ CompareStandardConversionSequences(Sema &S, SourceLocation Loc,
     if (UnqualT1 == UnqualT2) {
       // Objective-C++ ARC: If the references refer to objects with different
       // lifetimes, prefer bindings that don't change lifetime.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (SCS1.ObjCLifetimeConversionBinding != 
                                           SCS2.ObjCLifetimeConversionBinding) {
         return SCS1.ObjCLifetimeConversionBinding
                                            ? ImplicitConversionSequence::Worse
                                            : ImplicitConversionSequence::Better;
       }
+#endif
       
       // If the type is an array type, promote the element qualifiers to the
       // type for comparison.
@@ -3857,12 +3899,14 @@ CompareQualificationConversions(Sema &S,
   // Objective-C++ ARC:
   //   Prefer qualification conversions not involving a change in lifetime
   //   to qualification conversions that do not change lifetime.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (SCS1.QualificationIncludesObjCLifetime != 
                                       SCS2.QualificationIncludesObjCLifetime) {
     Result = SCS1.QualificationIncludesObjCLifetime
                ? ImplicitConversionSequence::Worse
                : ImplicitConversionSequence::Better;
   }
+#endif
   
   while (S.Context.UnwrapSimilarPointerTypes(T1, T2)) {
     // Within each iteration of the loop, we check the qualifiers to
@@ -4142,8 +4186,12 @@ Sema::ReferenceCompareResult
 Sema::CompareReferenceRelationship(SourceLocation Loc,
                                    QualType OrigT1, QualType OrigT2,
                                    bool &DerivedToBase,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed, trim last arg
                                    bool &ObjCConversion,
                                    bool &ObjCLifetimeConversion) {
+#else
+                                   bool &ObjCConversion) {
+#endif
   assert(!OrigT1->isReferenceType() &&
     "T1 must be the pointee type of the reference type");
   assert(!OrigT2->isReferenceType() && "T2 cannot be a reference type");
@@ -4160,7 +4208,9 @@ Sema::CompareReferenceRelationship(SourceLocation Loc,
   //   T1 is a base class of T2.
   DerivedToBase = false;
   ObjCConversion = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCLifetimeConversion = false;
+#endif
   if (UnqualT1 == UnqualT2) {
     // Nothing to do.
   } else if (isCompleteType(Loc, OrigT2) &&
@@ -4196,6 +4246,7 @@ Sema::CompareReferenceRelationship(SourceLocation Loc,
   // qualifiers when performing these computations, so that e.g., an int in
   // address space 1 is not reference-compatible with an int in address
   // space 2.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (T1Quals.getObjCLifetime() != T2Quals.getObjCLifetime() &&
       T1Quals.compatiblyIncludesObjCLifetime(T2Quals)) {
     if (isNonTrivialObjCLifetimeConversion(T2Quals, T1Quals))
@@ -4204,6 +4255,7 @@ Sema::CompareReferenceRelationship(SourceLocation Loc,
     T1Quals.removeObjCLifetime();
     T2Quals.removeObjCLifetime();    
   }
+#endif
     
   // MS compiler ignores __unaligned qualifier for references; do the same.
   T1Quals.removeUnaligned();
@@ -4252,7 +4304,9 @@ FindConversionForRefInit(Sema &S, ImplicitConversionSequence &ICS,
     if (AllowRvalues) {
       bool DerivedToBase = false;
       bool ObjCConversion = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX silly
       bool ObjCLifetimeConversion = false;
+#endif
       
       // If we are initializing an rvalue reference, don't permit conversion
       // functions that return lvalues.
@@ -4269,7 +4323,11 @@ FindConversionForRefInit(Sema &S, ImplicitConversionSequence &ICS,
             Conv->getConversionType().getNonReferenceType()
               .getUnqualifiedType(),
             DeclType.getNonReferenceType().getUnqualifiedType(),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
             DerivedToBase, ObjCConversion, ObjCLifetimeConversion) ==
+#else
+            DerivedToBase, ObjCConversion) ==
+#endif
           Sema::Ref_Incompatible)
         continue;
     } else {
@@ -4373,11 +4431,17 @@ TryReferenceInit(Sema &S, Expr *Init, QualType DeclType,
   bool isRValRef = DeclType->isRValueReferenceType();
   bool DerivedToBase = false;
   bool ObjCConversion = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool ObjCLifetimeConversion = false;
+#endif
   Expr::Classification InitCategory = Init->Classify(S.Context);
   Sema::ReferenceCompareResult RefRelationship
     = S.CompareReferenceRelationship(DeclLoc, T1, T2, DerivedToBase,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, trim last arg
                                      ObjCConversion, ObjCLifetimeConversion);
+#else
+                                     ObjCConversion);
+#endif
 
 
   // C++0x [dcl.init.ref]p5:
@@ -4415,7 +4479,9 @@ TryReferenceInit(Sema &S, Expr *Init, QualType DeclType,
       ICS.Standard.BindsToFunctionLvalue = T2->isFunctionType();
       ICS.Standard.BindsToRvalue = false;
       ICS.Standard.BindsImplicitObjectArgumentWithoutRefQualifier = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       ICS.Standard.ObjCLifetimeConversionBinding = ObjCLifetimeConversion;
+#endif
       ICS.Standard.CopyConstructor = nullptr;
       ICS.Standard.DeprecatedStringLiteralToCharPtr = false;
 
@@ -4480,7 +4546,9 @@ TryReferenceInit(Sema &S, Expr *Init, QualType DeclType,
     ICS.Standard.BindsToFunctionLvalue = T2->isFunctionType();
     ICS.Standard.BindsToRvalue = InitCategory.isRValue();
     ICS.Standard.BindsImplicitObjectArgumentWithoutRefQualifier = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ICS.Standard.ObjCLifetimeConversionBinding = ObjCLifetimeConversion;
+#endif
     ICS.Standard.CopyConstructor = nullptr;
     ICS.Standard.DeprecatedStringLiteralToCharPtr = false;
     return ICS;
@@ -4533,10 +4601,12 @@ TryReferenceInit(Sema &S, Expr *Init, QualType DeclType,
     // ObjC GC, lifetime and unaligned qualifiers aren't important.
     Qualifiers T1Quals = T1.getQualifiers();
     Qualifiers T2Quals = T2.getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     T1Quals.removeObjCGCAttr();
     T1Quals.removeObjCLifetime();
     T2Quals.removeObjCGCAttr();
     T2Quals.removeObjCLifetime();
+#endif
     // MS compiler ignores __unaligned qualifier for references; do the same.
     T1Quals.removeUnaligned();
     T2Quals.removeUnaligned();
@@ -4583,7 +4653,9 @@ TryReferenceInit(Sema &S, Expr *Init, QualType DeclType,
     ICS.Standard.BindsToFunctionLvalue = false;
     ICS.Standard.BindsToRvalue = true;
     ICS.Standard.BindsImplicitObjectArgumentWithoutRefQualifier = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ICS.Standard.ObjCLifetimeConversionBinding = false;
+#endif
   } else if (ICS.isUserDefined()) {
     const ReferenceType *LValRefType =
         ICS.UserDefined.ConversionFunction->getReturnType()
@@ -4609,7 +4681,9 @@ TryReferenceInit(Sema &S, Expr *Init, QualType DeclType,
     ICS.UserDefined.After.BindsToFunctionLvalue = false;
     ICS.UserDefined.After.BindsToRvalue = !LValRefType;
     ICS.UserDefined.After.BindsImplicitObjectArgumentWithoutRefQualifier = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ICS.UserDefined.After.ObjCLifetimeConversionBinding = false;
+#endif
   }
 
   return ICS;
@@ -4804,10 +4878,16 @@ TryListConversion(Sema &S, InitListExpr *From, QualType ToType,
       // Compute some basic properties of the types and the initializer.
       bool dummy1 = false;
       bool dummy2 = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX it just never ends
       bool dummy3 = false;
+#endif
       Sema::ReferenceCompareResult RefRelationship
         = S.CompareReferenceRelationship(From->getLocStart(), T1, T2, dummy1,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, trim last arg
                                          dummy2, dummy3);
+#else
+                                         dummy2);
+#endif
 
       if (RefRelationship >= Sema::Ref_Related) {
         return TryReferenceInit(S, Init, ToType, /*FIXME*/From->getLocStart(),
@@ -4836,7 +4916,9 @@ TryListConversion(Sema &S, InitListExpr *From, QualType ToType,
       SCS.BindsToRvalue = true;
       SCS.BindsToFunctionLvalue = false;
       SCS.BindsImplicitObjectArgumentWithoutRefQualifier = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       SCS.ObjCLifetimeConversionBinding = false;
+#endif
     } else
       Result.setBad(BadConversionSequence::lvalue_ref_to_rvalue,
                     From, ToType);
@@ -6447,9 +6529,15 @@ static bool isAllowableExplicitConversion(Sema &S,
     return true;
 
   // Allow qualification conversions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool ObjCLifetimeConversion;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (S.IsQualificationConversion(ConvType, ToNonRefType, /*CStyle*/false,
                                   ObjCLifetimeConversion))
+#else
+  if (S.IsQualificationConversion(ConvType, ToNonRefType, /*CStyle*/false))
+#endif
     return true;
 
   // If we're not allowed to consider Objective-C pointer conversions,
@@ -9229,6 +9317,7 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
       return;
     }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (FromQs.getObjCLifetime() != ToQs.getObjCLifetime()) {
       S.Diag(Fn->getLocation(), diag::note_ovl_candidate_bad_ownership)
         << (unsigned) FnKind << FnDesc
@@ -9239,7 +9328,9 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
       MaybeEmitInheritedConstructorNote(S, Cand->FoundDecl);
       return;
     }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (FromQs.getObjCGCAttr() != ToQs.getObjCGCAttr()) {
       S.Diag(Fn->getLocation(), diag::note_ovl_candidate_bad_gc)
       << (unsigned) FnKind << FnDesc
@@ -9250,6 +9341,7 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
       MaybeEmitInheritedConstructorNote(S, Cand->FoundDecl);
       return;
     }
+#endif
 
     if (FromQs.hasUnaligned() != ToQs.hasUnaligned()) {
       S.Diag(Fn->getLocation(), diag::note_ovl_candidate_bad_unaligned)
@@ -9362,6 +9454,7 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
       isa<PointerType>(CToTy)) {
       Qualifiers FromQs = CFromTy.getQualifiers();
       Qualifiers ToQs = CToTy.getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       if (FromQs.getObjCLifetime() != ToQs.getObjCLifetime()) {
         S.Diag(Fn->getLocation(), diag::note_ovl_candidate_bad_arc_conv)
         << (unsigned) FnKind << FnDesc
@@ -9370,6 +9463,7 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
         MaybeEmitInheritedConstructorNote(S, Cand->FoundDecl);
         return;
       }
+#endif
   }
 
   if (TakingCandidateAddress &&
@@ -12285,7 +12379,9 @@ Sema::BuildCallToMemberFunction(Scope *S, Expr *MemExprE,
     Qualifiers objectQuals = objectType.getQualifiers();
 
     Qualifiers difference = objectQuals - funcQuals;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     difference.removeObjCGCAttr();
+#endif
     difference.removeAddressSpace();
     if (difference) {
       std::string qualsString = difference.getAsString();

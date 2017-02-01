@@ -123,7 +123,6 @@ SRCS+=	BackendUtil.cpp \
 	CGExprConstant.cpp \
 	CGExprScalar.cpp \
 	CGLoopInfo.cpp \
-	CGObjC.cpp \
 	CGOpenCLRuntime.cpp \
 	CGOpenMPRuntime.cpp \
 	CGRecordLayoutBuilder.cpp \
@@ -298,7 +297,6 @@ SRCS+=	AnalysisBasedWarnings.cpp \
 	SemaInit.cpp \
 	SemaLambda.cpp \
 	SemaLookup.cpp \
-	SemaObjCProperty.cpp \
 	SemaOpenMP.cpp \
 	SemaOverload.cpp \
 	SemaPseudoObject.cpp \

@@ -1343,6 +1343,7 @@ bool Sema::CheckARMBuiltinExclusiveCall(unsigned BuiltinID, CallExpr *TheCall,
     return true;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   switch (ValType.getObjCLifetime()) {
   case Qualifiers::OCL_None:
   case Qualifiers::OCL_ExplicitNone:
@@ -1356,6 +1357,7 @@ bool Sema::CheckARMBuiltinExclusiveCall(unsigned BuiltinID, CallExpr *TheCall,
       << ValType << PointerArg->getSourceRange();
     return true;
   }
+#endif
 
   if (IsLdrex) {
     TheCall->setType(ValType);
@@ -2120,6 +2122,7 @@ bool Sema::GetFormatNSStringIdx(const FormatAttr *Format, unsigned &Idx) {
 }
 /// \brief Diagnose use of %s directive in an NSString which is being passed
 /// as formatting string to formatting method.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void
 DiagnoseCStringFormatDirectiveInCFAPI(Sema &S,
                                         const NamedDecl *FDecl,
@@ -2145,12 +2148,10 @@ DiagnoseCStringFormatDirectiveInCFAPI(Sema &S,
   if (const CStyleCastExpr *CSCE = dyn_cast<CStyleCastExpr>(FormatExpr))
     FormatExpr = CSCE->getSubExpr();
   const StringLiteral *FormatString;
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (const ObjCStringLiteral *OSL =
       dyn_cast<ObjCStringLiteral>(FormatExpr->IgnoreParenImpCasts()))
     FormatString = OSL->getString();
   else
-#endif
     FormatString = dyn_cast<StringLiteral>(FormatExpr->IgnoreParenImpCasts());
   if (!FormatString)
     return;
@@ -2161,6 +2162,7 @@ DiagnoseCStringFormatDirectiveInCFAPI(Sema &S,
       << FDecl->getDeclName();
   }
 }
+#endif
 
 /// Determine whether the given type has a non-null nullability annotation.
 static bool isNonNullType(ASTContext &ctx, QualType type) {
@@ -2655,6 +2657,7 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
     return ExprError();
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   switch (ValType.getObjCLifetime()) {
   case Qualifiers::OCL_None:
   case Qualifiers::OCL_ExplicitNone:
@@ -2670,6 +2673,7 @@ ExprResult Sema::SemaAtomicOpsOverloaded(ExprResult TheCallResult,
       << ValType << Ptr->getSourceRange();
     return ExprError();
   }
+#endif
 
   // atomic_fetch_or takes a pointer to a volatile 'A'.  We shouldn't let the
   // volatile-ness of the pointee-type inject itself into the result or the
@@ -2877,6 +2881,7 @@ Sema::SemaBuiltinAtomicOverloaded(ExprResult TheCallResult) {
     return ExprError();
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   switch (ValType.getObjCLifetime()) {
   case Qualifiers::OCL_None:
   case Qualifiers::OCL_ExplicitNone:
@@ -2890,6 +2895,7 @@ Sema::SemaBuiltinAtomicOverloaded(ExprResult TheCallResult) {
       << ValType << FirstArg->getSourceRange();
     return ExprError();
   }
+#endif
 
   // Strip any qualifiers off ValType.
   ValType = ValType.getUnqualifiedType();
@@ -6503,6 +6509,7 @@ void Sema::CheckMemaccessArguments(const CallExpr *Call,
           << (BId == Builtin::BImemcmp ? ArgIdx + 2 : ArgIdx)
           << FnName << IsContained << ContainedRD << OperationType
           << Call->getCallee()->getSourceRange());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, XXX add the {..}
     } else if (PointeeTy.hasNonTrivialObjCLifetime() &&
              BId != Builtin::BImemset)
       DiagRuntimeBehavior(
@@ -6510,6 +6517,9 @@ void Sema::CheckMemaccessArguments(const CallExpr *Call,
         PDiag(diag::warn_arc_object_memaccess)
           << ArgIdx << FnName << PointeeTy
           << Call->getCallee()->getSourceRange());
+#else
+    }
+#endif
     else
       continue;
 
@@ -8308,6 +8318,7 @@ void checkObjCDictionaryLiteral(Sema &S, QualType TargetType,
 
 /// Check a single element within a collection literal against the
 /// target element type.
+#ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 void checkObjCCollectionLiteralElement(Sema &S, QualType TargetElementType,
                                        Expr *Element, unsigned ElementKind) {
   // Skip a bitcast to 'id' or qualified 'id'.
@@ -8337,6 +8348,7 @@ void checkObjCCollectionLiteralElement(Sema &S, QualType TargetElementType,
     checkObjCDictionaryLiteral(S, TargetElementType, DictionaryLiteral);
 #endif
 }
+#endif
 
 /// Check an Objective-C array literal being converted to the given
 /// target type.
@@ -10043,13 +10055,17 @@ static bool considerVariable(VarDecl *var, Expr *ref, RetainCycleOwner &owner) {
   // In ARC, it's captured strongly iff the variable has __strong
   // lifetime.  In MRR, it's captured strongly if the variable is
   // __block and has an appropriate type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, XXX a bit confusing
   if (var->getType().getObjCLifetime() != Qualifiers::OCL_Strong)
+#endif
     return false;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not reachable because of ^^^
   owner.Variable = var;
   if (ref)
     owner.setLocsFrom(ref);
   return true;
+#endif
 }
 
 static bool findRetainCycleOwner(Sema &S, Expr *e, RetainCycleOwner &owner) {
@@ -10060,7 +10076,9 @@ static bool findRetainCycleOwner(Sema &S, Expr *e, RetainCycleOwner &owner) {
       case CK_BitCast:
       case CK_LValueBitCast:
       case CK_LValueToRValue:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       case CK_ARCReclaimReturnedObject:
+#endif
         e = cast->getSubExpr();
         continue;
 
@@ -10246,6 +10264,7 @@ static void diagnoseRetainCycle(Sema &S, Expr *capturer,
 
 /// Check for a keyword selector that starts with the word 'add' or
 /// 'set'.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool isSetterLikeSelector(Selector sel) {
   if (sel.isUnarySelector()) return false;
 
@@ -10265,6 +10284,7 @@ static bool isSetterLikeSelector(Selector sel) {
   if (str.empty()) return true;
   return !isLowercase(str.front());
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJCEXTRAS // __DragonFly__
 static Optional<int> GetNSMutableArrayArgumentIndex(Sema &S,
@@ -10492,6 +10512,7 @@ void Sema::checkRetainCycles(VarDecl *Var, Expr *Init) {
     diagnoseRetainCycle(*this, Capturer, Owner);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool checkUnsafeAssignLiteral(Sema &S, SourceLocation Loc,
                                      Expr *RHS, bool isProperty) {
   // Check if RHS is an Objective-C object literal, which also can get
@@ -10512,7 +10533,9 @@ static bool checkUnsafeAssignLiteral(Sema &S, SourceLocation Loc,
 
   return true;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool checkUnsafeAssignObject(Sema &S, SourceLocation Loc,
                                     Qualifiers::ObjCLifetime LT,
                                     Expr *RHS, bool isProperty) {
@@ -10534,7 +10557,9 @@ static bool checkUnsafeAssignObject(Sema &S, SourceLocation Loc,
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, XXX unsafe
 bool Sema::checkUnsafeAssigns(SourceLocation Loc,
                               QualType LHS, Expr *RHS) {
   Qualifiers::ObjCLifetime LT = LHS.getObjCLifetime();
@@ -10547,7 +10572,9 @@ bool Sema::checkUnsafeAssigns(SourceLocation Loc,
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume no-op
 void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
                               Expr *LHS, Expr *RHS) {
   QualType LHSType;
@@ -10566,19 +10593,27 @@ void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
   if (LHSType.isNull())
     LHSType = LHS->getType();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume OCL_None
   Qualifiers::ObjCLifetime LT = LHSType.getObjCLifetime();
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LT == Qualifiers::OCL_Weak) {
     if (!Diags.isIgnored(diag::warn_arc_repeated_use_of_weak, Loc))
       getCurFunction()->markSafeWeakUse(LHS);
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (checkUnsafeAssigns(Loc, LHSType, RHS))
     return;
+#endif
 
   // FIXME. Check for other life times.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, smth is borked here
   if (LT != Qualifiers::OCL_None)
     return;
+#endif
   
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume it was false
   if (PRE) {
@@ -10614,6 +10649,7 @@ void Sema::checkUnsafeExprAssigns(SourceLocation Loc,
   }
 #endif
 }
+#endif
 
 //===--- CHECK: Empty statement body (-Wempty-body) ---------------------===//
 

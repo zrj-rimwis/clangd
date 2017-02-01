@@ -118,6 +118,7 @@ static bool isDeadReturn(const CFGBlock *B, const Stmt *S) {
   llvm_unreachable("Broke out of infinite loop.");
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static SourceLocation getTopMostMacro(SourceLocation Loc, SourceManager &SM) {
   assert(Loc.isMacroID());
   SourceLocation Last;
@@ -127,6 +128,7 @@ static SourceLocation getTopMostMacro(SourceLocation Loc, SourceManager &SM) {
   }
   return Last;
 }
+#endif
 
 /// Returns true if the statement is expanded from a configuration macro.
 static bool isExpandedFromConfigurationMacro(const Stmt *S,

@@ -382,6 +382,7 @@ CheckExtVectorComponent(Sema &S, QualType baseType, ExprValueKind &VK,
   return VT; // should never get here (a typedef type should always be found).
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static Decl *FindGetterSetterNameDeclFromProtocolList(const ObjCProtocolDecl*PDecl,
                                                 IdentifierInfo *Member,
                                                 const Selector &Sel,
@@ -400,7 +401,9 @@ static Decl *FindGetterSetterNameDeclFromProtocolList(const ObjCProtocolDecl*PDe
   }
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static Decl *FindGetterSetterNameDecl(const ObjCObjectPointerType *QIdTy,
                                       IdentifierInfo *Member,
                                       const Selector &Sel,
@@ -430,6 +433,7 @@ static Decl *FindGetterSetterNameDecl(const ObjCObjectPointerType *QIdTy,
   }
   return GDecl;
 }
+#endif
 
 ExprResult
 Sema::ActOnDependentMemberExpr(Expr *BaseExpr, QualType BaseType,
@@ -1212,6 +1216,7 @@ Sema::BuildMemberReferenceExpr(Expr *BaseExpr, QualType BaseExprType,
 /// types would be profitable.  The redefinition type is whatever
 /// this translation unit tried to typedef to id/Class;  we store
 /// it to the side and then re-use it in places like this.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool ShouldTryAgainWithRedefinitionType(Sema &S, ExprResult &base) {
   const ObjCObjectPointerType *opty
     = base.get()->getType()->getAs<ObjCObjectPointerType>();
@@ -1237,6 +1242,7 @@ static bool ShouldTryAgainWithRedefinitionType(Sema &S, ExprResult &base) {
   base = S.ImpCastExprToType(base.get(), redef, CK_BitCast);
   return true;
 }
+#endif
 
 static bool isRecordType(QualType T) {
   return T->isRecordType();
@@ -1791,7 +1797,9 @@ BuildFieldReferenceExpr(Sema &S, Expr *BaseExpr, bool IsArrow,
     Qualifiers BaseQuals = BaseType.getQualifiers();
 
     // GC attributes are never picked up by members.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     BaseQuals.removeObjCGCAttr();
+#endif
 
     // CVR attributes from the base are picked up by members,
     // except that 'mutable' members don't pick up 'const'.

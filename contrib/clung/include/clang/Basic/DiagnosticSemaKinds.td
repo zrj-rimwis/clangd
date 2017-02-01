@@ -2254,8 +2254,6 @@ def err_arg_with_address_space : Error<
   "parameter may not be qualified with an address space">;
 def err_field_with_address_space : Error<
   "field may not be qualified with an address space">;
-def err_attr_objc_ownership_redundant : Error<
-  "the type %0 is already explicitly ownership-qualified">;
 def err_invalid_nsnumber_type : Error<
   "%0 is not a valid literal type for NSNumber">;
 def err_objc_illegal_boxed_expression_type : Error<

@@ -2464,6 +2464,7 @@ void CodeGenFunction::EmitFunctionProlog(const CGFunctionInfo &FI,
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void eraseUnusedBitCasts(llvm::Instruction *insn) {
   while (insn->use_empty()) {
     llvm::BitCastInst *bitcast = dyn_cast<llvm::BitCastInst>(insn);
@@ -2474,8 +2475,10 @@ static void eraseUnusedBitCasts(llvm::Instruction *insn) {
     bitcast->eraseFromParent();
   }
 }
+#endif
 
 /// Try to emit a fused autorelease of a return result.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static llvm::Value *tryEmitFusedAutoreleaseOfResult(CodeGenFunction &CGF,
                                                     llvm::Value *result) {
   // We must be immediately followed the cast.
@@ -2563,8 +2566,10 @@ static llvm::Value *tryEmitFusedAutoreleaseOfResult(CodeGenFunction &CGF,
   // Cast back to the result type.
   return CGF.Builder.CreateBitCast(result, resultType);
 }
+#endif
 
 /// If this is a +1 of the value of an immutable 'self', remove it.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static llvm::Value *tryRemoveRetainOfSelf(CodeGenFunction &CGF,
                                           llvm::Value *result) {
   // This is only applicable to a method with an immutable 'self'.
@@ -2600,10 +2605,12 @@ static llvm::Value *tryRemoveRetainOfSelf(CodeGenFunction &CGF,
 
   return CGF.Builder.CreateBitCast(load, resultType);
 }
+#endif
 
 /// Emit an ARC autorelease of the result of a function.
 ///
 /// \return the value to actually return from the function
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static llvm::Value *emitAutoreleaseOfResult(CodeGenFunction &CGF,
                                             llvm::Value *result) {
   // If we're returning 'self', kill the initial retain.  This is a
@@ -2620,6 +2627,7 @@ static llvm::Value *emitAutoreleaseOfResult(CodeGenFunction &CGF,
 
   return CGF.EmitARCAutoreleaseReturnValue(result);
 }
+#endif
 
 /// Heuristically search for a dominating store to the return-value slot.
 static llvm::StoreInst *findDominatingStoreToReturnValue(CodeGenFunction &CGF) {
@@ -2891,6 +2899,7 @@ static bool isInAllocaArgument(CGCXXABI &ABI, QualType type) {
   return RD && ABI.getRecordArgABI(RD) == CGCXXABI::RAA_DirectInMemory;
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed, XXX smth not right here
 static AggValueSlot createPlaceholderSlot(CodeGenFunction &CGF,
                                           QualType Ty) {
   // FIXME: Generate IR in one pass, rather than going back and fixing up these
@@ -2912,6 +2921,7 @@ static AggValueSlot createPlaceholderSlot(CodeGenFunction &CGF,
 #endif
                                AggValueSlot::IsNotAliased);
 }
+#endif
 
 void CodeGenFunction::EmitDelegateCallArg(CallArgList &args,
                                           const VarDecl *param,
@@ -2979,6 +2989,7 @@ static void emitWriteback(CodeGenFunction &CGF,
   // release it's potentially undefined behavior (and the optimizer
   // will ignore it), and if it happens before the retain then the
   // optimizer could move the release there.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   if (writeback.ToUse) {
     assert(srcLV.getObjCLifetime() == Qualifiers::OCL_Strong);
 
@@ -2998,6 +3009,10 @@ static void emitWriteback(CodeGenFunction &CGF,
     // Release the old value.
     CGF.EmitARCRelease(oldValue, srcLV.isARCPreciseLifetime());
 
+#else
+  if (false) {
+    /* dummy */
+#endif
   // Otherwise, we can just do a normal lvalue store.
   } else {
     CGF.EmitStoreThroughLValue(RValue::get(value), srcLV);
@@ -3122,7 +3137,9 @@ static void emitWritebackArg(CodeGenFunction &CGF, CallArgList &args,
     }
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   llvm::Value *valueToUse = nullptr;
+#endif
 
   // Perform a copy if necessary.
   if (shouldCopy) {
@@ -3141,10 +3158,12 @@ static void emitWritebackArg(CodeGenFunction &CGF, CallArgList &args,
     // value has to stay alive until we're doing the store back.
     // This is because the temporary is effectively unretained,
     // and so otherwise we can violate the high-level semantics.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (CGF.CGM.getCodeGenOpts().OptimizationLevel != 0 &&
         srcLV.getObjCLifetime() == Qualifiers::OCL_Strong) {
       valueToUse = src;
     }
+#endif
   }
   
   // Finish the control flow if we needed it.
@@ -3153,6 +3172,7 @@ static void emitWritebackArg(CodeGenFunction &CGF, CallArgList &args,
     CGF.EmitBlock(contBB);
 
     // Make a phi for the value to intrinsically use.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (valueToUse) {
       llvm::PHINode *phiToUse = CGF.Builder.CreatePHI(valueToUse->getType(), 2,
                                                       "icr.to-use");
@@ -3161,11 +3181,16 @@ static void emitWritebackArg(CodeGenFunction &CGF, CallArgList &args,
                             originBB);
       valueToUse = phiToUse;
     }
+#endif
 
     condEval.end(CGF);
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   args.addWriteback(srcLV, temp, valueToUse);
+#else
+  args.addWriteback(srcLV, temp);
+#endif
   args.add(RValue::get(finalArgument), CRE->getType());
 }
 #endif

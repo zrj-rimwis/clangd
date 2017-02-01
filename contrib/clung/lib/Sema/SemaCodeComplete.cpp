@@ -4919,6 +4919,7 @@ void Sema::CodeCompleteObjCAtExpression(Scope *S) {
 
 /// \brief Determine whether the addition of the given flag to an Objective-C
 /// property's attributes will cause a conflict.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX move to ParseObjc.cpp (used only there)
 static bool ObjCPropertyFlagConflicts(unsigned Attributes, unsigned NewFlag) {
   // Check if we've already added this flag.
   if (Attributes & NewFlag)
@@ -4949,7 +4950,9 @@ static bool ObjCPropertyFlagConflicts(unsigned Attributes, unsigned NewFlag) {
   
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX move to ParseObjc.cpp (used only there)
 void Sema::CodeCompleteObjCPropertyFlags(Scope *S, ObjCDeclSpec &ODS) { 
   if (!CodeCompleter)
     return;
@@ -5016,6 +5019,7 @@ void Sema::CodeCompleteObjCPropertyFlags(Scope *S, ObjCDeclSpec &ODS) {
                             CodeCompletionContext::CCC_Other,
                             Results.data(),Results.size());
 }
+#endif
 
 /// \brief Describes the kind of Objective-C method that we want to find
 /// via code completion.
@@ -5176,6 +5180,7 @@ static void AddObjCMethods(ObjCContainerDecl *Container,
 }
 
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::CodeCompleteObjCPropertyGetter(Scope *S) {
   // Try to find the interface where getters might live.
   ObjCInterfaceDecl *Class = dyn_cast_or_null<ObjCInterfaceDecl>(CurContext);
@@ -5202,7 +5207,9 @@ void Sema::CodeCompleteObjCPropertyGetter(Scope *S) {
                             CodeCompletionContext::CCC_Other,
                             Results.data(),Results.size());
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::CodeCompleteObjCPropertySetter(Scope *S) {
   // Try to find the interface where setters might live.
   ObjCInterfaceDecl *Class
@@ -5231,6 +5238,7 @@ void Sema::CodeCompleteObjCPropertySetter(Scope *S) {
                             CodeCompletionContext::CCC_Other,
                             Results.data(),Results.size());
 }
+#endif
 
 void Sema::CodeCompleteObjCPassingType(Scope *S, ObjCDeclSpec &DS,
                                        bool IsParameter) {
@@ -6496,6 +6504,7 @@ static bool InheritsFromClassNamed(ObjCInterfaceDecl *Class,
                   
 /// \brief Add code completions for Objective-C Key-Value Coding (KVC) and
 /// Key-Value Observing (KVO).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void AddObjCKeyValueCompletions(ObjCPropertyDecl *Property,
                                        bool IsInstanceMethod,
                                        QualType ReturnType,
@@ -7125,6 +7134,7 @@ static void AddObjCKeyValueCompletions(ObjCPropertyDecl *Property,
     }
   }
 }
+#endif
 
 void Sema::CodeCompleteObjCMethodDecl(Scope *S, 
                                       bool IsInstanceMethod,

@@ -704,10 +704,12 @@ public:
 
     // These will never be supported.
     case CK_ObjCObjectLValueCast:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case CK_ARCProduceObject:
     case CK_ARCConsumeObject:
     case CK_ARCReclaimReturnedObject:
     case CK_ARCExtendBlockObject:
+#endif
     case CK_CopyAndAutoreleaseBlockObject:
       return nullptr;
 

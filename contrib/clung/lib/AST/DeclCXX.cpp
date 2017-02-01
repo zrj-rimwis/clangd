@@ -709,7 +709,11 @@ void CXXRecordDecl::addedMember(Decl *D) {
     // that does not explicitly have no lifetime makes the class a non-POD.
     ASTContext &Context = getASTContext();
     QualType T = Context.getBaseElementType(Field->getType());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem false
     if (T->isObjCRetainableType() || T.isObjCGCStrong()) {
+#else
+    if (T->isObjCRetainableType() || false) {
+#endif
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
       if (!Context.getLangOpts().ObjCAutoRefCount) {
 #else

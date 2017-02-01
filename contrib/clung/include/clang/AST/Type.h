@@ -129,6 +129,7 @@ public:
     Strong
   };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume OCL_None
   enum ObjCLifetime {
     /// There is no lifetime qualification on this type.
     OCL_None,
@@ -150,6 +151,7 @@ public:
     /// Assigning into this object requires a lifetime extension.
     OCL_Autoreleasing
   };
+#endif
 
   enum {
     /// The maximum supported address space number.
@@ -183,17 +185,21 @@ public:
     L.removeCVRQualifiers(CommonCRV);
     R.removeCVRQualifiers(CommonCRV);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (L.getObjCGCAttr() == R.getObjCGCAttr()) {
       Q.setObjCGCAttr(L.getObjCGCAttr());
       L.removeObjCGCAttr();
       R.removeObjCGCAttr();
     }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (L.getObjCLifetime() == R.getObjCLifetime()) {
       Q.setObjCLifetime(L.getObjCLifetime());
       L.removeObjCLifetime();
       R.removeObjCLifetime();
     }
+#endif
 
     if (L.getAddressSpace() == R.getAddressSpace()) {
       Q.setAddressSpace(L.getAddressSpace());
@@ -283,7 +289,10 @@ public:
   void removeUnaligned() { Mask &= ~UMask; }
   void addUnaligned() { Mask |= UMask; }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasObjCGCAttr() const { return Mask & GCAttrMask; }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   GC getObjCGCAttr() const { return GC((Mask & GCAttrMask) >> GCAttrShift); }
   void setObjCGCAttr(GC type) {
     Mask = (Mask & ~GCAttrMask) | (type << GCAttrShift);
@@ -298,13 +307,19 @@ public:
     qs.removeObjCGCAttr();
     return qs;
   }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qualifiers withoutObjCLifetime() const {
     Qualifiers qs = *this;
     qs.removeObjCLifetime();
     return qs;
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasObjCLifetime() const { return Mask & LifetimeMask; }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCLifetime getObjCLifetime() const {
     return ObjCLifetime((Mask & LifetimeMask) >> LifetimeShift);
   }
@@ -317,18 +332,23 @@ public:
     assert(!hasObjCLifetime());
     Mask |= (type << LifetimeShift);
   }
+#endif
 
   /// True if the lifetime is neither None or ExplicitNone.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasNonTrivialObjCLifetime() const {
     ObjCLifetime lifetime = getObjCLifetime();
     return (lifetime > OCL_ExplicitNone);
   }
+#endif
 
   /// True if the lifetime is either strong or weak.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasStrongOrWeakObjCLifetime() const {
     ObjCLifetime lifetime = getObjCLifetime();
     return (lifetime == OCL_Strong || lifetime == OCL_Weak);
   }
+#endif
 
   bool hasAddressSpace() const { return Mask & AddressSpaceMask; }
   unsigned getAddressSpace() const { return Mask >> AddressSpaceShift; }
@@ -386,10 +406,14 @@ public:
       Mask |= (Q.Mask & CVRMask);
       if (Q.hasAddressSpace())
         addAddressSpace(Q.getAddressSpace());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (Q.hasObjCGCAttr())
         addObjCGCAttr(Q.getObjCGCAttr());
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (Q.hasObjCLifetime())
         addObjCLifetime(Q.getObjCLifetime());
+#endif
     }
   }
 
@@ -401,10 +425,14 @@ public:
       Mask &= ~Q.Mask;
     else {
       Mask &= ~(Q.Mask & CVRMask);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (getObjCGCAttr() == Q.getObjCGCAttr())
         removeObjCGCAttr();
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (getObjCLifetime() == Q.getObjCLifetime())
         removeObjCLifetime();
+#endif
       if (getAddressSpace() == Q.getAddressSpace())
         removeAddressSpace();
     }
@@ -415,10 +443,14 @@ public:
   void addConsistentQualifiers(Qualifiers qs) {
     assert(getAddressSpace() == qs.getAddressSpace() ||
            !hasAddressSpace() || !qs.hasAddressSpace());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false XXX
     assert(getObjCGCAttr() == qs.getObjCGCAttr() ||
            !hasObjCGCAttr() || !qs.hasObjCGCAttr());
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false XXX
     assert(getObjCLifetime() == qs.getObjCLifetime() ||
            !hasObjCLifetime() || !qs.hasObjCLifetime());
+#endif
     Mask |= qs.Mask;
   }
 
@@ -446,10 +478,14 @@ public:
     return isAddressSpaceSupersetOf(other) &&
            // ObjC GC qualifiers can match, be added, or be removed, but can't
            // be changed.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // can it be written in a more confusing way
            (getObjCGCAttr() == other.getObjCGCAttr() || !hasObjCGCAttr() ||
             !other.hasObjCGCAttr()) &&
            // ObjC lifetime qualifiers must match exactly.
            getObjCLifetime() == other.getObjCLifetime() &&
+#else
+           (true || !false || !false) && true &&
+#endif
            // CVR qualifiers may subset.
            (((Mask & CVRMask) | (other.Mask & CVRMask)) == (Mask & CVRMask)) &&
            // U qualifier may superset.
@@ -463,6 +499,7 @@ public:
   /// if the lifetime qualifiers match, or if both are non-__weak and the
   /// including set also contains the 'const' qualifier, or both are non-__weak
   /// and one is None (which can only happen in non-ARC modes).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume true
   bool compatiblyIncludesObjCLifetime(Qualifiers other) const {
     if (getObjCLifetime() == other.getObjCLifetime())
       return true;
@@ -475,6 +512,7 @@ public:
 
     return hasConst();
   }
+#endif
 
   /// \brief Determine whether this set of qualifiers is a strict superset of
   /// another set of qualifiers, not considering qualifier compatibility.
@@ -527,12 +565,20 @@ private:
 
   static const uint32_t UMask = 0x8;
   static const uint32_t UShift = 3;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   static const uint32_t GCAttrMask = 0x30;
   static const uint32_t GCAttrShift = 4;
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   static const uint32_t LifetimeMask = 0x1C0;
   static const uint32_t LifetimeShift = 6;
+#endif
   static const uint32_t AddressSpaceMask =
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // sigh, just hardcode
       ~(CVRMask | UMask | GCAttrMask | LifetimeMask);
+#else
+      ~(CVRMask | UMask | 0x30 | 0x1C0);
+#endif
   static const uint32_t AddressSpaceShift = 9;
 };
 
@@ -993,36 +1039,52 @@ public:
   inline unsigned getAddressSpace() const;
 
   /// Returns gc attribute of this type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   inline Qualifiers::GC getObjCGCAttr() const;
+#endif
 
   /// true when Type is objc's weak.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isObjCGCWeak() const {
     return getObjCGCAttr() == Qualifiers::Weak;
   }
+#endif
 
   /// true when Type is objc's strong.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isObjCGCStrong() const {
     return getObjCGCAttr() == Qualifiers::Strong;
   }
+#endif
 
   /// Returns lifetime attribute of this type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qualifiers::ObjCLifetime getObjCLifetime() const {
     return getQualifiers().getObjCLifetime();
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasNonTrivialObjCLifetime() const {
     return getQualifiers().hasNonTrivialObjCLifetime();
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasStrongOrWeakObjCLifetime() const {
     return getQualifiers().hasStrongOrWeakObjCLifetime();
   }
+#endif
 
   enum DestructionKind {
     DK_none,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     DK_cxx_destructor,
     DK_objc_strong_lifetime,
     DK_objc_weak_lifetime
+#else
+    DK_cxx_destructor
+#endif
   };
 
   /// Returns a nonzero value if objects of this type require
@@ -1204,13 +1266,17 @@ public:
 
   Qualifiers getQualifiers() const { return Quals; }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasObjCGCAttr() const { return Quals.hasObjCGCAttr(); }
   Qualifiers::GC getObjCGCAttr() const { return Quals.getObjCGCAttr(); }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool hasObjCLifetime() const { return Quals.hasObjCLifetime(); }
   Qualifiers::ObjCLifetime getObjCLifetime() const {
     return Quals.getObjCLifetime();
   }
+#endif
 
   bool hasAddressSpace() const { return Quals.hasAddressSpace(); }
   unsigned getAddressSpace() const { return Quals.getAddressSpace(); }
@@ -1688,10 +1754,12 @@ public:
   bool isExtVectorType() const;                 // Extended vector type.
   bool isObjCObjectPointerType() const;         // pointer to ObjC object
   bool isObjCRetainableType() const;            // ObjC object or block pointer
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isObjCLifetimeType() const;              // (array of)* retainable type
   bool isObjCIndirectLifetimeType() const;      // (pointer to)* lifetime type
   bool isObjCNSObjectType() const;              // __attribute__((NSObject))
   bool isObjCIndependentClassType() const;      // __attribute__((objc_independent_class))
+#endif
   // FIXME: change this to 'raw' interface type, so we can used 'interface' type
   // for the common case.
   bool isObjCObjectType() const;                // NSString or typeof(*(id)0)
@@ -1700,7 +1768,9 @@ public:
   bool isObjCQualifiedClassType() const;        // Class<foo>
   bool isObjCObjectOrInterfaceType() const;
   bool isObjCIdType() const;                    // id
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isObjCInertUnsafeUnretainedType() const;
+#endif
 
   /// Whether the type is Objective-C 'id' or a __kindof type of an
   /// object type, e.g., __kindof NSView * or __kindof id
@@ -1752,10 +1822,14 @@ public:
   /// Determines if this type, which must satisfy
   /// isObjCLifetimeType(), is implicitly __unsafe_unretained rather
   /// than implicitly __strong.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool isObjCARCImplicitlyUnretainedType() const;
+#endif
 
   /// Return the implicit lifetime for this type, which must not be dependent.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qualifiers::ObjCLifetime getObjCARCImplicitLifetime() const;
+#endif
 
   enum ScalarTypeKind {
     STK_CPointer,
@@ -3776,12 +3850,21 @@ public:
     LastExprOperandKind = attr_neon_polyvector_type,
 
     // Enumerated operand (string or keyword).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     attr_objc_gc,
     attr_objc_ownership,
+#else
+    attr_objc_gc_disabled,
+    attr_objc_ownership_disabled,
+#endif
     attr_pcs,
     attr_pcs_vfp,
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // wow, XXX need to readjust for logic
     FirstEnumOperandKind = attr_objc_gc,
+#else
+    FirstEnumOperandKind = attr_pcs,
+#endif
     LastEnumOperandKind = attr_pcs_vfp,
 
     // No operand.
@@ -3810,7 +3893,11 @@ public:
     attr_nullable,
     attr_null_unspecified,
     attr_objc_kindof,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     attr_objc_inert_unsafe_unretained,
+#else
+    attr_objc_inert_unsafe_unretained_disabled
+#endif
   };
 
 private:
@@ -5387,9 +5474,11 @@ inline unsigned QualType::getAddressSpace() const {
 }
 
 /// Return the gc attribute of this type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 inline Qualifiers::GC QualType::getObjCGCAttr() const {
   return getQualifiers().getObjCGCAttr();
 }
+#endif
 
 inline FunctionType::ExtInfo getFunctionExtInfo(const Type &t) {
   if (const PointerType *PT = t.getAs<PointerType>()) {

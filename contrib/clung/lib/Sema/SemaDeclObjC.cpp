@@ -284,6 +284,7 @@ void Sema::AddAnyMethodToGlobalPool(Decl *D) {
 
 /// HasExplicitOwnershipAttr - returns true when pointer to ObjC pointer
 /// has explicit ownership attribute; false otherwise.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool
 HasExplicitOwnershipAttr(Sema &S, ParmVarDecl *Param) {
   QualType T = Param->getType();
@@ -300,6 +301,7 @@ HasExplicitOwnershipAttr(Sema &S, ParmVarDecl *Param) {
   // inferred it. So, it is implicit.
   return !T.getLocalQualifiers().hasObjCLifetime();
 }
+#endif
 
 /// ActOnStartOfObjCMethodDef - This routine sets up parameters; invisible
 /// and user declared, in the method definition's AST.
@@ -2407,6 +2409,7 @@ static bool CheckMethodOverrideParam(Sema &S,
 
 /// In ARC, check whether the conventional meanings of the two methods
 /// match.  If they don't, it's a hard error.
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
 static bool checkMethodFamilyMismatch(Sema &S, ObjCMethodDecl *impl,
                                       ObjCMethodDecl *decl) {
   ObjCMethodFamily implFamily = impl->getMethodFamily();
@@ -2476,6 +2479,7 @@ static bool checkMethodFamilyMismatch(Sema &S, ObjCMethodDecl *impl,
 
   return true;
 }
+#endif
 
 void Sema::WarnConflictingTypedMethods(ObjCMethodDecl *ImpMethodDecl,
                                        ObjCMethodDecl *MethodDecl,
@@ -2884,6 +2888,7 @@ void Sema::CheckCategoryVsClassMethodMatches(
                              true /*WarnCategoryMethodImpl*/);
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
 void Sema::ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
                                      ObjCContainerDecl* CDecl,
                                      bool IncompleteImpl) {
@@ -2910,6 +2915,7 @@ void Sema::ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
   // Check and see if properties declared in the interface have either 1)
   // an implementation or 2) there is a @synthesize/@dynamic implementation
   // of the property in the @implementation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
   if (const ObjCInterfaceDecl *IDecl = dyn_cast<ObjCInterfaceDecl>(CDecl)) {
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume smth && false && !smth
     bool SynthesizeProperties = LangOpts.ObjCDefaultSynthProperties &&
@@ -2920,6 +2926,7 @@ void Sema::ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
 #endif
     DiagnoseUnimplementedProperties(S, IMPDecl, CDecl, SynthesizeProperties);
   }
+#endif
 
   // Diagnose null-resettable synthesized setters.
   diagnoseNullResettableSynthesizedSetters(IMPDecl);
@@ -2952,6 +2959,7 @@ void Sema::ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
     for (auto *PI : I->all_referenced_protocols())
       CheckProtocolMethodDefs(*this, IMPDecl->getLocation(), PI, IncompleteImpl,
                               InsMap, ClsMap, I, ExplicitImplProtocols);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
   } else if (ObjCCategoryDecl *C = dyn_cast<ObjCCategoryDecl>(CDecl)) {
     // For extended class, unimplemented methods in its protocols will
     // be reported in the primary class.
@@ -2963,9 +2971,11 @@ void Sema::ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
       DiagnoseUnimplementedProperties(S, IMPDecl, CDecl,
                                       /*SynthesizeProperties=*/false);
     } 
+#endif
   } else
     llvm_unreachable("invalid ObjCContainerDecl type.");
 }
+#endif
 
 Sema::DeclGroupPtrTy
 Sema::ActOnForwardClassDeclaration(SourceLocation AtClassLoc,
@@ -3203,6 +3213,7 @@ bool Sema::MatchTwoMethodDeclarations(const ObjCMethodDecl *left,
   return true;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool isMethodContextSameForKindofLookup(ObjCMethodDecl *Method,
                                                ObjCMethodDecl *MethodInList) {
   auto *MethodProtocol = dyn_cast<ObjCProtocolDecl>(Method->getDeclContext());
@@ -3222,6 +3233,7 @@ static bool isMethodContextSameForKindofLookup(ObjCMethodDecl *Method,
       MethodInList->getClassInterface();
   return MethodInterface == MethodInListInterface;
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assuem not needed
 void Sema::addMethodToGlobalList(ObjCMethodList *List,
@@ -3372,6 +3384,7 @@ void Sema::AddMethodToGlobalPool(ObjCMethodDecl *Method, bool impl,
 /// global mismatches which we can't afford to make warnings / errors.
 /// Really, what we want is a way to take a method out of the global
 /// method pool.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool isAcceptableMethodMismatch(ObjCMethodDecl *chosen,
                                        ObjCMethodDecl *other) {
   if (!chosen->isInstanceMethod())
@@ -3385,8 +3398,10 @@ static bool isAcceptableMethodMismatch(ObjCMethodDecl *chosen,
   // chose has an integral result type.
   return (chosen->getReturnType()->isIntegerType());
 }
+#endif
 
 /// Return true if the given method is wthin the type bound.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 static bool FilterMethodsByTypeBound(ObjCMethodDecl *Method,
                                      const ObjCObjectType *TypeBound) {
   if (!TypeBound)
@@ -3418,6 +3433,7 @@ static bool FilterMethodsByTypeBound(ObjCMethodDecl *Method,
   }
   llvm_unreachable("unknow method context");
 }
+#endif
 
 /// We first select the type of the method: Instance or Factory, then collect
 /// all methods with that type.
@@ -3714,8 +3730,9 @@ void Sema::DiagnoseDuplicateIvars(ObjCInterfaceDecl *ID,
 }
 
 /// Diagnose attempts to define ARC-__weak ivars when __weak is disabled.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void DiagnoseWeakIvars(Sema &S, ObjCImplementationDecl *ID) {
-#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false, XXX a mess
   if (S.getLangOpts().ObjCWeak) return;
 #endif
 
@@ -3736,6 +3753,7 @@ static void DiagnoseWeakIvars(Sema &S, ObjCImplementationDecl *ID) {
     }
   }
 }
+#endif
 
 Sema::ObjCContainerKind Sema::getObjCContainerKind() const {
   switch (CurContext->getDeclKind()) {
@@ -3758,6 +3776,7 @@ Sema::ObjCContainerKind Sema::getObjCContainerKind() const {
 }
 
 // Note: For class/category implementations, allMethods is always null.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
                        ArrayRef<DeclGroupPtrTy> allTUVars) {
   if (getObjCContainerKind() == Sema::OCK_None)
@@ -3971,17 +3990,21 @@ Decl *Sema::ActOnAtEnd(Scope *S, SourceRange AtEnd, ArrayRef<Decl *> allMethods,
   ActOnDocumentableDecl(ClassDecl);
   return ClassDecl;
 }
+#endif
 
 /// CvtQTToAstBitMask - utility routine to produce an AST bitmask for
 /// objective-c's type qualifier from the parser version of the same info.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static Decl::ObjCDeclQualifier
 CvtQTToAstBitMask(ObjCDeclSpec::ObjCDeclQualifier PQTVal) {
   return (Decl::ObjCDeclQualifier) (unsigned) PQTVal;
 }
+#endif
 
 /// \brief Check whether the declared result type of the given Objective-C
 /// method declaration is compatible with the method's class.
 ///
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static Sema::ResultTypeCompatibilityKind 
 CheckRelatedResultTypeCompatibility(Sema &S, ObjCMethodDecl *Method,
                                     ObjCInterfaceDecl *CurrentClass) {
@@ -4017,6 +4040,7 @@ CheckRelatedResultTypeCompatibility(Sema &S, ObjCMethodDecl *Method,
   
   return Sema::RTC_Incompatible;
 }
+#endif
 
 namespace {
 /// A helper class for searching for methods which a particular method
@@ -4272,6 +4296,7 @@ void Sema::CheckObjCMethodOverrides(ObjCMethodDecl *ObjCMethod,
 
 /// Merge type nullability from for a redeclaration of the same entity,
 /// producing the updated type of the redeclared entity.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static QualType mergeTypeNullabilityForRedecl(Sema &S, SourceLocation loc,
                                               QualType type,
                                               bool usesCSKeyword,
@@ -4308,10 +4333,12 @@ static QualType mergeTypeNullabilityForRedecl(Sema &S, SourceLocation loc,
            AttributedType::getNullabilityAttrKind(*prevNullability),
            type, type);
 }
+#endif
 
 /// Merge information from the declaration of a method in the \@interface
 /// (or a category/extension) into the corresponding method in the
 /// @implementation (for a class or category).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void mergeInterfaceMethodToImpl(Sema &S,
                                        ObjCMethodDecl *method,
                                        ObjCMethodDecl *prevMethod) {
@@ -4352,6 +4379,7 @@ static void mergeInterfaceMethodToImpl(Sema &S,
     param->setType(newParamType);
   }
 }
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Decl *Sema::ActOnMethodDeclaration(
@@ -4779,6 +4807,7 @@ void Sema::DiagnoseUseOfUnimplementedSelectors() {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 ObjCIvarDecl *
 Sema::GetIvarBackingPropertyAccessor(const ObjCMethodDecl *Method,
                                      const ObjCPropertyDecl *&PDecl) const {
@@ -4803,7 +4832,9 @@ Sema::GetIvarBackingPropertyAccessor(const ObjCMethodDecl *Method,
     }
   return nullptr;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 namespace {
   /// Used by Sema::DiagnoseUnusedBackingIvarInAccessor to check if a property
   /// accessor references the backing ivar.
@@ -4844,7 +4875,9 @@ namespace {
 #endif
   };
 } // end anonymous namespace
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void Sema::DiagnoseUnusedBackingIvarInAccessor(Scope *S,
                                           const ObjCImplementationDecl *ImplD) {
   if (S->hasUnrecoverableErrorOccurred())
@@ -4876,3 +4909,4 @@ void Sema::DiagnoseUnusedBackingIvarInAccessor(Scope *S,
     }
   }
 }
+#endif

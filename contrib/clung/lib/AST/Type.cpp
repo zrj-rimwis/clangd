@@ -34,14 +34,20 @@ bool Qualifiers::isStrictSupersetOf(Qualifiers Other) const {
     // CVR qualifiers superset
     (((Mask & CVRMask) | (Other.Mask & CVRMask)) == (Mask & CVRMask)) &&
     // ObjC GC qualifiers superset
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ((getObjCGCAttr() == Other.getObjCGCAttr()) ||
      (hasObjCGCAttr() && !Other.hasObjCGCAttr())) &&
+#endif
     // Address space superset.
     ((getAddressSpace() == Other.getAddressSpace()) ||
      (hasAddressSpace()&& !Other.hasAddressSpace())) &&
     // Lifetime qualifier superset.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX very confusing
     ((getObjCLifetime() == Other.getObjCLifetime()) ||
      (hasObjCLifetime() && !Other.hasObjCLifetime()));
+#else
+    (true || (false && !false));
+#endif
 }
 
 const IdentifierInfo* QualType::getBaseTypeIdentifier() const {
@@ -524,6 +530,7 @@ bool Type::isObjCClassOrClassKindOfType() const {
 /// This approximates the answer to the following question: if this
 /// translation unit were compiled in ARC, would this type be qualified
 /// with __unsafe_unretained?
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume wtf and false
 bool Type::isObjCInertUnsafeUnretainedType() const {
   const Type *cur = this;
   while (true) {
@@ -539,6 +546,7 @@ bool Type::isObjCInertUnsafeUnretainedType() const {
     cur = next.getTypePtr();
   }
 }
+#endif
 
 ObjCObjectType::ObjCObjectType(QualType Canonical, QualType Base,
                                ArrayRef<QualType> typeArgs,
@@ -3011,9 +3019,11 @@ bool AttributedType::isQualifier() const {
   // something about a specific value/variable of a type.  (They aren't
   // always part of the canonical type, though.)
   case AttributedType::attr_address_space:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case AttributedType::attr_objc_gc:
   case AttributedType::attr_objc_ownership:
   case AttributedType::attr_objc_inert_unsafe_unretained:
+#endif
   case AttributedType::attr_nonnull:
   case AttributedType::attr_nullable:
   case AttributedType::attr_null_unspecified:
@@ -3075,9 +3085,11 @@ bool AttributedType::isCallingConv() const {
   case attr_vector_size:
   case attr_neon_vector_type:
   case attr_neon_polyvector_type:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case attr_objc_gc:
   case attr_objc_ownership:
   case attr_objc_inert_unsafe_unretained:
+#endif
   case attr_noreturn:
   case attr_nonnull:
   case attr_nullable:
@@ -3706,12 +3718,15 @@ bool Type::isBlockCompatibleObjCPointerType(ASTContext &ctx) const {
   return true;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed
 Qualifiers::ObjCLifetime Type::getObjCARCImplicitLifetime() const {
   if (isObjCARCImplicitlyUnretainedType())
     return Qualifiers::OCL_ExplicitNone;
   return Qualifiers::OCL_Strong;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool Type::isObjCARCImplicitlyUnretainedType() const {
   assert(isObjCLifetimeType() &&
          "cannot query implicit lifetime for non-inferrable type");
@@ -3731,22 +3746,32 @@ bool Type::isObjCARCImplicitlyUnretainedType() const {
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 bool Type::isObjCNSObjectType() const {
   if (const TypedefType *typedefType = dyn_cast<TypedefType>(this))
     return typedefType->getDecl()->hasAttr<ObjCNSObjectAttr>();
   return false;
 }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // asume not needed and false
 bool Type::isObjCIndependentClassType() const {
   if (const TypedefType *typedefType = dyn_cast<TypedefType>(this))
     return typedefType->getDecl()->hasAttr<ObjCIndependentClassAttr>();
   return false;
 }
+#endif
 bool Type::isObjCRetainableType() const {
   return isObjCObjectPointerType() ||
          isBlockPointerType() ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
          isObjCNSObjectType();
+#else
+         false;
+#endif
 }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false, XXX i smell missuses elsewhere
 bool Type::isObjCIndirectLifetimeType() const {
   if (isObjCLifetimeType())
     return true;
@@ -3758,15 +3783,18 @@ bool Type::isObjCIndirectLifetimeType() const {
     return MemPtr->getPointeeType()->isObjCIndirectLifetimeType();
   return false;
 }
+#endif
 
 /// Returns true if objects of this type have lifetime semantics under
 /// ARC.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false?
 bool Type::isObjCLifetimeType() const {
   const Type *type = this;
   while (const ArrayType *array = type->getAsArrayTypeUnsafe())
     type = array->getElementType().getTypePtr();
   return type->isObjCRetainableType();
 }
+#endif
 
 /// \brief Determine whether the given type T is a "bridgable" Objective-C type,
 /// which is either an Objective-C object pointer type or an 
@@ -3807,6 +3835,7 @@ bool Type::hasSizedVLAType() const {
 }
 
 QualType::DestructionKind QualType::isDestructedTypeImpl(QualType type) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   switch (type.getObjCLifetime()) {
   case Qualifiers::OCL_None:
   case Qualifiers::OCL_ExplicitNone:
@@ -3818,6 +3847,7 @@ QualType::DestructionKind QualType::isDestructedTypeImpl(QualType type) {
   case Qualifiers::OCL_Weak:
     return DK_objc_weak_lifetime;
   }
+#endif
 
   /// Currently, the only destruction kind we recognize is C++ objects
   /// with non-trivial destructors.

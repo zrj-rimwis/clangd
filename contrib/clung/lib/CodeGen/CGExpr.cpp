@@ -207,6 +207,7 @@ pushTemporaryCleanup(CodeGenFunction &CGF, const MaterializeTemporaryExpr *M,
   //   need to perform retain/release operations on the temporary.
   //
   // FIXME: This should be looking at E, not M.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (auto Lifetime = M->getType().getObjCLifetime()) {
     switch (Lifetime) {
     case Qualifiers::OCL_None:
@@ -263,6 +264,7 @@ pushTemporaryCleanup(CodeGenFunction &CGF, const MaterializeTemporaryExpr *M,
       llvm_unreachable("unknown storage duration");
     }
   }
+#endif
 
   CXXDestructorDecl *ReferenceTemporaryDtor = nullptr;
   if (const RecordType *RT =
@@ -357,6 +359,7 @@ EmitMaterializeTemporaryExpr(const MaterializeTemporaryExpr *M) {
 
     // FIXME: ideally this would use EmitAnyExprToMem, however, we cannot do so
     // as that will cause the lifetime adjustment to be lost for ARC
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && !false thus not needed
   auto ownership = M->getType().getObjCLifetime();
   if (ownership != Qualifiers::OCL_None &&
       ownership != Qualifiers::OCL_ExplicitNone) {
@@ -401,6 +404,7 @@ EmitMaterializeTemporaryExpr(const MaterializeTemporaryExpr *M) {
     pushTemporaryCleanup(*this, M, E, Object);
     return RefTempDst;
   }
+#endif
 
   SmallVector<const Expr *, 2> CommaLHSs;
   SmallVector<SubobjectAdjustment, 2> Adjustments;
@@ -1466,6 +1470,7 @@ RValue CodeGenFunction::EmitLoadOfLValue(LValue LV, SourceLocation Loc) {
                                                              AddrWeakObj));
   }
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (LV.getQuals().getObjCLifetime() == Qualifiers::OCL_Weak) {
     // In MRC mode, we do a load+autorelease.
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
@@ -1481,6 +1486,7 @@ RValue CodeGenFunction::EmitLoadOfLValue(LValue LV, SourceLocation Loc) {
     Object = EmitObjCConsumeObject(LV.getType(), Object);
     return RValue::get(Object);
   }
+#endif
 
   if (LV.isSimple()) {
     assert(!LV.getType()->isFunctionType());
@@ -1643,6 +1649,7 @@ void CodeGenFunction::EmitStoreThroughLValue(RValue Src, LValue Dst,
   }
 
   // There's special magic for assigning into an ARC-qualified l-value.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and thus not needed
   if (Qualifiers::ObjCLifetime Lifetime = Dst.getQuals().getObjCLifetime()) {
     switch (Lifetime) {
     case Qualifiers::OCL_None:
@@ -1667,6 +1674,7 @@ void CodeGenFunction::EmitStoreThroughLValue(RValue Src, LValue Dst,
       break;
     }
   }
+#endif
 
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
   if (Dst.isObjCWeak() && !Dst.isNonGC()) {
@@ -1872,13 +1880,13 @@ void CodeGenFunction::EmitStoreThroughGlobalRegLValue(RValue Src, LValue Dst) {
 // setObjCGCLValueClass - sets class of the lvalue for the purpose of
 // generating write-barries API. It is currently a global, ivar,
 // or neither.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
 static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
                                  LValue &LV,
                                  bool IsMemberAccess=false) {
   if (Ctx.getLangOpts().getGC() == LangOptions::NonGC)
     return;
 
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (isa<ObjCIvarRefExpr>(E)) {
     QualType ExpTy = E->getType();
     if (IsMemberAccess && ExpTy->isPointerType()) {
@@ -1897,7 +1905,6 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     LV.setObjCArray(E->getType()->isArrayType());
     return;
   }
-#endif
 
   if (const auto *Exp = dyn_cast<DeclRefExpr>(E)) {
     if (const auto *VD = dyn_cast<VarDecl>(Exp->getDecl())) {
@@ -1944,12 +1951,10 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     return;
   }
 
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (const auto *Exp = dyn_cast<ObjCBridgedCastExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getSubExpr(), LV, IsMemberAccess);
     return;
   }
-#endif
 
   if (const auto *Exp = dyn_cast<ArraySubscriptExpr>(E)) {
     setObjCGCLValueClass(Ctx, Exp->getBase(), LV);
@@ -1972,6 +1977,7 @@ static void setObjCGCLValueClass(const ASTContext &Ctx, const Expr *E,
     return;
   }
 }
+#endif
 
 static llvm::Value *
 EmitBitCastOfLValueToProperType(CodeGenFunction &CGF,
@@ -2045,7 +2051,9 @@ static LValue EmitGlobalVarDeclLValue(CodeGenFunction &CGF,
   } else {
     LV = CGF.MakeAddrLValue(Addr, T, AlignmentSource::Decl);
   }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
   setObjCGCLValueClass(CGF.getContext(), E, LV);
+#endif
   return LV;
 }
 
@@ -2224,15 +2232,23 @@ LValue CodeGenFunction::EmitDeclRefLValue(const DeclRefExpr *E) {
                      !VD->getType()->isReferenceType() &&
                      !isBlockByref;
     if (NonGCable) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       LV.getQuals().removeObjCGCAttr();
+#endif
       LV.setNonGC(true);
     }
 
     bool isImpreciseLifetime =
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false
       (isLocalStorage && !VD->hasAttr<ObjCPreciseLifetimeAttr>());
+#else
+      (isLocalStorage && !false);
+#endif
     if (isImpreciseLifetime)
       LV.setARCPreciseLifetime(ARCImpreciseLifetime);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
     setObjCGCLValueClass(getContext(), E, LV);
+#endif
     return LV;
   }
 
@@ -3236,7 +3252,9 @@ EmitExtVectorElementExpr(const ExtVectorElementExpr *E) {
     Address Ptr = EmitPointerWithAlignment(E->getBase(), &AlignSource);
     const PointerType *PT = E->getBase()->getType()->getAs<PointerType>();
     Base = MakeAddrLValue(Ptr, PT->getPointeeType(), AlignSource);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     Base.getQuals().removeObjCGCAttr();
+#endif
   } else if (E->getBase()->isGLValue()) {
     // Otherwise, if the base is an lvalue ( as in the case of foo.x.x),
     // emit the base as an lvalue.
@@ -3297,7 +3315,9 @@ LValue CodeGenFunction::EmitMemberExpr(const MemberExpr *E) {
   NamedDecl *ND = E->getMemberDecl();
   if (auto *Field = dyn_cast<FieldDecl>(ND)) {
     LValue LV = EmitLValueForField(BaseLV, Field);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns
     setObjCGCLValueClass(getContext(), E, LV);
+#endif
     return LV;
   }
 
@@ -3447,8 +3467,10 @@ LValue CodeGenFunction::EmitLValueForField(LValue base,
   }
 
   // __weak attribute on a field is ignored.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (LV.getQuals().getObjCGCAttr() == Qualifiers::Weak)
     LV.getQuals().removeObjCGCAttr();
+#endif
 
   // Fields of may_alias structs act like 'char' for TBAA purposes.
   // FIXME: this should get propagated down through anonymous structs
@@ -3636,10 +3658,12 @@ LValue CodeGenFunction::EmitCastLValue(const CastExpr *E) {
   case CK_MemberPointerToBoolean:
   case CK_ReinterpretMemberPointer:
   case CK_AnyPointerToBlockPointerCast:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCProduceObject:
   case CK_ARCConsumeObject:
   case CK_ARCReclaimReturnedObject:
   case CK_ARCExtendBlockObject:
+#endif
   case CK_CopyAndAutoreleaseBlockObject:
   case CK_AddressSpaceConversion:
     return EmitUnsupportedLValue(E, "unexpected cast lvalue");
@@ -3797,6 +3821,7 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
 
   if (const auto *PseudoDtor =
           dyn_cast<CXXPseudoDestructorExpr>(E->getCallee()->IgnoreParens())) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and thus not needed
     QualType DestroyedType = PseudoDtor->getDestroyedType();
     if (DestroyedType.hasStrongOrWeakObjCLifetime()) {
       // Automatic Reference Counting:
@@ -3834,6 +3859,10 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
         EmitARCDestroyWeak(BaseValue);
         break;
       }
+#else
+    if (false) {
+     /* dummy */
+#endif
     } else {
       // C++ [expr.pseudo]p1:
       //   The result shall only be used as the operand for the function call
@@ -3870,14 +3899,13 @@ LValue CodeGenFunction::EmitBinaryOperatorLValue(const BinaryOperator *E) {
 
   switch (getEvaluationKind(E->getType())) {
   case TEK_Scalar: {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume OCL_None that does nothing
     switch (E->getLHS()->getType().getObjCLifetime()) {
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Qualifiers::OCL_Strong:
       return EmitARCStoreStrong(E, /*ignored*/ false).first;
 
     case Qualifiers::OCL_Autoreleasing:
       return EmitARCStoreAutoreleasing(E).first;
-#endif
 
     // No reason to do any of these differently.
     case Qualifiers::OCL_None:
@@ -3885,6 +3913,7 @@ LValue CodeGenFunction::EmitBinaryOperatorLValue(const BinaryOperator *E) {
     case Qualifiers::OCL_Weak:
       break;
     }
+#endif
 
     RValue RV = EmitAnyExpr(E->getRHS());
     LValue LV = EmitCheckedLValue(E->getLHS(), TCK_Store);

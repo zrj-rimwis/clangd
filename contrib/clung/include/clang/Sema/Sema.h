@@ -2378,7 +2378,11 @@ public:
                                     CXXCastPath &BasePath,
                                     bool IgnoreBaseAccess);
   bool IsQualificationConversion(QualType FromType, QualType ToType,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                  bool CStyle, bool &ObjCLifetimeConversion);
+#else
+                                 bool CStyle);
+#endif
   bool IsNoReturnConversion(QualType FromType, QualType ToType,
                             QualType &ResultTy);
   bool DiagnoseMultipleUserDefinedConversion(Expr *From, QualType ToType);
@@ -2507,6 +2511,7 @@ public:
 
   // Note that LK_String is intentionally after the other literals, as
   // this is used for diagnostics logic.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum ObjCLiteralKind {
     LK_Array,
     LK_Dictionary,
@@ -2517,6 +2522,7 @@ public:
     LK_None
   };
   ObjCLiteralKind CheckLiteralKind(Expr *FromE);
+#endif
 
   ExprResult PerformObjectMemberConversion(Expr *From,
                                            NestedNameSpecifier *Qualifier,
@@ -3171,18 +3177,24 @@ public:
 
   /// ImplMethodsVsClassMethods - This is main routine to warn if any method
   /// remains unimplemented in the class or category \@implementation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
   void ImplMethodsVsClassMethods(Scope *S, ObjCImplDecl* IMPDecl,
                                  ObjCContainerDecl* IDecl,
                                  bool IncompleteImpl = false);
+#endif
 
   /// DiagnoseUnimplementedProperties - This routine warns on those properties
   /// which must be implemented by this implementation.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseUnimplementedProperties(Scope *S, ObjCImplDecl* IMPDecl,
                                        ObjCContainerDecl *CDecl,
                                        bool SynthesizeProperties);
+#endif
 
   /// Diagnose any null-resettable synthesized setters.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void diagnoseNullResettableSynthesizedSetters(const ObjCImplDecl *impDecl);
+#endif
 
   /// DefaultSynthesizeProperties - This routine default synthesizes all
   /// properties which must be synthesized in the class's \@implementation.
@@ -3195,11 +3207,14 @@ public:
   /// IvarBacksCurrentMethodAccessor - This routine returns 'true' if 'IV' is
   /// an ivar synthesized for 'Method' and 'Method' is a property accessor
   /// declared in class 'IFace'.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool IvarBacksCurrentMethodAccessor(ObjCInterfaceDecl *IFace,
                                       ObjCMethodDecl *Method, ObjCIvarDecl *IV);
+#endif
   
   /// DiagnoseUnusedBackingIvarInAccessor - Issue an 'unused' warning if ivar which
   /// backs the property is not used in the property's accessor.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseUnusedBackingIvarInAccessor(Scope *S,
                                            const ObjCImplementationDecl *ImplD);
   
@@ -3208,9 +3223,11 @@ public:
   /// It also returns ivar's property on success.
   ObjCIvarDecl *GetIvarBackingPropertyAccessor(const ObjCMethodDecl *Method,
                                                const ObjCPropertyDecl *&PDecl) const;
+#endif
   
   /// Called by ActOnProperty to handle \@property declarations in
   /// class extensions.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCPropertyDecl *HandlePropertyInClassExtension(Scope *S,
                       SourceLocation AtLoc,
                       SourceLocation LParenLoc,
@@ -3223,9 +3240,11 @@ public:
                       QualType T,
                       TypeSourceInfo *TSI,
                       tok::ObjCKeywordKind MethodImplKind);
+#endif
 
   /// Called by ActOnProperty and HandlePropertyInClassExtension to
   /// handle creating the ObjcPropertyDecl for a category or \@interface.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCPropertyDecl *CreatePropertyDecl(Scope *S,
                                        ObjCContainerDecl *CDecl,
                                        SourceLocation AtLoc,
@@ -3240,18 +3259,23 @@ public:
                                        TypeSourceInfo *TSI,
                                        tok::ObjCKeywordKind MethodImplKind,
                                        DeclContext *lexicalDC = nullptr);
+#endif
 
   /// AtomicPropertySetterGetterRules - This routine enforces the rule (via
   /// warning) when atomic property has one but not the other user-declared
   /// setter or getter.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ .. assume not needed
   void AtomicPropertySetterGetterRules(ObjCImplDecl* IMPDecl,
                                        ObjCInterfaceDecl* IDecl);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnoseOwningPropertyGetterSynthesis(const ObjCImplementationDecl *D);
 
   void DiagnoseMissingDesignatedInitOverrides(
                                           const ObjCImplementationDecl *ImplD,
                                           const ObjCInterfaceDecl *IFD);
+#endif
 
   void DiagnoseDuplicateIvars(ObjCInterfaceDecl *ID, ObjCInterfaceDecl *SID);
 
@@ -3749,9 +3773,11 @@ public:
   void NoteDeletedFunction(FunctionDecl *FD);
   void NoteDeletedInheritingConstructor(CXXConstructorDecl *CD);
   std::string getDeletedOrUnavailableSuffix(const FunctionDecl *FD);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool DiagnosePropertyAccessorMismatch(ObjCPropertyDecl *PD,
                                         ObjCMethodDecl *Getter,
                                         SourceLocation Loc);
+#endif
   void DiagnoseSentinelCalls(NamedDecl *D, SourceLocation Loc,
                              ArrayRef<Expr *> Args);
 
@@ -7636,36 +7662,47 @@ public:
   /// Ensure attributes are consistent with type.
   /// \param [in, out] Attributes The attributes to check; they will
   /// be modified to be consistent with \p PropertyTy.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and everything is OK
   void CheckObjCPropertyAttributes(Decl *PropertyPtrTy,
                                    SourceLocation Loc,
                                    unsigned &Attributes,
                                    bool propertyInPrimaryClass);
+#endif
 
   /// Process the specified property declaration and create decls for the
   /// setters and getters as needed.
   /// \param property The property declaration being processed
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void ProcessPropertyDecl(ObjCPropertyDecl *property);
+#endif
 
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void DiagnosePropertyMismatch(ObjCPropertyDecl *Property,
                                 ObjCPropertyDecl *SuperProperty,
                                 const IdentifierInfo *Name,
                                 bool OverridingProtocolProperty);
+#endif
 
   void DiagnoseClassExtensionDupMethods(ObjCCategoryDecl *CAT,
                                         ObjCInterfaceDecl *ID);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and just returns nullptr
   Decl *ActOnAtEnd(Scope *S, SourceRange AtEnd,
                    ArrayRef<Decl *> allMethods = None,
                    ArrayRef<DeclGroupPtrTy> allTUVars = None);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Decl *ActOnProperty(Scope *S, SourceLocation AtLoc,
                       SourceLocation LParenLoc,
                       FieldDeclarator &FD, ObjCDeclSpec &ODS,
                       Selector GetterSel, Selector SetterSel,
                       tok::ObjCKeywordKind MethodImplKind,
                       DeclContext *lexicalDC = nullptr);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   Decl *ActOnPropertyImplDecl(Scope *S,
                               SourceLocation AtLoc,
                               SourceLocation PropertyLoc,
@@ -7674,6 +7711,7 @@ public:
                               IdentifierInfo *PropertyIvar,
                               SourceLocation PropertyIvarLoc,
                               ObjCPropertyQueryKind QueryKind);
+#endif
 
   enum ObjCSpecialMethodKind {
     OSMK_None,
@@ -9072,8 +9110,12 @@ public:
   ReferenceCompareResult CompareReferenceRelationship(SourceLocation Loc,
                                                       QualType T1, QualType T2,
                                                       bool &DerivedToBase,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC, trim last arg
                                                       bool &ObjCConversion,
                                                 bool &ObjCLifetimeConversion);
+#else
+                                                      bool &ObjCConversion);
+#endif
 
   ExprResult checkUnknownAnyCast(SourceRange TypeRange, QualType CastType,
                                  Expr *CastExpr, CastKind &CastKind,
@@ -9146,11 +9188,15 @@ public:
 
   /// checkUnsafeAssigns - Check whether +1 expr is being assigned
   /// to weak/__unsafe_unretained type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool checkUnsafeAssigns(SourceLocation Loc, QualType LHS, Expr *RHS);
+#endif
 
   /// checkUnsafeExprAssigns - Check whether +1 expr is being assigned
   /// to weak/__unsafe_unretained expression.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume no-op
   void checkUnsafeExprAssigns(SourceLocation Loc, Expr *LHS, Expr *RHS);
+#endif
 
   /// CheckMessageArgumentTypes - Check types in an Obj-C message send.
   /// \param Method - May be null.
@@ -9482,9 +9528,11 @@ public:
   void CodeCompleteObjCAtVisibility(Scope *S);
   void CodeCompleteObjCAtStatement(Scope *S);
   void CodeCompleteObjCAtExpression(Scope *S);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void CodeCompleteObjCPropertyFlags(Scope *S, ObjCDeclSpec &ODS);
   void CodeCompleteObjCPropertyGetter(Scope *S);
   void CodeCompleteObjCPropertySetter(Scope *S);
+#endif
   void CodeCompleteObjCPassingType(Scope *S, ObjCDeclSpec &DS,
                                    bool IsParameter);
   void CodeCompleteObjCMessageReceiver(Scope *S);

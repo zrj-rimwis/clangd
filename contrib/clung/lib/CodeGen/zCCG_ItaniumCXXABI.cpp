@@ -3708,6 +3708,7 @@ static void InitCatchParam(CodeGenFunction &CGF,
       llvm::Value *CastExn =
         CGF.Builder.CreateBitCast(AdjustedExn, LLVMCatchTy, "exn.casted");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only OCL_None should be taken
       switch (CatchType.getQualifiers().getObjCLifetime()) {
       case Qualifiers::OCL_Strong:
         CastExn = CGF.EmitARCRetainNonBlock(CastExn);
@@ -3716,14 +3717,17 @@ static void InitCatchParam(CodeGenFunction &CGF,
       case Qualifiers::OCL_None:
       case Qualifiers::OCL_ExplicitNone:
       case Qualifiers::OCL_Autoreleasing:
+#endif
         CGF.Builder.CreateStore(CastExn, ParamAddr);
         return;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // continuation
       case Qualifiers::OCL_Weak:
         CGF.EmitARCInitWeak(ParamAddr, CastExn);
         return;
       }
       llvm_unreachable("bad ownership qualifier!");
+#endif
     }
 
     // Otherwise, it returns a pointer into the exception object.

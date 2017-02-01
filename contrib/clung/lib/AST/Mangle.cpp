@@ -56,11 +56,13 @@ enum CCMangling {
   CCM_Std
 };
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume not needed
 static bool isExternC(const NamedDecl *ND) {
   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(ND))
     return FD->isExternC();
   return cast<VarDecl>(ND)->isExternC();
 }
+#endif
 
 static CCMangling getCallingConvMangling(const ASTContext &Context,
                                          const NamedDecl *ND) {

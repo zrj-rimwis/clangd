@@ -5021,7 +5021,9 @@ bool WebAssembly::isPICDefaultForced() const { return false; }
 bool WebAssembly::IsIntegratedAssemblerDefault() const { return true; }
 
 // TODO: Support Objective C stuff.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 bool WebAssembly::SupportsObjCGC() const { return false; }
+#endif
 
 bool WebAssembly::hasBlocksRuntime() const { return false; }
 

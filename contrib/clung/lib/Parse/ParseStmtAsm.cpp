@@ -280,6 +280,7 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
 
 /// Turn a sequence of our tokens back into a string that we can hand
 /// to the MC asm parser.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static bool buildMSAsmString(Preprocessor &PP, SourceLocation AsmLoc,
                              ArrayRef<Token> AsmToks,
                              SmallVectorImpl<unsigned> &TokOffsets,
@@ -334,9 +335,11 @@ static bool buildMSAsmString(Preprocessor &PP, SourceLocation AsmLoc,
   assert(TokOffsets.size() == AsmToks.size());
   return false;
 }
+#endif
 
 /// isTypeQualifier - Return true if the current token could be the
 /// start of a type-qualifier-list.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static bool isTypeQualifier(const Token &Tok) {
   switch (Tok.getKind()) {
   default: return false;
@@ -355,12 +358,15 @@ static bool isTypeQualifier(const Token &Tok) {
     return true;
   }
 }
+#endif
 
 // Determine if this is a GCC-style asm statement.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static bool isGCCAsmStatement(const Token &TokAfterAsm) {
   return TokAfterAsm.is(tok::l_paren) || TokAfterAsm.is(tok::kw_goto) ||
          isTypeQualifier(TokAfterAsm);
 }
+#endif
 
 /// ParseMicrosoftAsmStatement. When -fms-extensions/-fasm-blocks is enabled,
 /// this routine is called to collect the tokens for an MS asm statement.

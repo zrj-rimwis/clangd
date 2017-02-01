@@ -7234,12 +7234,14 @@ checkPointerTypesForAssignment(Sema &S, QualType LHSType, QualType RHSType) {
   // qualifiers of the type *pointed to* by the right;
 
   // As a special case, 'non-__weak A *' -> 'non-__weak const *' is okay.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   if (lhq.getObjCLifetime() != rhq.getObjCLifetime() &&
       lhq.compatiblyIncludesObjCLifetime(rhq)) {
     // Ignore lifetime for further calculation.
     lhq.removeObjCLifetime();
     rhq.removeObjCLifetime();
   }
+#endif
 
   if (!lhq.compatiblyIncludes(rhq)) {
     // Treat address-space mismatches as fatal.  TODO: address subspaces
@@ -7248,15 +7250,23 @@ checkPointerTypesForAssignment(Sema &S, QualType LHSType, QualType RHSType) {
 
     // It's okay to add or remove GC or lifetime qualifiers when converting to
     // and from void*.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume well something, too confusing
     else if (lhq.withoutObjCGCAttr().withoutObjCLifetime()
                         .compatiblyIncludes(
                                 rhq.withoutObjCGCAttr().withoutObjCLifetime())
              && (lhptee->isVoidType() || rhptee->isVoidType()))
       ; // keep old
+#else
+    else if (lhq.compatiblyIncludes(rhq)
+             && (lhptee->isVoidType() || rhptee->isVoidType()))
+      ; // keep old
+#endif
 
     // Treat lifetime mismatches as fatal.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     else if (lhq.getObjCLifetime() != rhq.getObjCLifetime())
       ConvTy = Sema::IncompatiblePointerDiscardsQualifiers;
+#endif
     
     // For GCC/MS compatibility, other qualifier mismatches are treated
     // as still compatible in C.
@@ -8983,6 +8993,7 @@ static bool isObjCObjectLiteral(ExprResult &E) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool hasIsEqualMethod(Sema &S, const Expr *LHS, const Expr *RHS) {
   const ObjCObjectPointerType *Type =
     LHS->getType()->getAs<ObjCObjectPointerType>();
@@ -9032,7 +9043,9 @@ static bool hasIsEqualMethod(Sema &S, const Expr *LHS, const Expr *RHS) {
   return false;
 #endif
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {
   FromE = FromE->IgnoreParenImpCasts();
   switch (FromE->getStmtClass()) {
@@ -9080,7 +9093,9 @@ Sema::ObjCLiteralKind Sema::CheckLiteralKind(Expr *FromE) {
   }
   return LK_None;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void diagnoseObjCLiteralComparison(Sema &S, SourceLocation Loc,
                                           ExprResult &LHS, ExprResult &RHS,
                                           BinaryOperator::Opcode Opc){
@@ -9134,6 +9149,7 @@ static void diagnoseObjCLiteralComparison(Sema &S, SourceLocation Loc,
       << FixItHint::CreateInsertion(End, "]");
   }
 }
+#endif
 
 static void diagnoseLogicalNotOnLHSofComparison(Sema &S, ExprResult &LHS,
                                                 ExprResult &RHS,
@@ -10167,12 +10183,14 @@ QualType Sema::CheckAssignmentOperands(Expr *LHSExpr, ExprResult &RHS,
     if (RHS.isInvalid())
       return QualType();
     // Special case of NSObject attributes on c-style pointer types.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && ((false && smth) || (false && smth))
     if (ConvTy == IncompatiblePointer &&
         ((Context.isObjCNSObjectType(LHSType) &&
           RHSType->isObjCObjectPointerType()) ||
          (Context.isObjCNSObjectType(RHSType) &&
           LHSType->isObjCObjectPointerType())))
       ConvTy = Compatible;
+#endif
 
     if (ConvTy == Compatible &&
         LHSType->isObjCObjectType())
@@ -10201,6 +10219,7 @@ QualType Sema::CheckAssignmentOperands(Expr *LHSExpr, ExprResult &RHS,
     }
 
     if (ConvTy == Compatible) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (LHSType.getObjCLifetime() == Qualifiers::OCL_Strong) {
         // Warn about retain cycles where a block captures the LHS, but
         // not if the LHS is a simple variable into which the block is
@@ -10226,6 +10245,7 @@ QualType Sema::CheckAssignmentOperands(Expr *LHSExpr, ExprResult &RHS,
         checkUnsafeExprAssigns(Loc, LHSExpr, RHS.get());
 #endif
       }
+#endif
     }
   } else {
     // Compound assignment "x += y"
@@ -11795,9 +11815,14 @@ static Expr *maybeRebuildARCConsumingStmt(Stmt *Statement) {
   if (!cleanups) return nullptr;
 
   ImplicitCastExpr *cast = dyn_cast<ImplicitCastExpr>(cleanups->getSubExpr());
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth || true, thus early return nullptr
   if (!cast || cast->getCastKind() != CK_ARCConsumeObject)
+#else
+  if (true)
+#endif
     return nullptr;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not reachable because of ^^^
   // Splice out the cast.  This shouldn't modify any interesting
   // features of the statement.
   Expr *producer = cast->getSubExpr();
@@ -11805,6 +11830,7 @@ static Expr *maybeRebuildARCConsumingStmt(Stmt *Statement) {
   assert(producer->getValueKind() == cast->getValueKind());
   cleanups->setSubExpr(producer);
   return cleanups;
+#endif
 }
 
 void Sema::ActOnStartStmtExpr() {
@@ -12492,9 +12518,13 @@ ExprResult Sema::BuildVAArgExpr(SourceLocation BuiltinLoc,
 
     if (!TInfo->getType().isPODType(Context)) {
       Diag(TInfo->getTypeLoc().getBeginLoc(),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
            TInfo->getType()->isObjCLifetimeType()
              ? diag::warn_second_parameter_to_va_arg_ownership_qualified
              : diag::warn_second_parameter_to_va_arg_not_pod)
+#else
+           diag::warn_second_parameter_to_va_arg_not_pod)
+#endif
         << TInfo->getType()
         << TInfo->getTypeLoc().getSourceRange();
     }
@@ -12666,9 +12696,11 @@ bool Sema::DiagnoseAssignmentResult(AssignConvertType ConvTy,
       break;
 
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     } else if (lhq.getObjCLifetime() != rhq.getObjCLifetime()) {
       DiagKind = diag::err_typecheck_incompatible_ownership;
       break;
+#endif
     }
 
     llvm_unreachable("unknown error case for discarding qualifiers!");
@@ -13530,6 +13562,7 @@ static bool captureInBlock(BlockScopeInfo *BSI, VarDecl *Var,
   }
 
   // Forbid the block-capture of autoreleasing variables.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (CaptureType.getObjCLifetime() == Qualifiers::OCL_Autoreleasing) {
     if (BuildAndDiagnose) {
       S.Diag(Loc, diag::err_arc_autoreleasing_capture)
@@ -13539,6 +13572,7 @@ static bool captureInBlock(BlockScopeInfo *BSI, VarDecl *Var,
     }
     return false;
   }
+#endif
   const bool HasBlocksAttr = Var->hasAttr<BlocksAttr>();
   if (HasBlocksAttr || CaptureType->isReferenceType() ||
       (S.getLangOpts().OpenMP && S.IsOpenMPCapturedDecl(Var))) {
@@ -13724,6 +13758,7 @@ static bool captureInLambda(LambdaScopeInfo *LSI,
     }
 
     // Forbid the lambda copy-capture of autoreleasing variables.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (CaptureType.getObjCLifetime() == Qualifiers::OCL_Autoreleasing) {
       if (BuildAndDiagnose) {
         S.Diag(Loc, diag::err_arc_autoreleasing_capture) << /*lambda*/ 1;
@@ -13732,6 +13767,7 @@ static bool captureInLambda(LambdaScopeInfo *LSI,
       }
       return false;
     }
+#endif
 
     // Make sure that by-copy captures are of a complete and non-abstract type.
     if (BuildAndDiagnose) {

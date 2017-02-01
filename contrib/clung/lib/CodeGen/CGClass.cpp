@@ -1016,7 +1016,11 @@ namespace {
       if (CGF.getContext().getLangOpts().SanitizeAddressFieldPadding)
         return false;
       Qualifiers Qual = F->getType().getQualifiers();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       if (Qual.hasVolatile() || Qual.hasObjCLifetime())
+#else
+      if (Qual.hasVolatile() || false)
+#endif
         return false;
       return true;
     }

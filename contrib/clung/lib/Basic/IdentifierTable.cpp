@@ -112,7 +112,11 @@ namespace {
 #endif
     KEYOPENCL = 0x200,
     KEYC11 = 0x400,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     KEYARC = 0x800,
+#else
+    KEYARCz = 0x800,
+#endif
     KEYNOMS18 = 0x01000,
     KEYNOOPENCL = 0x02000,
     WCHARSUPPORT = 0x04000,

@@ -641,9 +641,13 @@ llvm::DIType *CGDebugInfo::CreateQualifiedType(QualType Ty,
   const Type *T = Qc.strip(Ty);
 
   // Ignore these qualifiers for now.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qc.removeObjCGCAttr();
+#endif
   Qc.removeAddressSpace();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Qc.removeObjCLifetime();
+#endif
 
   // We will create one Derived type for one qualifier and recurse to handle any
   // additional ones.

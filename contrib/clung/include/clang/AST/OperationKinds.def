@@ -280,6 +280,7 @@ CAST_OPERATION(IntegralComplexCast)
 ///   _Complex unsigned -> _Complex float
 CAST_OPERATION(IntegralComplexToFloatingComplex)
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed and only for OBJC
 /// \brief [ARC] Produces a retainable object pointer so that it may
 /// be consumed, e.g. by being passed to a consuming parameter.
 /// Calls objc_retain.
@@ -301,6 +302,7 @@ CAST_OPERATION(ARCReclaimReturnedObject)
 /// would not otherwise be guaranteed, such as when casting to a
 /// non-block pointer type.
 CAST_OPERATION(ARCExtendBlockObject)
+#endif
 
 /// \brief Converts from _Atomic(T) to T.
 CAST_OPERATION(AtomicToNonAtomic)

@@ -1398,14 +1398,18 @@ public:
     case QualType::DK_none:
       return false;
     case QualType::DK_cxx_destructor:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, silly
     case QualType::DK_objc_weak_lifetime:
+#endif
       return getLangOpts().Exceptions;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case QualType::DK_objc_strong_lifetime:
       return getLangOpts().Exceptions &&
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume false
              CGM.getCodeGenOpts().ObjCAutoRefCountExceptions;
 #else
              false;
+#endif
 #endif
     }
     llvm_unreachable("bad destruction kind");
@@ -1693,10 +1697,14 @@ public:
 
   /// LoadObjCSelf - Load the value of self. This function is only valid while
   /// generating code for an Objective-C method.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   llvm::Value *LoadObjCSelf();
+#endif
 
   /// TypeOfSelfObject - Return type of object that this self represents.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   QualType TypeOfSelfObject();
+#endif
 
   /// hasAggregateLLVMType - Return true if the specified AST type will map into
   /// an aggregate LLVM type or is void.
@@ -3120,6 +3128,7 @@ public:
   }
 
   // ARC primitives.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void EmitARCInitWeak(Address addr, llvm::Value *value);
   void EmitARCDestroyWeak(Address addr);
   llvm::Value *EmitARCLoadWeak(Address addr);
@@ -3142,7 +3151,6 @@ public:
   llvm::Value *EmitARCAutoreleaseReturnValue(llvm::Value *value);
   llvm::Value *EmitARCRetainAutoreleaseReturnValue(llvm::Value *value);
   llvm::Value *EmitARCRetainAutoreleasedReturnValue(llvm::Value *value);
-#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   llvm::Value *EmitARCUnsafeClaimAutoreleasedReturnValue(llvm::Value *value);
 #endif
 
@@ -3155,9 +3163,11 @@ public:
   EmitARCStoreUnsafeUnretained(const BinaryOperator *e, bool ignored);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   llvm::Value *EmitObjCThrowOperand(const Expr *expr);
   llvm::Value *EmitObjCConsumeObject(QualType T, llvm::Value *Ptr);
   llvm::Value *EmitObjCExtendObjectLifetime(QualType T, llvm::Value *Ptr);
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   llvm::Value *EmitARCExtendBlockObject(const Expr *expr);
@@ -3168,11 +3178,15 @@ public:
   llvm::Value *EmitARCUnsafeUnretainedScalarExpr(const Expr *expr);
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void EmitARCIntrinsicUse(ArrayRef<llvm::Value*> values);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   static Destroyer destroyARCStrongImprecise;
   static Destroyer destroyARCStrongPrecise;
   static Destroyer destroyARCWeak;
+#endif
 
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   void EmitObjCAutoreleasePoolPop(llvm::Value *Ptr); 
@@ -3217,7 +3231,9 @@ public:
 
   /// EmitExtendGCLifetime - Given a pointer to an Objective-C object,
   /// make sure it survives garbage collection until this point.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   void EmitExtendGCLifetime(llvm::Value *object);
+#endif
 
   /// EmitComplexExpr - Emit the computation of the specified expression of
   /// complex type, returning the result.

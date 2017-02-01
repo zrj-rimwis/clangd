@@ -1515,7 +1515,11 @@ static bool ShouldDiagnoseUnusedDecl(const NamedDecl *D) {
     return false;
 
   if (D->isReferenced() || D->isUsed() || D->hasAttr<UnusedAttr>() ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       D->hasAttr<ObjCPreciseLifetimeAttr>())
+#else
+      false)
+#endif
     return false;
 
   if (isa<LabelDecl>(D))
@@ -2972,9 +2976,11 @@ bool Sema::MergeFunctionDecl(FunctionDecl *New, NamedDecl *&OldD,
     if (!Context.hasSameType(OldDeclaredReturnType, NewDeclaredReturnType) &&
         !((NewQType->isDependentType() || OldQType->isDependentType()) &&
           New->isLocalExternDecl())) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
       if (NewDeclaredReturnType->isObjCObjectPointerType() &&
           OldDeclaredReturnType->isObjCObjectPointerType())
         ResQT = Context.mergeObjCGCQualifiers(NewQType, OldQType);
+#endif
       if (ResQT.isNull()) {
         if (New->isCXXClassMember() && New->isOutOfLine())
           Diag(New->getLocation(), diag::err_member_def_does_not_match_ret_type)
@@ -3427,11 +3433,13 @@ void Sema::MergeVarDeclTypes(VarDecl *New, VarDecl *Old,
                                 NewArray->getElementType()))
           MergedT = Old->getType();
       }
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     }
     else if (New->getType()->isObjCObjectPointerType() &&
                Old->getType()->isObjCObjectPointerType()) {
       MergedT = Context.mergeObjCGCQualifiers(New->getType(),
                                               Old->getType());
+#endif
     }
   } else {
     // C 6.2.7p2:
@@ -5866,6 +5874,7 @@ static bool shouldConsiderLinkage(const FunctionDecl *FD) {
   llvm_unreachable("Unexpected context");
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static bool hasParsedAttr(Scope *S, const AttributeList *AttrList,
                           AttributeList::Kind Kind) {
   for (const AttributeList *L = AttrList; L; L = L->getNext())
@@ -5873,7 +5882,9 @@ static bool hasParsedAttr(Scope *S, const AttributeList *AttrList,
       return true;
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static bool hasParsedAttr(Scope *S, const Declarator &PD,
                           AttributeList::Kind Kind) {
   // Check decl attributes on the DeclSpec.
@@ -5890,6 +5901,7 @@ static bool hasParsedAttr(Scope *S, const Declarator &PD,
   // Finally, check attributes on the decl itself.
   return hasParsedAttr(S, PD.getAttributes(), Kind);
 }
+#endif
 
 /// Adjust the \c DeclContext for a function or variable that might be a
 /// function-local external declaration.
@@ -6972,6 +6984,7 @@ void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
     }
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume smth && false
   if (NewVD->hasLocalStorage() && T.isObjCGCWeak()
       && !NewVD->hasAttr<BlocksAttr>()) {
     if (getLangOpts().getGC() != LangOptions::NonGC)
@@ -6983,6 +6996,7 @@ void Sema::CheckVariableDeclarationType(VarDecl *NewVD) {
       Diag(NewVD->getLocation(), diag::warn_attribute_weak_on_local);
     }
   }
+#endif
 
   bool isVM = T->isVariablyModifiedType();
   if (isVM || NewVD->hasAttr<CleanupAttr>() ||
@@ -9874,7 +9888,9 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init,
     VDecl->setType(DclT);
 
   if (!VDecl->isInvalidDecl()) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume just returns false, XXX kill whole block?
     checkUnsafeAssigns(VDecl->getLocation(), VDecl->getType(), Init);
+#endif
 
     if (VDecl->hasAttr<BlocksAttr>())
       checkRetainCycles(VDecl, Init);
@@ -9886,10 +9902,12 @@ void Sema::AddInitializerToDecl(Decl *RealDecl, Expr *Init,
     // we do not warn to warn spuriously when 'x' and 'y' are on separate
     // paths through the function. This should be revisited if
     // -Wrepeated-use-of-weak is made flow-sensitive.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (VDecl->getType().getObjCLifetime() == Qualifiers::OCL_Strong &&
         !Diags.isIgnored(diag::warn_arc_repeated_use_of_weak,
                          Init->getLocStart()))
       getCurFunction()->markSafeWeakUse(Init);
+#endif
   }
 
   // The initialization is usually a full-expression.
@@ -12324,6 +12342,7 @@ bool Sema::isAcceptableTagRedeclaration(const TagDecl *Previous,
 ///       struct Y { friend struct /*N::*/ X; };
 ///     }
 ///   }
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume not needed
 static FixItHint createFriendTagNNSFixIt(Sema &SemaRef, NamedDecl *ND, Scope *S,
                                          SourceLocation NameLoc) {
   // While the decl is in a namespace, do repeated lookup of that name and see
@@ -12356,6 +12375,7 @@ static FixItHint createFriendTagNNSFixIt(Sema &SemaRef, NamedDecl *ND, Scope *S,
     OS << II->getName() << "::";
   return FixItHint::CreateInsertion(NameLoc, Insertion);
 }
+#endif
 
 /// \brief Determine whether a tag originally declared in context \p OldDC can
 /// be redeclared with an unqualfied name in \p NewDC (assuming name lookup
@@ -13820,8 +13840,10 @@ FieldDecl *Sema::CheckFieldDecl(DeclarationName Name, QualType T,
     NewFD->setInvalidDecl();
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (T.isObjCGCWeak())
     Diag(Loc, diag::warn_attribute_weak_on_field);
+#endif
 
   NewFD->setAccess(AS);
   return NewFD;

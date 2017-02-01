@@ -4386,10 +4386,16 @@ isNullPointerValueTemplateArgument(Sema &S, NonTypeTemplateParmDecl *Param,
       (EvalResult.Val.isMemberPointer() &&
        !EvalResult.Val.getMemberPointerDecl())) {
     // If our expression has an appropriate type, we've succeeded.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX prune last arg
     bool ObjCLifetimeConversion;
+#endif
     if (S.Context.hasSameUnqualifiedType(Arg->getType(), ParamType) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
         S.IsQualificationConversion(Arg->getType(), ParamType, false,
                                      ObjCLifetimeConversion))
+#else
+        S.IsQualificationConversion(Arg->getType(), ParamType, false))
+#endif
       return NPV_NullPointer;
     
     // The types didn't match, but we know we got a null pointer; complain,
@@ -4423,11 +4429,17 @@ isNullPointerValueTemplateArgument(Sema &S, NonTypeTemplateParmDecl *Param,
 static bool CheckTemplateArgumentIsCompatibleWithParameter(
     Sema &S, NonTypeTemplateParmDecl *Param, QualType ParamType, Expr *ArgIn,
     Expr *Arg, QualType ArgType) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX just stupid
   bool ObjCLifetimeConversion;
+#endif
   if (ParamType->isPointerType() &&
       !ParamType->getAs<PointerType>()->getPointeeType()->isFunctionType() &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assumc no needed
       S.IsQualificationConversion(ArgType, ParamType, false,
                                   ObjCLifetimeConversion)) {
+#else
+      S.IsQualificationConversion(ArgType, ParamType, false)) {
+#endif
     // For pointer-to-object types, qualification conversions are
     // permitted.
   } else {
@@ -4801,10 +4813,16 @@ static bool CheckTemplateArgumentPointerToMember(Sema &S,
     break;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX prune last arg
   bool ObjCLifetimeConversion;
+#endif
   if (S.IsQualificationConversion(Arg->getType(),
                                   ParamType.getNonReferenceType(),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                   false, ObjCLifetimeConversion)) {
+#else
+                                  false)) {
+#endif
     Arg = S.ImpCastExprToType(Arg, ParamType, CK_NoOp,
                               Arg->getValueKind()).get();
     ResultArg = Arg;
@@ -5491,10 +5509,16 @@ Sema::BuildExpressionFromDeclTemplateArgument(const TemplateArgument &Arg,
       // We might need to perform a trailing qualification conversion, since
       // the element type on the parameter could be more qualified than the
       // element type in the expression we constructed.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, XXX prune last arg
       bool ObjCLifetimeConversion;
+#endif
       if (IsQualificationConversion(((Expr*) RefExpr.get())->getType(),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                     ParamType.getUnqualifiedType(), false,
                                     ObjCLifetimeConversion))
+#else
+                                    ParamType.getUnqualifiedType(), false))
+#endif
         RefExpr = ImpCastExprToType(RefExpr.get(), ParamType.getUnqualifiedType(), CK_NoOp);
 
       assert(!RefExpr.isInvalid() &&

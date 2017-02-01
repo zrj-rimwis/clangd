@@ -811,9 +811,15 @@ public:
     DQ_PR_nonatomic = 0x40,
     DQ_PR_setter = 0x80,
     DQ_PR_atomic = 0x100,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     DQ_PR_weak =   0x200,
     DQ_PR_strong = 0x400,
     DQ_PR_unsafe_unretained = 0x800,
+#else
+    DQ_PR_weak_disabled =   0x200,
+    DQ_PR_strong_disabled = 0x400,
+    DQ_PR_unsafe_unretained_disabled = 0x800,
+#endif
     DQ_PR_nullability = 0x1000,
     DQ_PR_null_resettable = 0x2000,
     DQ_PR_class = 0x4000

@@ -1583,6 +1583,7 @@ static void EmitObjectDelete(CodeGenFunction &CGF,
                               /*ForVirtualBase=*/false,
                               /*Delegating=*/false,
                               Ptr);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   else if (auto Lifetime = ElementType.getObjCLifetime()) {
     switch (Lifetime) {
     case Qualifiers::OCL_None:
@@ -1599,6 +1600,7 @@ static void EmitObjectDelete(CodeGenFunction &CGF,
       break;
     }
   }
+#endif
            
   CGF.PopCleanupBlock();
 }

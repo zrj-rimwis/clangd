@@ -1125,19 +1125,8 @@ def ObjCMethodFamily : InheritableAttr {
   let Documentation = [ObjCMethodFamilyDocs];
 }
 
-def ObjCNSObject : InheritableAttr {
-  let Spellings = [GNU<"NSObject">];
-  let Documentation = [Undocumented];
-}
-
 def ObjCIndependentClass : InheritableAttr {
   let Spellings = [GNU<"objc_independent_class">];
-  let Documentation = [Undocumented];
-}
-
-def ObjCPreciseLifetime : InheritableAttr {
-  let Spellings = [GNU<"objc_precise_lifetime">];
-  let Subjects = SubjectList<[Var], ErrorDiag>;
   let Documentation = [Undocumented];
 }
 
@@ -1415,19 +1404,6 @@ def Unavailable : InheritableAttr {
                  "IR_ARCForbiddenConversion",
                  "IR_ARCInitReturnsUnrelated",
                  "IR_ARCFieldWithOwnership"], 1, /*fake*/ 1>];
-  let Documentation = [Undocumented];
-}
-
-def ObjCGC : TypeAttr {
-  let Spellings = [GNU<"objc_gc">];
-  let Args = [IdentifierArgument<"Kind">];
-  let Documentation = [Undocumented];
-}
-
-def ObjCOwnership : InheritableAttr {
-  let Spellings = [GNU<"objc_ownership">];
-  let Args = [IdentifierArgument<"Kind">];
-  let ASTNode = 0;
   let Documentation = [Undocumented];
 }
 

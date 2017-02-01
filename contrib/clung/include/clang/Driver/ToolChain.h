@@ -293,7 +293,9 @@ public:
   virtual bool SupportsProfiling() const { return true; }
 
   /// Does this tool chain support Objective-C garbage collection.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   virtual bool SupportsObjCGC() const { return true; }
+#endif
 
   /// Complain if this tool chain doesn't support Objective-C ARC.
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume die

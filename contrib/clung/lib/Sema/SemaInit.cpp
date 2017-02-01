@@ -3745,10 +3745,18 @@ static void TryReferenceListInitialization(Sema &S,
       return;
 
     SourceLocation DeclLoc = Initializer->getLocStart();
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX oh nice even explicit dummies
     bool dummy1, dummy2, dummy3;
+#else
+    bool dummy1, dummy2;
+#endif
     Sema::ReferenceCompareResult RefRelationship
       = S.CompareReferenceRelationship(DeclLoc, cv1T1, cv2T2, dummy1,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, trim last arg
                                        dummy2, dummy3);
+#else
+                                       dummy2);
+#endif
     if (RefRelationship >= Sema::Ref_Related) {
       // Try to bind the reference here.
       TryReferenceInitializationCore(S, Entity, Kind, Initializer, cv1T1, T1,
@@ -3986,15 +3994,23 @@ static OverloadingResult TryRefInitWithConversionFunction(Sema &S,
 
   bool DerivedToBase;
   bool ObjCConversion;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool ObjCLifetimeConversion;
+#endif
   assert(!S.CompareReferenceRelationship(Initializer->getLocStart(),
                                          T1, T2, DerivedToBase,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, trim the last arg
                                          ObjCConversion,
                                          ObjCLifetimeConversion) &&
+#else
+                                         ObjCConversion) &&
+#endif
          "Must have incompatible references when binding via conversion");
   (void)DerivedToBase;
   (void)ObjCConversion;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX XXX wth is this and why?
   (void)ObjCLifetimeConversion;
+#endif
   
   // Build the candidate set directly in the initialization sequence
   // structure, so that it will persist if we fail.
@@ -4115,12 +4131,18 @@ static OverloadingResult TryRefInitWithConversionFunction(Sema &S,
 
   bool NewDerivedToBase = false;
   bool NewObjCConversion = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, trim last arg
   bool NewObjCLifetimeConversion = false;
+#endif
   Sema::ReferenceCompareResult NewRefRelationship
     = S.CompareReferenceRelationship(DeclLoc, T1,
                                      T2.getNonLValueExprType(S.Context),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                      NewDerivedToBase, NewObjCConversion,
                                      NewObjCLifetimeConversion);
+#else
+                                     NewDerivedToBase, NewObjCConversion);
+#endif
   if (NewRefRelationship == Sema::Ref_Incompatible) {
     // If the type we've converted to is not reference-related to the
     // type we're looking for, then there is another conversion step
@@ -4245,11 +4267,17 @@ static void TryReferenceInitializationCore(Sema &S,
   bool isRValueRef = !isLValueRef;
   bool DerivedToBase = false;
   bool ObjCConversion = false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed, trim last arg
   bool ObjCLifetimeConversion = false;
+#endif
   Expr::Classification InitCategory = Initializer->Classify(S.Context);
   Sema::ReferenceCompareResult RefRelationship
     = S.CompareReferenceRelationship(DeclLoc, cv1T1, cv2T2, DerivedToBase,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
                                      ObjCConversion, ObjCLifetimeConversion);
+#else
+                                     ObjCConversion);
+#endif
 
   // C++0x [dcl.init.ref]p5:
   //   A reference to type "cv1 T1" is initialized by an expression of type
@@ -4588,10 +4616,12 @@ static void TryDefaultInitialization(Sema &S,
   }
 
   // If the destination type has a lifetime property, zero-initialize it.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (DestType.getQualifiers().hasObjCLifetime()) {
     Sequence.AddZeroInitializationStep(Entity.getType());
     return;
   }
+#endif
 }
 
 /// \brief Attempt a user-defined conversion between two types (C++ [dcl.init]),
@@ -4803,8 +4833,10 @@ static InvalidICRKind isInvalidICRSource(ASTContext &C, Expr *e,
   } else if (isa<DeclRefExpr>(e)) {
     // set isWeakAccess to true, to mean that there will be an implicit 
     // load which requires a cleanup.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (e->getType().getObjCLifetime() == Qualifiers::OCL_Weak)
       isWeakAccess = true;
+#endif
     
     if (!isAddressOf) return IIK_nonlocal;
 
@@ -4836,6 +4868,7 @@ static InvalidICRKind isInvalidICRSource(ASTContext &C, Expr *e,
 
 /// Check whether the given expression is a valid operand for an
 /// indirect copy/restore.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static void checkIndirectCopyRestoreSource(Sema &S, Expr *src) {
   assert(src->isRValue());
   bool isWeakAccess = false;
@@ -4853,6 +4886,7 @@ static void checkIndirectCopyRestoreSource(Sema &S, Expr *src) {
     << ((unsigned) iik - 1)  // shift index into diagnostic explanations
     << src->getSourceRange();
 }
+#endif
 
 /// \brief Determine whether we have compatible array types for the
 /// purposes of GNU by-copy array initialization.
@@ -6949,11 +6983,13 @@ InitializationSequence::Perform(Sema &S,
       break;
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     case SK_ProduceObjCObject:
       CurInit =
           ImplicitCastExpr::Create(S.Context, Step->Type, CK_ARCProduceObject,
                                    CurInit.get(), nullptr, VK_RValue);
       break;
+#endif
 
     case SK_StdInitializerList: {
       S.Diag(CurInit.get()->getExprLoc(),

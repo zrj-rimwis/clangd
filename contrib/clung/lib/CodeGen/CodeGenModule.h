@@ -116,6 +116,7 @@ struct OrderGlobalInits {
   }
 };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
 struct ObjCEntrypoints {
   ObjCEntrypoints() { memset(this, 0, sizeof(*this)); }
 
@@ -183,6 +184,7 @@ struct ObjCEntrypoints {
   /// void clang.arc.use(...);
   llvm::Constant *clang_arc_use;
 };
+#endif
 
 /// This class records statistics on instrumentation based profiling.
 class InstrProfStats {
@@ -300,7 +302,9 @@ private:
   std::unique_ptr<CGCUDARuntime> CUDARuntime;
 #endif
   std::unique_ptr<CGDebugInfo> DebugInfo;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   std::unique_ptr<ObjCEntrypoints> ObjCData;
+#endif
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed
   llvm::MDNode *NoObjCARCExceptionsMetadata = nullptr;
 #endif
@@ -551,10 +555,12 @@ public:
   }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   ObjCEntrypoints &getObjCEntrypoints() const {
     assert(ObjCData != nullptr);
     return *ObjCData;
   }
+#endif
 
   InstrProfStats &getPGOStats() { return PGOStats; }
   llvm::IndexedInstrProfReader *getPGOReader() const { return PGOReader.get(); }

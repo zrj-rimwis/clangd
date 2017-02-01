@@ -766,6 +766,7 @@ collectPublicBases(CXXRecordDecl *RD,
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static void getUnambiguousPublicSubobjects(
     CXXRecordDecl *RD, llvm::SmallVectorImpl<CXXRecordDecl *> &Objects) {
   llvm::DenseMap<CXXRecordDecl *, unsigned> SubobjectsSeen;
@@ -784,6 +785,7 @@ static void getUnambiguousPublicSubobjects(
     Objects.push_back(PublicSubobject);
   }
 }
+#endif
 
 /// CheckCXXThrowOperand - Validate the operand of a throw.
 bool Sema::CheckCXXThrowOperand(SourceLocation ThrowLoc,
@@ -4013,6 +4015,7 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
     // considered scalar types. However, such types do not actually behave
     // like scalar types at run time (since they may require retain/release
     // operations), so we report them as non-scalar.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (T->isObjCLifetimeType()) {
       switch (T.getObjCLifetime()) {
       case Qualifiers::OCL_None:
@@ -4025,6 +4028,7 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
         return false;
       }
     }
+#endif
       
     return T->isScalarType();
   case UTT_IsCompound:
@@ -4160,9 +4164,11 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
       return true;
 
     // Objective-C++ ARC: autorelease types don't require destruction.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (T->isObjCLifetimeType() &&
         T.getObjCLifetime() == Qualifiers::OCL_Autoreleasing)
       return true;
+#endif
 
     // C++14 [meta.unary.prop]:
     //   For incomplete types and function types, is_destructible<T>::value is
@@ -4206,9 +4212,11 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
       return true;
       
     // Objective-C++ ARC: autorelease types don't require destruction.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (T->isObjCLifetimeType() && 
         T.getObjCLifetime() == Qualifiers::OCL_Autoreleasing)
       return true;
+#endif
       
     if (CXXRecordDecl *RD = C.getBaseElementType(T)->getAsCXXRecordDecl())
       return RD->hasTrivialDestructor();
@@ -4226,7 +4234,11 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
       return false;
     if (T->isReferenceType())
       return false;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (T.isPODType(C) || T->isObjCLifetimeType())
+#else
+    if (T.isPODType(C) || false)
+#endif
       return true;
 
     if (const RecordType *RT = T->getAs<RecordType>())
@@ -4254,7 +4266,11 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
     //   if type is a cv class or union type with copy constructors that are
     //   known not to throw an exception then the trait is true, else it is
     //   false.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (T.isPODType(C) || T->isReferenceType() || T->isObjCLifetimeType())
+#else
+    if (T.isPODType(C) || T->isReferenceType() || false)
+#endif
       return true;
     if (CXXRecordDecl *RD = T->getAsCXXRecordDecl()) {
       if (RD->hasTrivialCopyConstructor() &&
@@ -4296,7 +4312,11 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
     //   true, else if type is a cv class or union type (or array
     //   thereof) with a default constructor that is known not to
     //   throw an exception then the trait is true, else it is false.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (T.isPODType(C) || T->isObjCLifetimeType())
+#else
+    if (T.isPODType(C) || false)
+#endif
       return true;
     if (CXXRecordDecl *RD = C.getBaseElementType(T)->getAsCXXRecordDecl()) {
       if (RD->hasTrivialDefaultConstructor() &&
@@ -4350,6 +4370,7 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
 
 /// \brief Determine whether T has a non-trivial Objective-C lifetime in
 /// ARC mode.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 static bool hasNontrivialObjCLifetime(QualType T) {
   switch (T.getObjCLifetime()) {
   case Qualifiers::OCL_ExplicitNone:
@@ -4366,6 +4387,7 @@ static bool hasNontrivialObjCLifetime(QualType T) {
 
   llvm_unreachable("Unknown ObjC lifetime qualifier");
 }
+#endif
 
 static bool EvaluateBinaryTypeTrait(Sema &Self, TypeTrait BTT, QualType LhsT,
                                     QualType RhsT, SourceLocation KeyLoc);
@@ -6189,6 +6211,7 @@ ExprResult Sema::BuildPseudoDestructorExpr(Expr *Base,
         DestructedTypeInfo = Context.getTrivialTypeSourceInfo(ObjectType,
                                                            DestructedTypeStart);
         Destructed = PseudoDestructorTypeStorage(DestructedTypeInfo);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
       } else if (DestructedType.getObjCLifetime() != 
                                                 ObjectType.getObjCLifetime()) {
         
@@ -6206,6 +6229,7 @@ ExprResult Sema::BuildPseudoDestructorExpr(Expr *Base,
         DestructedTypeInfo = Context.getTrivialTypeSourceInfo(ObjectType,
                                                            DestructedTypeStart);
         Destructed = PseudoDestructorTypeStorage(DestructedTypeInfo);
+#endif
       }
     }
   }

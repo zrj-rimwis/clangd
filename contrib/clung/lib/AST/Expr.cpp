@@ -1567,10 +1567,12 @@ bool CastExpr::CastConsistency() const {
   case CK_IntegralComplexToReal:
   case CK_IntegralComplexCast:
   case CK_IntegralComplexToFloatingComplex:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case CK_ARCProduceObject:
   case CK_ARCConsumeObject:
   case CK_ARCReclaimReturnedObject:
   case CK_ARCExtendBlockObject:
+#endif
   case CK_ZeroToOCLEvent:
     assert(!getType()->isBooleanType() && "unheralded conversion to bool");
     goto CheckNoBasePath;

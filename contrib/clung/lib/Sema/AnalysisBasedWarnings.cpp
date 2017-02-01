@@ -1182,6 +1182,7 @@ static void DiagnoseSwitchLabelsFallthrough(Sema &S, AnalysisDeclContext &AC,
     S.Diag(F->getLocStart(), diag::err_fallthrough_attr_invalid_placement);
 }
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static bool isInLoop(const ASTContext &Ctx, const ParentMap &PM,
                      const Stmt *S) {
   assert(S);
@@ -1191,9 +1192,7 @@ static bool isInLoop(const ASTContext &Ctx, const ParentMap &PM,
     case Stmt::ForStmtClass:
     case Stmt::WhileStmtClass:
     case Stmt::CXXForRangeStmtClass:
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     case Stmt::ObjCForCollectionStmtClass:
-#endif
       return true;
     case Stmt::DoStmtClass: {
       const Expr *Cond = cast<DoStmt>(S)->getCond();
@@ -1209,7 +1208,9 @@ static bool isInLoop(const ASTContext &Ctx, const ParentMap &PM,
 
   return false;
 }
+#endif
 
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
 static void diagnoseRepeatedUseOfWeak(Sema &S,
                                       const sema::FunctionScopeInfo *CurFn,
                                       const Decl *D,
@@ -1365,6 +1366,7 @@ static void diagnoseRepeatedUseOfWeak(Sema &S,
     }
   }
 }
+#endif
 
 namespace {
 class UninitValsDiagReporter : public UninitVariablesHandler {

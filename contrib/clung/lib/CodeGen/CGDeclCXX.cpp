@@ -86,11 +86,13 @@ static void EmitDeclDestroy(CodeGenFunction &CGF, const VarDecl &D,
   case QualType::DK_cxx_destructor:
     break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // wow how it even slipped through??
   case QualType::DK_objc_strong_lifetime:
   case QualType::DK_objc_weak_lifetime:
     // We don't care about releasing objects during process teardown.
     assert(!D.getTLSKind() && "should have rejected this");
     return;
+#endif
   }
 
   llvm::Constant *function;

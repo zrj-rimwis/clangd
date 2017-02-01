@@ -5874,8 +5874,10 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     if (false) {
       /* dummy */
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (getToolChain().SupportsObjCGC()) {
       GCArg->render(Args, CmdArgs);
+#endif
     } else {
       // FIXME: We should move this to a hard error.
       D.Diag(diag::warn_drv_objc_gc_unsupported) << GCArg->getAsString(Args);
