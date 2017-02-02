@@ -557,6 +557,7 @@ void X86AsmPrinter::EmitStartOfAsmFile(Module &M) {
     OutStreamer->EmitAssemblerFlag(MCAF_Code16);
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed
 static void
 emitNonLazySymbolPointer(MCStreamer &OutStreamer, MCSymbol *StubLabel,
                          MachineModuleInfoImpl::StubValueTy &MCSym) {
@@ -579,6 +580,7 @@ emitNonLazySymbolPointer(MCStreamer &OutStreamer, MCSymbol *StubLabel,
         MCSymbolRefExpr::create(MCSym.getPointer(), OutStreamer.getContext()),
         4 /*size*/);
 }
+#endif
 
 MCSymbol *X86AsmPrinter::GetCPISymbol(unsigned CPID) const {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__

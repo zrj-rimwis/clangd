@@ -797,12 +797,14 @@ static void checkARMCPUName(const Driver &D, const Arg *A, const ArgList &Args,
     D.Diag(diag::err_drv_clang_unsupported) << A->getAsString(Args);
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed
 static bool useAAPCSForMachO(const llvm::Triple &T) {
   // The backend is hardwired to assume AAPCS for M-class processors, ensure
   // the frontend matches that.
   return T.getEnvironment() == llvm::Triple::EABI ||
          T.getOS() == llvm::Triple::UnknownOS || isARMMProfile(T);
 }
+#endif
 
 // Select the float ABI as determined by -msoft-float, -mhard-float, and
 // -mfloat-abi=.
@@ -3528,6 +3530,7 @@ static void addDashXForInput(const ArgList &Args, const InputInfo &Input,
     CmdArgs.push_back(types::getTypeName(Input.getType()));
 }
 
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assuem not needed
 static VersionTuple getMSCompatibilityVersion(unsigned Version) {
   if (Version < 100)
     return VersionTuple(Version);
@@ -3540,6 +3543,7 @@ static VersionTuple getMSCompatibilityVersion(unsigned Version) {
     Build = Build + (Version % 10) * Factor;
   return VersionTuple(Version / 100, Version % 100, Build);
 }
+#endif
 
 // Claim options we don't want to warn if they are unused. We do this for
 // options that build systems might add but are unused when assembling or only

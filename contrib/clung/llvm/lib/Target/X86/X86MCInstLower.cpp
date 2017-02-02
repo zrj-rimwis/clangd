@@ -1139,6 +1139,7 @@ void X86AsmPrinter::EmitXRayTable() {
 
 // Returns instruction preceding MBBI in MachineFunction.
 // If MBBI is the first instruction of the first basic block, returns null.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed
 static MachineBasicBlock::const_iterator
 PrevCrossBBInst(MachineBasicBlock::const_iterator MBBI) {
   const MachineBasicBlock *MBB = MBBI->getParent();
@@ -1150,6 +1151,7 @@ PrevCrossBBInst(MachineBasicBlock::const_iterator MBBI) {
   }
   return --MBBI;
 }
+#endif
 
 static const Constant *getConstantFromPool(const MachineInstr &MI,
                                            const MachineOperand &Op) {

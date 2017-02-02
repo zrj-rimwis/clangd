@@ -592,6 +592,7 @@ static std::string toString(const clang::SanitizerSet &Sanitizers) {
   return Res;
 }
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume not needed
 static void addIncludeLinkerOption(const ToolChain &TC,
                                    const llvm::opt::ArgList &Args,
                                    llvm::opt::ArgStringList &CmdArgs,
@@ -605,6 +606,7 @@ static void addIncludeLinkerOption(const ToolChain &TC,
   LinkerOptionFlag += SymbolName;
   CmdArgs.push_back(Args.MakeArgString(LinkerOptionFlag));
 }
+#endif
 
 void SanitizerArgs::addArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
                             llvm::opt::ArgStringList &CmdArgs,

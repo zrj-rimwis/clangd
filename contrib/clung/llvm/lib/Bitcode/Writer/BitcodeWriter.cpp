@@ -3703,11 +3703,13 @@ void ModuleBitcodeWriter::writeModule() {
   Stream.ExitBlock();
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed
 static void writeInt32ToBuffer(uint32_t Value, SmallVectorImpl<char> &Buffer,
                                uint32_t &Position) {
   support::endian::write32le(&Buffer[Position], Value);
   Position += 4;
 }
+#endif
 
 /// If generating a bc file on darwin, we have to emit a
 /// header and trailer to make it compatible with the system archiver.  To do
@@ -3722,6 +3724,7 @@ static void writeInt32ToBuffer(uint32_t Value, SmallVectorImpl<char> &Buffer,
 ///   uint32_t CPUType;       // CPU specifier.
 ///   ... potentially more later ...
 /// };
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed
 static void emitDarwinBCHeaderAndTrailer(SmallVectorImpl<char> &Buffer,
                                          const Triple &TT) {
   unsigned CPUType = ~0U;
@@ -3767,6 +3770,7 @@ static void emitDarwinBCHeaderAndTrailer(SmallVectorImpl<char> &Buffer,
   while (Buffer.size() & 15)
     Buffer.push_back(0);
 }
+#endif
 
 /// Helper to write the header common to all bitcode files.
 void BitcodeWriter::writeBitcodeHeader() {
