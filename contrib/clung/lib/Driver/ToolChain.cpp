@@ -264,7 +264,9 @@ Tool *ToolChain::getTool(Action::ActionClass AC) const {
   case Action::PrecompileJobClass:
   case Action::PreprocessJobClass:
   case Action::AnalyzeJobClass:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   case Action::MigrateJobClass:
+#endif
   case Action::VerifyPCHJobClass:
   case Action::BackendJobClass:
     return getClang();

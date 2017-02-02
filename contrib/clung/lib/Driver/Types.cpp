@@ -91,20 +91,29 @@ bool types::isAcceptedByClang(ID Id) {
   case TY_CUDA: case TY_PP_CUDA:
   case TY_CUDA_DEVICE:
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case TY_ObjC: case TY_PP_ObjC: case TY_PP_ObjC_Alias:
+#endif
   case TY_CXX: case TY_PP_CXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
+#endif
   case TY_CHeader: case TY_PP_CHeader:
   case TY_CLHeader:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case TY_ObjCHeader: case TY_PP_ObjCHeader:
+#endif
   case TY_CXXHeader: case TY_PP_CXXHeader:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
+#endif
   case TY_AST: case TY_ModuleFile:
   case TY_LLVM_IR: case TY_LLVM_BC:
     return true;
   }
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
 bool types::isObjC(ID Id) {
   switch (Id) {
   default:
@@ -117,6 +126,7 @@ bool types::isObjC(ID Id) {
     return true;
   }
 }
+#endif
 
 bool types::isCXX(ID Id) {
   switch (Id) {
@@ -124,9 +134,13 @@ bool types::isCXX(ID Id) {
     return false;
 
   case TY_CXX: case TY_PP_CXX:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case TY_ObjCXX: case TY_PP_ObjCXX: case TY_PP_ObjCXX_Alias:
+#endif
   case TY_CXXHeader: case TY_PP_CXXHeader:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
+#endif
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   case TY_CUDA: case TY_PP_CUDA: case TY_CUDA_DEVICE:
 #endif
@@ -165,8 +179,10 @@ types::ID types::lookupTypeForExtension(const char *Ext) {
   return llvm::StringSwitch<types::ID>(Ext)
            .Case("c", TY_C)
            .Case("i", TY_PP_C)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
            .Case("m", TY_ObjC)
            .Case("M", TY_ObjCXX)
+#endif
            .Case("h", TY_CHeader)
            .Case("C", TY_CXX)
            .Case("H", TY_CXXHeader)
@@ -179,8 +195,10 @@ types::ID types::lookupTypeForExtension(const char *Ext) {
            .Case("obj", TY_Object)
            .Case("lib", TY_Object)
            .Case("ii", TY_PP_CXX)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
            .Case("mi", TY_PP_ObjC)
            .Case("mm", TY_ObjCXX)
+#endif
            .Case("bc", TY_LLVM_BC)
            .Case("cc", TY_CXX)
            .Case("CC", TY_CXX)
@@ -210,7 +228,9 @@ types::ID types::lookupTypeForExtension(const char *Ext) {
            .Case("f95", TY_PP_Fortran)
            .Case("F90", TY_Fortran)
            .Case("F95", TY_Fortran)
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
            .Case("mii", TY_PP_ObjCXX)
+#endif
            .Case("pcm", TY_ModuleFile)
            .Case("pch", TY_PCH)
            .Case("gch", TY_PCH)

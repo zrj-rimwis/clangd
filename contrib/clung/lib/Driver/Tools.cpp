@@ -3524,9 +3524,11 @@ static void addDashXForInput(const ArgList &Args, const InputInfo &Input,
     return;
 
   CmdArgs.push_back("-x");
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // uch**2
   if (Args.hasArg(options::OPT_rewrite_objc))
     CmdArgs.push_back(types::getTypeName(types::TY_PP_ObjCXX));
   else
+#endif
     CmdArgs.push_back(types::getTypeName(Input.getType()));
 }
 
@@ -4043,16 +4045,20 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   if (isa<AnalyzeJobAction>(JA)) {
     assert(JA.getType() == types::TY_Plist && "Invalid output type.");
     CmdArgs.push_back("-analyze");
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   } else if (isa<MigrateJobAction>(JA)) {
     CmdArgs.push_back("-migrate");
+#endif
   } else if (isa<PreprocessJobAction>(JA)) {
     if (Output.getType() == types::TY_Dependencies)
       CmdArgs.push_back("-Eonly");
     else {
       CmdArgs.push_back("-E");
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // srsly?
       if (Args.hasArg(options::OPT_rewrite_objc) &&
           !Args.hasArg(options::OPT_g_Group))
         CmdArgs.push_back("-P");
+#endif
     }
   } else if (isa<AssembleJobAction>(JA)) {
     CmdArgs.push_back("-emit-obj");
@@ -4090,12 +4096,14 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       CmdArgs.push_back("-emit-pch");
     } else if (JA.getType() == types::TY_ModuleFile) {
       CmdArgs.push_back("-module-file-info");
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     } else if (JA.getType() == types::TY_RewrittenObjC) {
       CmdArgs.push_back("-rewrite-objc");
       rewriteKind = RK_NonFragile;
     } else if (JA.getType() == types::TY_RewrittenLegacyObjC) {
       CmdArgs.push_back("-rewrite-objc");
       rewriteKind = RK_Fragile;
+#endif
     } else {
       assert(JA.getType() == types::TY_PP_Asm && "Unexpected output type!");
     }
@@ -4868,6 +4876,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   Args.AddLastArg(CmdArgs, options::OPT_working_directory);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   bool ARCMTEnabled = false;
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false, strange..
   if (!Args.hasArg(options::OPT_fno_objc_arc, options::OPT_fobjc_arc)) {
@@ -4902,7 +4911,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     Args.ClaimAllArgs(options::OPT_ccc_arcmt_modify);
     Args.ClaimAllArgs(options::OPT_ccc_arcmt_migrate);
   }
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not availabe
   if (const Arg *A = Args.getLastArg(options::OPT_ccc_objcmt_migrate)) {
     if (ARCMTEnabled) {
       D.Diag(diag::err_drv_argument_not_allowed_with) << A->getAsString(Args)
@@ -4941,6 +4952,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     Args.AddLastArg(CmdArgs, options::OPT_objcmt_migrate_designated_init);
     Args.AddLastArg(CmdArgs, options::OPT_objcmt_whitelist_dir_path);
   }
+#endif
 
   // Add preprocessing options like -I, -D, etc. if we are using the
   // preprocessor.
@@ -5277,7 +5289,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       (Args.hasArg(options::OPT_mkernel) && types::isCXX(InputType)))
     CmdArgs.push_back("-fapple-kext");
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   Args.AddLastArg(CmdArgs, options::OPT_fobjc_sender_dependent_dispatch);
+#endif
   Args.AddLastArg(CmdArgs, options::OPT_fdiagnostics_print_source_range_info);
   Args.AddLastArg(CmdArgs, options::OPT_fdiagnostics_parseable_fixits);
   Args.AddLastArg(CmdArgs, options::OPT_ftime_report);
@@ -5862,11 +5876,14 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
 
   // -fobjc-infer-related-result-type is the default, except in the Objective-C
   // rewriter.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (rewriteKind != RK_None)
     CmdArgs.push_back("-fno-objc-infer-related-result-type");
+#endif
 
   // Handle -fobjc-gc and -fobjc-gc-only. They are exclusive, and -fobjc-gc-only
   // takes precedence.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   const Arg *GCArg = Args.getLastArg(options::OPT_fobjc_gc_only);
   if (!GCArg)
     GCArg = Args.getLastArg(options::OPT_fobjc_gc);
@@ -5887,6 +5904,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       D.Diag(diag::warn_drv_objc_gc_unsupported) << GCArg->getAsString(Args);
     }
   }
+#endif
 
   // Pass down -fobjc-weak or -fno-objc-weak if present.
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed

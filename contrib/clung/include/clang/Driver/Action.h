@@ -59,7 +59,11 @@ public:
     PreprocessJobClass,
     PrecompileJobClass,
     AnalyzeJobClass,
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     MigrateJobClass,
+#else
+    MigrateJobClass_disabled,
+#endif
     CompileJobClass,
     BackendJobClass,
     AssembleJobClass,
@@ -371,6 +375,7 @@ public:
   }
 };
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 class MigrateJobAction : public JobAction {
   void anchor() override;
 public:
@@ -380,6 +385,7 @@ public:
     return A->getKind() == MigrateJobClass;
   }
 };
+#endif
 
 class CompileJobAction : public JobAction {
   void anchor() override;

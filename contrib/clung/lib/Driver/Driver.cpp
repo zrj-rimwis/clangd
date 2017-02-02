@@ -186,9 +186,11 @@ phases::ID Driver::getFinalPhase(const DerivedArgList &DAL,
   } else if ((PhaseArg = DAL.getLastArg(options::OPT_fsyntax_only)) ||
              (PhaseArg = DAL.getLastArg(options::OPT_module_file_info)) ||
              (PhaseArg = DAL.getLastArg(options::OPT_verify_pch)) ||
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
              (PhaseArg = DAL.getLastArg(options::OPT_rewrite_objc)) ||
              (PhaseArg = DAL.getLastArg(options::OPT_rewrite_legacy_objc)) ||
              (PhaseArg = DAL.getLastArg(options::OPT__migrate)) ||
+#endif
              (PhaseArg = DAL.getLastArg(options::OPT__analyze,
                                         options::OPT__analyze_auto)) ||
              (PhaseArg = DAL.getLastArg(options::OPT_emit_ast))) {
@@ -1355,12 +1357,14 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
         // source file.
         //
         // FIXME: Clean this up if we move the phase sequence into the type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // uch
         if (Ty != types::TY_Object) {
           if (Args.hasArg(options::OPT_ObjC))
             Ty = types::TY_ObjC;
           else if (Args.hasArg(options::OPT_ObjCXX))
             Ty = types::TY_ObjCXX;
         }
+#endif
       } else {
         assert(InputTypeArg && "InputType set w/o InputTypeArg");
         if (!InputTypeArg->getOption().matches(options::OPT_x)) {
@@ -1865,15 +1869,19 @@ Action *Driver::ConstructPhaseAction(Compilation &C, const ArgList &Args,
   case phases::Compile: {
     if (Args.hasArg(options::OPT_fsyntax_only))
       return C.MakeAction<CompileJobAction>(Input, types::TY_Nothing);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     if (Args.hasArg(options::OPT_rewrite_objc))
       return C.MakeAction<CompileJobAction>(Input, types::TY_RewrittenObjC);
     if (Args.hasArg(options::OPT_rewrite_legacy_objc))
       return C.MakeAction<CompileJobAction>(Input,
                                             types::TY_RewrittenLegacyObjC);
+#endif
     if (Args.hasArg(options::OPT__analyze, options::OPT__analyze_auto))
       return C.MakeAction<AnalyzeJobAction>(Input, types::TY_Plist);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     if (Args.hasArg(options::OPT__migrate))
       return C.MakeAction<MigrateJobAction>(Input, types::TY_Remap);
+#endif
     if (Args.hasArg(options::OPT_emit_ast))
       return C.MakeAction<CompileJobAction>(Input, types::TY_AST);
     if (Args.hasArg(options::OPT_module_file_info))
@@ -2139,7 +2147,11 @@ static const Tool *selectToolForJob(Compilation &C, bool SaveTemps,
   if (PreprocessJA && isa<PreprocessJobAction>(PreprocessJA) &&
       !C.getArgs().hasArg(options::OPT_no_integrated_cpp) &&
       !C.getArgs().hasArg(options::OPT_traditional_cpp) && !SaveTemps &&
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !false, and very nasty bug here
       !C.getArgs().hasArg(options::OPT_rewrite_objc) &&
+#else
+      !false &&
+#endif
       ToolForJob->hasIntegratedCPP()) {
     Inputs = &PreprocessJA->getInputs();
     if (PreprocessOA)

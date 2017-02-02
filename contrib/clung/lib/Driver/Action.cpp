@@ -27,7 +27,9 @@ const char *Action::getClassName(ActionClass AC) {
   case PreprocessJobClass: return "preprocessor";
   case PrecompileJobClass: return "precompiler";
   case AnalyzeJobClass: return "analyzer";
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   case MigrateJobClass: return "migrator";
+#endif
   case CompileJobClass: return "compiler";
   case BackendJobClass: return "backend";
   case AssembleJobClass: return "assembler";
@@ -289,10 +291,12 @@ void AnalyzeJobAction::anchor() {}
 AnalyzeJobAction::AnalyzeJobAction(Action *Input, types::ID OutputType)
     : JobAction(AnalyzeJobClass, Input, OutputType) {}
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 void MigrateJobAction::anchor() {}
 
 MigrateJobAction::MigrateJobAction(Action *Input, types::ID OutputType)
     : JobAction(MigrateJobClass, Input, OutputType) {}
+#endif
 
 void CompileJobAction::anchor() {}
 

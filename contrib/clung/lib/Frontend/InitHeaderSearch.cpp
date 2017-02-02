@@ -643,8 +643,7 @@ void InitHeaderSearch::Realize(const LangOptions &Lang) {
         (Lang.ObjC1 && !Lang.CPlusPlus && Include.first == ObjCSystem) ||
         (Lang.ObjC1 && Lang.CPlusPlus && Include.first == ObjCXXSystem))
 #else
-        (false && !Lang.CPlusPlus && Include.first == ObjCSystem) ||
-        (false && Lang.CPlusPlus && Include.first == ObjCXXSystem))
+        (false) || (false))
 #endif
       SearchList.push_back(Include.second);
 

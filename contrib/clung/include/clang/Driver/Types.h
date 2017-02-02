@@ -76,7 +76,9 @@ namespace types {
 #endif
 
   /// isObjC - Is this an "ObjC" input (Obj-C and Obj-C++ sources and headers).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   bool isObjC(ID Id);
+#endif
 
   /// lookupTypeForExtension - Lookup the type to use for the file
   /// extension \p Ext.

@@ -45,7 +45,9 @@ DIAGOPT(Name, Bits, Default)
 #endif
 
 SEMANTIC_DIAGOPT(IgnoreWarnings, 1, 0)   /// -w
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
 DIAGOPT(NoRewriteMacros, 1, 0)  /// -Wno-rewrite-macros
+#endif
 DIAGOPT(Pedantic, 1, 0)         /// -pedantic
 DIAGOPT(PedanticErrors, 1, 0)   /// -pedantic-errors
 DIAGOPT(ShowColumn, 1, 1)       /// Show column number on diagnostics.

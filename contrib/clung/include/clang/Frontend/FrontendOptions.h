@@ -159,8 +159,10 @@ public:
   unsigned FixOnlyWarnings : 1;            ///< Apply fixes only for warnings.
   unsigned FixAndRecompile : 1;            ///< Apply fixes and recompile.
   unsigned FixToTemporaries : 1;           ///< Apply fixes to temporary files.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   unsigned ARCMTMigrateEmitARCErrors : 1;  /// Emit ARC errors even if the
                                            /// migrator can fix them
+#endif
   unsigned SkipFunctionBodies : 1;         ///< Skip over function bodies to
                                            /// speed up parsing in cases you do
                                            /// not need them (e.g. with code
@@ -182,13 +184,16 @@ public:
 
   CodeCompleteOptions CodeCompleteOpts;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum {
     ARCMT_None,
     ARCMT_Check,
     ARCMT_Modify,
     ARCMT_Migrate
   } ARCMTAction;
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   enum {
     ObjCMT_None = 0,
     /// \brief Enable migration to modern ObjC literals.
@@ -227,11 +232,14 @@ public:
     ObjCMT_MigrateAll = (ObjCMT_Literals | ObjCMT_Subscripting |
                          ObjCMT_MigrateDecls | ObjCMT_PropertyDotSyntax)
   };
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   unsigned ObjCMTAction;
   std::string ObjCMTWhiteListPath;
 
   std::string MTMigrateDir;
   std::string ARCMTMigrateReportOut;
+#endif
 
   /// The input files and their types.
   std::vector<FrontendInputFile> Inputs;
@@ -299,12 +307,24 @@ public:
     DisableFree(false), RelocatablePCH(false), ShowHelp(false),
     ShowStats(false), ShowTimers(false), ShowVersion(false),
     FixWhatYouCan(false), FixOnlyWarnings(false), FixAndRecompile(false),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     FixToTemporaries(false), ARCMTMigrateEmitARCErrors(false),
+#else
+    FixToTemporaries(false),
+#endif
     SkipFunctionBodies(false), UseGlobalModuleIndex(true),
     GenerateGlobalModuleIndex(true), ASTDumpDecls(false), ASTDumpLookups(false),
     BuildingImplicitModule(false), ModulesEmbedAllFiles(false),
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     IncludeTimestamps(true), ARCMTAction(ARCMT_None),
+#else
+    IncludeTimestamps(true),
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ObjCMTAction(ObjCMT_None), ProgramAction(frontend::ParseSyntaxOnly)
+#else
+    ProgramAction(frontend::ParseSyntaxOnly)
+#endif
   {}
 
   /// getInputKindForExtension - Return the appropriate input kind for a file

@@ -35,8 +35,13 @@ namespace frontend {
                     ///  extern "C".
     CSystem,        ///< Like System, but only used for C.
     CXXSystem,      ///< Like System, but only used for C++.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     ObjCSystem,     ///< Like System, but only used for ObjC.
     ObjCXXSystem,   ///< Like System, but only used for ObjC++.
+#else
+    ObjCSystem_disabled,
+    ObjCXXSystem_disabled,
+#endif
     After           ///< Like System, but searched after the system directories.
   };
 }

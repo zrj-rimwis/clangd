@@ -746,6 +746,7 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
     Opts.StackProbeSize = StackProbeSize;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
   if (Arg *A = Args.getLastArg(OPT_fobjc_dispatch_method_EQ)) {
     StringRef Name = A->getValue();
     unsigned Method = llvm::StringSwitch<unsigned>(Name)
@@ -761,6 +762,7 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
         static_cast<CodeGenOptions::ObjCDispatchMethodKind>(Method));
     }
   }
+#endif
 
   Opts.EmulatedTLS =
       Args.hasFlag(OPT_femulated_tls, OPT_fno_emulated_tls, false);
@@ -942,7 +944,9 @@ bool clang::ParseDiagnosticArgs(DiagnosticOptions &Opts, ArgList &Args,
           Args.getLastArg(OPT_diagnostic_serialized_file, OPT__serialize_diags))
     Opts.DiagnosticSerializationFile = A->getValue();
   Opts.IgnoreWarnings = Args.hasArg(OPT_w);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   Opts.NoRewriteMacros = Args.hasArg(OPT_Wno_rewrite_macros);
+#endif
   Opts.Pedantic = Args.hasArg(OPT_pedantic);
   Opts.PedanticErrors = Args.hasArg(OPT_pedantic_errors);
   Opts.ShowCarets = !Args.hasArg(OPT_fno_caret_diagnostics);
@@ -1242,6 +1246,7 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
       llvm::Triple::normalize(Args.getLastArgValue(OPT_aux_triple));
   Opts.FindPchSource = Args.getLastArgValue(OPT_find_pch_source_EQ);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   if (const Arg *A = Args.getLastArg(OPT_arcmt_check,
                                      OPT_arcmt_modify,
                                      OPT_arcmt_migrate)) {
@@ -1259,12 +1264,16 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
       break;
     }
   }
+#endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   Opts.MTMigrateDir = Args.getLastArgValue(OPT_mt_migrate_directory);
   Opts.ARCMTMigrateReportOut
     = Args.getLastArgValue(OPT_arcmt_migrate_report_output);
   Opts.ARCMTMigrateEmitARCErrors
     = Args.hasArg(OPT_arcmt_migrate_emit_arc_errors);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   if (Args.hasArg(OPT_objcmt_migrate_literals))
     Opts.ObjCMTAction |= FrontendOptions::ObjCMT_Literals;
   if (Args.hasArg(OPT_objcmt_migrate_subscripting))
@@ -1295,14 +1304,19 @@ static InputKind ParseFrontendArgs(FrontendOptions &Opts, ArgList &Args,
     Opts.ObjCMTAction |= FrontendOptions::ObjCMT_DesignatedInitializer;
   if (Args.hasArg(OPT_objcmt_migrate_all))
     Opts.ObjCMTAction |= FrontendOptions::ObjCMT_MigrateDecls;
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
   Opts.ObjCMTWhiteListPath = Args.getLastArgValue(OPT_objcmt_whitelist_dir_path);
+#endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   if (Opts.ARCMTAction != FrontendOptions::ARCMT_None &&
       Opts.ObjCMTAction != FrontendOptions::ObjCMT_None) {
     Diags.Report(diag::err_drv_argument_not_allowed_with)
       << "ARC migration" << "ObjC migration";
   }
+#endif
 
   InputKind DashX = IK_None;
   if (const Arg *A = Args.getLastArg(OPT_x)) {
@@ -1474,10 +1488,12 @@ static void ParseHeaderSearchArgs(HeaderSearchOptions &Opts, ArgList &Args) {
     Opts.AddPath(A->getValue(), frontend::CSystem, false, true);
   for (const Arg *A : Args.filtered(OPT_cxx_isystem))
     Opts.AddPath(A->getValue(), frontend::CXXSystem, false, true);
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   for (const Arg *A : Args.filtered(OPT_objc_isystem))
     Opts.AddPath(A->getValue(), frontend::ObjCSystem, false,true);
   for (const Arg *A : Args.filtered(OPT_objcxx_isystem))
     Opts.AddPath(A->getValue(), frontend::ObjCXXSystem, false, true);
+#endif
 
   // Add the internal paths from a driver that detects standard include paths.
   for (const Arg *A :
