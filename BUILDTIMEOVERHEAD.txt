@@ -7,12 +7,12 @@ CPU: Intel(R) Core(TM) i7-4712MQ CPU @ 2.30GHz (2294.70-MHz K8-class CPU)
 turbo disabled (for more reproducible build times)
 All compilations are done on tmpfs mount, "time make -j8" in gnu/usr.bin/clung.
 
-du -hsc contrib : 65M (2338 sources)
+du -hsc contrib : 62M (2177 sources)
 make -j8 depend : ~2.5min
-make -j8        : 19min 15s
-du -hsc .       : 571M
- clang          : 52M
- LLVM.gold      : 28M
+make -j8        : 17min 43s
+du -hsc .       : 537M
+ clang          : 48M
+ LLVM.gold      : 27M
 
 add twice that to the reference /usr/src base system compilation,
 that bootstraps two compilers gcc47 and gcc50 already:
