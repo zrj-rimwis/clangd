@@ -46,7 +46,7 @@ beforedepend:	${SING1}
 all:		${SING1}
 	@echo LLVM block3 complete
 
-TGEN=	${.OBJDIR}/../block2/llvm-tblgen/llvm-tblgen
+TGEN=	${.OBJDIR}/../block2/llvm-tblgen/llvm-tblgen.nx
 TGINCS=	-I${TOP_LLVM}/include/llvm/IR \
 	-I${TOP_LLVM}/include \
 	-I${TOP_LLVM}/lib/Target
@@ -85,7 +85,7 @@ generated/${T}${FX:H}.inc: ${T}.td ${TGEN}
 .PATH:	${TOP_CLUNG}/include/clang/Basic
 .PATH:	${TOP_CLUNG}/include/clang/Driver
 
-CGEN=	${.OBJDIR}/../block2/clang-tblgen/clang-tblgen
+CGEN=	${.OBJDIR}/../block2/clang-tblgen/clang-tblgen.nx
 CXINCS=	-I${TOP_CLUNG}/include \
 	-I${TOP_LLVM}/lib/Target
 CID1=	${CXINCS} -I${TOP_CLUNG}/include/clang/AST

@@ -1,6 +1,9 @@
 LIB=	LLVMtblgen
 
-beforedepend: libLLVMtblgen.a
+# XXX avoid -std= options, also any of -m*
+NXCXXFLAGS=	${CFLAGS:N-std=*:N-m*}
+
+beforedepend: libLLVMtblgen.na
 
 .include "${.CURDIR}/Makefile.sources"
-.include <bsd.lib.mk>
+.include <bsd.hostlib.mk>

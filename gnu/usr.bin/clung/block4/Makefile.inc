@@ -13,8 +13,6 @@ CFLAGS+=	-D__STDC_CONSTANT_MACROS \
 
 CXXFLAGS+=	-std=c++11 -fno-exceptions -fno-rtti
 
-#CFLAGS_X86=	-I${TOP_LLVM}/lib/Target/X86 \
-		-I${.OBJDIR}/../../block3/lib/Target/X86
 CFLAGS_CLANG=	-I${TOP_CLUNG}/include
 
 .for _t in ${LLVM_SRCDIRS}
