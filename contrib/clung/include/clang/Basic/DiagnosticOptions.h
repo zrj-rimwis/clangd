@@ -60,10 +60,14 @@ raw_ostream& operator<<(raw_ostream& Out, DiagnosticLevelMask M);
 /// \brief Options for controlling the compiler diagnostics engine.
 class DiagnosticOptions : public RefCountedBase<DiagnosticOptions>{
 public:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__ // uch
   enum TextDiagnosticFormat { Clang, MSVC, Vi };
 #else
   enum TextDiagnosticFormat { Clang, MSVC_disabled, Vi };
+#endif
+#else
+  enum TextDiagnosticFormat { Clang, Vi };
 #endif
 
   // Default values.

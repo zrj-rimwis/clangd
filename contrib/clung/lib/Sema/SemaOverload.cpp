@@ -133,7 +133,9 @@ ImplicitConversionRank clang::GetConversionRank(ImplicitConversionKind Kind) {
     ICR_Complex_Real_Conversion,
     ICR_Conversion,
     ICR_Conversion,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__ // wow wow wow
     ICR_Writeback_Conversion,
+#endif
     ICR_Exact_Match, // NOTE(gbiv): This may not be completely right --
                      // it was omitted by the patch that added
                      // ICK_Zero_Event_Conversion
@@ -169,7 +171,9 @@ static const char* GetImplicitConversionName(ImplicitConversionKind Kind) {
     "Complex-real conversion",
     "Block Pointer conversion",
     "Transparent Union Conversion",
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
     "Writeback conversion",
+#endif
     "OpenCL Zero Event Conversion",
     "C specific type conversion"
   };

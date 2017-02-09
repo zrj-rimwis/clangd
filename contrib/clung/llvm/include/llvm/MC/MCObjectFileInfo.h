@@ -355,16 +355,20 @@ public:
   }
 
   enum Environment {
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__ // rewrite
     IsMachO,
 #else
     IsMachO_disabled,
 #endif
+#endif
     IsELF,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     IsCOFF,
 #else
     IsCOFF_disabled
+#endif
 #endif
   };
   Environment getObjectFileType() const { return Env; }

@@ -5116,13 +5116,15 @@ void ASTRecordWriter::AddDeclarationName(DeclarationName Name) {
     AddIdentifierRef(Name.getAsIdentifierInfo());
     break;
 
-#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   case DeclarationName::ObjCZeroArgSelector:
   case DeclarationName::ObjCOneArgSelector:
   case DeclarationName::ObjCMultiArgSelector:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     AddSelectorRef(Name.getObjCSelector());
-    break;
+#else
+    assert(false && "OBJC disabled");
 #endif
+    break;
 
   case DeclarationName::CXXConstructorName:
   case DeclarationName::CXXDestructorName:

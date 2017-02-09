@@ -2307,10 +2307,12 @@ public:
     AA_Initializing,
     AA_Sending,
     AA_Casting,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     AA_Passing_CFAudited
 #else
     AA_Passing_CFAudited_disabled
+#endif
 #endif
   };
 
@@ -7727,7 +7729,9 @@ public:
 
   /// Check the application of the Objective-C '__kindof' qualifier to
   /// the given type.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   bool checkObjCKindOfType(QualType &type, SourceLocation loc);
+#endif
 
   /// Ensure attributes are consistent with type.
   /// \param [in, out] Attributes The attributes to check; they will
@@ -8888,10 +8892,12 @@ public:
     VAK_Valid,
     VAK_ValidInCXX11,
     VAK_Undefined,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__
     VAK_MSVCUndefined,
 #else
     VAK_MSVCUndefined_disabled,
+#endif
 #endif
     VAK_Invalid
   };

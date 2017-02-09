@@ -63,10 +63,12 @@ namespace clang {
     TST_union,
     TST_struct,
     TST_class,        // C++ class type
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     TST_interface,    // C++ (Microsoft-specific) __interface type
 #else
     TST_interface_disabled,
+#endif
 #endif
     TST_typename,     // Typedef, C++ class-name or enum name, etc.
     TST_typeofType,
@@ -137,10 +139,12 @@ namespace clang {
     /// An Objective-C array/dictionary subscripting which reads an
     /// object or writes at the subscripted array/dictionary element via
     /// Objective-C method calls.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     OK_ObjCSubscript
 #else
     OK_ObjCSubscript_disabled
+#endif
 #endif
   };
 
@@ -242,10 +246,12 @@ namespace clang {
     CC_X86FastCall, // __attribute__((fastcall))
     CC_X86ThisCall, // __attribute__((thiscall))
     CC_X86VectorCall, // __attribute__((vectorcall))
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     CC_X86Pascal,   // __attribute__((pascal))
 #else
     CC_X86Pascal_disabled,
+#endif
 #endif
     CC_X86_64Win64, // __attribute__((ms_abi))
     CC_X86_64SysV,  // __attribute__((sysv_abi))

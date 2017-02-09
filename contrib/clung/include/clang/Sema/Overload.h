@@ -81,10 +81,12 @@ namespace clang {
     ICK_Complex_Real,          ///< Complex-real conversions (C99 6.3.1.7)
     ICK_Block_Pointer_Conversion,    ///< Block Pointer conversions 
     ICK_TransparentUnionConversion, ///< Transparent Union Conversions
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__ // wow check SemaOverload.cpp
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     ICK_Writeback_Conversion,  ///< Objective-C ARC writeback conversion
 #else
     ICK_Writeback_Conversion_disabled,
+#endif
 #endif
     ICK_Zero_Event_Conversion, ///< Zero constant to event (OpenCL1.2 6.12.10)
     ICK_C_Only_Conversion,     ///< Conversions allowed in C, but not C++
@@ -584,6 +586,7 @@ namespace clang {
     /// viable because the final conversion was not an exact match.
     ovl_fail_final_conversion_not_exact,
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
     /// (CUDA) This candidate was not viable because the callee
     /// was not accessible from the caller's target (i.e. host->device,
@@ -591,6 +594,7 @@ namespace clang {
     ovl_fail_bad_target,
 #else
     ovl_fail_bad_target_disabled,
+#endif
 #endif
 
     /// This candidate function was not viable because an enable_if

@@ -63,9 +63,11 @@ Expected<std::unique_ptr<Binary>> object::createBinary(MemoryBufferRef Buffer,
     case sys::fs::file_magic::macho_dsym_companion:
     case sys::fs::file_magic::macho_kext_bundle:
 #endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     case sys::fs::file_magic::coff_object:
     case sys::fs::file_magic::coff_import_library:
     case sys::fs::file_magic::pecoff_executable:
+#endif
     case sys::fs::file_magic::bitcode:
       return ObjectFile::createSymbolicFile(Buffer, Type, Context);
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__

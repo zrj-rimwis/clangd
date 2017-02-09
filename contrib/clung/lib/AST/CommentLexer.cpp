@@ -39,6 +39,7 @@ static inline bool isHTMLHexCharacterReferenceCharacter(char C) {
 }
 #endif
 
+#ifdef CLANG_ENABLE_HTML // __DragonFly__
 static inline StringRef convertCodePointToUTF8(
                                       llvm::BumpPtrAllocator &Allocator,
                                       unsigned CodePoint) {
@@ -49,6 +50,7 @@ static inline StringRef convertCodePointToUTF8(
   else
     return StringRef();
 }
+#endif
 
 namespace {
 

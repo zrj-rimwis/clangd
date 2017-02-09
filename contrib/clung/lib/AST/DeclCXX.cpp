@@ -438,7 +438,11 @@ void CXXRecordDecl::addedMember(Decl *D) {
       !isa<FieldDecl>(D) &&
       !isa<IndirectFieldDecl>(D) &&
       (!isa<TagDecl>(D) || cast<TagDecl>(D)->getTagKind() == TTK_Class ||
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__ // assume false
         cast<TagDecl>(D)->getTagKind() == TTK_Interface))
+#else
+        false))
+#endif
     data().HasOnlyCMembers = false;
 
   // Ignore friends and invalid declarations.
@@ -1044,7 +1048,11 @@ void CXXRecordDecl::finishedDefaultedOrDeletedMember(CXXMethodDecl *D) {
 }
 
 bool CXXRecordDecl::isCLike() const {
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__ // assume false
   if (getTagKind() == TTK_Class || getTagKind() == TTK_Interface ||
+#else
+  if (getTagKind() == TTK_Class || false ||
+#endif
       !TemplateOrInstantiation.isNull())
     return false;
   if (!hasDefinition())

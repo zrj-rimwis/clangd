@@ -736,6 +736,7 @@ ExprResult Sema::BuildCXXThrow(SourceLocation OpLoc, Expr *Ex,
       CXXThrowExpr(Ex, Context.VoidTy, OpLoc, IsThrownVarInScope);
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void
 collectPublicBases(CXXRecordDecl *RD,
                    llvm::DenseMap<CXXRecordDecl *, unsigned> &SubobjectsSeen,
@@ -765,6 +766,7 @@ collectPublicBases(CXXRecordDecl *RD,
                        PublicPath);
   }
 }
+#endif
 
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
 static void getUnambiguousPublicSubobjects(
@@ -3863,7 +3865,9 @@ static bool CheckUnaryTypeTraitTypeCompleteness(Sema &S, TypeTrait UTT,
   case UTT_IsUnsigned:
 
   // This type trait always returns false, checking the type is moot.
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case UTT_IsInterfaceClass:
+#endif
     return true;
 
   // C++14 [meta.unary.prop]:
@@ -3880,7 +3884,9 @@ static bool CheckUnaryTypeTraitTypeCompleteness(Sema &S, TypeTrait UTT,
   // C++14 [meta.unary.prop]:
   //   If T is a class type, T shall be a complete type.
   case UTT_IsFinal:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case UTT_IsSealed:
+#endif
     if (ArgTy->getAsCXXRecordDecl())
       return !S.RequireCompleteType(
           Loc, ArgTy, diag::err_incomplete_type_used_in_type_trait_expr);
@@ -4067,10 +4073,14 @@ static bool EvaluateUnaryTypeTrait(Sema &Self, TypeTrait UTT,
   // __is_interface_class only returns true when CL is invoked in /CLR mode and
   // even then only when it is used with the 'interface struct ...' syntax
   // Clang doesn't support /CLR which makes this type trait moot.
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case UTT_IsInterfaceClass:
     return false;
+#endif
   case UTT_IsFinal:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case UTT_IsSealed:
+#endif
     if (const CXXRecordDecl *RD = T->getAsCXXRecordDecl())
       return RD->hasAttr<FinalAttr>();
     return false;

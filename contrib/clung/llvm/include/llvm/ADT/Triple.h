@@ -141,33 +141,41 @@ public:
     UnknownOS,
 
     CloudABI,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     Darwin,
 #else
     Darwin_disabled,
 #endif
+#endif
     DragonFly,
     FreeBSD,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     IOS,
 #else
     IOS_disabled,
 #endif
+#endif
     KFreeBSD,
     Linux,
     Lv2,        // PS3
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MacOSX,
 #else
     MacOSX_disabled,
 #endif
+#endif
     NetBSD,
     OpenBSD,
     Solaris,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     Win32,
 #else
     Win32_disabled,
+#endif
 #endif
     Haiku,
     Minix,
@@ -181,12 +189,14 @@ public:
     AMDHSA,     // AMD HSA Runtime
     PS4,
     ELFIAMCU,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     TvOS,       // Apple tvOS
     WatchOS,    // Apple watchOS
 #else
     TvOS_disabled,
     WatchOS_disabled,
+#endif
 #endif
     Mesa3D,
     LastOSType = Mesa3D
@@ -207,42 +217,52 @@ public:
     MuslEABI,
     MuslEABIHF,
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__
     MSVC,
 #else
     MSVC_disabled,
 #endif
+#endif
     Itanium,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     Cygnus,
 #else
     Cygnus_disabled,
 #endif
+#endif
     AMDOpenCL,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     CoreCLR,
 #else
     CoreCLR_disabled,
 #endif
+#endif
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // this is silly
     LastEnvironmentType = CoreCLR
 #else
-    LastEnvironmentType = CoreCLR_disabled
+    LastEnvironmentType = AMDOpenCL
 #endif
   };
   enum ObjectFormatType {
     UnknownObjectFormat,
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     COFF,
 #else
     COFF_disabled,
 #endif
+#endif
     ELF,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MachO,
 #else
     MachO_disabled,
+#endif
 #endif
   };
 

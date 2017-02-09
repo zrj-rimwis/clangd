@@ -3052,16 +3052,21 @@ bool AttributedType::isQualifier() const {
   case AttributedType::attr_preserve_all:
   case AttributedType::attr_ms_abi:
   case AttributedType::attr_sysv_abi:
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case AttributedType::attr_ptr32:
   case AttributedType::attr_ptr64:
   case AttributedType::attr_sptr:
   case AttributedType::attr_uptr:
+#endif
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
   case AttributedType::attr_objc_kindof:
+#endif
     return false;
   }
   llvm_unreachable("bad attributed type kind");
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false, who it get to uncreachable?
 bool AttributedType::isMSTypeSpec() const {
   switch (getAttrKind()) {
   default:  return false;
@@ -3073,13 +3078,16 @@ bool AttributedType::isMSTypeSpec() const {
   }
   llvm_unreachable("invalid attr kind");
 }
+#endif
 
 bool AttributedType::isCallingConv() const {
   switch (getAttrKind()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case attr_ptr32:
   case attr_ptr64:
   case attr_sptr:
   case attr_uptr:
+#endif
   case attr_address_space:
   case attr_regparm:
   case attr_vector_size:
@@ -3094,7 +3102,9 @@ bool AttributedType::isCallingConv() const {
   case attr_nonnull:
   case attr_nullable:
   case attr_null_unspecified:
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
   case attr_objc_kindof:
+#endif
     return false;
 
   case attr_pcs:

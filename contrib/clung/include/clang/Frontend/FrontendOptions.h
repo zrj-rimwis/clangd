@@ -34,10 +34,12 @@ namespace frontend {
     DumpTokens,             ///< Dump out preprocessed tokens.
     EmitAssembly,           ///< Emit a .s file.
     EmitBC,                 ///< Emit a .bc file.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_HTML // __DragonFly__
     EmitHTML,               ///< Translate input source into HTML.
 #else
     EmitHTML_disabled,
+#endif
 #endif
     EmitLLVM,               ///< Emit a .ll file.
     EmitLLVMOnly,           ///< Generate LLVM IR, but do not emit anything.
@@ -56,10 +58,12 @@ namespace frontend {
     PrintPreamble,          ///< Print the "preamble" of the input file
     PrintPreprocessedInput, ///< -E mode.
     RewriteMacros,          ///< Expand macros but not \#includes.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC_REWRITER // __DragonFly__ // chedaaa aha!
     RewriteObjC,            ///< ObjC->C Rewriter.
 #else
     RewriteObjC_disabled,
+#endif
 #endif
     RewriteTest,            ///< Rewriter playground
     RunAnalysis,            ///< Run one or more source code analyses.
@@ -73,6 +77,7 @@ enum InputKind {
   IK_Asm,
   IK_C,
   IK_CXX,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__
   IK_ObjC,
   IK_ObjCXX,
@@ -80,8 +85,10 @@ enum InputKind {
   IK_ObjC_disabled,
   IK_ObjCXX_disabled,
 #endif
+#endif
   IK_PreprocessedC,
   IK_PreprocessedCXX,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__
   IK_PreprocessedObjC,
   IK_PreprocessedObjCXX,
@@ -89,13 +96,16 @@ enum InputKind {
   IK_PreprocessedObjC_disabled,
   IK_PreprocessedObjCXX_disabled,
 #endif
+#endif
   IK_OpenCL,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
   IK_CUDA,
   IK_PreprocessedCuda,
 #else
   IK_CUDA_disabled,
   IK_PreprocessedCuda_disabled,
+#endif
 #endif
   IK_RenderScript,
   IK_AST,

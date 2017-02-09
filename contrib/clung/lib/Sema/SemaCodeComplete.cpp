@@ -1140,7 +1140,11 @@ bool ResultBuilder::IsClassOrStruct(const NamedDecl *ND) const {
   if (const RecordDecl *RD = dyn_cast<RecordDecl>(ND))
     return RD->getTagKind() == TTK_Class ||
     RD->getTagKind() == TTK_Struct ||
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__ // assume false
     RD->getTagKind() == TTK_Interface;
+#else
+    false;
+#endif
   
   return false;
 }
@@ -1510,7 +1514,9 @@ static const char *GetCompletionTypeString(QualType T,
         if (!Tag->hasNameForLinkage()) {
           switch (Tag->getTagKind()) {
           case TTK_Struct: return "struct <anonymous>";
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
           case TTK_Interface: return "__interface <anonymous>";
+#endif
           case TTK_Class:  return "class <anonymous>";
           case TTK_Union:  return "union <anonymous>";
           case TTK_Enum:   return "enum <anonymous>";
@@ -3118,7 +3124,9 @@ CXCursorKind clang::getCursorKindForDecl(const Decl *D) {
     default:
       if (const TagDecl *TD = dyn_cast<TagDecl>(D)) {
         switch (TD->getTagKind()) {
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__ // uch..
           case TTK_Interface:  // fall through
+#endif
           case TTK_Struct: return CXCursor_StructDecl;
           case TTK_Class:  return CXCursor_ClassDecl;
           case TTK_Union:  return CXCursor_UnionDecl;
@@ -6491,6 +6499,7 @@ static void AddObjCPassingTypeChunk(QualType Type,
 
 /// \brief Determine whether the given class is or inherits from a class by
 /// the given name.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 static bool InheritsFromClassNamed(ObjCInterfaceDecl *Class, 
                                    StringRef Name) {
   if (!Class)
@@ -6501,6 +6510,7 @@ static bool InheritsFromClassNamed(ObjCInterfaceDecl *Class,
   
   return InheritsFromClassNamed(Class->getSuperClass(), Name);
 }
+#endif
                   
 /// \brief Add code completions for Objective-C Key-Value Coding (KVC) and
 /// Key-Value Observing (KVO).

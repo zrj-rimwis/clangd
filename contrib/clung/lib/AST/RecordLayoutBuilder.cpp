@@ -1973,7 +1973,9 @@ ItaniumRecordLayoutBuilder::updateExternalFieldOffset(const FieldDecl *Field,
 static unsigned getPaddingDiagFromTagKind(TagTypeKind Tag) {
   switch (Tag) {
   case TTK_Struct: return 0;
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TTK_Interface: return 1;
+#endif
   case TTK_Class: return 2;
   default: llvm_unreachable("Invalid tag kind for field padding diagnostic!");
   }

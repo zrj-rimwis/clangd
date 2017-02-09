@@ -138,7 +138,11 @@ void Mangler::getNameWithPrefix(raw_ostream &OS, const GlobalValue *GV,
     MSFunc = nullptr; // Don't mangle when \01 is present.
   CallingConv::ID CC =
       MSFunc ? MSFunc->getCallingConv() : (unsigned)CallingConv::C;
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__ // // assume !false
   if (!DL.hasMicrosoftFastStdCallMangling() &&
+#else
+  if (!false &&
+#endif
       CC != CallingConv::X86_VectorCall)
     MSFunc = nullptr;
   if (MSFunc) {

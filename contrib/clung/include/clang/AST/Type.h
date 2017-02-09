@@ -3850,12 +3850,14 @@ public:
     LastExprOperandKind = attr_neon_polyvector_type,
 
     // Enumerated operand (string or keyword).
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     attr_objc_gc,
     attr_objc_ownership,
 #else
     attr_objc_gc_disabled,
     attr_objc_ownership_disabled,
+#endif
 #endif
     attr_pcs,
     attr_pcs_vfp,
@@ -3873,10 +3875,12 @@ public:
     attr_fastcall,
     attr_stdcall,
     attr_thiscall,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     attr_pascal,
 #else
     attr_pascal_disabled,
+#endif
 #endif
     attr_swiftcall,
     attr_vectorcall,
@@ -3885,18 +3889,29 @@ public:
     attr_sysv_abi,
     attr_preserve_most,
     attr_preserve_all,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     attr_ptr32,
     attr_ptr64,
     attr_sptr,
     attr_uptr,
+#else
+    attr_ptr32_disabled,
+    attr_ptr64_disabled,
+    attr_sptr_disabled,
+    attr_uptr_disabled,
+#endif
+#endif
     attr_nonnull,
     attr_nullable,
     attr_null_unspecified,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
     attr_objc_kindof,
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     attr_objc_inert_unsafe_unretained,
 #else
     attr_objc_inert_unsafe_unretained_disabled
+#endif
 #endif
   };
 
@@ -3944,7 +3959,9 @@ public:
   /// type.
   bool isQualifier() const;
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false
   bool isMSTypeSpec() const;
+#endif
 
   bool isCallingConv() const;
 
@@ -4435,8 +4452,10 @@ public:
 enum TagTypeKind {
   /// \brief The "struct" keyword.
   TTK_Struct,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   /// \brief The "__interface" keyword.
   TTK_Interface,
+#endif
   /// \brief The "union" keyword.
   TTK_Union,
   /// \brief The "class" keyword.
@@ -4451,10 +4470,12 @@ enum ElaboratedTypeKeyword {
   /// \brief The "struct" keyword introduces the elaborated-type-specifier.
   ETK_Struct,
   /// \brief The "__interface" keyword introduces the elaborated-type-specifier.
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   ETK_Interface,
 #else
   ETK_Interface_disabled,
+#endif
 #endif
   /// \brief The "union" keyword introduces the elaborated-type-specifier.
   ETK_Union,

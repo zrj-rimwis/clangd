@@ -3076,8 +3076,8 @@ void InitializationSequence::Step::Destroy() {
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
   case SK_PassByIndirectCopyRestore:
   case SK_PassByIndirectRestore:
-#endif
   case SK_ProduceObjCObject:
+#endif
   case SK_StdInitializerList:
   case SK_StdInitializerListConstructorCall:
   case SK_OCLSamplerInit:
@@ -3317,12 +3317,14 @@ void InitializationSequence::AddPassByIndirectCopyRestoreStep(QualType type,
 }
 #endif
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 void InitializationSequence::AddProduceObjCObjectStep(QualType T) {
   Step S;
   S.Kind = SK_ProduceObjCObject;
   S.Type = T;
   Steps.push_back(S);
 }
+#endif
 
 void InitializationSequence::AddStdInitializerListConstructionStep(QualType T) {
   Step S;
@@ -4796,9 +4798,12 @@ static bool isLibstdcxxPointerReturnFalseHack(Sema &S,
 }
 
 /// The non-zero enum values here are indexes into diagnostic alternatives.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 enum InvalidICRKind { IIK_okay, IIK_nonlocal, IIK_nonscalar };
+#endif
 
 /// Determines whether this expression is an acceptable ICR source.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 static InvalidICRKind isInvalidICRSource(ASTContext &C, Expr *e,
                                          bool isAddressOf, bool &isWeakAccess) {
   // Skip parens.
@@ -4865,6 +4870,7 @@ static InvalidICRKind isInvalidICRSource(ASTContext &C, Expr *e,
 
   return IIK_nonlocal;
 }
+#endif
 
 /// Check whether the given expression is a valid operand for an
 /// indirect copy/restore.
@@ -6452,8 +6458,8 @@ InitializationSequence::Perform(Sema &S,
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ //assume only for OBJC
   case SK_PassByIndirectCopyRestore:
   case SK_PassByIndirectRestore:
-#endif
   case SK_ProduceObjCObject:
+#endif
   case SK_StdInitializerList:
   case SK_OCLSamplerInit:
   case SK_OCLZeroEvent: {
@@ -7813,11 +7819,11 @@ void InitializationSequence::dump(raw_ostream &OS) const {
     case SK_PassByIndirectRestore:
       OS << "pass by indirect restore";
       break;
-#endif
 
     case SK_ProduceObjCObject:
       OS << "Objective-C object retension";
       break;
+#endif
 
     case SK_StdInitializerList:
       OS << "std::initializer_list from initializer list";

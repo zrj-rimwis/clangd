@@ -59,10 +59,12 @@ public:
     PreprocessJobClass,
     PrecompileJobClass,
     AnalyzeJobClass,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
     MigrateJobClass,
 #else
     MigrateJobClass_disabled,
+#endif
 #endif
     CompileJobClass,
     BackendJobClass,

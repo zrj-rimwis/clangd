@@ -71,9 +71,11 @@ static CGCXXABI *createCXXABI(CodeGenModule &CGM) {
   switch (CGM.getTarget().getCXXABI().getKind()) {
   case TargetCXXABI::GenericAArch64:
   case TargetCXXABI::GenericARM:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TargetCXXABI::iOS:
   case TargetCXXABI::iOS64:
   case TargetCXXABI::WatchOS:
+#endif
   case TargetCXXABI::GenericMIPS:
   case TargetCXXABI::GenericItanium:
   case TargetCXXABI::WebAssembly:

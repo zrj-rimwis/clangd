@@ -1184,11 +1184,14 @@ void TypePrinter::printAttributedBefore(const AttributedType *T,
     return printBefore(T->getEquivalentType(), OS);
 #endif
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   if (T->getAttrKind() == AttributedType::attr_objc_kindof)
     OS << "__kindof ";
+#endif
 
   printBefore(T->getModifiedType(), OS);
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false, ehem
   if (T->isMSTypeSpec()) {
     switch (T->getAttrKind()) {
     default: return;
@@ -1199,6 +1202,7 @@ void TypePrinter::printAttributedBefore(const AttributedType *T,
     }
     spaceBeforePlaceHolder(OS);
   }
+#endif
 
   // Print nullability type specifiers.
   if (T->getAttrKind() == AttributedType::attr_nonnull ||
@@ -1225,12 +1229,16 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
     return printAfter(T->getEquivalentType(), OS);
 #endif
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   if (T->getAttrKind() == AttributedType::attr_objc_kindof)
     return;
+#endif
 
   // TODO: not all attributes are GCC-style attributes.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume false, wow
   if (T->isMSTypeSpec())
     return;
+#endif
 
   // Nothing to print after.
   if (T->getAttrKind() == AttributedType::attr_nonnull ||

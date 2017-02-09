@@ -21,6 +21,7 @@ class StringTableBuilder {
 public:
   enum Kind {
     ELF,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // rewrite
     WinCOFF,
 #else
@@ -30,6 +31,7 @@ public:
     MachO,
 #else
     MachO_disabled,
+#endif
 #endif
     RAW
    };

@@ -1044,11 +1044,6 @@ def TypeNullUnspecified : TypeAttr {
   let Documentation = [TypeNullUnspecifiedDocs];
 }
 
-def ObjCKindOf : TypeAttr {
-  let Spellings = [Keyword<"__kindof">];
-  let Documentation = [Undocumented];
-}
-
 def AssumeAligned : InheritableAttr {
   let Spellings = [GCC<"assume_aligned">];
   let Subjects = SubjectList<[ObjCMethod, Function]>;

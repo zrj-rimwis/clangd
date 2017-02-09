@@ -85,10 +85,12 @@ public:
     EK_RelatedResult,
     /// \brief The entity being initialized is a function parameter; function
     /// is member of group of audited CF APIs.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__ // nice implicit dep
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
     EK_Parameter_CF_Audited
 #else
     EK_Parameter_CF_Audited_disabled
+#endif
 #endif
 
     // Note: err_init_conversion_failed in DiagnosticSemaKinds.td uses this
@@ -713,6 +715,7 @@ public:
     /// This is a GNU C++ extension.
     SK_ParenthesizedArrayInit,
     /// \brief Pass an object by indirect copy-and-restore.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // XXX assume only for OBJC, strange why no prefix?
     SK_PassByIndirectCopyRestore,
 #else
@@ -724,8 +727,15 @@ public:
 #else
     SK_PassByIndirectRestore_disabled,
 #endif
+#endif
     /// \brief Produce an Objective-C object pointer.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     SK_ProduceObjCObject,
+#else
+    SK_ProduceObjCObject_disabled,
+#endif
+#endif
     /// \brief Construct a std::initializer_list from an initializer list.
     SK_StdInitializerList,
     /// \brief Perform initialization via a constructor taking a single
@@ -1107,7 +1117,9 @@ public:
 
   /// \brief Add a step to "produce" an Objective-C object (by
   /// retaining it).
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   void AddProduceObjCObjectStep(QualType T);
+#endif
 
   /// \brief Add a step to construct a std::initializer_list object from an
   /// initializer list.

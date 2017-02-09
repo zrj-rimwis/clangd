@@ -1119,6 +1119,7 @@ void Driver::PrintActions(const Compilation &C) const {
 
 /// \brief Check whether the given input tree contains any compilation or
 /// assembly actions.
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static bool ContainsCompileOrAssembleAction(const Action *A) {
   if (isa<CompileJobAction>(A) || isa<BackendJobAction>(A) ||
       isa<AssembleJobAction>(A))
@@ -1130,6 +1131,7 @@ static bool ContainsCompileOrAssembleAction(const Action *A) {
 
   return false;
 }
+#endif
 
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__ // hmmm this one is only for macho?
 void Driver::BuildUniversalActions(Compilation &C, const ToolChain &TC,

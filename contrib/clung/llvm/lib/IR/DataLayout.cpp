@@ -361,6 +361,7 @@ void DataLayout::parseSpecifier(StringRef Desc) {
       case 'e':
         ManglingMode = MM_ELF;
         break;
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
       case 'o':
         ManglingMode = MM_MachO;
@@ -375,6 +376,7 @@ void DataLayout::parseSpecifier(StringRef Desc) {
       case 'x':
         ManglingMode = MM_WinCOFFX86;
         break;
+#endif
       }
       break;
     default:

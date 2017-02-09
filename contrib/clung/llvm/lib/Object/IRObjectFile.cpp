@@ -294,8 +294,14 @@ ErrorOr<MemoryBufferRef> IRObjectFile::findBitcodeInMemBuffer(MemoryBufferRef Ob
   case sys::fs::file_magic::bitcode:
     return Object;
   case sys::fs::file_magic::elf_relocatable:
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
   case sys::fs::file_magic::macho_object:
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
   case sys::fs::file_magic::coff_object: {
+#else
+  {
+#endif
     Expected<std::unique_ptr<ObjectFile>> ObjFile =
         ObjectFile::createObjectFile(Object, Type);
     if (!ObjFile)

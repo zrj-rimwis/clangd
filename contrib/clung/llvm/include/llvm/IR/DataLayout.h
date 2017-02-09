@@ -108,6 +108,7 @@ private:
   enum ManglingModeT {
     MM_None,
     MM_ELF,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     MM_MachO,
 #else
@@ -116,6 +117,7 @@ private:
     MM_WinCOFF,
     MM_WinCOFFX86,
     MM_Mips
+#endif
   };
   ManglingModeT ManglingMode;
 
@@ -253,9 +255,11 @@ public:
 
   unsigned getStackAlignment() const { return StackNaturalAlign; }
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__ // assume false
   bool hasMicrosoftFastStdCallMangling() const {
     return ManglingMode == MM_WinCOFFX86;
   }
+#endif
 
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
   bool hasLinkerPrivateGlobalPrefix() const { return ManglingMode == MM_MachO; }
@@ -275,14 +279,18 @@ public:
     switch (ManglingMode) {
     case MM_None:
     case MM_ELF:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case MM_Mips:
     case MM_WinCOFF:
+#endif
       return '\0';
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case MM_MachO:
 #endif
     case MM_WinCOFFX86:
       return '_';
+#endif
     }
     llvm_unreachable("invalid mangling mode");
   }
@@ -293,14 +301,18 @@ public:
       return "";
     case MM_ELF:
       return ".L";
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case MM_Mips:
       return "$";
+#endif
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     case MM_MachO:
 #endif
     case MM_WinCOFF:
     case MM_WinCOFFX86:
       return "L";
+#endif
     }
     llvm_unreachable("invalid mangling mode");
   }

@@ -48,10 +48,12 @@ enum class ExceptionHandling {
   DwarfCFI, /// DWARF-like instruction based exceptions
   SjLj,     /// setjmp/longjmp based exceptions
   ARM,      /// ARM EHABI
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__
   WinEH,    /// Windows Exception Handling
 #else
   WinEH_disabled,
+#endif
 #endif
 };
 

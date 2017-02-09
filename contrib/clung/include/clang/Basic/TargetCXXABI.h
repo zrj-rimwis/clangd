@@ -52,6 +52,7 @@ public:
     ///                    /help/topic/com.arm.doc.ihi0041c/IHI0041C_cppabi.pdf
     GenericARM,
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     /// The iOS ABI is a partial implementation of the ARM ABI.
     /// Several of the features of the ARM ABI were not fully implemented
     /// in the compilers that iOS was launched with.
@@ -75,6 +76,7 @@ public:
     /// the iOS64 ABI ported to 32-bits. The primary difference from iOS64 is
     /// that RTTI objects must still be unique at the moment.
     WatchOS,
+#endif
 
     /// The generic AArch64 ABI is also a modified version of the Itanium ABI,
     /// but it has fewer divergences than the 32-bit ARM ABI.
@@ -105,6 +107,7 @@ public:
     /// of these details is necessarily final yet.
     WebAssembly,
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     /// The Microsoft ABI is the ABI used by Microsoft Visual Studio (and
     /// compatible compilers).
     ///
@@ -115,6 +118,7 @@ public:
     Microsoft
 #else
     Microsoft_disabled
+#endif
 #endif
   };
 
@@ -199,11 +203,13 @@ public:
       //       the this adjustment, so they don't require functions to have any
       //       special alignment and could therefore also return false.
     case GenericItanium:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case iOS:
     case iOS64:
     case WatchOS:
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Microsoft:
+#endif
 #endif
       return true;
     }
@@ -287,16 +293,22 @@ public:
   bool canKeyFunctionBeInline() const {
     switch (getKind()) {
     case GenericARM:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case iOS64:
+#endif
     case WebAssembly:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case WatchOS:
+#endif
       return false;
 
     case GenericAArch64:
     case GenericItanium:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case iOS:   // old iOS compilers did not follow this rule
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     case Microsoft:
+#endif
 #endif
     case GenericMIPS:
       return true;
@@ -343,15 +355,21 @@ public:
     case GenericItanium:
     case GenericAArch64:
     case GenericARM:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case iOS:
+#endif
     case GenericMIPS:
       return UseTailPaddingUnlessPOD03;
 
     // iOS on ARM64 and WebAssembly use the C++11 POD rules.  They do not honor
     // the Itanium exception about classes with over-large bitfields.
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case iOS64:
+#endif
     case WebAssembly:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     case WatchOS:
+#endif
       return UseTailPaddingUnlessPOD11;
 
     // MSVC always allocates fields in the tail-padding of a base class

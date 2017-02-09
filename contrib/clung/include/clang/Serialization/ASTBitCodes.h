@@ -496,11 +496,13 @@ namespace clang {
       /// \brief Record code for \#pragma diagnostic mappings.
       DIAG_PRAGMA_MAPPINGS = 32,
 
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       /// \brief Record code for special CUDA declarations.
       CUDA_SPECIAL_DECL_REFS = 33,
 #else
       CUDA_SPECIAL_DECL_REFS_disabled = 33,
+#endif
 #endif
       
       /// \brief Record code for header search information.
@@ -581,10 +583,12 @@ namespace clang {
       DELETE_EXPRS_TO_ANALYZE = 54,
 
       /// \brief Record code for \#pragma ms_struct options.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       MSSTRUCT_PRAGMA_OPTIONS = 55,
 #else
       MSSTRUCT_PRAGMA_OPTIONS_disabled = 55,
+#endif
 #endif
 
       /// \brief Record code for \#pragma ms_struct options.
@@ -783,10 +787,12 @@ namespace clang {
       /// \brief The OpenCL 'half' / ARM NEON __fp16 type.
       PREDEF_TYPE_HALF_ID       = 33,
       /// \brief ARC's unbridged-cast placeholder type.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume only for OBJC
       PREDEF_TYPE_ARC_UNBRIDGED_CAST = 34,
 #else
       PREDEF_TYPE_ARC_UNBRIDGED_CAST_disabled = 34,
+#endif
 #endif
       /// \brief The pseudo-object placeholder type.
       PREDEF_TYPE_PSEUDO_OBJECT = 35,
@@ -1058,10 +1064,12 @@ namespace clang {
       /// \brief A FieldDecl record.
       DECL_FIELD,
       /// \brief A MSPropertyDecl record.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT_ // __DragonFly__
       DECL_MS_PROPERTY,
 #else
       DECL_MS_PROPERTY_disabled,
+#endif
 #endif
       /// \brief A VarDecl record.
       DECL_VAR,
@@ -1180,6 +1188,7 @@ namespace clang {
       DECL_OBJC_TYPE_PARAM,
       /// \brief An OMPCapturedExprDecl record.
       DECL_OMP_CAPTUREDEXPR,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       /// \brief A PragmaCommentDecl record.
       DECL_PRAGMA_COMMENT,
@@ -1188,6 +1197,7 @@ namespace clang {
 #else
       DECL_PRAGMA_COMMENT_disabled,
       DECL_PRAGMA_DETECT_MISMATCH_disabled,
+#endif
 #endif
       /// \brief An OMPDeclareReductionDecl record.
       DECL_OMP_DECLARE_REDUCTION,
@@ -1247,10 +1257,12 @@ namespace clang {
       /// \brief A GCC-style AsmStmt record.
       STMT_GCCASM,
       /// \brief A MS-style AsmStmt record.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       STMT_MSASM,
 #else
       STMT_MSASM_disabled,
+#endif
 #endif
       /// \brief A PredefinedExpr record.
       EXPR_PREDEFINED,
@@ -1332,12 +1344,15 @@ namespace clang {
       // Objective-C
 
       /// \brief An ObjCStringLiteral record.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_STRING_LITERAL,
 #else
       EXPR_OBJC_STRING_LITERAL_disabled,
 #endif
+#endif
 
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_BOXED_EXPRESSION,
       EXPR_OBJC_ARRAY_LITERAL,
@@ -1347,9 +1362,11 @@ namespace clang {
       EXPR_OBJC_ARRAY_LITERAL_disabled,
       EXPR_OBJC_DICTIONARY_LITERAL_disabled,
 #endif
+#endif
 
     
       /// \brief An ObjCEncodeExpr record.
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
       EXPR_OBJC_ENCODE,
 #else
@@ -1464,6 +1481,7 @@ namespace clang {
 #else
       EXPR_OBJC_AVAILABILITY_CHECK_disabled,
 #endif
+#endif
 
       // C++
       
@@ -1538,17 +1556,20 @@ namespace clang {
       EXPR_MATERIALIZE_TEMPORARY, // MaterializeTemporaryExpr
       EXPR_CXX_FOLD,              // CXXFoldExpr
 
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__
       // CUDA
       EXPR_CUDA_KERNEL_CALL,       // CUDAKernelCallExpr      
 #else
       EXPR_CUDA_KERNEL_CALL_disabled,
 #endif
+#endif
 
       // OpenCL
       EXPR_ASTYPE,                 // AsTypeExpr
 
       // Microsoft
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
       EXPR_CXX_PROPERTY_REF_EXPR, // MSPropertyRefExpr
       EXPR_CXX_PROPERTY_SUBSCRIPT_EXPR, // MSPropertySubscriptExpr
@@ -1573,6 +1594,7 @@ namespace clang {
       STMT_SEH_EXCEPT_disabled,
       STMT_SEH_FINALLY_disabled,
       STMT_SEH_TRY_disabled,
+#endif
 #endif
 
       // OpenMP directives
@@ -1616,6 +1638,7 @@ namespace clang {
       EXPR_OMP_ARRAY_SECTION,
 
       // ARC
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not available
       EXPR_OBJC_BRIDGED_CAST,     // ObjCBridgedCastExpr
 #else
@@ -1626,6 +1649,7 @@ namespace clang {
       STMT_MS_DEPENDENT_EXISTS,   // MSDependentExistsStmt
 #else
       STMT_MS_DEPENDENT_EXISTS_disabled,
+#endif
 #endif
       EXPR_LAMBDA                 // LambdaExpr
     };

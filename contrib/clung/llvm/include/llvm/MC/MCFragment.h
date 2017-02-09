@@ -40,12 +40,14 @@ public:
     FT_DwarfFrame,
     FT_LEB,
     FT_SafeSEH,
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_CODEVIEWDEBUG // __DragonFly__
     FT_CVInlineLines,
     FT_CVDefRange,
 #else
     FT_CVInlineLines_disabled,
     FT_CVDefRange_disabled,
+#endif
 #endif
     FT_Dummy
   };

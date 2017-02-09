@@ -5295,6 +5295,7 @@ static bool requiresParensToAddCast(const Expr *E) {
   }
 }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__
 static std::pair<QualType, StringRef>
 shouldNotPrintDirectly(const ASTContext &Context,
                        QualType IntendedTy,
@@ -5349,6 +5350,7 @@ shouldNotPrintDirectly(const ASTContext &Context,
 
   return std::make_pair(QualType(), StringRef());
 }
+#endif
 
 bool
 CheckPrintfHandler::checkFormatExpr(const analyze_printf::PrintfSpecifier &FS,

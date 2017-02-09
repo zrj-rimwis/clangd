@@ -144,6 +144,7 @@ enum class UnqualifiedTypeNameLookupResult {
 /// dependent class.
 /// \return \a NotFound if no any decls is found, \a FoundNotType if found not a
 /// type decl, \a FoundType if only type decls are found.
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static UnqualifiedTypeNameLookupResult
 lookupUnqualifiedTypeNameInBase(Sema &S, const IdentifierInfo &II,
                                 SourceLocation NameLoc,
@@ -199,6 +200,7 @@ lookupUnqualifiedTypeNameInBase(Sema &S, const IdentifierInfo &II,
 
   return FoundTypeDecl;
 }
+#endif
 
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__
 static ParsedType recoverFromTypeInKnownDependentBase(Sema &S,
@@ -746,9 +748,11 @@ static bool isTagTypeWithMissingTag(Sema &SemaRef, LookupResult &Result,
         FixItTagName = "struct ";
         break;
 
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
       case TTK_Interface:
         FixItTagName = "__interface ";
         break;
+#endif
 
       case TTK_Union:
         FixItTagName = "union ";
@@ -12226,7 +12230,9 @@ bool Sema::CheckEnumRedeclaration(
 static unsigned getRedeclDiagFromTagKind(TagTypeKind Tag) {
   switch (Tag) {
   case TTK_Struct: return 0;
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__ // uch...
   case TTK_Interface: return 1;
+#endif
   case TTK_Class:  return 2;
   default: llvm_unreachable("Invalid tag kind for redecl diagnostic!");
   }
@@ -12238,7 +12244,11 @@ static unsigned getRedeclDiagFromTagKind(TagTypeKind Tag) {
 /// \returns true iff the tag kind is compatible.
 static bool isClassCompatTagKind(TagTypeKind Tag)
 {
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   return Tag == TTK_Struct || Tag == TTK_Class || Tag == TTK_Interface;
+#else
+  return Tag == TTK_Struct || Tag == TTK_Class || false;
+#endif
 }
 
 /// \brief Determine whether a tag with a given kind is acceptable

@@ -246,6 +246,7 @@ struct file_magic {
     elf_executable,           ///< ELF Executable image
     elf_shared_object,        ///< ELF dynamically linked shared lib
     elf_core,                 ///< ELF core image
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     macho_object,             ///< Mach-O Object file
     macho_executable,         ///< Mach-O Executable
     macho_fixed_virtual_memory_shared_lib, ///< Mach-O Shared Lib, FVM
@@ -258,9 +259,12 @@ struct file_magic {
     macho_dsym_companion,     ///< Mach-O dSYM companion file
     macho_kext_bundle,        ///< Mach-O kext bundle file
     macho_universal_binary,   ///< Mach-O universal binary
+#endif
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__
     coff_object,              ///< COFF object file
     coff_import_library,      ///< COFF import library
     pecoff_executable,        ///< PECOFF executable file
+#endif
     windows_resource          ///< Windows compiled resource file (.rc)
   };
 

@@ -45,7 +45,9 @@ namespace clang {
     UTT_IsFunction,
     UTT_IsFundamental,
     UTT_IsIntegral,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     UTT_IsInterfaceClass,
+#endif
     UTT_IsLiteral,
     UTT_IsLvalueReference,
     UTT_IsMemberFunctionPointer,
@@ -59,7 +61,9 @@ namespace clang {
     UTT_IsReference,
     UTT_IsRvalueReference,
     UTT_IsScalar,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
     UTT_IsSealed,
+#endif
     UTT_IsSigned,
     UTT_IsStandardLayout,
     UTT_IsTrivial,

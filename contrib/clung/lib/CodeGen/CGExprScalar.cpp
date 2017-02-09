@@ -1511,9 +1511,12 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
     return CGF.EmitARCExtendBlockObject(E);
 #endif
 
-#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed, but you know
   case CK_CopyAndAutoreleaseBlockObject:
     return CGF.EmitBlockCopyAndAutorelease(Visit(E), E->getType());
+#else
+  case CK_CopyAndAutoreleaseBlockObject:
+    llvm_unreachable("OBJC runtime disabled");
 #endif
 
   case CK_FloatingRealToComplex:

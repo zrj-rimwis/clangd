@@ -6487,7 +6487,9 @@ static int EvaluateBuiltinClassifyType(const CallExpr *E,
       switch (RT->getDecl()->getTagKind()) {
       case TagTypeKind::TTK_Struct:
       case TagTypeKind::TTK_Class:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
       case TagTypeKind::TTK_Interface:
+#endif
         return record_type_class;
 
       case TagTypeKind::TTK_Enum:

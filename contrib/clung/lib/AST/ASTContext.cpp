@@ -679,9 +679,11 @@ CXXABI *ASTContext::createCXXABI(const TargetInfo &T) {
 
   switch (T.getCXXABI().getKind()) {
   case TargetCXXABI::GenericARM: // Same as Itanium at this level
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TargetCXXABI::iOS:
   case TargetCXXABI::iOS64:
   case TargetCXXABI::WatchOS:
+#endif
   case TargetCXXABI::GenericAArch64:
   case TargetCXXABI::GenericMIPS:
   case TargetCXXABI::GenericItanium:
@@ -8828,10 +8830,14 @@ MangleContext *ASTContext::createMangleContext() {
   case TargetCXXABI::GenericItanium:
   case TargetCXXABI::GenericARM:
   case TargetCXXABI::GenericMIPS:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TargetCXXABI::iOS:
   case TargetCXXABI::iOS64:
+#endif
   case TargetCXXABI::WebAssembly:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TargetCXXABI::WatchOS:
+#endif
     return ItaniumMangleContext::create(*this, getDiagnostics());
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case TargetCXXABI::Microsoft:

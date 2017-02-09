@@ -27,6 +27,7 @@ enum class EHPersonality {
   GNU_CXX,
   GNU_CXX_SjLj,
   GNU_ObjC,
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__
   MSVC_X86SEH,
   MSVC_Win64SEH,
@@ -37,6 +38,7 @@ enum class EHPersonality {
   MSVC_Win64SEH_disabled,
   MSVC_CXX_disabled,
   CoreCLR_disabled,
+#endif
 #endif
   Rust
 };

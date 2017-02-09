@@ -684,8 +684,10 @@ static void distributeTypeAttrsFromDeclarator(TypeProcessingState &state,
       // Nullability specifiers cannot go after the declarator-id.
 
     // Objective-C __kindof does not get distributed.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     case AttributeList::AT_ObjCKindOf:
       continue;
+#endif
 
     default:
       break;
@@ -2893,7 +2895,9 @@ static QualType GetDeclSpecTypeForDeclarator(TypeProcessingState &state,
       case TTK_Struct: Error = Cxx ? 1 : 2; /* Struct member */ break;
       case TTK_Union:  Error = Cxx ? 3 : 4; /* Union member */ break;
       case TTK_Class:  Error = 5; /* Class member */ break;
+#ifdef LLVM_ENABLE_NONC_TARGETS // __DragonFly__
       case TTK_Interface: Error = 6; /* Interface member */ break;
+#endif
       }
       break;
     }
@@ -4846,8 +4850,10 @@ static AttributeList::Kind getAttrListKind(AttributedType::Kind kind) {
     return AttributeList::AT_TypeNullable;
   case AttributedType::attr_null_unspecified:
     return AttributeList::AT_TypeNullUnspecified;
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
   case AttributedType::attr_objc_kindof:
     return AttributeList::AT_ObjCKindOf;
+#endif
   }
   llvm_unreachable("unexpected attribute kind!");
 }
@@ -6014,6 +6020,7 @@ bool Sema::checkNullabilityTypeSpecifier(QualType &type,
   return false;
 }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
 bool Sema::checkObjCKindOfType(QualType &type, SourceLocation loc) {
   // Find out if it's an Objective-C object or object pointer type;
   const ObjCObjectPointerType *ptrType = type->getAs<ObjCObjectPointerType>();
@@ -6052,6 +6059,7 @@ bool Sema::checkObjCKindOfType(QualType &type, SourceLocation loc) {
 
   return false;
 }
+#endif
 
 /// Map a nullability attribute kind to a nullability kind.
 static NullabilityKind mapNullabilityAttrKind(AttributeList::Kind kind) {
@@ -6766,6 +6774,7 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
       }
       break;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__
     case AttributeList::AT_ObjCKindOf:
       // '__kindof' must be part of the decl-specifiers.
       switch (TAL) {
@@ -6787,6 +6796,7 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
         attr.setInvalid();
       attr.setUsedAsTypeAttr();
       break;
+#endif
 
     case AttributeList::AT_NSReturnsRetained:
 #ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume !false
@@ -7225,7 +7235,9 @@ bool Sema::RequireCompleteType(SourceLocation Loc, QualType T,
 static unsigned getLiteralDiagFromTagKind(TagTypeKind Tag) {
   switch (Tag) {
   case TTK_Struct: return 0;
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TTK_Interface: return 1;
+#endif
   case TTK_Class:  return 2;
   default: llvm_unreachable("Invalid tag kind for literal type diagnostic!");
   }

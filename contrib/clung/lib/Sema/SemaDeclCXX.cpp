@@ -790,7 +790,9 @@ static bool CheckConstexprParameterTypes(Sema &SemaRef,
 static unsigned getRecordDiagFromTagKind(TagTypeKind Tag) {
   switch (Tag) {
   case TTK_Struct: return 0;
+#ifdef LLVM_ENABLE_NOC_TARGETS // __DragonFly__ // so much bugz..
   case TTK_Interface: return 1;
+#endif
   case TTK_Class:  return 2;
   default: llvm_unreachable("Invalid tag kind for record diagnostic!");
   }
@@ -9609,6 +9611,7 @@ void Sema::ActOnFinishCXXMemberDecls() {
   }
 }
 
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
 static void getDefaultArgExprsForConstructors(Sema &S, CXXRecordDecl *Class) {
   // Don't do anything for template patterns.
   if (Class->getDescribedClassTemplate())
@@ -9663,6 +9666,7 @@ static void getDefaultArgExprsForConstructors(Sema &S, CXXRecordDecl *Class) {
     }
   }
 }
+#endif
 
 void Sema::ActOnFinishCXXNonNestedClass(Decl *D) {
   auto *RD = dyn_cast<CXXRecordDecl>(D);

@@ -423,6 +423,7 @@ public:
                                    CharUnits cookieSize) override;
 };
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
 class iOS64CXXABI : public ARMCXXABI {
 public:
   iOS64CXXABI(CodeGen::CodeGenModule &CGM) : ARMCXXABI(CGM) {}
@@ -430,6 +431,7 @@ public:
   // ARM64 libraries are prepared for non-unique RTTI.
   bool shouldRTTIBeUnique() const override { return false; }
 };
+#endif
 
 class WebAssemblyCXXABI final : public ItaniumCXXABI {
 public:
@@ -452,12 +454,16 @@ CodeGen::CGCXXABI *CodeGen::CreateItaniumCXXABI(CodeGenModule &CGM) {
   // For IR-generation purposes, there's no significant difference
   // between the ARM and iOS ABIs.
   case TargetCXXABI::GenericARM:
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TargetCXXABI::iOS:
   case TargetCXXABI::WatchOS:
+#endif
     return new ARMCXXABI(CGM);
 
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
   case TargetCXXABI::iOS64:
     return new iOS64CXXABI(CGM);
+#endif
 
   // Note that AArch64 uses the generic ItaniumCXXABI class since it doesn't
   // include the other 32-bit ARM oddities: constructor/destructor return values

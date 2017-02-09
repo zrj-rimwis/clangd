@@ -822,9 +822,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           REVERTIBLE_TYPE_TRAIT(__is_constructible);
           REVERTIBLE_TYPE_TRAIT(__is_convertible);
           REVERTIBLE_TYPE_TRAIT(__is_convertible_to);
-#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           REVERTIBLE_TYPE_TRAIT(__is_destructible);
-#endif
           REVERTIBLE_TYPE_TRAIT(__is_empty);
           REVERTIBLE_TYPE_TRAIT(__is_enum);
           REVERTIBLE_TYPE_TRAIT(__is_floating_point);
@@ -843,9 +841,7 @@ ExprResult Parser::ParseCastExpression(bool isUnaryExpression,
           REVERTIBLE_TYPE_TRAIT(__is_member_pointer);
           REVERTIBLE_TYPE_TRAIT(__is_nothrow_assignable);
           REVERTIBLE_TYPE_TRAIT(__is_nothrow_constructible);
-#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
           REVERTIBLE_TYPE_TRAIT(__is_nothrow_destructible);
-#endif
           REVERTIBLE_TYPE_TRAIT(__is_object);
           REVERTIBLE_TYPE_TRAIT(__is_pod);
           REVERTIBLE_TYPE_TRAIT(__is_pointer);

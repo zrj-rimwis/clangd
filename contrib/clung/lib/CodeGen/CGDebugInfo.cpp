@@ -903,14 +903,12 @@ static unsigned getDwarfCC(CallingConv CC) {
     // Avoid emitting DW_AT_calling_convention if the C convention was used.
     return 0;
 
-#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
   case CC_X86StdCall:
     return llvm::dwarf::DW_CC_BORLAND_stdcall;
   case CC_X86FastCall:
     return llvm::dwarf::DW_CC_BORLAND_msfastcall;
   case CC_X86ThisCall:
     return llvm::dwarf::DW_CC_BORLAND_thiscall;
-#endif
   case CC_X86VectorCall:
     return llvm::dwarf::DW_CC_LLVM_vectorcall;
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__

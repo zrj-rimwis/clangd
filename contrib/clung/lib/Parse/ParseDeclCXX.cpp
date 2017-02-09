@@ -1305,9 +1305,7 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
                   tok::kw___is_constructible,
                   tok::kw___is_convertible,
                   tok::kw___is_convertible_to,
-#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                   tok::kw___is_destructible,
-#endif
                   tok::kw___is_empty,
                   tok::kw___is_enum,
                   tok::kw___is_floating_point,
@@ -1326,9 +1324,7 @@ void Parser::ParseClassSpecifier(tok::TokenKind TagTokKind,
                   tok::kw___is_member_pointer,
                   tok::kw___is_nothrow_assignable,
                   tok::kw___is_nothrow_constructible,
-#ifdef CLANG_ENABLE_MSEXT // __DragonFly__
                   tok::kw___is_nothrow_destructible,
-#endif
                   tok::kw___is_object,
                   tok::kw___is_pod,
                   tok::kw___is_pointer,

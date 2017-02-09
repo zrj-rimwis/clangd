@@ -2681,9 +2681,17 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
     TagDecl *TagY = cast<TagDecl>(Y);
     return (TagX->getTagKind() == TagY->getTagKind()) ||
       ((TagX->getTagKind() == TTK_Struct || TagX->getTagKind() == TTK_Class ||
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__ // assume false
         TagX->getTagKind() == TTK_Interface) &&
+#else
+        false) &&
+#endif
        (TagY->getTagKind() == TTK_Struct || TagY->getTagKind() == TTK_Class ||
+#ifdef LLVM_ENABLE_NONELF_TARGETS // __DragonFly__
         TagY->getTagKind() == TTK_Interface));
+#else
+        false));
+#endif
   }
 
   // Functions with the same type and linkage match.
