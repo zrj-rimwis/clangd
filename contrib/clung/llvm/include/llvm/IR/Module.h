@@ -33,7 +33,9 @@ template <typename T> class Optional;
 class FunctionType;
 class GVMaterializer;
 class LLVMContext;
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__
 class RandomNumberGenerator;
+#endif
 class StructType;
 template <class PtrType> class SmallPtrSetImpl;
 
@@ -240,6 +242,7 @@ public:
   /// @returns a string containing the module-scope inline assembly blocks.
   const std::string &getModuleInlineAsm() const { return GlobalScopeAsm; }
 
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__
   /// Get a RandomNumberGenerator salted for use with this module. The
   /// RNG can be seeded via -rng-seed=<uint64> and is salted with the
   /// ModuleID and the provided pass salt. The returned RNG should not
@@ -249,7 +252,10 @@ public:
   /// when other randomness consuming passes are added or removed. In
   /// addition, the random stream will be reproducible across LLVM
   /// versions when the pass does not change.
+#endif
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__
   RandomNumberGenerator *createRNG(const Pass* P) const;
+#endif
 
 /// @}
 /// @name Module Level Mutators

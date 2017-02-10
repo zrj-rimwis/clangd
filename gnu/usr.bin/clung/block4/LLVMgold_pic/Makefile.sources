@@ -470,7 +470,6 @@ SRCS+=	APFloat.cpp \
 	Process.cpp \
 	Program.cpp \
 	RWMutex.cpp \
-	RandomNumberGenerator.cpp \
 	Regex.cpp \
 	SHA1.cpp \
 	ScaledNumber.cpp \

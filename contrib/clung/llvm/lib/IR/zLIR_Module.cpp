@@ -26,7 +26,9 @@
 #include "llvm/IR/TypeFinder.h"
 #include "llvm/Support/Dwarf.h"
 #include "llvm/Support/Path.h"
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__
 #include "llvm/Support/RandomNumberGenerator.h"
+#endif
 #include <algorithm>
 #include <cstdarg>
 #include <cstdlib>
@@ -67,6 +69,7 @@ Module::~Module() {
   delete static_cast<StringMap<NamedMDNode *> *>(NamedMDSymTab);
 }
 
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__
 RandomNumberGenerator *Module::createRNG(const Pass* P) const {
   SmallString<32> Salt(P->getPassName());
 
@@ -84,6 +87,7 @@ RandomNumberGenerator *Module::createRNG(const Pass* P) const {
 
   return new RandomNumberGenerator(Salt);
 }
+#endif
 
 /// getNamedValue - Return the first global value in the module with
 /// the specified name, of arbitrary type.  This method returns null
