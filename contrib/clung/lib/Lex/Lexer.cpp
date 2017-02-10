@@ -2277,11 +2277,13 @@ static bool isEndOfBlockCommentWithEscapedNewLine(const char *CurPtr,
   return true;
 }
 
+#ifdef CLANG_ENABLE_SSE2USE // __DragonFly__
 #ifdef __SSE2__
 #include <emmintrin.h>
 #elif __ALTIVEC__
 #include <altivec.h>
 #undef bool
+#endif
 #endif
 
 /// We have just read from input the / and * characters that started a comment.
@@ -2340,6 +2342,7 @@ bool Lexer::SkipBlockComment(Token &Result, const char *CurPtr,
 
       if (C == '/') goto FoundSlash;
 
+#ifdef CLANG_ENABLE_SSE2USE // __DragonFly__ // nonono, just copy over "standard block"
 #ifdef __SSE2__
       __m128i Slashes = _mm_set1_epi8('/');
       while (CurPtr+16 <= BufferEnd) {
@@ -2362,6 +2365,16 @@ bool Lexer::SkipBlockComment(Token &Result, const char *CurPtr,
       while (CurPtr+16 <= BufferEnd &&
              !vec_any_eq(*(const vector unsigned char*)CurPtr, Slashes))
         CurPtr += 16;
+#else
+      // Scan for '/' quickly.  Many block comments are very large.
+      while (CurPtr[0] != '/' &&
+             CurPtr[1] != '/' &&
+             CurPtr[2] != '/' &&
+             CurPtr[3] != '/' &&
+             CurPtr+4 < BufferEnd) {
+        CurPtr += 4;
+      }
+#endif
 #else
       // Scan for '/' quickly.  Many block comments are very large.
       while (CurPtr[0] != '/' &&

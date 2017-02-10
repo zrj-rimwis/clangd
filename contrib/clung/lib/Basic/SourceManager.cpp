@@ -1189,8 +1189,10 @@ unsigned SourceManager::getPresumedColumnNumber(SourceLocation Loc,
   return PLoc.getColumn();
 }
 
+#ifdef CLANG_ENABLE_SSE2USE // __DragonFly__
 #ifdef __SSE2__
 #include <emmintrin.h>
+#endif
 #endif
 
 static LLVM_ATTRIBUTE_NOINLINE void
@@ -1219,6 +1221,7 @@ static void ComputeLineNumbers(DiagnosticsEngine &Diag, ContentCache *FI,
     // Skip over the contents of the line.
     const unsigned char *NextBuf = (const unsigned char *)Buf;
 
+#ifdef CLANG_ENABLE_SSE2USE // __DragonFly__ // nonono
 #ifdef __SSE2__
     // Try to skip to the next newline using SSE instructions. This is very
     // performance sensitive for programs with lots of diagnostics and in -E
@@ -1248,12 +1251,15 @@ static void ComputeLineNumbers(DiagnosticsEngine &Diag, ContentCache *FI,
       NextBuf += 16;
     }
 #endif
+#endif
 
     while (*NextBuf != '\n' && *NextBuf != '\r' && *NextBuf != '\0')
       ++NextBuf;
 
+#ifdef CLANG_ENABLE_SSE2USE // __DragonFly__
 #ifdef __SSE2__
 FoundSpecialChar:
+#endif
 #endif
     Offs += NextBuf-Buf;
     Buf = NextBuf;

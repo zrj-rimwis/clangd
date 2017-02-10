@@ -57,7 +57,9 @@
 
 #ifndef NDEBUG
 // We only use this for a debug check.
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__
 #include <random>
+#endif
 #endif
 
 using namespace llvm;
@@ -78,8 +80,10 @@ STATISTIC(NumVectorized, "Number of vectorized aggregates");
 
 /// Hidden option to enable randomly shuffling the slices to help uncover
 /// instability in their order.
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__ // only useful for llvm devel
 static cl::opt<bool> SROARandomShuffleSlices("sroa-random-shuffle-slices",
                                              cl::init(false), cl::Hidden);
+#endif
 
 /// Hidden option to experiment with completely strict handling of inbounds
 /// GEPs.
@@ -1003,10 +1007,12 @@ AllocaSlices::AllocaSlices(const DataLayout &DL, AllocaInst &AI)
                Slices.end());
 
 #ifndef NDEBUG
+#ifdef LLVM_ENABLE_CXXRAND // __DragonFly__ // only useful for llvm devel
   if (SROARandomShuffleSlices) {
     std::mt19937 MT(static_cast<unsigned>(sys::TimeValue::now().msec()));
     std::shuffle(Slices.begin(), Slices.end(), MT);
   }
+#endif
 #endif
 
   // Sort the uses. This arranges for the offsets to be in ascending order,
