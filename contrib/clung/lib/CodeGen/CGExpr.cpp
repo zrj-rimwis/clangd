@@ -3819,8 +3819,12 @@ RValue CodeGenFunction::EmitCallExpr(const CallExpr *E,
     if (const CXXMethodDecl *MD = dyn_cast_or_null<CXXMethodDecl>(TargetDecl))
       return EmitCXXOperatorMemberCallExpr(CE, MD, ReturnValue);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume temp not needed
   if (const auto *PseudoDtor =
           dyn_cast<CXXPseudoDestructorExpr>(E->getCallee()->IgnoreParens())) {
+#else
+  if (dyn_cast<CXXPseudoDestructorExpr>(E->getCallee()->IgnoreParens())) {
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and thus not needed
     QualType DestroyedType = PseudoDtor->getDestroyedType();
     if (DestroyedType.hasStrongOrWeakObjCLifetime()) {

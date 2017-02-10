@@ -295,8 +295,12 @@ void Sema::DiagnoseUnusedExprResult(const Stmt *S) {
   if (false) {
     /* dummy */
 #endif
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   } else if (const PseudoObjectExpr *POE = dyn_cast<PseudoObjectExpr>(E)) {
     const Expr *Source = POE->getSyntacticForm();
+#else
+  } else if (dyn_cast<PseudoObjectExpr>(E)) {
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
     if (isa<ObjCSubscriptRefExpr>(Source))
       DiagID = diag::warn_unused_container_subscript_expr;

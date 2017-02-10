@@ -684,7 +684,7 @@ void IfConverter::ScanInstructions(BBInfo &BBI) {
     // following CFG, which is subject to our "simple" transformation.
     //
     //    BB0     // if (c1) goto BB1; else goto BB2;
-    //   /   \
+    //   /   \    //
     //  BB1   |
     //   |   BB2  // if (c2) goto TBB; else goto FBB;
     //   |   / |
@@ -1799,7 +1799,7 @@ void IfConverter::MergeBlocks(BBInfo &ToBBI, BBInfo &FromBBI, bool AddEdges) {
       // Before ifcvt:      After ifcvt (assume B->D is kept):
       //
       //       A                A
-      //      /|               /|\
+      //      /|               /|\   //
       //     / B              / B|
       //    | /|             |  ||
       //    |/ |             |  |/

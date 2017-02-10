@@ -277,7 +277,9 @@ Tool *ToolChain::getTool(Action::ActionClass AC) const {
 
 static StringRef getArchNameForCompilerRTLib(const ToolChain &TC,
                                              const ArgList &Args) {
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume not needed temp
   const llvm::Triple &Triple = TC.getTriple();
+#endif
 #ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume false
   bool IsWindows = Triple.isOSWindows();
 #endif

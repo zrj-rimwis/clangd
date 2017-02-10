@@ -3388,22 +3388,28 @@ X86TargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   const uint32_t *Mask = RegInfo->getCallPreservedMask(MF, CallConv);
   assert(Mask && "Missing call preserved mask for calling convention");
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   // If this is an invoke in a 32-bit function using a funclet-based
   // personality, assume the function clobbers all registers. If an exception
   // is thrown, the runtime will not restore CSRs.
   // FIXME: Model this more precisely so that we can register allocate across
   // the normal edge and spill and fill across the exceptional edge.
+#endif
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume whole block in no-op
   if (!Is64Bit && CLI.CS && CLI.CS->isInvoke()) {
     const Function *CallerFn = MF.getFunction();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
     EHPersonality Pers =
         CallerFn->hasPersonalityFn()
             ? classifyEHPersonality(CallerFn->getPersonalityFn())
             : EHPersonality::Unknown;
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
     if (isFuncletEHPersonality(Pers))
       Mask = RegInfo->getNoPreservedMask();
 #endif
   }
+#endif
 
   Ops.push_back(DAG.getRegisterMask(Mask));
 
@@ -18687,7 +18693,9 @@ SDValue X86TargetLowering::LowerRETURNADDR(SDValue Op,
 SDValue X86TargetLowering::LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const {
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo *MFI = MF.getFrameInfo();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   X86MachineFunctionInfo *FuncInfo = MF.getInfo<X86MachineFunctionInfo>();
+#endif
   const X86RegisterInfo *RegInfo = Subtarget.getRegisterInfo();
   EVT VT = Op.getValueType();
 
@@ -23307,11 +23315,11 @@ X86TargetLowering::EmitLoweredSelect(MachineInstr &MI,
   // because this custom-inserter would have generated:
   //
   //   A
-  //   | \
+  //   | \                //
   //   |  B
   //   | /
   //   C
-  //   | \
+  //   | \                //
   //   |  D
   //   | /
   //   E
@@ -23325,7 +23333,7 @@ X86TargetLowering::EmitLoweredSelect(MachineInstr &MI,
   // If we lower both CMOVs in a single step, we can instead generate:
   //
   //   A
-  //   | \
+  //   | \               //
   //   |  C
   //   | /|
   //   |/ |

@@ -527,8 +527,8 @@ static Cl::Kinds ClassifyMemberExpr(ASTContext &Ctx, const MemberExpr *E) {
     // *E1 is an lvalue
     if (E->isArrow())
       return Cl::CL_LValue;
-    Expr *Base = E->getBase()->IgnoreParenImpCasts();
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
+    Expr *Base = E->getBase()->IgnoreParenImpCasts();
     if (isa<ObjCPropertyRefExpr>(Base))
       return Cl::CL_SubObjCPropertySetting;
 #endif

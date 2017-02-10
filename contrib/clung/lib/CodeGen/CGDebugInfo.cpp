@@ -3112,8 +3112,8 @@ llvm::DIType *CGDebugInfo::EmitTypeForVarWithBlocksAttr(const VarDecl *VD,
     EltTys.push_back(
         CreateMemberType(Unit, FType, "__destroy_helper", &FieldOffset));
   }
-  bool HasByrefExtendedLayout;
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
+  bool HasByrefExtendedLayout;
   Qualifiers::ObjCLifetime Lifetime;
   if (CGM.getContext().getByrefLifetime(Type, Lifetime,
                                         HasByrefExtendedLayout) &&

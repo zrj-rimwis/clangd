@@ -5658,7 +5658,9 @@ static void AddClassMessageCompletions(Sema &SemaRef, Scope *S,
                                        bool AtArgumentExpression,
                                        bool IsSuper,
                                        ResultBuilder &Results) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   typedef CodeCompletionResult Result;
+#endif
   ObjCInterfaceDecl *CDecl = nullptr;
 
   // If the given name refers to an interface type, retrieve the
@@ -5777,7 +5779,9 @@ void Sema::CodeCompleteObjCInstanceMessage(Scope *S, Expr *Receiver,
                                            ArrayRef<IdentifierInfo *> SelIdents,
                                            bool AtArgumentExpression,
                                            ObjCInterfaceDecl *Super) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   typedef CodeCompletionResult Result;
+#endif
   
   Expr *RecExpr = static_cast<Expr *>(Receiver);
   
@@ -7345,7 +7349,9 @@ void Sema::CodeCompleteObjCMethodDeclSelector(Scope *S,
   }
 
   // Build the set of methods we can see.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp bellow
   typedef CodeCompletionResult Result;
+#endif
   ResultBuilder Results(*this, CodeCompleter->getAllocator(),
                         CodeCompleter->getCodeCompletionTUInfo(),
                         CodeCompletionContext::CCC_Other);

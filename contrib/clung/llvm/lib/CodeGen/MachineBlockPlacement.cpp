@@ -430,9 +430,9 @@ BranchProbability MachineBlockPlacement::collectViableSuccessors(
   // following CFG:
   //
   //     --->A
-  //     |  / \
+  //     |  / \          //
   //     | B   C
-  //     |  \ / \
+  //     |  \ / \        //
   //     ----D   E
   //
   // Assume A->C is very hot (>90%), and C->D has a 50% probability, then after
@@ -557,8 +557,8 @@ bool MachineBlockPlacement::hasBetterLayoutPredecessor(
   // -------------------------------------
   // Case 1: triangular shape CFG (if-then):
   //     BB
-  //     | \
-  //     |  \
+  //     | \           //
+  //     |  \          //
   //     |   Pred
   //     |   /
   //     Succ
@@ -587,8 +587,8 @@ bool MachineBlockPlacement::hasBetterLayoutPredecessor(
   // -----------------------------------------------------------------
   // Case 2: diamond like CFG (if-then-else):
   //     S
-  //    / \
-  //   |   \
+  //    / \             //
+  //   |   \            //
   //  BB    Pred
   //   \    /
   //    Succ

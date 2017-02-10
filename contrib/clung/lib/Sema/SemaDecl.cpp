@@ -6303,7 +6303,9 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
   if (IsLocalExternDecl)
     NewVD->setLocalExternDecl();
 
+#ifdef CLANG_ENABLE_LANG_CUDA // __DragonFly__ // assume not needed temp
   bool EmitTLSUnsupportedError = false;
+#endif
   if (DeclSpec::TSCS TSCS = D.getDeclSpec().getThreadStorageClassSpec()) {
     // C++11 [dcl.stc]p4:
     //   When thread_local is applied to a variable of block scope the
@@ -10668,8 +10670,12 @@ Sema::FinalizeDeclaration(Decl *ThisDecl) {
   }
 
   if (VD->isStaticLocal()) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed temp
     if (FunctionDecl *FD =
             dyn_cast_or_null<FunctionDecl>(VD->getParentFunctionOrMethod())) {
+#else
+    if (dyn_cast_or_null<FunctionDecl>(VD->getParentFunctionOrMethod())) {
+#endif
       // Static locals inherit dll attributes from their function.
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume nullptr
       if (Attr *A = getDLLAttr(FD)) {
@@ -14144,7 +14150,9 @@ void Sema::ActOnFields(Scope *S, SourceLocation RecLoc, Decl *EnclosingDecl,
   // Verify that all the fields are okay.
   SmallVector<FieldDecl*, 32> RecFields;
 
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed temp
   bool ARCErrReported = false;
+#endif
   for (ArrayRef<Decl *>::iterator i = Fields.begin(), end = Fields.end();
        i != end; ++i) {
     FieldDecl *FD = cast<FieldDecl>(*i);

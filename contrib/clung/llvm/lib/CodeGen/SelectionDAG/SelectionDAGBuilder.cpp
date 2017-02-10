@@ -1245,10 +1245,8 @@ void SelectionDAGBuilder::visitCatchPad(const CatchPadInst &I) {
   auto Pers = classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
   bool IsMSVCCXX = Pers == EHPersonality::MSVC_CXX;
   bool IsCoreCLR = Pers == EHPersonality::CoreCLR;
-#endif
   MachineBasicBlock *CatchPadMBB = FuncInfo.MBB;
   // In MSVC C++ and CoreCLR, catchblocks are funclets and need prologues.
-#ifdef LLVM_ENABLE_MSEH // __DragonFly__
   if (IsMSVCCXX || IsCoreCLR)
     CatchPadMBB->setIsEHFuncletEntry();
 #endif
@@ -1265,8 +1263,8 @@ void SelectionDAGBuilder::visitCatchRet(const CatchReturnInst &I) {
   MachineBasicBlock *TargetMBB = FuncInfo.MBBMap[I.getSuccessor()];
   FuncInfo.MBB->addSuccessor(TargetMBB);
 
-  auto Pers = classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
+  auto Pers = classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
   bool IsSEH = isAsynchronousEHPersonality(Pers);
   if (IsSEH) {
     // If this is not a fall-through branch or optimizations are switched off,
@@ -1328,8 +1326,10 @@ static void findUnwindDestinations(
     BranchProbability Prob,
     SmallVectorImpl<std::pair<MachineBasicBlock *, BranchProbability>>
         &UnwindDests) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   EHPersonality Personality =
     classifyEHPersonality(FuncInfo.Fn->getPersonalityFn());
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume both false
   bool IsMSVCCXX = Personality == EHPersonality::MSVC_CXX;
   bool IsCoreCLR = Personality == EHPersonality::CoreCLR;

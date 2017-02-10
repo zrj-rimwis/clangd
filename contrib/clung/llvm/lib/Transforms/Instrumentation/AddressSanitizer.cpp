@@ -374,7 +374,9 @@ static ShadowMapping getShadowMapping(Triple &TargetTriple, int LongSize,
   bool IsPPC64 = TargetTriple.getArch() == llvm::Triple::ppc64 ||
                  TargetTriple.getArch() == llvm::Triple::ppc64le;
   bool IsSystemZ = TargetTriple.getArch() == llvm::Triple::systemz;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed temp
   bool IsX86 = TargetTriple.getArch() == llvm::Triple::x86;
+#endif
   bool IsX86_64 = TargetTriple.getArch() == llvm::Triple::x86_64;
   bool IsMIPS32 = TargetTriple.getArch() == llvm::Triple::mips ||
                   TargetTriple.getArch() == llvm::Triple::mipsel;
@@ -1560,7 +1562,9 @@ bool AddressSanitizerModule::InstrumentGlobals(IRBuilder<> &IRB, Module &M) {
 
 
   GlobalVariable *AllGlobals = nullptr;
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed temp
   GlobalVariable *RegisteredFlag = nullptr;
+#endif
 
   // On recent Mach-O platforms, we emit the global metadata in a way that
   // allows the linker to properly strip dead globals.

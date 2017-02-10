@@ -717,8 +717,8 @@ void Driver::generateCompilationDiagnostics(Compilation &C,
 
   // Construct the list of abstract actions to perform for this compilation. On
   // Darwin OSes this uses the driver-driver and builds universal actions.
-  const ToolChain &TC = C.getDefaultToolChain();
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
+  const ToolChain &TC = C.getDefaultToolChain();
   if (TC.getTriple().isOSBinFormatMachO())
     BuildUniversalActions(C, TC, Inputs);
   else
@@ -2207,12 +2207,12 @@ InputInfo Driver::BuildJobsForActionNoCache(
     //
     // c) Specify a device dependences to a host action;
     //    Device Action 1  _
-    //                      \
+    //                      \   //
     //      Host Action 1  ---> OffloadAction -> Host Action 2
     //
     // d) Specify a host dependence to a device action.
     //      Host Action 1  _
-    //                      \
+    //                      \   //
     //    Device Action 1  ---> OffloadAction -> Device Action 2
     //
     // For a) and b), we just return the job generated for the dependence. For

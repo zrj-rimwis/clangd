@@ -180,6 +180,7 @@ static void CheckStringInit(Expr *Str, QualType &DeclT, const ArrayType *AT,
   // the size may be smaller or larger than the string we are initializing.
   // FIXME: Avoid truncation for 64-bit length strings.
   if (S.getLangOpts().CPlusPlus) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op block
     if (StringLiteral *SL = dyn_cast<StringLiteral>(Str->IgnoreParens())) {
       // For Pascal strings it's OK to strip off the terminating null character,
       // so the example below is valid:
@@ -190,6 +191,7 @@ static void CheckStringInit(Expr *Str, QualType &DeclT, const ArrayType *AT,
         StrLength--;
 #endif
     }
+#endif
   
     // [dcl.init.string]p2
     if (StrLength > CAT->getSize().getZExtValue())

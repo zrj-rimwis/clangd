@@ -664,7 +664,9 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
   // The 2 byte DWARF version.
   MCOS->EmitIntValue(context.getDwarfVersion(), 2);
 
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly___ // assume not needed temp
   const MCAsmInfo &AsmInfo = *context.getAsmInfo();
+#endif
   // The 4 byte offset to the debug abbrevs from the start of the .debug_abbrev,
   // it is at the start of that section so this is zero.
   if (AbbrevSectionSymbol == nullptr)

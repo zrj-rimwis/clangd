@@ -1444,6 +1444,7 @@ static bool CheckLValueConstantExpression(EvalInfo &Info, SourceLocation Loc,
         return false;
 #endif
     }
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op block
     if (const auto *FD = dyn_cast<const FunctionDecl>(VD)) {
       // __declspec(dllimport) must be handled very carefully:
       // We must never initialize an expression with the thunk in C++.
@@ -1460,6 +1461,7 @@ static bool CheckLValueConstantExpression(EvalInfo &Info, SourceLocation Loc,
         return false;
 #endif
     }
+#endif
   }
 
   // Allow address constant expressions to be past-the-end pointers. This is

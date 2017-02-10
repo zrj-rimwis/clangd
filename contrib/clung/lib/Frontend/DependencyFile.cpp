@@ -347,7 +347,7 @@ void DFGImpl::AddFilename(StringRef Filename) {
 /// and emit it as
 ///     a\\\ b\\#c.h
 /// which GNU Make will interpret as
-///     a\ b\
+///     a\ b\                       //
 /// followed by a comment. Failing to find this file, it will fall back to the
 /// original string, which probably doesn't exist either; in any case it won't
 /// find

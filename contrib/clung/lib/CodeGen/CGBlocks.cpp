@@ -2201,8 +2201,8 @@ const BlockByrefInfo &CodeGenFunction::getBlockByrefInfo(const VarDecl *D) {
     size += getPointerSize();
   }
 
-  bool HasByrefExtendedLayout = false;
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
+  bool HasByrefExtendedLayout = false;
   Qualifiers::ObjCLifetime Lifetime;
   if (getContext().getByrefLifetime(Ty, Lifetime, HasByrefExtendedLayout) &&
       HasByrefExtendedLayout) {
@@ -2275,8 +2275,8 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
   const VarDecl &D = *emission.Variable;
   QualType type = D.getType();
 
-  bool HasByrefExtendedLayout;
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
+  bool HasByrefExtendedLayout;
   Qualifiers::ObjCLifetime ByrefLifetime;
   bool ByRefHasLifetime =
     getContext().getByrefLifetime(type, ByrefLifetime, HasByrefExtendedLayout);

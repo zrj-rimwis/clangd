@@ -112,11 +112,13 @@ public:
   }
 
   CallingConv getDefaultMethodCallConv(bool isVariadic) const override {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume no-op block
     const llvm::Triple &T = Context.getTargetInfo().getTriple();
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
     if (!isVariadic && T.isWindowsGNUEnvironment() &&
         T.getArch() == llvm::Triple::x86)
       return CC_X86ThisCall;
+#endif
 #endif
     return CC_C;
   }

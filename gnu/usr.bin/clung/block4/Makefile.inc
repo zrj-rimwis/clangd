@@ -1,4 +1,5 @@
 INTERNALLIB=	yes
+WARNS?=	2
 TOP_CLUNG=	${.CURDIR}/../../../../../contrib/clung
 TOP_LLVM=	${TOP_CLUNG}/llvm
 CFLAGS+=	-I${.OBJDIR} \

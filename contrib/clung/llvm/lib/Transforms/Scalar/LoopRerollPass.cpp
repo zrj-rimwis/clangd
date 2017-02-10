@@ -322,7 +322,7 @@ namespace {
     //
     //   Base instruction -> i*3
     //                    +---+----+
-    //                   /    |     \
+    //                   /    |     \              //
     //               ST[y1]  +1     +2  <-- Roots
     //                        |      |
     //                      ST[y2] ST[y3]

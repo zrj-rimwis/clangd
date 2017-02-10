@@ -5023,7 +5023,11 @@ ExprResult Sema::CheckTemplateArgument(NonTypeTemplateParmDecl *Param,
       // -- a string literal
       // -- the result of a typeid expression, or
       // -- a predefind __func__ variable
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed temp
       if (auto *E = Value.getLValueBase().dyn_cast<const Expr*>()) {
+#else
+      if (Value.getLValueBase().dyn_cast<const Expr*>()) {
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
         if (isa<CXXUuidofExpr>(E)) {
           Converted = TemplateArgument(const_cast<Expr*>(E));

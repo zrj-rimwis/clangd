@@ -88,8 +88,8 @@ FunctionScopeInfo::WeakObjectProfileTy::getBaseInfo(const Expr *E) {
   }
 #endif
   case Stmt::PseudoObjectExprClass: {
-    const PseudoObjectExpr *POE = cast<PseudoObjectExpr>(E);
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+    const PseudoObjectExpr *POE = cast<PseudoObjectExpr>(E);
     const ObjCPropertyRefExpr *BaseProp =
       dyn_cast<ObjCPropertyRefExpr>(POE->getSyntacticForm());
     if (BaseProp) {

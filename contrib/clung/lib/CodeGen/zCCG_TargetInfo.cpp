@@ -1231,8 +1231,12 @@ ABIArgInfo X86_32ABIInfo::classifyReturnType(QualType RetTy,
     return ABIArgInfo::getDirect();
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // assume not needed temp
   if (const VectorType *VT = RetTy->getAs<VectorType>()) {
     // On Darwin, some vectors are returned in registers.
+#else
+  if (RetTy->getAs<VectorType>()) {
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (IsDarwinVectorABI) {
       uint64_t Size = getContext().getTypeSize(RetTy);
@@ -1558,9 +1562,13 @@ ABIArgInfo X86_32ABIInfo::classifyArgumentType(QualType Ty,
     return getIndirectResult(Ty, true, State);
   }
 
+#ifdef LLVM_ENABLE_MACHO // __DragonFly__ // asume not needed temp
   if (const VectorType *VT = Ty->getAs<VectorType>()) {
     // On Darwin, some vectors are passed in memory, we handle this by passing
     // it as an i8/i16/i32/i64.
+#else
+  if (Ty->getAs<VectorType>()) {
+#endif
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
     if (IsDarwinVectorABI) {
       uint64_t Size = getContext().getTypeSize(Ty);

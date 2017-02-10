@@ -1620,8 +1620,8 @@ ExprResult MSPropertyOpBuilder::buildSet(Expr *op, SourceLocation sl,
 //===----------------------------------------------------------------------===//
 
 ExprResult Sema::checkPseudoObjectRValue(Expr *E) {
-  Expr *opaqueRef = E->IgnoreParens();
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  Expr *opaqueRef = E->IgnoreParens();
   if (ObjCPropertyRefExpr *refExpr
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
@@ -1661,8 +1661,8 @@ ExprResult Sema::checkPseudoObjectIncDec(Scope *Sc, SourceLocation opcLoc,
                                        VK_RValue, OK_Ordinary, opcLoc);
 
   assert(UnaryOperator::isIncrementDecrementOp(opcode));
-  Expr *opaqueRef = op->IgnoreParens();
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  Expr *opaqueRef = op->IgnoreParens();
   if (ObjCPropertyRefExpr *refExpr
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);
@@ -1706,8 +1706,8 @@ ExprResult Sema::checkPseudoObjectAssignment(Scope *S, SourceLocation opcLoc,
     RHS = result.get();
   }
 
-  Expr *opaqueRef = LHS->IgnoreParens();
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
+  Expr *opaqueRef = LHS->IgnoreParens();
   if (ObjCPropertyRefExpr *refExpr
         = dyn_cast<ObjCPropertyRefExpr>(opaqueRef)) {
     ObjCPropertyOpBuilder builder(*this, refExpr);

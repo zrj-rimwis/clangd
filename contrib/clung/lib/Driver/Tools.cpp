@@ -446,7 +446,11 @@ void Clang::AddPreprocessingOptions(Compilation &C, const JobAction &JA,
   // wonky, but we include looking for .gch so we can support seamless
   // replacement into a build system already set up to be generating
   // .gch files.
+#ifdef CLANG_ENABLE_MSCL // __DragonFly__ // assume one unneeded temp, multi statement
   int YcIndex = -1, YuIndex = -1;
+#else
+  int YcIndex = -1;
+#endif
   {
     int AI = -1;
 #ifdef CLANG_ENABLE_MSCL // __DragonFly__ // uch, assume these are nullptr
@@ -4040,7 +4044,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   getToolChain().addClangWarningOptions(CmdArgs);
 
   // Select the appropriate action.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   RewriteKind rewriteKind = RK_None;
+#endif
 
   if (isa<AnalyzeJobAction>(JA)) {
     assert(JA.getType() == types::TY_Plist && "Invalid output type.");

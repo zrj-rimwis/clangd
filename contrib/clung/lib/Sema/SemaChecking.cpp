@@ -3403,7 +3403,9 @@ bool Sema::SemaBuiltinVAStart(CallExpr *TheCall) {
   // (Yes, that means there's no corresponding way to support variadic
   // System V ABI functions on Windows.)
   if (Context.getTargetInfo().getTriple().getArch() == llvm::Triple::x86_64) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume not needed temp
     unsigned OS = Context.getTargetInfo().getTriple().getOS();
+#endif
     clang::CallingConv CC = CC_C;
     if (const FunctionDecl *FD = getCurFunctionDecl())
       CC = FD->getType()->getAs<FunctionType>()->getCallConv();

@@ -5051,7 +5051,9 @@ static void handleX86ForceAlignArgPointerAttr(Sema &S, Decl *D,
 
 static void handleLayoutVersion(Sema &S, Decl *D, const AttributeList &Attr) {
   uint32_t Version;
+#ifdef LLVM_ENABLE_MSVC // __DragonFly__ // assume not needed temp
   Expr *VersionExpr = static_cast<Expr *>(Attr.getArgAsExpr(0));
+#endif
   if (!checkUInt32Argument(S, Attr, Attr.getArgAsExpr(0), Version))
     return;
 

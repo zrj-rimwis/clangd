@@ -678,6 +678,7 @@ StringRef CodeGenModule::getMangledName(GlobalDecl GD) {
 
   // Some ABIs don't have constructor variants.  Make sure that base and
   // complete constructors get mangled the same.
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op block
   if (const auto *CD = dyn_cast<CXXConstructorDecl>(CanonicalGD.getDecl())) {
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume !true
     if (!getTarget().getCXXABI().hasConstructorVariants()) {
@@ -688,6 +689,7 @@ StringRef CodeGenModule::getMangledName(GlobalDecl GD) {
     }
 #endif
   }
+#endif
 
   StringRef &FoundStr = MangledDeclNames[CanonicalGD];
   if (!FoundStr.empty())
@@ -2956,8 +2958,8 @@ static void ReplaceUsesOfNonProtoTypeWithRealFunction(llvm::GlobalValue *Old,
 }
 
 void CodeGenModule::HandleCXXStaticMemberVarInstantiation(VarDecl *VD) {
-  auto DK = VD->isThisDeclarationADefinition();
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
+  auto DK = VD->isThisDeclarationADefinition();
   if (DK == VarDecl::Definition && VD->hasAttr<DLLImportAttr>())
     return;
 #endif
@@ -3457,8 +3459,10 @@ CodeGenModule::GetAddrOfConstantString(const StringLiteral *Literal) {
                                 "_unnamed_nsstring_");
   GV->setAlignment(Alignment.getQuantity());
   const char *NSStringSection = "__OBJC,__cstring_object,regular,no_dead_strip";
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed
   const char *NSStringNonFragileABISection =
       "__DATA,__objc_stringobj,regular,no_dead_strip";
+#endif
   // FIXME. Fix section.
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false? confusing
   GV->setSection(LangOpts.ObjCRuntime.isNonFragile()

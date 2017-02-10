@@ -1932,7 +1932,9 @@ public:
           if (RangeVar->isInvalidDecl())
             return StmtError();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
           Expr *RangeExpr = RangeVar->getInit();
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed early
           if (!RangeExpr->isTypeDependent() &&
               RangeExpr->getType()->isObjCObjectPointerType())

@@ -109,7 +109,7 @@ struct BitSetBuilder {
 /// For example, consider this class hierarchy:
 ///
 /// A       B
-///   \   / | \
+///   \   / | \         //
 ///     C   D   E
 ///
 /// We have five bit sets: bsA (A, C), bsB (B, C, D, E), bsC (C), bsD (D) and

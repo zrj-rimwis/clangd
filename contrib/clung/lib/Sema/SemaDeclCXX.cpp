@@ -9669,7 +9669,9 @@ static void getDefaultArgExprsForConstructors(Sema &S, CXXRecordDecl *Class) {
 #endif
 
 void Sema::ActOnFinishCXXNonNestedClass(Decl *D) {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed temp
   auto *RD = dyn_cast<CXXRecordDecl>(D);
+#endif
 
   // Default constructors that are annotated with __declspec(dllexport) which
   // have default arguments or don't use the standard calling convention are

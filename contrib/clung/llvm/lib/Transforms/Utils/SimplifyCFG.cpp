@@ -2677,11 +2677,11 @@ static bool mergeConditionalStores(BranchInst *PBI, BranchInst *QBI) {
   // We only deal with simple diamonds or triangles:
   //
   //     PBI       or      PBI        or a combination of the two
-  //    /   \               | \
+  //    /   \               | \       //
   //   PTB  PFB             |  PFB
   //    \   /               | /
   //     QBI                QBI
-  //    /  \                | \
+  //    /  \                | \       //
   //   QTB  QFB             |  QFB
   //    \  /                | /
   //    PostBB            PostBB

@@ -960,8 +960,12 @@ void Sema::checkVariadicArgument(const Expr *E, VariadicCallType CT) {
 /// will create a trap if the resulting type is not a POD type.
 ExprResult Sema::DefaultVariadicArgumentPromotion(Expr *E, VariadicCallType CT,
                                                   FunctionDecl *FDecl) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   if (const BuiltinType *PlaceholderTy = E->getType()->getAsPlaceholderType()) {
     // Strip the unbridged-cast placeholder expression off, if applicable.
+#else
+  if (E->getType()->getAsPlaceholderType()) {
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && (smth || smth)
     if (PlaceholderTy->getKind() == BuiltinType::ARCUnbridgedCast &&
         (CT == VariadicMethod ||
@@ -2480,6 +2484,7 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
   if (!CurMethod)
     return ExprError();
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   // There are two cases to handle here.  1) scoped lookup could have failed,
   // in which case we should look for an ivar.  2) scoped lookup could have
   // found a decl, but that decl is outside the current instance method (i.e.
@@ -2490,6 +2495,7 @@ Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
   // ivars.  But if we don't find anything else, and there's an
   // ivar, that's an error.
   bool IsClassMethod = CurMethod->isClassMethod();
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
   bool LookForIvars;
@@ -11814,7 +11820,9 @@ static Expr *maybeRebuildARCConsumingStmt(Stmt *Statement) {
   ExprWithCleanups *cleanups = dyn_cast<ExprWithCleanups>(Statement);
   if (!cleanups) return nullptr;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   ImplicitCastExpr *cast = dyn_cast<ImplicitCastExpr>(cleanups->getSubExpr());
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume !smth || true, thus early return nullptr
   if (!cast || cast->getCastKind() != CK_ARCConsumeObject)
 #else
@@ -15296,8 +15304,8 @@ ExprResult Sema::CheckPlaceholderExpr(Expr *E) {
     // Accept __noop without parens by implicitly converting it to a call expr.
     auto *DRE = dyn_cast<DeclRefExpr>(E->IgnoreParenImpCasts());
     if (DRE) {
-      auto *FD = cast<FunctionDecl>(DRE->getDecl());
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
+      auto *FD = cast<FunctionDecl>(DRE->getDecl());
       if (FD->getBuiltinID() == Builtin::BI__noop) {
         E = ImpCastExprToType(E, Context.getPointerType(FD->getType()),
                               CK_BuiltinFnToFnPtr).get();

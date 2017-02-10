@@ -327,7 +327,9 @@ ObjectFilePCHContainerWriter::CreatePCHContainerGenerator(
 void ObjectFilePCHContainerReader::ExtractPCH(
     llvm::MemoryBufferRef Buffer, llvm::BitstreamReader &StreamFile) const {
   if (auto OF = llvm::object::ObjectFile::createObjectFile(Buffer)) {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume temps are not needed
     auto *Obj = OF.get().get();
+#endif
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false and constify
     bool IsCOFF = isa<llvm::object::COFFObjectFile>(Obj);
 #endif

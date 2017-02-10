@@ -37,8 +37,8 @@ static void EmitDeclInit(CodeGenFunction &CGF, const VarDecl &D,
   const Expr *Init = D.getInit();
   switch (CGF.getEvaluationKind(type)) {
   case TEK_Scalar: {
-    CodeGenModule &CGM = CGF.CGM;
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume both false
+    CodeGenModule &CGM = CGF.CGM;
     if (lv.isObjCStrong())
       CGM.getObjCRuntime().EmitObjCGlobalAssign(CGF, CGF.EmitScalarExpr(Init),
                                                 DeclPtr, D.getTLSKind());

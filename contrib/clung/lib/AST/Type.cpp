@@ -377,7 +377,11 @@ bool Type::isObjCBoxableRecordType() const {
   return false;
 }
 bool Type::isInterfaceType() const {
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed parm
   if (const RecordType *RT = getAs<RecordType>())
+#else
+  if (getAs<RecordType>())
+#endif
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
     return RT->getDecl()->isInterface();
 #else
@@ -1953,8 +1957,10 @@ bool Type::isIncompleteType(NamedDecl **Def) const {
     // Member pointers with dependent class types don't get special treatment.
     if (ClassTy->isDependentType())
       return false;
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume not needed
     const CXXRecordDecl *RD = ClassTy->getAsCXXRecordDecl();
     ASTContext &Context = RD->getASTContext();
+#endif
     // Member pointers not in the MS ABI don't get special treatment.
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // confusing
     if (!Context.getTargetInfo().getCXXABI().isMicrosoft())

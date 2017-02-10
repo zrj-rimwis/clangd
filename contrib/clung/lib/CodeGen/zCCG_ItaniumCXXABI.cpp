@@ -2107,8 +2107,8 @@ static void emitGlobalDtorWithCXAAtExit(CodeGenFunction &CGF,
                                         bool TLS) {
   const char *Name = "__cxa_atexit";
   if (TLS) {
-    const llvm::Triple &T = CGF.getTarget().getTriple();
 #ifdef LLVM_ENABLE_MACHO // __DragonFly__
+    const llvm::Triple &T = CGF.getTarget().getTriple();
     Name = T.isOSDarwin() ?  "_tlv_atexit" : "__cxa_thread_atexit";
 #else
     Name = false ?  "_tlv_atexit" : "__cxa_thread_atexit";
@@ -2522,13 +2522,15 @@ ItaniumRTTIBuilder::GetAddrOfExternalRTTIDescriptor(QualType Ty) {
                                   /*Constant=*/true,
                                   llvm::GlobalValue::ExternalLinkage, nullptr,
                                   Name);
+#ifdef CLANG_ENABLE_MSEXT // __DragonFly__ // assume no-op block
     if (const RecordType *RecordTy = dyn_cast<RecordType>(Ty)) {
-      const CXXRecordDecl *RD = cast<CXXRecordDecl>(RecordTy->getDecl());
 #ifdef CLANG_ENABLE_MSEXT // __DragonFly__
+      const CXXRecordDecl *RD = cast<CXXRecordDecl>(RecordTy->getDecl());
       if (RD->hasAttr<DLLImportAttr>())
         GV->setDLLStorageClass(llvm::GlobalVariable::DLLImportStorageClass);
 #endif
     }
+#endif
   }
 
   return llvm::ConstantExpr::getBitCast(GV, CGM.Int8PtrTy);

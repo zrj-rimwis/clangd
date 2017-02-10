@@ -456,7 +456,9 @@ MachineInstr *X86FrameLowering::emitStackProbe(MachineFunction &MF,
                                                MachineBasicBlock::iterator MBBI,
                                                const DebugLoc &DL,
                                                bool InProlog) const {
+#ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume not needed temp
   const X86Subtarget &STI = MF.getSubtarget<X86Subtarget>();
+#endif
 #ifdef LLVM_ENABLE_MSWIN // __DragonFly__ // assume false
   if (STI.isTargetWindowsCoreCLR()) {
     if (InProlog) {
@@ -796,6 +798,7 @@ MachineInstr *X86FrameLowering::emitStackProbeInlineStub(
 }
 #endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed
 static unsigned calculateSetFPREG(uint64_t SPAdjust) {
   // Win64 ABI has a less restrictive limitation of 240; 128 works equally well
   // and might require smaller successive adjustments.
@@ -804,6 +807,7 @@ static unsigned calculateSetFPREG(uint64_t SPAdjust) {
   // Win64 ABI requires 16-byte alignment for the UWOP_SET_FPREG opcode.
   return SEHFrameOffset & -16;
 }
+#endif
 
 // If we're forcing a stack realignment we can't rely on just the frame
 // info, we need to know the ABI stack alignment as well in case we
@@ -1033,8 +1037,10 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
   uint64_t NumBytes = 0;
   int stackGrowth = -SlotSize;
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   // Find the funclet establisher parameter
   unsigned Establisher = X86::NoRegister;
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume both false
   if (IsClrFunclet)
     Establisher = Uses64BitFramePtr ? X86::RCX : X86::ECX;
@@ -1151,9 +1157,11 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
     NumBytes = StackSize - X86FI->getCalleeSavedFrameSize();
   }
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   // For EH funclets, only allocate enough space for outgoing calls. Save the
   // NumBytes value that we would've used for the parent frame.
   unsigned ParentFrameNumBytes = NumBytes;
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (IsFunclet)
     NumBytes = getWinEHFuncletFrameSize(MF);
@@ -1168,7 +1176,9 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
          (MBBI->getOpcode() == X86::PUSH32r ||
           MBBI->getOpcode() == X86::PUSH64r)) {
     PushedRegs = true;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
     unsigned Reg = MBBI->getOperand(0).getReg();
+#endif
     ++MBBI;
 
     if (!HasFP && NeedsDwarfCFI) {
@@ -1215,7 +1225,9 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
   // responsible for adjusting the stack pointer.  Touching the stack at 4K
   // increments is necessary to ensure that the guard pages used by the OS
   // virtual memory manager are allocated in correct sequence.
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   uint64_t AlignedNumBytes = NumBytes;
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (IsWin64Prologue && !IsFunclet && TRI->needsStackRealignment(MF))
     AlignedNumBytes = alignTo(AlignedNumBytes, MaxAlign);
@@ -1286,7 +1298,9 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
         .setMIFlag(MachineInstr::FrameSetup);
 #endif
 
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   int SEHFrameOffset = 0;
+#endif
   unsigned SPOrEstablisher;
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (IsFunclet) {
@@ -1365,7 +1379,9 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF,
 #endif
 
   while (MBBI != MBB.end() && MBBI->getFlag(MachineInstr::FrameSetup)) {
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
     const MachineInstr &FrameInstr = *MBBI;
+#endif
     ++MBBI;
 
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
@@ -1659,7 +1675,9 @@ void X86FrameLowering::emitEpilogue(MachineFunction &MF,
   } else {
     NumBytes = StackSize - CSSize;
   }
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   uint64_t SEHStackAllocAmt = NumBytes;
+#endif
 
   // Skip the callee-saved pop instructions.
   while (MBBI != MBB.begin()) {
@@ -1716,7 +1734,9 @@ void X86FrameLowering::emitEpilogue(MachineFunction &MF,
 #endif
     if (TRI->needsStackRealignment(MF))
       MBBI = FirstCSPop;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
     unsigned SEHFrameOffset = calculateSetFPREG(SEHStackAllocAmt);
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false, XXX -CSSize???
     uint64_t LEAAmount =
         IsWin64Prologue ? SEHStackAllocAmt - SEHFrameOffset : -CSSize;
@@ -1797,7 +1817,9 @@ int X86FrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
   // frame, base, and stack pointer depending on which is used.
   int Offset = MFI->getObjectOffset(FI) - getOffsetOfLocalArea();
   const X86MachineFunctionInfo *X86FI = MF.getInfo<X86MachineFunctionInfo>();
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   unsigned CSSize = X86FI->getCalleeSavedFrameSize();
+#endif
   uint64_t StackSize = MFI->getStackSize();
   bool HasFP = hasFP(MF);
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false

@@ -101,8 +101,10 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
 
   // If this personality uses funclets, we need to do a bit more work.
   DenseMap<const AllocaInst *, int *> CatchObjects;
+#ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume not needed temp
   EHPersonality Personality = classifyEHPersonality(
       Fn->hasPersonalityFn() ? Fn->getPersonalityFn() : nullptr);
+#endif
 #ifdef LLVM_ENABLE_MSEH // __DragonFly__ // assume false
   if (isFuncletEHPersonality(Personality)) {
     // Calculate state numbers if we haven't already.

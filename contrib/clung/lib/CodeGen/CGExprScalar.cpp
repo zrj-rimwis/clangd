@@ -1374,7 +1374,11 @@ Value *ScalarExprEmitter::VisitCastExpr(CastExpr *CE) {
 
   // These cases are generally not written to ignore the result of
   // evaluating their sub-expressions, so we clear this now.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   bool Ignored = TestAndClearIgnoreResultAssign();
+#else
+  TestAndClearIgnoreResultAssign();
+#endif
 
   // Since almost all cast kinds apply to scalars, this switch doesn't have
   // a default case, so the compiler will warn on a missing case.  The cases
