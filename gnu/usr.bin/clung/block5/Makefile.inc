@@ -12,6 +12,9 @@ CFLAGS+=	-D__STDC_CONSTANT_MACROS \
 
 CXXFLAGS+=	-std=c++11 -fno-exceptions -fno-rtti
 
+# -fstrict-aliasing is a no-no for llvm and clang
+NO_STRICT_ALIASING=yes
+
 .for _t in ${LLVM_SRCDIRS}
 .PATH:		${TOP_LLVM}/${_t}
 .endfor

@@ -2477,7 +2477,9 @@ ExprResult Sema::BuildQualifiedDeclarationNameExpr(
 ExprResult
 Sema::LookupInObjCMethod(LookupResult &Lookup, Scope *S,
                          IdentifierInfo *II, bool AllowBuiltinCreation) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   SourceLocation Loc = Lookup.getNameLoc();
+#endif
   ObjCMethodDecl *CurMethod = getCurMethodDecl();
   
   // Check for error condition which is already reported.
@@ -7453,7 +7455,9 @@ Sema::AssignConvertType
 Sema::CheckAssignmentConstraints(QualType LHSType, ExprResult &RHS,
                                  CastKind &Kind, bool ConvertRHS) {
   QualType RHSType = RHS.get()->getType();
+#ifdef LLVM_ENABLE_OBJCEXTRAS // __DragonFly__ // assume not needed temp
   QualType OrigLHSType = LHSType;
+#endif
 
   // Get canonical types.  We're not formatting these types, just comparing
   // them.

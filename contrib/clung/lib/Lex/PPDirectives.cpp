@@ -2517,12 +2517,14 @@ void Preprocessor::HandleDefineDirective(Token &DefineTok,
     // In Objective-C, ignore attempts to directly redefine the builtin
     // definitions of the ownership qualifiers.  It's still possible to
     // #undef them.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp, very strange
     auto isObjCProtectedMacro = [](const IdentifierInfo *II) -> bool {
       return II->isStr("__strong") ||
              II->isStr("__weak") ||
              II->isStr("__unsafe_unretained") ||
              II->isStr("__autoreleasing");
     };
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false && stmh && smth, but source indentation is borked
    if (getLangOpts().ObjC1 &&
         SourceMgr.getFileID(OtherMI->getDefinitionLoc())

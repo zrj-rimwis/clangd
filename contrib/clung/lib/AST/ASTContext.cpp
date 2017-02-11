@@ -5088,7 +5088,9 @@ bool ASTContext::BlockRequiresCopying(QualType Ty,
   
   if (!Ty->isObjCRetainableType()) return false;
   
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   Qualifiers qs = Ty.getQualifiers();
+#endif
   
   // If we have lifetime, that dominates.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false

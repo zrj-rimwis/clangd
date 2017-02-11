@@ -1458,7 +1458,9 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
         flags = BLOCK_FIELD_IS_BLOCK;
 
       // Special rules for ARC captures:
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
       Qualifiers qs = type.getQualifiers();
+#endif
 
       // We need to register __weak direct captures with the runtime.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed till else
@@ -1649,7 +1651,9 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
         flags = BLOCK_FIELD_IS_BLOCK;
 
       // Special rules for ARC captures.
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
       Qualifiers qs = type.getQualifiers();
+#endif
 
       // Use objc_storeStrong for __strong direct captures; the
       // dynamic tools really like it when we do this.
@@ -2061,7 +2065,9 @@ CodeGenFunction::buildByrefHelpers(llvm::StructType &byrefType,
   // that the runtime does extra copies.
   if (!type->isObjCRetainableType()) return nullptr;
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   Qualifiers qs = type.getQualifiers();
+#endif
 
   // If we have lifetime, that dominates.
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed
@@ -2272,8 +2278,10 @@ void CodeGenFunction::emitByrefStructureInit(const AutoVarEmission &emission) {
   // Build the byref helpers if necessary.  This is null if we don't need any.
   BlockByrefHelpers *helpers = buildByrefHelpers(*byrefType, emission);
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
   const VarDecl &D = *emission.Variable;
   QualType type = D.getType();
+#endif
 
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false and constify
   bool HasByrefExtendedLayout;

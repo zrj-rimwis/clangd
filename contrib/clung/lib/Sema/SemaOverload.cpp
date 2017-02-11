@@ -9454,6 +9454,7 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
     return;
   }
 
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume whole block is no-op
   if (isa<ObjCObjectPointerType>(CFromTy) &&
       isa<PointerType>(CToTy)) {
       Qualifiers FromQs = CFromTy.getQualifiers();
@@ -9469,6 +9470,7 @@ static void DiagnoseBadConversion(Sema &S, OverloadCandidate *Cand,
       }
 #endif
   }
+#endif
 
   if (TakingCandidateAddress &&
       !checkAddressOfCandidateIsAvailable(S, Cand->Function))

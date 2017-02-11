@@ -1854,7 +1854,9 @@ void CodeGenFunction::EmitParmDecl(const VarDecl &D, ParamValue Arg,
 
   LValue lv = MakeAddrLValue(DeclPtr, Ty);
   if (IsScalar) {
+#ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume not needed temp
     Qualifiers qs = Ty.getQualifiers();
+#endif
 #ifdef CLANG_ENABLE_OBJC // __DragonFly__ // assume false
     if (Qualifiers::ObjCLifetime lt = qs.getObjCLifetime()) {
       // We honor __attribute__((ns_consumed)) for types with lifetime.

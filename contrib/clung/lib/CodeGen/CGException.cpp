@@ -456,8 +456,14 @@ llvm::Value *CodeGenFunction::getSelectorFromSlot() {
 
 void CodeGenFunction::EmitCXXThrowExpr(const CXXThrowExpr *E,
                                        bool KeepInsertionPoint) {
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed temp
   if (const Expr *SubExpr = E->getSubExpr()) {
+#else
+  if (E->getSubExpr()) {
+#endif
+#ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume not needed temp
     QualType ThrowType = SubExpr->getType();
+#endif
 #ifdef CLANG_ENABLE_OBJCRUNTIME // __DragonFly__ // assume false and not needed
     if (ThrowType->isObjCObjectPointerType()) {
       const Stmt *ThrowStmt = E->getSubExpr();
