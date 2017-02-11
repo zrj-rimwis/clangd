@@ -18,7 +18,7 @@
 #define CLANG_LIBDIR_SUFFIX ""
 
 /* Relative directory for resource files */
-#define CLANG_RESOURCE_DIR ""
+#define CLANG_RESOURCE_DIR "."
 
 /* Directories clang will search for headers */
 #define C_INCLUDE_DIRS ""
