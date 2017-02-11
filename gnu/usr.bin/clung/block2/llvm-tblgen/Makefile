@@ -1,7 +1,9 @@
 PROG_CXX=	llvm-tblgen
 
+.if ${WORLD_VERSION} <= 400711
 # XXX avoid -std= options, also any of -m*
-NXCXXFLAGS=	${CFLAGS:N-std=*:N-m*}
+NXCXXFLAGS=	${CFLAGS:N-flto:N-std=*:N-m*}
+.endif
 
 beforedepend: llvm-tblgen.nx
 

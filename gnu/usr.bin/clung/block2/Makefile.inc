@@ -34,6 +34,8 @@ NOMAN=
 install:
 	# don't install the table generators
 
+.if ${WORLD_VERSION} <= 400711
 # XXX helper for lack of .cxx.no in sys.mk
 .cpp.no:
 	${NXCXX} ${_${.IMPSRC:T}_FLAGS} ${NXCXXFLAGS} -c ${.IMPSRC} -o ${.TARGET}
+.endif
