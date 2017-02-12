@@ -31,6 +31,8 @@ SING1=	clang/Driver/Options.inc \
 	llvm/IR/Intrinsics.gen \
 	generated/AttributesCompatFunc.inc
 
+SING1+= generated/DFbaseconfig.h
+
 #SING1=	clang/Driver/Options.inc \
 #	llvm/IR/Attributes.inc \
 #	llvm/IR/Intrinsics.gen \
@@ -54,19 +56,19 @@ TXINCS=	-I${TOP_LLVM}/include \
 	-I${TOP_LLVM}/lib/Target
 
 clang/Driver/Options.inc: Options.td ${TGEN}
-	test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
+	@test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
 	${TGEN} -gen-opt-parser-defs ${CIOPT} ${.ALLSRC:M*.td} -o ${.TARGET}
 
 llvm/IR/Attributes.inc: Attributes.td ${TGEN}
-	test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
+	@test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
 	${TGEN} -gen-attrs ${TGINCS} ${.ALLSRC:M*.td} -o ${.TARGET}
 
 llvm/IR/Intrinsics.gen: Intrinsics.td ${TGEN}
-	test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
+	@test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
 	${TGEN} -gen-intrinsic ${TGINCS} ${.ALLSRC:M*.td} -o ${.TARGET}
 
 generated/AttributesCompatFunc.inc: AttributesCompatFunc.td ${TGEN}
-	test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
+	@test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
 	${TGEN} -gen-attrs ${TGINCS} ${.ALLSRC:M*.td} -o ${.TARGET}
 
 
@@ -95,8 +97,8 @@ CID4=	${CXINCS} -I${TOP_CLUNG}/include/clang/Serialization
 CID5=	${CXINCS} -I${TOP_CLUNG}/include/clang/Parse
 CIOPT=	${CXINCS} -I${TOP_CLUNG}/include/clang/Driver -I${TOP_LLVM}/include
 CXAST=	-I${TOP_CLUNG}/lib/Headers \
-        -I${TOP_LLVM}/lib/Target \
-        -I${TOP_LLVM}/include
+	-I${TOP_LLVM}/lib/Target \
+	-I${TOP_LLVM}/include
 CLX1=	Attrs/-gen-clang-attr-classes/Attr.td \
 	AttrImpl/-gen-clang-attr-impl/Attr.td \
 	AttrDump/-gen-clang-attr-dump/Attr.td \
@@ -141,5 +143,27 @@ clang/${ZZ:T}/${FX:H:H}.inc: ${FX:T} ${CGEN}
 	${CGEN} ${FX:H:T:S|,| |} ${CID${ZZ:H}} ${.ALLSRC:M*.td} -o ${.TARGET}
 .  endfor
 .endfor
+
+
+.include "../../Makefile.cco"	# for CC_PRIMARY to adjust paths
+
+.if (${CC_PRIMARY} == gcc70)
+_DF_CXX_HEADERS=7.0
+.elif (${CC_PRIMARY} == gcc50)
+_DF_CXX_HEADERS=5.0
+.elif (${CC_PRIMARY} == gcc47)
+_DF_CXX_HEADERS=4.7
+.endif
+
+generated/DFbaseconfig.h:
+	@test -d ${.TARGET:H} || mkdir -p ${.TARGET:H}
+	echo "#define DF_BASE_BINS           \"${TOOLS_PREFIX}/usr/bin\"" > ${.TARGET}
+	echo "#define DF_BASE_INCLUDES       \"${USRDATA_PREFIX}/usr/include\"" >> ${.TARGET}
+	echo "#define DF_BASE_CXX_INCLUDES   \"${USRDATA_PREFIX}/usr/include/c++/${_DF_CXX_HEADERS}\"" >> ${.TARGET}
+	echo "#define DF_BASE_CCLIBSL      \"-L${USRDATA_PREFIX}/usr/lib/${CC_PRIMARY}\"" >> ${.TARGET}
+	echo "#define DF_BASE_CCLIBS         \"${USRDATA_PREFIX}/usr/lib/${CC_PRIMARY}\"" >> ${.TARGET}
+	echo "#define DF_BASE_LIBS           \"${USRDATA_PREFIX}/usr/lib\"" >> ${.TARGET}
+	echo "#define DF_BASE_CCLIBSRPATH    \"/usr/lib/${CC_PRIMARY}\"" >> ${.TARGET}
+
 
 .include <bsd.prog.mk>

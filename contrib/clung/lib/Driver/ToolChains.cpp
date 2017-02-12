@@ -41,6 +41,10 @@
 #include <cstdlib> // ::getenv
 #include <system_error>
 
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+#include "DFbaseconfig.h" // for easier bootstrapping
+#endif
+
 using namespace clang::driver;
 using namespace clang::driver::toolchains;
 using namespace clang;
@@ -4714,9 +4718,19 @@ DragonFly::DragonFly(const Driver &D, const llvm::Triple &Triple,
   if (getDriver().getInstalledDir() != getDriver().Dir)
     getProgramPaths().push_back(getDriver().Dir);
 
-  getFilePaths().push_back(getDriver().Dir + "/../lib");
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+  /* In case of bootstrapping compiler, honor the correct /usr/bin/ */
+  getProgramPaths().push_back(DF_BASE_BINS);
+#endif
+
+  getFilePaths().push_back(getDriver().Dir + "/../lib"); // XXX hmmm also ^^^
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+  getFilePaths().push_back(DF_BASE_LIBS);
+  getFilePaths().push_back(DF_BASE_CCLIBS);
+#else
   getFilePaths().push_back("/usr/lib");
   getFilePaths().push_back("/usr/lib/gcc50"); // XXX how to deal with up upcoming gcc 7.0?
+#endif
 }
 
 Tool *DragonFly::buildAssembler() const {

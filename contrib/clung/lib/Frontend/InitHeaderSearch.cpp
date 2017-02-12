@@ -29,6 +29,10 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+#include "DFbaseconfig.h" // for easier bootstrapping
+#endif
+
 using namespace clang;
 using namespace clang::frontend;
 
@@ -239,15 +243,15 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   // Builtin includes use #include_next directives and should be positioned
   // just prior C include dirs.
   if (HSOpts.UseBuiltinIncludes) {
-#if 0
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+    /* DF_CLANG_HEADERS provided by Makefiles */
+    AddPath(DF_CLANG_HEADERS, ExternCSystem, false);
+#else
     // Ignore the sys root, we *always* look for clang headers relative to
     // supplied path.
     SmallString<128> P = StringRef(HSOpts.ResourceDir);
     llvm::sys::path::append(P, "include");
     AddUnmappedPath(P, ExternCSystem, false);
-#else
-    /* DF_CLANG_HEADERS provided by Makefiles */
-    AddPath(DF_CLANG_HEADERS, ExternCSystem, false);
 #endif
   }
 
@@ -267,7 +271,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   }
 
   switch (os) {
-#ifdef DF_CLANG_HEADERS
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
   /* lets see what breaks */
   case llvm::Triple::DragonFly: {
     break;
@@ -343,6 +347,11 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
   case llvm::Triple::NaCl:
   case llvm::Triple::ELFIAMCU:
     break;
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+  case llvm::Triple::DragonFly: // base system headers handling
+    AddPath(DF_BASE_INCLUDES, ExternCSystem, false);
+    break;
+#endif
   case llvm::Triple::PS4: {
     // <isysroot> gets prepended later in AddPath().
     std::string BaseSDKPath = "";
@@ -436,7 +445,11 @@ AddDefaultCPlusPlusIncludePaths(const llvm::Triple &triple, const HeaderSearchOp
     break;
 #endif
   case llvm::Triple::DragonFly: // XXX how to handle this for upcoming gcc 7.0 ?
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+    AddPath(DF_BASE_CXX_INCLUDES, CXXSystem, false);
+#else
     AddPath("/usr/include/c++/5.0", CXXSystem, false);
+#endif
     break;
   case llvm::Triple::OpenBSD: {
     std::string t = triple.getTriple();
@@ -708,11 +721,11 @@ void clang::ApplyHeaderSearchOptions(HeaderSearch &HS,
 
   if (HSOpts.UseBuiltinIncludes) {
     // Set up the builtin include directory in the module map.
-#if 0 // DragonFly
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+    SmallString<256> P = StringRef(DF_CLANG_HEADERS);
+#else
     SmallString<128> P = StringRef(HSOpts.ResourceDir);
     llvm::sys::path::append(P, "include");
-#else
-    SmallString<256> P = StringRef(DF_CLANG_HEADERS);
 #endif
     if (const DirectoryEntry *Dir = HS.getFileMgr().getDirectory(P))
       HS.getModuleMap().setBuiltinIncludeDir(Dir);

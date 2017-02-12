@@ -49,6 +49,10 @@
 #include <unistd.h> // For getuid().
 #endif
 
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+#include "DFbaseconfig.h" // for easier bootstrapping
+#endif
+
 using namespace clang::driver;
 using namespace clang::driver::tools;
 using namespace clang;
@@ -10284,11 +10288,19 @@ void dragonfly::Linker::ConstructJob(Compilation &C, const JobAction &JA,
   AddLinkerInputs(getToolChain(), Inputs, Args, CmdArgs);
 
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+    CmdArgs.push_back(DF_BASE_CCLIBSL);
+#else
     CmdArgs.push_back("-L/usr/lib/gcc50"); // XXX gcc 7.0 import
+#endif
 
     if (!Args.hasArg(options::OPT_static)) {
       CmdArgs.push_back("-rpath");
+#if defined(__DragonFly__) && defined(DF_CLANG_HEADERS)
+      CmdArgs.push_back(DF_BASE_CCLIBSRPATH);
+#else
       CmdArgs.push_back("/usr/lib/gcc50"); // XXX gcc 7.0 import
+#endif
     }
 
     if (D.CCCIsCXX()) {
